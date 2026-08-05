@@ -1,0 +1,8 @@
+{
+  "liveServer.settings.donotShowInfoMsg": true,
+  "files.exclude": {
+    "**/.git": true,
+    "**/Thumbs.db": true,
+    "**/.DS_Store": true
+  }
+}
