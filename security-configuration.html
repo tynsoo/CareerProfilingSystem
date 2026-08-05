@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Configuration — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="bg-[#f9fafb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-[256px] shrink-0 bg-[#001c43] flex flex-col">
+
+    <!-- Logo Area -->
+    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
+      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+      <p class="text-sm text-gray-500">Admin Dashboard</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
+      <div class="px-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
+            Student Information
+          </a>
+        </li>
+        <li>
+          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
+            Career Data Set
+          </a>
+        </li>
+        <li>
+          <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+            Analytics
+          </a>
+        </li>
+        <li>
+          <a href="monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
+            Monitoring
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-6 pt-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Security &amp; System</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="security-configuration.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+            <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
+            Security Configuration
+          </a>
+        </li>
+        <li>
+          <a href="audit-log.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
+            Audit Log
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
+      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+        <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0">
+      <button type="button" class="w-5 h-4">
+        <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-6">
+        <button type="button" class="relative w-5 h-5">
+          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+        </button>
+        <button type="button" class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+          </span>
+          <span class="text-left">
+            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+            <span class="block text-xs text-gray-500">Administrator</span>
+          </span>
+          <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <!-- Page Header -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">Security Configuration</h1>
+        <p class="text-sm text-slate-500 mt-1">Manage access controls, security settings, and system protection.</p>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+
+        <!-- LEFT COLUMN (span 2) -->
+        <div class="xl:col-span-2 flex flex-col gap-6">
+
+          <!-- Role-Based Access Control -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="border-b border-slate-200 flex items-center justify-between px-5 py-5 flex-wrap gap-3">
+              <div class="flex items-center gap-3">
+                <img src="images/security/icon-people.svg" alt="" class="w-[22px] h-[18px]">
+                <div>
+                  <h2 class="text-base font-semibold text-slate-900">Role-Based Access Control</h2>
+                  <p class="text-xs text-slate-500">Manage what each user role can access and do within the system.</p>
+                </div>
+              </div>
+              <button type="button" class="flex items-center gap-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm font-medium text-slate-700">
+                <img src="images/security/icon-edit.svg" alt="" class="w-3 h-3">
+                Edit Roles
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[700px]">
+                <thead class="bg-slate-50/50 border-b border-slate-200">
+                  <tr>
+                    <th class="px-5 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Module / Feature</th>
+                    <th class="px-3 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase text-center">
+                      <div class="flex items-center justify-center gap-1"><img src="images/security/icon-admin.svg" alt="" class="w-2.5 h-3">Administrator</div>
+                    </th>
+                    <th class="px-3 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase text-center">
+                      <div class="flex items-center justify-center gap-1"><img src="images/security/icon-counselor.svg" alt="" class="w-2.5 h-3">Guidance Counselor</div>
+                    </th>
+                    <th class="px-3 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase text-center">
+                      <div class="flex items-center justify-center gap-1"><img src="images/security/icon-student.svg" alt="" class="w-2.5 h-3">Student</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  <tr>
+                    <td class="px-5 py-3">
+                      <div class="flex items-start gap-3">
+                        <img src="images/security/icon-module-career.svg" alt="" class="w-[17.5px] h-4 mt-0.5">
+                        <div>
+                          <p class="text-sm font-medium text-slate-800">Career Profile Input</p>
+                          <p class="text-xs text-slate-500">Create and edit student profiles</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-amber-500"><img src="images/security/icon-dash-orange.svg" alt="Limited Access" class="w-2 h-0.5"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span></td>
+                  </tr>
+                  <tr>
+                    <td class="px-5 py-3">
+                      <div class="flex items-start gap-3">
+                        <img src="images/security/icon-module-rac.svg" alt="" class="w-[10.5px] h-4 mt-0.5">
+                        <div>
+                          <p class="text-sm font-medium text-slate-800">RAC Assessment</p>
+                          <p class="text-xs text-slate-500">View and manage assessments</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span></td>
+                  </tr>
+                  <tr>
+                    <td class="px-5 py-3">
+                      <div class="flex items-start gap-3">
+                        <img src="images/security/icon-module-recommendations.svg" alt="" class="w-3.5 h-4 mt-0.5">
+                        <div>
+                          <p class="text-sm font-medium text-slate-800">Recommendations</p>
+                          <p class="text-xs text-slate-500">View recommendations only</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                  </tr>
+                  <tr>
+                    <td class="px-5 py-3">
+                      <div class="flex items-start gap-3">
+                        <img src="images/security/icon-module-counselor.svg" alt="" class="w-3 h-4 mt-0.5">
+                        <div>
+                          <p class="text-sm font-medium text-slate-800">CGC Guidance Counselor</p>
+                          <p class="text-xs text-slate-500">Manage counselor accounts</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span></td>
+                  </tr>
+                  <tr>
+                    <td class="px-5 py-3">
+                      <div class="flex items-start gap-3">
+                        <img src="images/security/icon-module-monitoring.svg" alt="" class="w-4 h-4 mt-0.5">
+                        <div>
+                          <p class="text-sm font-medium text-slate-800">Student Monitoring</p>
+                          <p class="text-xs text-slate-500">View student progress and status</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
+                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="bg-slate-50 border-t border-slate-200 flex items-center gap-6 px-4 py-4 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex w-4 h-4 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="" class="w-2 h-1.5"></span>
+                <span class="text-xs text-slate-500">Full Access</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex w-4 h-4 items-center justify-center rounded-full border border-amber-500"><img src="images/security/icon-dash-orange.svg" alt="" class="w-1.5 h-0.5"></span>
+                <span class="text-xs text-slate-500">Limited Access</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex w-4 h-4 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="" class="w-2 h-2"></span>
+                <span class="text-xs text-slate-500">No Access</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-px bg-slate-400"></span>
+                <span class="text-xs text-slate-500">Not Applicable</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Login & Access Policies -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="border-b border-slate-200 px-5 py-5">
+              <h2 class="text-base font-semibold text-slate-900">Login &amp; Access Policies</h2>
+              <p class="text-xs text-slate-500">Enforce strong access policies to protect user accounts.</p>
+            </div>
+            <div class="p-2">
+              <div class="flex items-center justify-between p-4 rounded-lg">
+                <div>
+                  <p class="text-sm font-medium text-slate-800">Password Policy</p>
+                  <p class="text-xs text-slate-500">Minimum 8 characters with uppercase, lowercase, number, and symbol.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-md">Enabled</span>
+                  <img src="images/security/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
+                </div>
+              </div>
+              <div class="flex items-center justify-between p-4 rounded-lg border-t border-slate-100">
+                <div>
+                  <p class="text-sm font-medium text-slate-800">Account Lockout</p>
+                  <p class="text-xs text-slate-500">Lock account after 5 failed login attempts.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-md">Enabled</span>
+                  <img src="images/security/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
+                </div>
+              </div>
+              <div class="flex items-center justify-between p-4 rounded-lg border-t border-slate-100">
+                <div>
+                  <p class="text-sm font-medium text-slate-800">Login Activity Monitoring</p>
+                  <p class="text-xs text-slate-500">Track and log user login activities and device information.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-md">Enabled</span>
+                  <img src="images/security/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="flex flex-col gap-6">
+
+          <!-- Security Settings -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="border-b border-slate-200 flex items-center gap-3 px-5 py-5">
+              <img src="images/security/icon-lock.svg" alt="" class="w-4 h-[18px]">
+              <div>
+                <h2 class="text-base font-semibold text-slate-900">Security Settings</h2>
+                <p class="text-xs text-slate-500">Configure system-wide security preferences.</p>
+              </div>
+            </div>
+            <div class="p-5 flex flex-col gap-6">
+
+              <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-4">
+                <div class="flex items-start justify-between">
+                  <div class="flex flex-col gap-1.5">
+                    <p class="text-sm font-semibold text-slate-800">Two-Factor Authentication for Staff</p>
+                    <p class="text-xs text-slate-500">Require 2FA for added account security.</p>
+                    <span class="bg-green-50 border border-green-200 text-green-700 text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded w-fit">Recommended</span>
+                  </div>
+                  <button type="button" class="w-11 h-6 rounded-full bg-[#ed1c24] relative shrink-0" aria-pressed="true">
+                    <span class="absolute right-0.5 top-0.5 w-[18px] h-[18px] rounded-full bg-white"></span>
+                  </button>
+                </div>
+                <div class="flex flex-col gap-2 pl-0">
+                  <p class="text-xs text-slate-500">Required for Guidance Counselor and Administrator accounts.</p>
+                  <div class="flex items-center gap-2">
+                    <img src="images/security/icon-shield-small.svg" alt="" class="w-4 h-3">
+                    <p class="text-xs text-slate-500">Enforced for privileged roles</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
+                <div class="flex items-start justify-between">
+                  <div class="flex flex-col gap-1.5">
+                    <p class="text-sm font-semibold text-slate-800">Automatic Session Timeout</p>
+                    <p class="text-xs text-slate-500">End inactive sessions after a period of inactivity.</p>
+                    <span class="bg-green-50 border border-green-200 text-green-700 text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded w-fit">Recommended</span>
+                  </div>
+                  <button type="button" class="w-11 h-6 rounded-full bg-[#ed1c24] relative shrink-0" aria-pressed="true">
+                    <span class="absolute right-0.5 top-0.5 w-[18px] h-[18px] rounded-full bg-white"></span>
+                  </button>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-xs text-slate-600">Timeout Duration</label>
+                  <select class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700">
+                    <option>30 minutes</option>
+                    <option>15 minutes</option>
+                    <option>60 minutes</option>
+                  </select>
+                </div>
+                <div class="flex items-center gap-2">
+                  <img src="images/security/icon-clock-small.svg" alt="" class="w-3.5 h-3">
+                  <p class="text-xs text-slate-500">Users will be logged out after 30 minutes of inactivity.</p>
+                </div>
+              </div>
+
+              <div class="bg-blue-50 border border-blue-100 rounded-lg p-3.5 flex items-start gap-3">
+                <img src="images/security/icon-info.svg" alt="" class="w-4 h-4 mt-0.5 shrink-0">
+                <p class="text-xs text-blue-800 leading-relaxed">Security settings help protect sensitive student data and ensure compliance with data privacy policies.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Security Overview -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="border-b border-slate-200 px-5 py-5">
+              <h2 class="text-base font-semibold text-slate-900">System Security Overview</h2>
+              <p class="text-xs text-slate-500">Overview of your system security status.</p>
+            </div>
+            <div class="p-5 grid grid-cols-2 gap-4">
+              <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                <p class="text-2xl font-bold text-slate-800">98%</p>
+                <p class="text-xs font-medium text-slate-600">Security Score</p>
+                <p class="text-[10px] text-green-600 mt-1">Good</p>
+              </div>
+              <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                <img src="images/security/icon-overview-users.svg" alt="" class="w-[30px] h-6 mb-2">
+                <p class="text-2xl font-bold text-slate-800">24</p>
+                <p class="text-xs font-medium text-slate-600">Active Users</p>
+                <p class="text-[10px] text-slate-500 mt-1">Today</p>
+              </div>
+              <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                <img src="images/security/icon-overview-alerts.svg" alt="" class="w-[21px] h-6 mb-2">
+                <p class="text-2xl font-bold text-slate-800">0</p>
+                <p class="text-xs font-medium text-slate-600">Security Alerts</p>
+                <p class="text-[10px] text-green-600 mt-1">Last 7 days</p>
+              </div>
+              <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                <img src="images/security/icon-overview-backup.svg" alt="" class="w-[18px] h-6 mb-2">
+                <p class="text-2xl font-bold text-slate-800">100%</p>
+                <p class="text-xs font-medium text-slate-600">Data Backup</p>
+                <p class="text-[10px] text-green-600 mt-1">Up to date</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-center gap-1.5 mt-6">
+        <img src="images/security/icon-clock.svg" alt="" class="w-3 h-3">
+        <p class="text-xs text-slate-500">Last updated: May 27, 2025 10:25 AM</p>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="register-container">
+
+    <img src="images/MMCL-logo.webp"
+         alt="MMCL Logo"
+         class="register-logo">
+
+    <div class="register-card">
+
+        <h2>Create Account</h2>
+
+        <form action="register.php" method="POST">
+
+            <div class="name-row">
+                <input type="text"
+                       name="first_name"
+                       placeholder="First Name"
+                       required>
+
+                <input type="text"
+                       name="last_name"
+                       placeholder="Last Name"
+                       required>
+            </div>
+
+            <input type="text"
+                   name="school_id"
+                   placeholder="School ID"
+                   required>
+
+            <div class="row">
+
+                <div class="strand-section">
+                    <label>SHS Strand</label>
+
+                    <select name="strand" required>
+                        <option value="">Select Strand</option>
+                        <option value="STEM">STEM</option>
+                        <option value="ABM">ABM</option>
+                        <option value="HUMSS">HUMSS</option>
+                        <option value="GAS">GAS</option>
+                        <option value="TVL">TVL</option>
+                    </select>
+                </div>
+
+                <div class="grade-section">
+
+                    <label>Grade Level</label>
+
+                    <div class="grade-buttons">
+
+                        <input type="radio"
+                               id="grade11"
+                               name="grade_level"
+                               value="11"
+                               required>
+
+                        <label for="grade11"
+                               class="grade-btn">
+                            Grade 11
+                        </label>
+
+                        <input type="radio"
+                               id="grade12"
+                               name="grade_level"
+                               value="12">
+
+                        <label for="grade12"
+                               class="grade-btn">
+                            Grade 12
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <input type="password"
+                   name="password"
+                   placeholder="Password"
+                   required>
+
+            <button type="submit">
+                Continue
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

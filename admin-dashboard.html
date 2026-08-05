@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="bg-[#f9fafb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col transition-all duration-200">
+
+    <!-- Logo Area -->
+    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
+      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+      <p class="text-sm text-gray-500">Admin Dashboard</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
+      <div class="px-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
+            Student Information
+          </a>
+        </li>
+        <li>
+          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
+            Career Data Set
+          </a>
+        </li>
+        <li>
+          <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+            Analytics
+          </a>
+        </li>
+        <li>
+          <a href="monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
+            Monitoring
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-6 pt-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Security &amp; System</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="security-configuration.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
+            Security Configuration
+          </a>
+        </li>
+        <li>
+          <a href="audit-log.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
+            Audit Log
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
+      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+        <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0 relative z-20">
+      <button type="button" id="menuToggle" class="w-5 h-4">
+        <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-6">
+
+        <!-- Notifications -->
+        <div class="relative">
+          <button type="button" id="notifBtn" class="relative w-5 h-5">
+            <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+            <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+          </button>
+          <div id="notifPanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <p class="text-sm font-semibold text-gray-900">Notifications</p>
+              <span class="text-xs text-gray-500">3 new</span>
+            </div>
+            <ul class="max-h-80 overflow-auto divide-y divide-gray-100">
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">New student registered</span> — Gomez, Jerome Grant just signed up.</p>
+                <p class="text-xs text-gray-400 mt-1">5 minutes ago</p>
+              </li>
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">Assessment flagged</span> — RIASEC confidence below threshold.</p>
+                <p class="text-xs text-gray-400 mt-1">1 hour ago</p>
+              </li>
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">Counseling request</span> — Solis, Christeen Ann requested counseling.</p>
+                <p class="text-xs text-gray-400 mt-1">2 hours ago</p>
+              </li>
+            </ul>
+            <a href="monitoring.html" class="block text-center text-sm font-medium text-[#ed1c24] px-4 py-3 border-t border-gray-100 hover:bg-gray-50">View all notifications</a>
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="relative">
+          <button type="button" id="profileBtn" class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+              <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+            </span>
+            <span class="text-left">
+              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+              <span class="block text-xs text-gray-500">Administrator</span>
+            </span>
+            <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+          </button>
+          <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+            <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
+            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Student Information Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1">Overview of student assessments and counseling status</p>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start justify-between pb-4">
+            <span class="w-12 h-12 rounded-lg bg-[#dbeafe] flex items-center justify-center">
+              <img src="images/admin/card-icon-students.svg" alt="" class="w-5 h-5">
+            </span>
+            <div class="text-right">
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Total Students</p>
+              <p class="text-3xl font-bold text-gray-900">1,248</p>
+            </div>
+          </div>
+          <div class="flex items-end justify-between pt-4">
+            <span class="text-sm font-medium text-emerald-500">+18 this month</span>
+            <img src="images/admin/sparkline-blue.svg" alt="" class="w-16 h-8">
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start justify-between pb-4">
+            <span class="w-12 h-12 rounded-lg bg-[#dcfce7] flex items-center justify-center">
+              <img src="images/admin/card-icon-assessments.svg" alt="" class="w-4 h-5">
+            </span>
+            <div class="text-right">
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Assessments Completed</p>
+              <p class="text-3xl font-bold text-gray-900">932</p>
+            </div>
+          </div>
+          <div class="flex items-end justify-between pt-4">
+            <span class="text-sm font-medium text-emerald-500">74.7% of total</span>
+            <img src="images/admin/sparkline-green.svg" alt="" class="w-16 h-8">
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start justify-between pb-4">
+            <span class="w-12 h-12 rounded-lg bg-[#ffedd5] flex items-center justify-center">
+              <img src="images/admin/card-icon-pending.svg" alt="" class="w-5 h-5">
+            </span>
+            <div class="text-right">
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Pending Assessments</p>
+              <p class="text-3xl font-bold text-gray-900">216</p>
+            </div>
+          </div>
+          <div class="flex items-end justify-between pt-4">
+            <span class="text-sm font-medium text-amber-500">17.3% of total</span>
+            <img src="images/admin/sparkline-orange.svg" alt="" class="w-16 h-8">
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start justify-between pb-4">
+            <span class="w-12 h-12 rounded-lg bg-[#f3e8ff] flex items-center justify-center">
+              <img src="images/admin/card-icon-counseling.svg" alt="" class="w-5 h-5">
+            </span>
+            <div class="text-right">
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Availed for Counseling</p>
+              <p class="text-3xl font-bold text-gray-900">384</p>
+            </div>
+          </div>
+          <div class="flex items-end justify-between pt-4">
+            <span class="text-sm font-medium text-purple-500">30.8% of total</span>
+            <img src="images/admin/sparkline-purple.svg" alt="" class="w-16 h-8">
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table Section -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+
+        <div class="border-b border-gray-200 flex items-center justify-between px-6 py-5 flex-wrap gap-3">
+          <h2 class="text-lg font-bold text-gray-900">Student Assessment Overview</h2>
+          <div class="flex items-center gap-3">
+            <div class="relative w-64">
+              <img src="images/admin/icon-search.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4">
+              <input type="text" id="studentSearch" placeholder="Search student..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+            </div>
+            <div class="relative">
+              <button type="button" id="filterBtn" class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <img src="images/admin/icon-filter.svg" alt="" class="w-3.5 h-3.5">
+                Filters
+              </button>
+              <div id="filterPanel" class="hidden absolute right-0 top-[calc(100%+8px)] w-72 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-10">
+                <div class="flex flex-col gap-3">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Strand</label>
+                    <select id="filterStrand" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                      <option value="">All Strands</option>
+                      <option>STEM</option>
+                      <option>HUMSS</option>
+                      <option>ABM</option>
+                      <option>TVL (ICT)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Assessment Status</label>
+                    <select id="filterStatus" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                      <option value="">All Status</option>
+                      <option>Completed</option>
+                      <option>In Progress</option>
+                      <option>Pending</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Counseling Status</label>
+                    <select id="filterCounseling" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                      <option value="">All</option>
+                      <option>Availed</option>
+                      <option>Did Not Avail</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center gap-2 pt-1">
+                    <button type="button" id="applyFilters" class="flex-1 bg-[#ed1c24] text-white text-sm font-medium rounded-md py-2 hover:opacity-90">Apply</button>
+                    <button type="button" id="clearFilters" class="flex-1 border border-gray-300 text-gray-700 text-sm font-medium rounded-md py-2 hover:bg-gray-50">Clear</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p id="noResults" class="hidden px-6 py-6 text-sm text-gray-500 text-center">No students match your search or filters.</p>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">#</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Student Name</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Strand</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Status</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Top 3 RIASEC</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase text-center">Counseling Status</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100" id="studentTbody">
+
+              <tr class="student-row" data-name="dela cruz, juan miguel" data-strand="STEM" data-status="Completed" data-counseling="Availed">
+                <td class="px-6 py-4 text-sm text-gray-500">1</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Dela Cruz, Juan Miguel</td>
+                <td class="px-6 py-4 text-sm text-gray-500">STEM</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Completed
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Investigative, Realistic, Artistic</td>
+                <td class="px-6 py-4 text-center">
+                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Availed
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <a href="student-profile.html?name=Dela%20Cruz%2C%20Juan%20Miguel&strand=STEM&status=Completed&riasec=Investigative%2C%20Realistic%2C%20Artistic&counseling=Availed" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
+                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
+                  </a>
+                </td>
+              </tr>
+
+              <tr class="student-row" data-name="santos, maria angela" data-strand="HUMSS" data-status="Completed" data-counseling="Availed">
+                <td class="px-6 py-4 text-sm text-gray-500">2</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Santos, Maria Angela</td>
+                <td class="px-6 py-4 text-sm text-gray-500">HUMSS</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Completed
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Social, Enterprising, Artistic</td>
+                <td class="px-6 py-4 text-center">
+                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Availed
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <a href="student-profile.html?name=Santos%2C%20Maria%20Angela&strand=HUMSS&status=Completed&riasec=Social%2C%20Enterprising%2C%20Artistic&counseling=Availed" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
+                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
+                  </a>
+                </td>
+              </tr>
+
+              <tr class="student-row" data-name="reyes, dominic paul" data-strand="ABM" data-status="In Progress" data-counseling="Did Not Avail">
+                <td class="px-6 py-4 text-sm text-gray-500">3</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Reyes, Dominic Paul</td>
+                <td class="px-6 py-4 text-sm text-gray-500">ABM</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 bg-[#eff6ff] border border-[#bfdbfe] text-blue-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-blue.svg" alt="" class="w-3 h-3"> In Progress
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Enterprising, Conventional, Realistic</td>
+                <td class="px-6 py-4 text-center">
+                  <span class="inline-flex items-center gap-1.5 bg-[#fef2f2] border border-[#fecaca] text-red-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-red.svg" alt="" class="w-3 h-3"> Did Not Avail
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <a href="student-profile.html?name=Reyes%2C%20Dominic%20Paul&strand=ABM&status=In%20Progress&riasec=Enterprising%2C%20Conventional%2C%20Realistic&counseling=Did%20Not%20Avail" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
+                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
+                  </a>
+                </td>
+              </tr>
+
+              <tr class="student-row" data-name="garcia, andrea nicole" data-strand="STEM" data-status="Completed" data-counseling="Availed">
+                <td class="px-6 py-4 text-sm text-gray-500">4</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Garcia, Andrea Nicole</td>
+                <td class="px-6 py-4 text-sm text-gray-500">STEM</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Completed
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Investigative, Artistic, Social</td>
+                <td class="px-6 py-4 text-center">
+                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Availed
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <a href="student-profile.html?name=Garcia%2C%20Andrea%20Nicole&strand=STEM&status=Completed&riasec=Investigative%2C%20Artistic%2C%20Social&counseling=Availed" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
+                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
+                  </a>
+                </td>
+              </tr>
+
+              <tr class="student-row" data-name="torres, nathaniel" data-strand="TVL (ICT)" data-status="In Progress" data-counseling="">
+                <td class="px-6 py-4 text-sm text-gray-500">5</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Torres, Nathaniel</td>
+                <td class="px-6 py-4 text-sm text-gray-500">TVL (ICT)</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 bg-[#eff6ff] border border-[#bfdbfe] text-blue-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-blue.svg" alt="" class="w-3 h-3"> In Progress
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Realistic, Investigative, Conventional</td>
+                <td class="px-6 py-4 text-center text-gray-400">—</td>
+                <td class="px-6 py-4 text-center">
+                  <a href="student-profile.html?name=Torres%2C%20Nathaniel&strand=TVL%20(ICT)&status=In%20Progress&riasec=Realistic%2C%20Investigative%2C%20Conventional&counseling=" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
+                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
+                  </a>
+                </td>
+              </tr>
+
+              <tr class="student-row" data-name="lim, patricia mae" data-strand="HUMSS" data-status="Pending" data-counseling="">
+                <td class="px-6 py-4 text-sm text-gray-500">6</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Lim, Patricia Mae</td>
+                <td class="px-6 py-4 text-sm text-gray-500">HUMSS</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 bg-[#fff7ed] border border-[#fed7aa] text-amber-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-orange.svg" alt="" class="w-3 h-3"> Pending
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Social, Artistic, Enterprising</td>
+                <td class="px-6 py-4 text-center text-gray-400">—</td>
+                <td class="px-6 py-4 text-center">
+                  <a href="student-profile.html?name=Lim%2C%20Patricia%20Mae&strand=HUMSS&status=Pending&riasec=Social%2C%20Artistic%2C%20Enterprising&counseling=" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
+                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
+                  </a>
+                </td>
+              </tr>
+
+              <tr class="student-row" data-name="bautista, kyle andrew" data-strand="STEM" data-status="Completed" data-counseling="Availed">
+                <td class="px-6 py-4 text-sm text-gray-500">7</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Bautista, Kyle Andrew</td>
+                <td class="px-6 py-4 text-sm text-gray-500">STEM</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Completed
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Investigative, Realistic, Conventional</td>
+                <td class="px-6 py-4 text-center">
+                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Availed
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <a href="student-profile.html?name=Bautista%2C%20Kyle%20Andrew&strand=STEM&status=Completed&riasec=Investigative%2C%20Realistic%2C%20Conventional&counseling=Availed" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
+                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
+                  </a>
+                </td>
+              </tr>
+
+              <tr class="student-row" data-name="navarro, angelica" data-strand="ABM" data-status="In Progress" data-counseling="Did Not Avail">
+                <td class="px-6 py-4 text-sm text-gray-500">8</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Navarro, Angelica</td>
+                <td class="px-6 py-4 text-sm text-gray-500">ABM</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center gap-1.5 bg-[#eff6ff] border border-[#bfdbfe] text-blue-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-blue.svg" alt="" class="w-3 h-3"> In Progress
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Enterprising, Conventional, Social</td>
+                <td class="px-6 py-4 text-center">
+                  <span class="inline-flex items-center gap-1.5 bg-[#fef2f2] border border-[#fecaca] text-red-500 text-xs font-medium px-3 py-1 rounded-full">
+                    <img src="images/admin/dot-red.svg" alt="" class="w-3 h-3"> Did Not Avail
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <a href="student-profile.html?name=Navarro%2C%20Angelica&strand=ABM&status=In%20Progress&riasec=Enterprising%2C%20Conventional%2C%20Social&counseling=Did%20Not%20Avail" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
+                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
+                  </a>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+
+        <div class="border-t border-gray-200 flex items-center justify-between px-6 py-4 flex-wrap gap-3">
+          <p class="text-sm text-gray-500">
+            Showing <span class="font-medium text-gray-900">1</span> to <span class="font-medium text-gray-900" id="visibleCount">8</span> of <span class="font-medium text-gray-900">1,248</span> students
+          </p>
+          <div class="flex items-center gap-1" id="pagination">
+            <button type="button" id="pagePrev" class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50">
+              <img src="images/admin/icon-chevron-left.svg" alt="Previous" class="w-1.5 h-2.5">
+            </button>
+            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md bg-[#ed1c24] border border-[#ed1c24] text-white text-sm font-medium">1</button>
+            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">2</button>
+            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">3</button>
+            <span class="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>
+            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">156</button>
+            <button type="button" id="pageNext" class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50">
+              <img src="images/admin/icon-chevron-right.svg" alt="Next" class="w-1.5 h-2.5">
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  function toggleDropdown(panel, ...others) {
+    others.forEach(p => p.classList.add('hidden'));
+    panel.classList.toggle('hidden');
+  }
+
+  const notifBtn = document.getElementById('notifBtn');
+  const notifPanel = document.getElementById('notifPanel');
+  const profileBtn = document.getElementById('profileBtn');
+  const profilePanel = document.getElementById('profilePanel');
+  const filterBtn = document.getElementById('filterBtn');
+  const filterPanel = document.getElementById('filterPanel');
+
+  notifBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleDropdown(notifPanel, profilePanel, filterPanel);
+  });
+  profileBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleDropdown(profilePanel, notifPanel, filterPanel);
+  });
+  filterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleDropdown(filterPanel, notifPanel, profilePanel);
+  });
+  document.addEventListener('click', () => {
+    notifPanel.classList.add('hidden');
+    profilePanel.classList.add('hidden');
+    filterPanel.classList.add('hidden');
+  });
+  filterPanel.addEventListener('click', (e) => e.stopPropagation());
+
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('hidden');
+  });
+
+  // Search + filter
+  const searchInput = document.getElementById('studentSearch');
+  const rows = Array.from(document.querySelectorAll('.student-row'));
+  const noResults = document.getElementById('noResults');
+  const visibleCount = document.getElementById('visibleCount');
+
+  function applyFilters() {
+    const q = searchInput.value.trim().toLowerCase();
+    const strand = document.getElementById('filterStrand').value;
+    const status = document.getElementById('filterStatus').value;
+    const counseling = document.getElementById('filterCounseling').value;
+    let shown = 0;
+
+    rows.forEach(row => {
+      const matchesSearch = !q || row.dataset.name.includes(q);
+      const matchesStrand = !strand || row.dataset.strand === strand;
+      const matchesStatus = !status || row.dataset.status === status;
+      const matchesCounseling = !counseling || row.dataset.counseling === counseling;
+      const visible = matchesSearch && matchesStrand && matchesStatus && matchesCounseling;
+      row.classList.toggle('hidden', !visible);
+      if (visible) shown++;
+    });
+
+    noResults.classList.toggle('hidden', shown !== 0);
+    visibleCount.textContent = shown;
+  }
+
+  searchInput.addEventListener('input', applyFilters);
+  document.getElementById('applyFilters').addEventListener('click', () => {
+    applyFilters();
+    filterPanel.classList.add('hidden');
+  });
+  document.getElementById('clearFilters').addEventListener('click', () => {
+    document.getElementById('filterStrand').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterCounseling').value = '';
+    searchInput.value = '';
+    applyFilters();
+  });
+
+  // Pagination (visual state — data is static in this prototype)
+  document.querySelectorAll('.page-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.page-btn').forEach(b => {
+        b.classList.remove('bg-[#ed1c24]', 'border-[#ed1c24]', 'text-white');
+        b.classList.add('border-gray-300', 'text-gray-700');
+      });
+      btn.classList.remove('border-gray-300', 'text-gray-700');
+      btn.classList.add('bg-[#ed1c24]', 'border-[#ed1c24]', 'text-white');
+    });
+  });
+</script>
+
+</body>
+</html>

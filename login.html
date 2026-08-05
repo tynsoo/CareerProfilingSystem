@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerPath Login</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<div class="relative flex flex-col items-start justify-center min-h-screen overflow-hidden">
+
+  <!-- Background photo + triangle accents -->
+  <div class="absolute inset-0">
+    <img src="images/login/campus-bg.png" alt="" class="absolute inset-0 w-full h-full object-cover">
+    <div class="absolute inset-0 bg-white/70"></div>
+    <div class="absolute bottom-0 left-0 w-[500px] h-[400px] pointer-events-none select-none" style="background:#081E3C; clip-path: polygon(0% 0%, 100% 100%, 0% 100%);"></div>
+    <img src="images/login/red-triangle.svg" alt="" class="absolute bottom-0 right-0 w-[640px] pointer-events-none select-none">
+  </div>
+
+  <div class="relative flex w-full min-h-screen">
+
+    <!-- Left: Branding -->
+    <div class="hidden md:flex flex-1 relative overflow-hidden">
+      <div class="relative m-auto max-w-md px-8">
+        <img src="images/login/cgc-logo-title.png" alt="Center for Guidance and Counseling — Mapúa MCL" class="w-[280px] mb-4">
+        <h1 class="text-[#001c43] text-3xl font-medium leading-tight">Career Profiling System</h1>
+        <div class="w-16 h-1 bg-[#ed1c24] mt-4 mb-4"></div>
+        <p class="text-[#001c43] text-lg leading-relaxed">
+          Empowering students. Guiding futures.
+          Data-driven insights for informed career decisions.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right: Login Card -->
+    <div class="flex flex-1 items-center justify-center p-8">
+      <div class="w-full max-w-[448px] bg-white border border-gray-100 rounded-xl shadow-2xl p-10 flex flex-col gap-6">
+
+        <!-- Header -->
+        <div class="flex flex-col items-center gap-1">
+          <img src="images/login/mmcl-crest.png" alt="Mapúa MCL crest" class="w-[140px] mb-2">
+          <h2 class="text-[#001c43] text-2xl font-bold text-center">Welcome back!</h2>
+          <p class="text-gray-500 text-sm text-center">
+            Sign in to continue to <span class="text-[#ed1c24] font-semibold">Career Profiling System</span>.
+          </p>
+        </div>
+
+        <!-- Form -->
+        <form action="login.php" method="POST" class="flex flex-col gap-5">
+
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-4">
+              <img src="images/login/icon-user.svg" alt="" class="w-full h-full">
+            </span>
+            <input
+              type="text"
+              name="username"
+              placeholder="Username or Email"
+              required
+              class="w-full pl-10 pr-3 py-3.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+          </div>
+
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-4">
+              <img src="images/login/icon-lock.svg" alt="" class="w-full h-full">
+            </span>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+              class="w-full pl-10 pr-10 py-3.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+            <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-4">
+              <img src="images/login/icon-eye.svg" alt="Toggle password visibility" class="w-full h-full">
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" name="remember" class="w-4 h-4 border-gray-300 rounded text-[#ed1c24] focus:ring-[#ed1c24]">
+              Remember me
+            </label>
+            <a href="forgot-password.html" class="text-sm font-medium text-[#ed1c24] hover:underline">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="w-full py-3.5 rounded-md bg-[#ed1c24] text-white text-sm font-medium shadow hover:opacity-90 transition">
+            Sign In
+          </button>
+        </form>
+
+        <!-- Footer -->
+        <p class="text-sm text-gray-500 text-center">
+          Need help? Contact your <span class="text-[#ed1c24]">system administrator</span>.
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.getElementById('togglePassword').addEventListener('click', function () {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
+</script>
+
+</body>
+</html>

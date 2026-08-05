@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics Dashboard — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+  select{ appearance:none; -webkit-appearance:none; }
+</style>
+</head>
+<body class="bg-[#f9fafb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-[256px] shrink-0 bg-[#001c43] flex flex-col">
+
+    <!-- Logo Area -->
+    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
+      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+      <p class="text-sm text-gray-500">Admin Dashboard</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
+      <div class="px-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
+            Student Information
+          </a>
+        </li>
+        <li>
+          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
+            Career Data Set
+          </a>
+        </li>
+        <li>
+          <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+            Analytics
+          </a>
+        </li>
+        <li>
+          <a href="monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
+            Monitoring
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-6 pt-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Security &amp; System</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="security-configuration.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
+            Security Configuration
+          </a>
+        </li>
+        <li>
+          <a href="audit-log.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
+            Audit Log
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
+      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+        <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0">
+      <button type="button" class="w-5 h-4">
+        <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-6">
+        <button type="button" class="relative w-5 h-5">
+          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+        </button>
+        <button type="button" class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+          </span>
+          <span class="text-left">
+            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+            <span class="block text-xs text-gray-500">Administrator</span>
+          </span>
+          <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <!-- Page Header -->
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Analytics Dashboard</h1>
+          <p class="text-sm text-slate-500 mt-1">Insights and trends based on student assessments and career profiling data.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <img src="images/analytics/icon-calendar.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-[21px] h-[21px]">
+            <select class="appearance-none bg-white border border-slate-300 rounded-md pl-10 pr-9 py-2.5 text-sm font-medium text-slate-700">
+              <option>School Year 2025-2026</option>
+              <option>School Year 2024-2025</option>
+            </select>
+            <img src="images/analytics/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-4 pointer-events-none">
+          </div>
+          <button type="button" class="flex items-center gap-2 bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            <img src="images/analytics/icon-filter.svg" alt="" class="w-3.5 h-3">
+            Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Metric Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative flex flex-col justify-between">
+          <img src="images/analytics/icon-info.svg" alt="" class="absolute top-4 right-4 w-4 h-4">
+          <div>
+            <div class="flex gap-4 items-start mb-4">
+              <span class="w-12 h-12 rounded-lg bg-[#eef3fc] flex items-center justify-center shrink-0">
+                <img src="images/analytics/card-icon-assessment.svg" alt="" class="w-4 h-5">
+              </span>
+              <div>
+                <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Assessment<br>Completion Rate</p>
+                <p class="text-[30px] font-bold text-[#19427b] leading-tight mt-1">74.7%</p>
+              </div>
+            </div>
+            <p class="text-sm mb-4"><span class="font-semibold text-[#19427b]">932</span> <span class="text-slate-500">of 1,248 students</span></p>
+            <div class="w-full h-1.5 rounded-full bg-slate-100 mb-4">
+              <div class="h-1.5 rounded-full bg-[#19427b]" style="width:74.7%"></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <img src="images/analytics/icon-trend-up.svg" alt="" class="w-2.5 h-2.5">
+            <p class="text-xs"><span class="font-semibold text-slate-700">8.6%</span> <span class="text-slate-500">vs. SY 2024-2025</span></p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative flex flex-col justify-between">
+          <img src="images/analytics/icon-info.svg" alt="" class="absolute top-4 right-4 w-4 h-4">
+          <div>
+            <div class="flex gap-4 items-start mb-4">
+              <span class="w-12 h-12 rounded-lg bg-[#e6f3eb] flex items-center justify-center shrink-0">
+                <img src="images/analytics/card-icon-counseling.svg" alt="" class="w-6 h-5">
+              </span>
+              <div>
+                <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Counseling Availment<br>Rate</p>
+                <p class="text-[30px] font-bold text-[#1b8a47] leading-tight mt-1">30.8%</p>
+              </div>
+            </div>
+            <p class="text-sm mb-4"><span class="font-semibold text-[#1b8a47]">384</span> <span class="text-slate-500">of 1,248 students</span></p>
+            <div class="w-full h-1.5 rounded-full bg-slate-100 mb-4">
+              <div class="h-1.5 rounded-full bg-[#1b8a47]" style="width:30.8%"></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <img src="images/analytics/icon-trend-up.svg" alt="" class="w-2.5 h-2.5">
+            <p class="text-xs"><span class="font-semibold text-slate-700">5.4%</span> <span class="text-slate-500">vs. SY 2024-2025</span></p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative flex flex-col justify-between">
+          <img src="images/analytics/icon-info.svg" alt="" class="absolute top-4 right-4 w-4 h-4">
+          <div>
+            <div class="flex gap-4 items-start mb-4">
+              <span class="w-12 h-12 rounded-lg bg-[#fbece1] flex items-center justify-center shrink-0">
+                <img src="images/analytics/card-icon-institution.svg" alt="" class="w-5 h-5">
+              </span>
+              <div>
+                <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Students Considering<br>MMCL Programs</p>
+                <p class="text-[30px] font-bold text-[#db7020] leading-tight mt-1">62.3%</p>
+              </div>
+            </div>
+            <p class="text-sm mb-4"><span class="font-semibold text-[#db7020]">777</span> <span class="text-slate-500">of 1,248 students</span></p>
+            <div class="w-full h-1.5 rounded-full bg-slate-100 mb-4">
+              <div class="h-1.5 rounded-full bg-[#db7020]" style="width:62.3%"></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <img src="images/analytics/icon-trend-up.svg" alt="" class="w-2.5 h-2.5">
+            <p class="text-xs"><span class="font-semibold text-slate-700">6.1%</span> <span class="text-slate-500">vs. SY 2024-2025</span></p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative">
+          <img src="images/analytics/icon-info.svg" alt="" class="absolute top-4 right-4 w-4 h-4">
+          <div class="flex gap-4 items-start mb-2">
+            <span class="w-12 h-12 rounded-lg bg-[#eee8f7] flex items-center justify-center shrink-0">
+              <img src="images/analytics/card-icon-strand.svg" alt="" class="w-6 h-4">
+            </span>
+            <div>
+              <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Top Strand</p>
+              <p class="text-[30px] font-bold text-[#673ab7] leading-tight mt-1">STEM</p>
+            </div>
+          </div>
+          <p class="text-sm"><span class="font-semibold text-[#673ab7]">28.9%</span> <span class="text-slate-500">of total students</span></p>
+          <p class="text-xs text-slate-400">(361 students)</p>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Students by Strand</p>
+          <img src="images/analytics/chart-strand.png" alt="Students by Strand bar chart" class="w-full h-auto">
+          <div class="border-t border-slate-100 pt-4 mt-4">
+            <p class="text-sm text-slate-500">Total Students: 1,248</p>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Average RIASEC Dimension Scores</p>
+          <img src="images/analytics/chart-riasec.png" alt="Average RIASEC Dimension Scores bar chart" class="w-full h-auto">
+          <div class="border-t border-slate-100 pt-4 mt-4 text-center">
+            <p class="text-sm text-slate-500">Scores range from 0 to 100</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended Careers Table -->
+      <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="border-b border-slate-200 px-5 py-5">
+          <p class="text-[11px] font-semibold tracking-wide text-slate-800 uppercase">Top 5 Recommended Careers (Institution-Wide)</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[900px]">
+            <thead class="bg-slate-50/50">
+              <tr>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">#</th>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">Career</th>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">Students Matched</th>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">% of Total Students</th>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">Trend vs. Last SY</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="px-5 py-4 text-sm text-slate-600">1</td>
+                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Information Technology Specialist</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-3">
+                  <span class="text-sm text-slate-600 w-8">210</span>
+                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:85%"></div></div>
+                </div></td>
+                <td class="px-5 py-4 text-sm text-slate-600">16.8%</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
+                  <img src="images/analytics/icon-trend-up-table.svg" alt="" class="w-2 h-2.5">
+                  <span class="text-sm font-medium text-[#1b8a47]">12.4%</span>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="px-5 py-4 text-sm text-slate-600">2</td>
+                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Psychologist</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-3">
+                  <span class="text-sm text-slate-600 w-8">184</span>
+                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:75%"></div></div>
+                </div></td>
+                <td class="px-5 py-4 text-sm text-slate-600">14.7%</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
+                  <img src="images/analytics/icon-trend-up-table.svg" alt="" class="w-2 h-2.5">
+                  <span class="text-sm font-medium text-[#1b8a47]">8.7%</span>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="px-5 py-4 text-sm text-slate-600">3</td>
+                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Software Developer</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-3">
+                  <span class="text-sm text-slate-600 w-8">176</span>
+                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:70%"></div></div>
+                </div></td>
+                <td class="px-5 py-4 text-sm text-slate-600">14.1%</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
+                  <img src="images/analytics/icon-trend-up-table.svg" alt="" class="w-2 h-2.5">
+                  <span class="text-sm font-medium text-[#1b8a47]">10.2%</span>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="px-5 py-4 text-sm text-slate-600">4</td>
+                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Data Analyst</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-3">
+                  <span class="text-sm text-slate-600 w-8">142</span>
+                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:58%"></div></div>
+                </div></td>
+                <td class="px-5 py-4 text-sm text-slate-600">11.4%</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
+                  <img src="images/analytics/icon-trend-up-table.svg" alt="" class="w-2 h-2.5">
+                  <span class="text-sm font-medium text-[#1b8a47]">6.5%</span>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="px-5 py-4 text-sm text-slate-600">5</td>
+                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Civil Engineer</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-3">
+                  <span class="text-sm text-slate-600 w-8">128</span>
+                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:50%"></div></div>
+                </div></td>
+                <td class="px-5 py-4 text-sm text-slate-600">10.3%</td>
+                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
+                  <img src="images/analytics/icon-trend-down-table.svg" alt="" class="w-2 h-2.5">
+                  <span class="text-sm font-medium text-[#ed1c24]">-3.1%</span>
+                </div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="border-t border-slate-200 flex items-center justify-between px-4 py-4">
+          <p class="text-sm text-slate-500">Showing top 5 of 25 careers</p>
+          <a href="#" class="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-[#ed1c24]">
+            View all careers
+            <img src="images/analytics/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
+          </a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

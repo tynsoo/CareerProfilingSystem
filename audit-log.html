@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Log — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="bg-[#f9fafb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-[256px] shrink-0 bg-[#001c43] flex flex-col">
+
+    <!-- Logo Area -->
+    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
+      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+      <p class="text-sm text-gray-500">Admin Dashboard</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
+      <div class="px-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
+            Student Information
+          </a>
+        </li>
+        <li>
+          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
+            Career Data Set
+          </a>
+        </li>
+        <li>
+          <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+            Analytics
+          </a>
+        </li>
+        <li>
+          <a href="monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
+            Monitoring
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-6 pt-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Security &amp; System</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="security-configuration.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
+            Security Configuration
+          </a>
+        </li>
+        <li>
+          <a href="audit-log.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
+            Audit Log
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
+      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+        <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0">
+      <button type="button" class="w-5 h-4">
+        <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-6">
+        <button type="button" class="relative w-5 h-5">
+          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+        </button>
+        <button type="button" class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+          </span>
+          <span class="text-left">
+            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+            <span class="block text-xs text-gray-500">Administrator</span>
+          </span>
+          <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <!-- Page Header -->
+      <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Audit Log</h1>
+          <p class="text-sm text-gray-500 mt-1">Track system activities and changes for security and compliance.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button type="button" class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm">
+            May 20, 2025 - May 27, 2025
+            <img src="images/audit/icon-calendar.svg" alt="" class="w-4 h-4">
+          </button>
+          <button type="button" class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm">
+            <img src="images/audit/icon-filter.svg" alt="" class="w-4 h-4">
+            Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-[21px] flex items-start gap-4">
+          <span class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+            <img src="images/audit/card-icon-total.svg" alt="" class="w-6 h-6">
+          </span>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Total Activities</p>
+            <p class="text-3xl font-bold text-gray-900">1,248</p>
+            <p class="text-xs mt-1"><span class="text-green-600 font-medium">↑ 12.4%</span> <span class="text-gray-400">vs. May 13 - May 19, 2025</span></p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-[21px] flex items-start gap-4">
+          <span class="w-[50px] h-[50px] rounded-lg bg-green-50 border border-green-100 flex items-center justify-center shrink-0">
+            <img src="images/audit/card-icon-success.svg" alt="" class="w-6 h-6">
+          </span>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Successful</p>
+            <p class="text-3xl font-bold text-gray-900">1,186</p>
+            <p class="text-xs mt-1"><span class="text-green-600 font-medium">95.0%</span> <span class="text-gray-400">of total</span></p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-[21px] flex items-start gap-4">
+          <span class="w-[50px] h-[50px] rounded-lg bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+            <img src="images/audit/card-icon-failed.svg" alt="" class="w-6 h-6">
+          </span>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Failed</p>
+            <p class="text-3xl font-bold text-gray-900">62</p>
+            <p class="text-xs mt-1"><span class="text-red-600 font-medium">5.0%</span> <span class="text-gray-400">of total</span></p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-[21px] flex items-start gap-4">
+          <span class="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+            <img src="images/audit/card-icon-users.svg" alt="" class="w-6 h-6">
+          </span>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Users Active</p>
+            <p class="text-3xl font-bold text-gray-900">24</p>
+            <p class="text-xs mt-1"><span class="text-green-600 font-medium">↑ 9.1%</span> <span class="text-gray-400">vs. previous 7 days</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table Section -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+
+        <div class="border-b border-gray-200 flex items-center justify-between px-4 py-4 flex-wrap gap-3">
+          <div class="relative flex-1 max-w-[448px]">
+            <img src="images/audit/icon-search.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4">
+            <input type="text" placeholder="Search logs..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+          </div>
+          <button type="button" class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm">
+            <img src="images/audit/icon-export.svg" alt="" class="w-4 h-4">
+            Export
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[1200px]">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th class="px-6 py-3 text-xs font-semibold text-gray-500">
+                  <span class="flex items-center gap-1.5">Timestamp <span class="text-gray-400">⇅</span></span>
+                </th>
+                <th class="px-6 py-3 text-xs font-semibold text-gray-500">User</th>
+                <th class="px-6 py-3 text-xs font-semibold text-gray-500">Role</th>
+                <th class="px-6 py-3 text-xs font-semibold text-gray-500">Action</th>
+                <th class="px-6 py-3 text-xs font-semibold text-gray-500">Module / Affected Data</th>
+                <th class="px-6 py-3 text-xs font-semibold text-gray-500">IP Address</th>
+                <th class="px-6 py-3 text-xs font-semibold text-gray-500">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 10:24:35 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Admin User</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Administrator</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Logged in</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Authentication</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.10</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 10:18:12 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Juan Dela Cruz</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Guidance Counselor</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Updated student profile</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Student Information</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.25</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 10:15:47 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Maria Santos</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Data Manager</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Imported career data set</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Career Data Set</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.32</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:58:03 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Kyle Reyes</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Guidance Counselor</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Marked assessment as completed</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Assessments</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.25</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:47:21 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Admin User</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Administrator</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Created new user account</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">User Management</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.10</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:35:10 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Maria Santos</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Data Manager</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Deleted career data</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Career Data Set</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.32</td>
+                <td class="px-6 py-4"><span class="bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded-full">Failed</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:31:45 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Juan Dela Cruz</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Guidance Counselor</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Viewed student report</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Reports</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.25</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:21:34 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">System</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">System</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Scheduled backup executed</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">System</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">127.0.0.1</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:10:11 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Kyle Reyes</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Guidance Counselor</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Updated counseling status</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Counseling</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.25</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:02:55 AM</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Unknown</td>
+                <td class="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">—</td>
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Failed login attempt</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Authentication</td>
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.50</td>
+                <td class="px-6 py-4"><span class="bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded-full">Failed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="border-t border-gray-200 flex items-center justify-between px-6 py-4 flex-wrap gap-3">
+          <p class="text-sm text-gray-700">Showing 1 to 10 of 1,248 logs</p>
+          <div class="flex items-center gap-1">
+            <button type="button" class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md">
+              <img src="images/audit/icon-page-prev.svg" alt="Previous" class="w-1.5 h-2.5">
+            </button>
+            <button type="button" class="w-9 h-9 flex items-center justify-center rounded-md bg-[#ed1c24] text-white text-sm">1</button>
+            <button type="button" class="w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm">2</button>
+            <button type="button" class="w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm">3</button>
+            <span class="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>
+            <button type="button" class="w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm">125</button>
+            <button type="button" class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md">
+              <img src="images/audit/icon-page-next.svg" alt="Next" class="w-1.5 h-2.5">
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Info Box -->
+      <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start gap-3 mt-6">
+        <img src="images/audit/icon-info.svg" alt="" class="w-5 h-5 shrink-0">
+        <p class="text-sm text-blue-800">Audit logs are retained for 365 days in accordance with data privacy and institutional security policies.</p>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

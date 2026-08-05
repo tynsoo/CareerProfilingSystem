@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Dataset — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+  select{ appearance:none; -webkit-appearance:none; }
+</style>
+</head>
+<body class="bg-[#f9fafb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-[256px] shrink-0 bg-[#001c43] flex flex-col">
+
+    <!-- Logo Area -->
+    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
+      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+      <p class="text-sm text-gray-500">Admin Dashboard</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
+      <div class="px-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
+            Student Information
+          </a>
+        </li>
+        <li>
+          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
+            Career Data Set
+          </a>
+        </li>
+        <li>
+          <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+            Analytics
+          </a>
+        </li>
+        <li>
+          <a href="monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
+            Monitoring
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-6 pt-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Security &amp; System</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="security-configuration.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
+            Security Configuration
+          </a>
+        </li>
+        <li>
+          <a href="audit-log.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
+            Audit Log
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
+      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+        <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0">
+      <button type="button" class="w-5 h-4">
+        <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-6">
+        <button type="button" class="relative w-5 h-5">
+          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+        </button>
+        <button type="button" class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+          </span>
+          <span class="text-left">
+            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+            <span class="block text-xs text-gray-500">Administrator</span>
+          </span>
+          <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <!-- Page Header -->
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Career Dataset</h1>
+          <p class="text-sm text-slate-500 mt-1">Manage the career knowledge base used for student career recommendations.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <img src="images/admin/icon-search2.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4">
+            <input type="text" placeholder="Search careers..." class="w-64 pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+          </div>
+          <button type="button" class="flex items-center gap-2 bg-[#ed1c24] text-white rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm hover:opacity-90">
+            <span class="font-black">+</span> Add Career
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-6 flex items-center gap-5">
+          <span class="w-14 h-14 rounded-lg bg-[#eff6ff] flex items-center justify-center shrink-0">
+            <img src="images/admin/card-icon-briefcase.svg" alt="" class="w-6 h-6">
+          </span>
+          <div>
+            <p class="text-sm font-medium text-slate-500">Total Careers</p>
+            <p class="text-3xl font-bold text-slate-900">126</p>
+            <p class="text-xs text-slate-500">Active careers in the system</p>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-6 flex items-center gap-5">
+          <span class="w-14 h-14 rounded-lg bg-[#f0fdf4] flex items-center justify-center shrink-0">
+            <img src="images/admin/card-icon-graduation.svg" alt="" class="w-7 h-5">
+          </span>
+          <div>
+            <p class="text-sm font-medium text-slate-500">MMCL Programs</p>
+            <p class="text-3xl font-bold text-slate-900">18</p>
+            <p class="text-xs text-slate-500">Related degree programs</p>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-6 flex items-center gap-5">
+          <span class="w-14 h-14 rounded-lg bg-[#faf5ff] flex items-center justify-center shrink-0">
+            <img src="images/admin/card-icon-department.svg" alt="" class="w-4 h-6">
+          </span>
+          <div>
+            <p class="text-sm font-medium text-slate-500">Departments</p>
+            <p class="text-3xl font-bold text-slate-900">5</p>
+            <p class="text-xs text-slate-500">Academic departments</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Data Section -->
+      <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+
+        <!-- Filters Bar -->
+        <div class="border-b border-slate-200 px-5 py-5 flex items-end justify-between flex-wrap gap-4">
+          <div class="flex items-start gap-4 flex-wrap">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-slate-600">Department</label>
+              <div class="relative">
+                <select class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[162px]">
+                  <option>All Departments</option>
+                  <option>CCIS</option>
+                  <option>MITL</option>
+                  <option>CON</option>
+                  <option>ETYCB</option>
+                  <option>CAS</option>
+                </select>
+                <img src="images/admin/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-1.5 pointer-events-none">
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-slate-600">MMCL Program</label>
+              <div class="relative">
+                <select class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[139px]">
+                  <option>All Programs</option>
+                </select>
+                <img src="images/admin/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-1.5 pointer-events-none">
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-slate-600">RIASEC Code</label>
+              <div class="relative">
+                <select class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[121px]">
+                  <option>All Codes</option>
+                  <option>R</option><option>I</option><option>A</option>
+                  <option>S</option><option>E</option><option>C</option>
+                </select>
+                <img src="images/admin/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-1.5 pointer-events-none">
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-slate-600">Status</label>
+              <div class="relative">
+                <select class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[117px]">
+                  <option>All Status</option>
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select>
+                <img src="images/admin/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-1.5 pointer-events-none">
+              </div>
+            </div>
+          </div>
+          <button type="button" class="flex items-center gap-2 border border-slate-300 rounded-md px-4 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50">
+            <img src="images/admin/icon-clear-filters.svg" alt="" class="w-4 h-3.5">
+            Clear Filters
+          </button>
+        </div>
+
+        <!-- Data Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[1000px]">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Career Title</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">RIASEC Code</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Related MMCL Program</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Department</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Status</th>
+                <th class="px-6 py-4"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+
+              <tr>
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Information Technology Specialist</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">I</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">R</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">C</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BS Information Technology</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">CCIS</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">Active</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+              <tr>
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Civil Engineer</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">R</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">I</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">C</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BS Civil Engineering</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#fee2e2] text-[#dc2626] text-xs font-medium px-3 py-1 rounded-full">MITL</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">Active</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+              <tr>
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Registered Nurse</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">S</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">I</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">A</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BS Nursing</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#fef9c3] text-[#ca8a04] text-xs font-medium px-3 py-1 rounded-full">CON</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">Active</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+              <tr>
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Accountant</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">C</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">I</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">E</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BS Accountancy</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#f3e8ff] text-[#9333ea] text-xs font-medium px-3 py-1 rounded-full">ETYCB</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">Active</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+              <tr>
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Psychologist</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">S</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">I</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">A</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BS Psychology</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#e0e7ff] text-[#4f46e5] text-xs font-medium px-3 py-1 rounded-full">CAS</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">Active</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+              <tr class="opacity-60">
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Mechanical Engineer</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">R</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">I</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">C</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BS Mechanical Engineering</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#fee2e2] text-[#dc2626] text-xs font-medium px-3 py-1 rounded-full">MITL</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-slate-100 text-slate-500 text-xs font-medium px-3 py-1 rounded-full">Inactive</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+              <tr>
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Architect</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">R</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">I</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">A</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BS Architecture</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#fee2e2] text-[#dc2626] text-xs font-medium px-3 py-1 rounded-full">MITL</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">Active</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+              <tr>
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Elementary Teacher</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">S</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">A</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">E</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BEEd Elementary Education</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#e0e7ff] text-[#4f46e5] text-xs font-medium px-3 py-1 rounded-full">CAS</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">Active</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+              <tr>
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Entrepreneur</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">E</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">R</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">I</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BS Entrepreneurship</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#f3e8ff] text-[#9333ea] text-xs font-medium px-3 py-1 rounded-full">ETYCB</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">Active</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+              <tr>
+                <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">Data Analyst</td>
+                <td class="px-6 py-4"><div class="flex gap-1.5">
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">I</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">C</span>
+                  <span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">R</span>
+                </div></td>
+                <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">BS Data Science</td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">CCIS</span></td>
+                <td class="px-6 py-4"><span class="inline-block bg-[#dcfce7] text-[#16a34a] text-xs font-medium px-3 py-1 rounded-full">Active</span></td>
+                <td class="px-6 py-4"><div class="flex items-center gap-3">
+                  <button type="button"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+                  <button type="button"><img src="images/admin/icon-row-delete.svg" alt="More" class="w-1 h-3"></button>
+                </div></td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="border-t border-slate-200 flex items-center justify-between px-6 py-4 flex-wrap gap-3">
+          <p class="text-sm text-slate-600">
+            Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">126</span> careers
+          </p>
+          <div class="flex items-center gap-1">
+            <button type="button" class="w-9 h-9 flex items-center justify-center border border-slate-300 rounded-md">
+              <img src="images/admin/icon-page-prev.svg" alt="Previous" class="w-1.5 h-2.5">
+            </button>
+            <button type="button" class="w-9 h-9 flex items-center justify-center rounded-md bg-[#ed1c24] border border-[#ed1c24] text-white text-sm font-medium">1</button>
+            <button type="button" class="w-9 h-9 flex items-center justify-center rounded-md border border-slate-300 text-slate-700 text-sm font-medium">2</button>
+            <button type="button" class="w-9 h-9 flex items-center justify-center rounded-md border border-slate-300 text-slate-700 text-sm font-medium">3</button>
+            <span class="w-9 h-9 flex items-center justify-center text-slate-500 text-sm">...</span>
+            <button type="button" class="w-9 h-9 flex items-center justify-center rounded-md border border-slate-300 text-slate-700 text-sm font-medium">12</button>
+            <button type="button" class="w-9 h-9 flex items-center justify-center border border-slate-300 rounded-md">
+              <img src="images/admin/icon-page-next.svg" alt="Next" class="w-1.5 h-2.5">
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

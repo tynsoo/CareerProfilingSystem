@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Profile — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="bg-[#f9fafb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-[256px] shrink-0 bg-[#001c43] flex flex-col">
+
+    <!-- Logo Area -->
+    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
+      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+      <p class="text-sm text-gray-500">Admin Dashboard</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
+      <div class="px-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
+            Student Information
+          </a>
+        </li>
+        <li>
+          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
+            Career Data Set
+          </a>
+        </li>
+        <li>
+          <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+            Analytics
+          </a>
+        </li>
+        <li>
+          <a href="monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
+            Monitoring
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-6 pt-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Security &amp; System</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="security-configuration.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
+            Security Configuration
+          </a>
+        </li>
+        <li>
+          <a href="audit-log.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
+            Audit Log
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
+      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+        <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0">
+      <button type="button" class="w-5 h-4" onclick="history.back()">
+        <img src="images/admin/icon-menu.svg" alt="Back" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-6">
+        <button type="button" class="relative w-5 h-5">
+          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+        </button>
+        <a href="profile.html" class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+          </span>
+          <span class="text-left">
+            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+            <span class="block text-xs text-gray-500">Administrator</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <div class="mb-8">
+        <a href="admin-dashboard.html" class="text-sm text-gray-500 hover:text-[#ed1c24]">&larr; Back to Dashboard</a>
+        <h1 class="text-2xl font-bold text-gray-900 mt-2" id="studentName">Student Profile</h1>
+        <p class="text-sm text-gray-500 mt-1" id="studentId">Student ID: —</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-4xl">
+
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col items-center text-center">
+          <span class="w-24 h-24 rounded-full bg-[#001c43] flex items-center justify-center mb-4">
+            <img src="images/admin/icon-avatar.svg" alt="" class="w-8 h-9">
+          </span>
+          <p class="text-base font-semibold text-gray-900" id="avatarName">—</p>
+          <p class="text-sm text-gray-500" id="avatarStrand">—</p>
+        </div>
+
+        <form id="studentForm" class="lg:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col gap-5">
+          <h2 class="text-base font-semibold text-gray-900">Assessment Details</h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Strand</label>
+              <input type="text" id="strandField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Assessment Status</label>
+              <select id="statusField" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+                <option>Completed</option>
+                <option>In Progress</option>
+                <option>Pending</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-gray-600 mb-1">Top 3 RIASEC</label>
+              <input type="text" id="riasecField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Counseling Status</label>
+              <select id="counselingField" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+                <option value="">Not applicable</option>
+                <option>Availed</option>
+                <option>Did Not Avail</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="saveMessage" class="hidden bg-green-50 border border-green-200 text-green-700 text-sm rounded-md px-4 py-2.5">Student record updated.</div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Save Changes</button>
+            <a href="admin-dashboard.html" class="border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-5 py-2.5 hover:bg-gray-50">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const name = params.get('name') || 'Unknown Student';
+  const strand = params.get('strand') || '—';
+  const status = params.get('status') || 'Pending';
+  const riasec = params.get('riasec') || '—';
+  const counseling = params.get('counseling') || '';
+
+  document.getElementById('studentName').textContent = name;
+  document.getElementById('avatarName').textContent = name;
+  document.getElementById('avatarStrand').textContent = strand;
+  document.getElementById('strandField').value = strand;
+  document.getElementById('riasecField').value = riasec;
+  document.getElementById('studentId').textContent = 'Strand: ' + strand;
+
+  const statusSelect = document.getElementById('statusField');
+  if ([...statusSelect.options].some(o => o.value === status)) statusSelect.value = status;
+
+  const counselingSelect = document.getElementById('counselingField');
+  if ([...counselingSelect.options].some(o => o.value === counseling)) counselingSelect.value = counseling;
+
+  document.getElementById('studentForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('saveMessage');
+    msg.classList.remove('hidden');
+    setTimeout(() => msg.classList.add('hidden'), 3000);
+  });
+</script>
+
+</body>
+</html>

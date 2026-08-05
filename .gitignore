@@ -1,0 +1,19 @@
+# OS junk
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editor junk
+*.swp
+*.swo
+*~
+
+# Environment / secrets (if added later)
+.env
+.env.local
+
+# PHP dependency folder (if Composer is added later)
+vendor/
+
+# Logs
+*.log
