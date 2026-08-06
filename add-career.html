@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Career — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+  select{ appearance:none; -webkit-appearance:none; }
+</style>
+</head>
+<body class="bg-[#f9fafb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
+
+    <!-- Logo Area -->
+    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
+      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+      <p class="text-sm text-gray-500">Admin Dashboard</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
+      <div class="px-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
+            Student Information
+          </a>
+        </li>
+        <li>
+          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
+            Career Data Set
+          </a>
+        </li>
+        <li>
+          <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+            Analytics
+          </a>
+        </li>
+        <li>
+          <a href="monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
+            Monitoring
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-6 pt-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Security &amp; System</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="security-configuration.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
+            Security Configuration
+          </a>
+        </li>
+        <li>
+          <a href="audit-log.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
+            Audit Log
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
+      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+        <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0">
+      <button type="button" id="menuToggle" class="w-5 h-4">
+        <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-6">
+        <button type="button" class="relative w-5 h-5">
+          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+        </button>
+        <button type="button" class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+          </span>
+          <span class="text-left">
+            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+            <span class="block text-xs text-gray-500">Administrator</span>
+          </span>
+          <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <!-- Page Header -->
+      <div class="flex items-center gap-3 mb-6">
+        <a href="career-dataset.html" class="text-slate-400 hover:text-slate-600">
+          <img src="images/admin/icon-chevron-left.svg" alt="Back" class="w-2.5 h-4">
+        </a>
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Add Career</h1>
+          <p class="text-sm text-slate-500 mt-1">Add a new career to the career knowledge base.</p>
+        </div>
+      </div>
+
+      <div id="successBanner" class="hidden bg-[#dcfce7] text-[#16a34a] text-sm font-medium rounded-lg px-4 py-3 mb-6">
+        Career added successfully.
+      </div>
+
+      <form id="addCareerForm" class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 max-w-2xl flex flex-col gap-5">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-slate-600">Career Title <span class="text-[#ed1c24]">*</span></label>
+          <input type="text" id="titleInput" required placeholder="e.g. Software Engineer" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-slate-600">Related MMCL Program <span class="text-[#ed1c24]">*</span></label>
+          <input type="text" id="programInput" required placeholder="e.g. BS Computer Science" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium text-slate-600">Department <span class="text-[#ed1c24]">*</span></label>
+            <select id="departmentInput" required class="border border-slate-300 rounded-md px-3 py-2.5 text-sm">
+              <option value="">Select department</option>
+              <option>CCIS</option>
+              <option>MITL</option>
+              <option>CON</option>
+              <option>ETYCB</option>
+              <option>CAS</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium text-slate-600">Status</label>
+            <select id="statusInput" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm">
+              <option>Active</option>
+              <option>Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-slate-600">RIASEC Code <span class="text-[#ed1c24]">*</span> (choose up to 3)</label>
+          <div class="flex flex-wrap gap-4">
+            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="R"> R &mdash; Realistic</label>
+            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="I"> I &mdash; Investigative</label>
+            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="A"> A &mdash; Artistic</label>
+          </div>
+          <div class="flex flex-wrap gap-4">
+            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="S"> S &mdash; Social</label>
+            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="E"> E &mdash; Enterprising</label>
+            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="C"> C &mdash; Conventional</label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+          <a href="career-dataset.html" class="px-4 py-2.5 text-sm font-medium text-slate-600 rounded-md border border-slate-300 hover:bg-slate-50">Cancel</a>
+          <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Save Career</button>
+        </div>
+      </form>
+
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('hidden');
+  });
+
+  const STORAGE_KEY = 'careerDataset';
+
+  const DEFAULT_CAREERS = [
+    { id: 1, title: 'Information Technology Specialist', riasec: ['I', 'R', 'C'], program: 'BS Information Technology', department: 'CCIS', status: 'Active' },
+    { id: 2, title: 'Civil Engineer', riasec: ['R', 'I', 'C'], program: 'BS Civil Engineering', department: 'MITL', status: 'Active' },
+    { id: 3, title: 'Registered Nurse', riasec: ['S', 'I', 'A'], program: 'BS Nursing', department: 'CON', status: 'Active' },
+    { id: 4, title: 'Accountant', riasec: ['C', 'I', 'E'], program: 'BS Accountancy', department: 'ETYCB', status: 'Active' },
+    { id: 5, title: 'Psychologist', riasec: ['S', 'I', 'A'], program: 'BS Psychology', department: 'CAS', status: 'Active' },
+    { id: 6, title: 'Mechanical Engineer', riasec: ['R', 'I', 'C'], program: 'BS Mechanical Engineering', department: 'MITL', status: 'Inactive' },
+    { id: 7, title: 'Architect', riasec: ['R', 'I', 'A'], program: 'BS Architecture', department: 'MITL', status: 'Active' },
+    { id: 8, title: 'Elementary Teacher', riasec: ['S', 'A', 'E'], program: 'BEEd Elementary Education', department: 'CAS', status: 'Active' },
+    { id: 9, title: 'Entrepreneur', riasec: ['E', 'R', 'I'], program: 'BS Entrepreneurship', department: 'ETYCB', status: 'Active' },
+    { id: 10, title: 'Data Analyst', riasec: ['I', 'C', 'R'], program: 'BS Data Science', department: 'CCIS', status: 'Active' }
+  ];
+
+  function loadCareers() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch (e) { /* fall through to defaults */ }
+    return DEFAULT_CAREERS.slice();
+  }
+
+  function saveCareers(list) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+
+  const form = document.getElementById('addCareerForm');
+  const titleInput = document.getElementById('titleInput');
+  const programInput = document.getElementById('programInput');
+  const departmentInput = document.getElementById('departmentInput');
+  const statusInput = document.getElementById('statusInput');
+  const riasecChecks = () => Array.from(document.querySelectorAll('.riasec-check'));
+  const successBanner = document.getElementById('successBanner');
+
+  riasecChecks().forEach(chk => {
+    chk.addEventListener('change', () => {
+      const checked = riasecChecks().filter(c => c.checked);
+      if (checked.length > 3) chk.checked = false;
+    });
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const selectedRiasec = riasecChecks().filter(c => c.checked).map(c => c.value);
+    if (!titleInput.value.trim()) { alert('Career title is required.'); titleInput.focus(); return; }
+    if (!programInput.value.trim()) { alert('Related MMCL Program is required.'); programInput.focus(); return; }
+    if (!departmentInput.value) { alert('Please select a department.'); departmentInput.focus(); return; }
+    if (!selectedRiasec.length) { alert('Select at least one RIASEC code.'); return; }
+
+    const careers = loadCareers();
+    const nextId = careers.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
+
+    careers.push({
+      id: nextId,
+      title: titleInput.value.trim(),
+      program: programInput.value.trim(),
+      department: departmentInput.value,
+      status: statusInput.value,
+      riasec: selectedRiasec
+    });
+
+    saveCareers(careers);
+
+    successBanner.classList.remove('hidden');
+    form.classList.add('opacity-50', 'pointer-events-none');
+    setTimeout(() => { window.location.href = 'career-dataset.html'; }, 700);
+  });
+})();
+</script>
+
+</body>
+</html>

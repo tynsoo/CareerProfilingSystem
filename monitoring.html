@@ -17,7 +17,7 @@
 <div class="flex min-h-screen">
 
   <!-- Sidebar -->
-  <aside class="w-[256px] shrink-0 bg-[#001c43] flex flex-col">
+  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
 
     <!-- Logo Area -->
     <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
@@ -91,7 +91,7 @@
 
     <!-- Top Header -->
     <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0">
-      <button type="button" class="w-5 h-4">
+      <button type="button" id="menuToggle" class="w-5 h-4">
         <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
       </button>
       <div class="flex items-center gap-6">
@@ -151,7 +151,7 @@
               <p class="mt-1"><span class="text-3xl font-bold text-[#ed1c24]">18</span> <span class="text-sm text-slate-500">Students</span></p>
             </div>
           </div>
-          <a href="#" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
+          <a href="monitoring-details.html?tab=needs-review" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
             View all
             <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
           </a>
@@ -165,7 +165,7 @@
               <p class="mt-1"><span class="text-3xl font-bold text-[#001c43]">42</span> <span class="text-sm text-slate-500">Assessments</span></p>
             </div>
           </div>
-          <a href="#" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
+          <a href="monitoring-details.html?tab=completed" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
             View all
             <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
           </a>
@@ -179,7 +179,7 @@
               <p class="mt-1"><span class="text-3xl font-bold text-orange-500">71</span> <span class="text-sm text-slate-500">Students</span></p>
             </div>
           </div>
-          <a href="#" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
+          <a href="monitoring-details.html?tab=pending" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
             View all
             <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
           </a>
@@ -193,7 +193,7 @@
               <p class="mt-1"><span class="text-3xl font-bold text-green-600">12</span> <span class="text-sm text-slate-500">Students</span></p>
             </div>
           </div>
-          <a href="#" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
+          <a href="monitoring-details.html?tab=counseling" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
             View all
             <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
           </a>
@@ -213,10 +213,10 @@
               <p class="text-xs text-slate-500">Students whose recommendations require review.</p>
             </div>
           </div>
-          <button type="button" class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-md px-3.5 py-2 text-sm text-slate-600">
+          <a href="monitoring-details.html?tab=needs-review" class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-md px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-100">
             View All
             <img src="images/monitoring/icon-chevron-right2.svg" alt="" class="w-1.5 h-2.5">
-          </button>
+          </a>
         </div>
 
         <div class="overflow-x-auto">
@@ -233,7 +233,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-              <tr>
+              <tr data-student-id="2026-0001" data-student-name="Gomez, Gerome Grant" data-strand="STEM" data-career="Information Technology" data-match="52%" data-reason="Below minimum confidence threshold">
                 <td class="px-6 py-3">
                   <div class="flex items-center gap-3">
                     <img src="images/monitoring/avatar-1.png" alt="" class="w-8 h-8 rounded-full">
@@ -250,14 +250,14 @@
                 <td class="px-6 py-3">
                   <span class="bg-red-50 border border-red-100 text-[#ed1c24] text-xs font-bold px-2.5 py-1 rounded-md">High</span>
                 </td>
-                <td class="px-6 py-3">
-                  <a href="#" class="flex items-center gap-1 text-sm text-blue-600">
+                <td class="px-6 py-3 review-cell">
+                  <a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline">
                     Review
                     <img src="images/monitoring/icon-chevron-right3.svg" alt="" class="w-1.5 h-2.5">
                   </a>
                 </td>
               </tr>
-              <tr>
+              <tr data-student-id="2026-0002" data-student-name="Solis, Christeen Ann" data-strand="HUMSS" data-career="Industrial Engineering" data-match="76%" data-reason="Counselor requested second review">
                 <td class="px-6 py-3">
                   <div class="flex items-center gap-3">
                     <img src="images/monitoring/avatar-2.png" alt="" class="w-8 h-8 rounded-full">
@@ -274,8 +274,8 @@
                 <td class="px-6 py-3">
                   <span class="bg-orange-50 border border-orange-100 text-orange-600 text-xs font-bold px-2.5 py-1 rounded-md">Medium</span>
                 </td>
-                <td class="px-6 py-3">
-                  <a href="#" class="flex items-center gap-1 text-sm text-blue-600">
+                <td class="px-6 py-3 review-cell">
+                  <a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline">
                     Review
                     <img src="images/monitoring/icon-chevron-right3.svg" alt="" class="w-1.5 h-2.5">
                   </a>
@@ -305,6 +305,122 @@
     </main>
   </div>
 </div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <h3 class="text-lg font-bold text-slate-900">Review Recommendation</h3>
+      <button type="button" id="reviewModalClose" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Student</p>
+        <p id="reviewStudentName" class="text-sm font-medium text-slate-900"></p>
+        <p id="reviewStudentId" class="text-xs text-slate-500"></p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase">Strand</p>
+          <p id="reviewStrand" class="text-sm text-slate-800"></p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase">Match</p>
+          <p id="reviewMatch" class="text-sm text-slate-800"></p>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Recommended Career</p>
+        <p id="reviewCareer" class="text-sm text-slate-800"></p>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Flag Reason</p>
+        <p id="reviewReason" class="text-sm text-slate-800"></p>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 flex flex-wrap gap-2 justify-end">
+      <button type="button" data-action="dismiss" class="review-action-btn px-3.5 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Dismiss Flag</button>
+      <button type="button" data-action="escalate" class="review-action-btn px-3.5 py-2 text-sm font-medium text-orange-600 border border-orange-200 bg-orange-50 rounded-md hover:bg-orange-100">Escalate to Counselor</button>
+      <button type="button" data-action="approve" class="review-action-btn px-3.5 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:bg-red-600">Approve Recommendation</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('hidden');
+  });
+
+  (function() {
+    const REVIEW_KEY = 'monitoringReviews';
+
+    function loadReviews() {
+      try { return JSON.parse(localStorage.getItem(REVIEW_KEY)) || {}; } catch (e) { return {}; }
+    }
+    function saveReviews(obj) {
+      localStorage.setItem(REVIEW_KEY, JSON.stringify(obj));
+    }
+    function labelFor(action) {
+      return action === 'approve' ? 'Approved' : action === 'escalate' ? 'Escalated' : 'Dismissed';
+    }
+    function markRowReviewed(row, action) {
+      const cell = row.querySelector('.review-cell');
+      if (cell) {
+        cell.innerHTML = `<span class="text-xs font-semibold text-green-600">${labelFor(action)} &#10003;</span>`;
+      }
+    }
+
+    let currentReviewId = null;
+
+    function openReviewModal(row) {
+      currentReviewId = row.dataset.studentId;
+      document.getElementById('reviewStudentName').textContent = row.dataset.studentName || '';
+      document.getElementById('reviewStudentId').textContent = row.dataset.studentId || '';
+      document.getElementById('reviewStrand').textContent = row.dataset.strand || '';
+      document.getElementById('reviewMatch').textContent = row.dataset.match || '';
+      document.getElementById('reviewCareer').textContent = row.dataset.career || '';
+      document.getElementById('reviewReason').textContent = row.dataset.reason || '';
+      document.getElementById('reviewModal').classList.remove('hidden');
+    }
+    function closeReviewModal() {
+      document.getElementById('reviewModal').classList.add('hidden');
+      currentReviewId = null;
+    }
+
+    document.querySelectorAll('.review-link').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const row = e.currentTarget.closest('tr[data-student-id]');
+        if (row) openReviewModal(row);
+      });
+    });
+
+    document.getElementById('reviewModalClose').addEventListener('click', closeReviewModal);
+    document.getElementById('reviewModal').addEventListener('click', function(e) {
+      if (e.target.id === 'reviewModal') closeReviewModal();
+    });
+
+    document.querySelectorAll('.review-action-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!currentReviewId) return;
+        const reviews = loadReviews();
+        reviews[currentReviewId] = { action: btn.dataset.action, at: new Date().toISOString() };
+        saveReviews(reviews);
+        const row = document.querySelector('tr[data-student-id="' + currentReviewId + '"]');
+        if (row) markRowReviewed(row, btn.dataset.action);
+        closeReviewModal();
+      });
+    });
+
+    (function applyExistingReviewStatus() {
+      const reviews = loadReviews();
+      document.querySelectorAll('tr[data-student-id]').forEach(function(row) {
+        const id = row.dataset.studentId;
+        if (reviews[id]) markRowReviewed(row, reviews[id].action);
+      });
+    })();
+  })();
+</script>
 
 </body>
 </html>

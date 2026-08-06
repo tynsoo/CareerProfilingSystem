@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   body{ font-family:'Inter', sans-serif; }
+  select{ appearance:none; -webkit-appearance:none; }
 </style>
 </head>
 <body class="bg-[#f9fafb]">
@@ -17,7 +18,7 @@
 <div class="flex min-h-screen">
 
   <!-- Sidebar -->
-  <aside class="w-[256px] shrink-0 bg-[#001c43] flex flex-col">
+  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
 
     <!-- Logo Area -->
     <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
@@ -91,7 +92,7 @@
 
     <!-- Top Header -->
     <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0">
-      <button type="button" class="w-5 h-4">
+      <button type="button" id="menuToggle" class="w-5 h-4">
         <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
       </button>
       <div class="flex items-center gap-6">
@@ -136,7 +137,7 @@
                   <p class="text-xs text-slate-500">Manage what each user role can access and do within the system.</p>
                 </div>
               </div>
-              <button type="button" class="flex items-center gap-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm font-medium text-slate-700">
+              <button type="button" id="editRolesBtn" class="flex items-center gap-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 <img src="images/security/icon-edit.svg" alt="" class="w-3 h-3">
                 Edit Roles
               </button>
@@ -158,78 +159,7 @@
                     </th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200">
-                  <tr>
-                    <td class="px-5 py-3">
-                      <div class="flex items-start gap-3">
-                        <img src="images/security/icon-module-career.svg" alt="" class="w-[17.5px] h-4 mt-0.5">
-                        <div>
-                          <p class="text-sm font-medium text-slate-800">Career Profile Input</p>
-                          <p class="text-xs text-slate-500">Create and edit student profiles</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-amber-500"><img src="images/security/icon-dash-orange.svg" alt="Limited Access" class="w-2 h-0.5"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span></td>
-                  </tr>
-                  <tr>
-                    <td class="px-5 py-3">
-                      <div class="flex items-start gap-3">
-                        <img src="images/security/icon-module-rac.svg" alt="" class="w-[10.5px] h-4 mt-0.5">
-                        <div>
-                          <p class="text-sm font-medium text-slate-800">RAC Assessment</p>
-                          <p class="text-xs text-slate-500">View and manage assessments</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span></td>
-                  </tr>
-                  <tr>
-                    <td class="px-5 py-3">
-                      <div class="flex items-start gap-3">
-                        <img src="images/security/icon-module-recommendations.svg" alt="" class="w-3.5 h-4 mt-0.5">
-                        <div>
-                          <p class="text-sm font-medium text-slate-800">Recommendations</p>
-                          <p class="text-xs text-slate-500">View recommendations only</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                  </tr>
-                  <tr>
-                    <td class="px-5 py-3">
-                      <div class="flex items-start gap-3">
-                        <img src="images/security/icon-module-counselor.svg" alt="" class="w-3 h-4 mt-0.5">
-                        <div>
-                          <p class="text-sm font-medium text-slate-800">CGC Guidance Counselor</p>
-                          <p class="text-xs text-slate-500">Manage counselor accounts</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span></td>
-                  </tr>
-                  <tr>
-                    <td class="px-5 py-3">
-                      <div class="flex items-start gap-3">
-                        <img src="images/security/icon-module-monitoring.svg" alt="" class="w-4 h-4 mt-0.5">
-                        <div>
-                          <p class="text-sm font-medium text-slate-800">Student Monitoring</p>
-                          <p class="text-xs text-slate-500">View student progress and status</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span></td>
-                    <td class="px-3 py-3 text-center"><span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span></td>
-                  </tr>
-                </tbody>
+                <tbody id="rbacTableBody" class="divide-y divide-slate-200"></tbody>
               </table>
             </div>
 
@@ -259,38 +189,7 @@
               <h2 class="text-base font-semibold text-slate-900">Login &amp; Access Policies</h2>
               <p class="text-xs text-slate-500">Enforce strong access policies to protect user accounts.</p>
             </div>
-            <div class="p-2">
-              <div class="flex items-center justify-between p-4 rounded-lg">
-                <div>
-                  <p class="text-sm font-medium text-slate-800">Password Policy</p>
-                  <p class="text-xs text-slate-500">Minimum 8 characters with uppercase, lowercase, number, and symbol.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-md">Enabled</span>
-                  <img src="images/security/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
-                </div>
-              </div>
-              <div class="flex items-center justify-between p-4 rounded-lg border-t border-slate-100">
-                <div>
-                  <p class="text-sm font-medium text-slate-800">Account Lockout</p>
-                  <p class="text-xs text-slate-500">Lock account after 5 failed login attempts.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-md">Enabled</span>
-                  <img src="images/security/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
-                </div>
-              </div>
-              <div class="flex items-center justify-between p-4 rounded-lg border-t border-slate-100">
-                <div>
-                  <p class="text-sm font-medium text-slate-800">Login Activity Monitoring</p>
-                  <p class="text-xs text-slate-500">Track and log user login activities and device information.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-md">Enabled</span>
-                  <img src="images/security/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
-                </div>
-              </div>
-            </div>
+            <div class="p-2" id="policyListContainer"></div>
           </div>
         </div>
 
@@ -315,8 +214,8 @@
                     <p class="text-xs text-slate-500">Require 2FA for added account security.</p>
                     <span class="bg-green-50 border border-green-200 text-green-700 text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded w-fit">Recommended</span>
                   </div>
-                  <button type="button" class="w-11 h-6 rounded-full bg-[#ed1c24] relative shrink-0" aria-pressed="true">
-                    <span class="absolute right-0.5 top-0.5 w-[18px] h-[18px] rounded-full bg-white"></span>
+                  <button type="button" id="toggle2fa" class="w-11 h-6 rounded-full relative shrink-0" aria-pressed="true">
+                    <span class="absolute top-0.5 w-[18px] h-[18px] rounded-full bg-white transition-all"></span>
                   </button>
                 </div>
                 <div class="flex flex-col gap-2 pl-0">
@@ -335,21 +234,21 @@
                     <p class="text-xs text-slate-500">End inactive sessions after a period of inactivity.</p>
                     <span class="bg-green-50 border border-green-200 text-green-700 text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded w-fit">Recommended</span>
                   </div>
-                  <button type="button" class="w-11 h-6 rounded-full bg-[#ed1c24] relative shrink-0" aria-pressed="true">
-                    <span class="absolute right-0.5 top-0.5 w-[18px] h-[18px] rounded-full bg-white"></span>
+                  <button type="button" id="toggleSessionTimeout" class="w-11 h-6 rounded-full relative shrink-0" aria-pressed="true">
+                    <span class="absolute top-0.5 w-[18px] h-[18px] rounded-full bg-white transition-all"></span>
                   </button>
                 </div>
                 <div class="flex items-center justify-between">
                   <label class="text-xs text-slate-600">Timeout Duration</label>
-                  <select class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700">
-                    <option>30 minutes</option>
-                    <option>15 minutes</option>
-                    <option>60 minutes</option>
+                  <select id="timeoutDuration" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700">
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">60 minutes</option>
                   </select>
                 </div>
                 <div class="flex items-center gap-2">
                   <img src="images/security/icon-clock-small.svg" alt="" class="w-3.5 h-3">
-                  <p class="text-xs text-slate-500">Users will be logged out after 30 minutes of inactivity.</p>
+                  <p id="timeoutDescText" class="text-xs text-slate-500">Users will be logged out after 30 minutes of inactivity.</p>
                 </div>
               </div>
 
@@ -397,12 +296,336 @@
 
       <div class="flex items-center justify-center gap-1.5 mt-6">
         <img src="images/security/icon-clock.svg" alt="" class="w-3 h-3">
-        <p class="text-xs text-slate-500">Last updated: May 27, 2025 10:25 AM</p>
+        <p id="lastUpdatedText" class="text-xs text-slate-500">Last updated: May 27, 2025 10:25 AM</p>
       </div>
 
     </main>
   </div>
 </div>
+
+<!-- Edit Roles Modal -->
+<div id="rolesModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 sticky top-0 bg-white">
+      <h3 class="text-lg font-bold text-slate-900">Edit Role-Based Access Control</h3>
+      <button type="button" id="rolesModalClose" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <div class="px-6 py-5">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr>
+            <th class="pb-3 text-xs font-semibold text-slate-500 uppercase">Module</th>
+            <th class="pb-3 text-xs font-semibold text-slate-500 uppercase text-center">Administrator</th>
+            <th class="pb-3 text-xs font-semibold text-slate-500 uppercase text-center">Guidance Counselor</th>
+            <th class="pb-3 text-xs font-semibold text-slate-500 uppercase text-center">Student</th>
+          </tr>
+        </thead>
+        <tbody id="rolesModalBody" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2 sticky bottom-0 bg-white">
+      <button type="button" id="rolesModalCancel" class="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Cancel</button>
+      <button type="button" id="rolesModalSave" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:bg-red-600">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Policy Edit Modal -->
+<div id="policyModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <h3 id="policyModalTitle" class="text-lg font-bold text-slate-900"></h3>
+      <button type="button" id="policyModalClose" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <div class="px-6 py-5 flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <p class="text-sm font-medium text-slate-800">Status</p>
+        <button type="button" id="policyEnabledToggle" class="w-11 h-6 rounded-full relative shrink-0">
+          <span class="absolute top-0.5 w-[18px] h-[18px] rounded-full bg-white transition-all"></span>
+        </button>
+      </div>
+      <div id="policyFields" class="flex flex-col gap-4"></div>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button type="button" id="policyModalCancel" class="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Cancel</button>
+      <button type="button" id="policyModalSave" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:bg-red-600">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('hidden');
+  });
+
+  (function() {
+    const STORAGE_KEY = 'securityConfig';
+
+    const MODULES = [
+      { id: 'career', label: 'Career Profile Input', desc: 'Create and edit student profiles', icon: 'images/security/icon-module-career.svg', iconClass: 'w-[17.5px] h-4 mt-0.5' },
+      { id: 'rac', label: 'RAC Assessment', desc: 'View and manage assessments', icon: 'images/security/icon-module-rac.svg', iconClass: 'w-[10.5px] h-4 mt-0.5' },
+      { id: 'recommendations', label: 'Recommendations', desc: 'View recommendations only', icon: 'images/security/icon-module-recommendations.svg', iconClass: 'w-3.5 h-4 mt-0.5' },
+      { id: 'counselor', label: 'CGC Guidance Counselor', desc: 'Manage counselor accounts', icon: 'images/security/icon-module-counselor.svg', iconClass: 'w-3 h-4 mt-0.5' },
+      { id: 'monitoring', label: 'Student Monitoring', desc: 'View student progress and status', icon: 'images/security/icon-module-monitoring.svg', iconClass: 'w-4 h-4 mt-0.5' }
+    ];
+    const ROLES = ['admin', 'counselor', 'student'];
+    const LEVEL_LABEL = { full: 'Full Access', limited: 'Limited Access', none: 'No Access', na: 'Not Applicable' };
+
+    const DEFAULT_STATE = {
+      rbac: {
+        career: { admin: 'full', counselor: 'limited', student: 'none' },
+        rac: { admin: 'full', counselor: 'full', student: 'none' },
+        recommendations: { admin: 'full', counselor: 'full', student: 'full' },
+        counselor: { admin: 'full', counselor: 'full', student: 'none' },
+        monitoring: { admin: 'full', counselor: 'full', student: 'none' }
+      },
+      policies: {
+        password: { enabled: true, minLength: 8, requireUpper: true, requireLower: true, requireNumber: true, requireSymbol: true },
+        lockout: { enabled: true, maxAttempts: 5, lockoutMinutes: 15 },
+        monitoring: { enabled: true, retentionDays: 90 }
+      },
+      settings: { twoFactor: true, sessionTimeoutEnabled: true, timeoutMinutes: 30 },
+      lastUpdated: null
+    };
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!saved) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        return {
+          rbac: Object.assign({}, DEFAULT_STATE.rbac, saved.rbac),
+          policies: Object.assign({}, DEFAULT_STATE.policies, saved.policies),
+          settings: Object.assign({}, DEFAULT_STATE.settings, saved.settings),
+          lastUpdated: saved.lastUpdated || null
+        };
+      } catch (e) {
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+    }
+    function saveState() {
+      state.lastUpdated = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderLastUpdated();
+    }
+
+    let state = loadState();
+
+    function renderLastUpdated() {
+      const el = document.getElementById('lastUpdatedText');
+      if (state.lastUpdated) {
+        const d = new Date(state.lastUpdated);
+        el.textContent = 'Last updated: ' + d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      }
+    }
+
+    function permIcon(level) {
+      if (level === 'full') return '<span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span>';
+      if (level === 'limited') return '<span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-amber-500"><img src="images/security/icon-dash-orange.svg" alt="Limited Access" class="w-2 h-0.5"></span>';
+      if (level === 'none') return '<span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span>';
+      return '<span class="inline-flex w-5 h-5 items-center justify-center"><span class="w-3 h-px bg-slate-400"></span></span>';
+    }
+
+    function renderRbacTable() {
+      const tbody = document.getElementById('rbacTableBody');
+      tbody.innerHTML = MODULES.map(m => {
+        const cells = ROLES.map(r => '<td class="px-3 py-3 text-center">' + permIcon(state.rbac[m.id][r]) + '</td>').join('');
+        return '<tr>' +
+          '<td class="px-5 py-3"><div class="flex items-start gap-3">' +
+          '<img src="' + m.icon + '" alt="" class="' + m.iconClass + '">' +
+          '<div><p class="text-sm font-medium text-slate-800">' + m.label + '</p><p class="text-xs text-slate-500">' + m.desc + '</p></div>' +
+          '</div></td>' + cells + '</tr>';
+      }).join('');
+    }
+
+    function renderRolesModal() {
+      const tbody = document.getElementById('rolesModalBody');
+      tbody.innerHTML = MODULES.map(m => {
+        const cells = ROLES.map(r => {
+          const options = Object.keys(LEVEL_LABEL).map(lvl =>
+            '<option value="' + lvl + '"' + (state.rbac[m.id][r] === lvl ? ' selected' : '') + '>' + LEVEL_LABEL[lvl] + '</option>'
+          ).join('');
+          return '<td class="py-2.5 px-1 text-center"><select class="rbac-select border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700 w-full" data-module="' + m.id + '" data-role="' + r + '">' + options + '</select></td>';
+        }).join('');
+        return '<tr><td class="py-2.5 pr-2 text-sm text-slate-800">' + m.label + '</td>' + cells + '</tr>';
+      }).join('');
+    }
+
+    document.getElementById('editRolesBtn').addEventListener('click', function() {
+      renderRolesModal();
+      document.getElementById('rolesModal').classList.remove('hidden');
+    });
+    function closeRolesModal() { document.getElementById('rolesModal').classList.add('hidden'); }
+    document.getElementById('rolesModalClose').addEventListener('click', closeRolesModal);
+    document.getElementById('rolesModalCancel').addEventListener('click', closeRolesModal);
+    document.getElementById('rolesModal').addEventListener('click', function(e) {
+      if (e.target.id === 'rolesModal') closeRolesModal();
+    });
+    document.getElementById('rolesModalSave').addEventListener('click', function() {
+      document.querySelectorAll('.rbac-select').forEach(function(sel) {
+        state.rbac[sel.dataset.module][sel.dataset.role] = sel.value;
+      });
+      renderRbacTable();
+      saveState();
+      closeRolesModal();
+    });
+
+    const POLICY_META = {
+      password: { title: 'Password Policy' },
+      lockout: { title: 'Account Lockout' },
+      monitoring: { title: 'Login Activity Monitoring' }
+    };
+
+    function policyDesc(key) {
+      const p = state.policies[key];
+      if (key === 'password') {
+        const reqs = [];
+        if (p.requireUpper) reqs.push('uppercase');
+        if (p.requireLower) reqs.push('lowercase');
+        if (p.requireNumber) reqs.push('number');
+        if (p.requireSymbol) reqs.push('symbol');
+        return 'Minimum ' + p.minLength + ' characters' + (reqs.length ? ' with ' + reqs.join(', ') + '.' : '.');
+      }
+      if (key === 'lockout') {
+        return 'Lock account after ' + p.maxAttempts + ' failed login attempts (' + p.lockoutMinutes + ' min lockout).';
+      }
+      return 'Track and log user login activities and device information. Retained for ' + p.retentionDays + ' days.';
+    }
+
+    function renderPolicyList() {
+      const container = document.getElementById('policyListContainer');
+      const keys = ['password', 'lockout', 'monitoring'];
+      container.innerHTML = keys.map(function(key, idx) {
+        const p = state.policies[key];
+        const badge = p.enabled
+          ? '<span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-md">Enabled</span>'
+          : '<span class="bg-slate-100 text-slate-500 text-xs font-medium px-2 py-1 rounded-md">Disabled</span>';
+        return '<button type="button" class="policy-row w-full flex items-center justify-between p-4 rounded-lg text-left hover:bg-slate-50' + (idx > 0 ? ' border-t border-slate-100' : '') + '" data-policy="' + key + '">' +
+          '<div><p class="text-sm font-medium text-slate-800">' + POLICY_META[key].title + '</p><p class="text-xs text-slate-500 policy-desc">' + policyDesc(key) + '</p></div>' +
+          '<div class="flex items-center gap-2">' + badge + '<img src="images/security/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5"></div>' +
+          '</button>';
+      }).join('');
+
+      document.querySelectorAll('.policy-row').forEach(function(row) {
+        row.addEventListener('click', function() { openPolicyModal(row.dataset.policy); });
+      });
+    }
+
+    let currentPolicyKey = null;
+    let draftPolicyEnabled = false;
+
+    function setToggleVisual(btn, on) {
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.className = 'w-11 h-6 rounded-full relative shrink-0 ' + (on ? 'bg-[#ed1c24]' : 'bg-slate-300');
+      const knob = btn.querySelector('span');
+      knob.className = 'absolute top-0.5 w-[18px] h-[18px] rounded-full bg-white transition-all ' + (on ? 'right-0.5' : 'left-0.5');
+    }
+
+    function policyFieldsHtml(key) {
+      const p = state.policies[key];
+      if (key === 'password') {
+        return '<div class="flex items-center justify-between"><label class="text-xs text-slate-600">Minimum Length</label>' +
+          '<input type="number" id="fldMinLength" min="6" max="32" value="' + p.minLength + '" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-20 text-right"></div>' +
+          '<label class="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" id="fldReqUpper" ' + (p.requireUpper ? 'checked' : '') + '> Require uppercase letter</label>' +
+          '<label class="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" id="fldReqLower" ' + (p.requireLower ? 'checked' : '') + '> Require lowercase letter</label>' +
+          '<label class="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" id="fldReqNumber" ' + (p.requireNumber ? 'checked' : '') + '> Require number</label>' +
+          '<label class="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" id="fldReqSymbol" ' + (p.requireSymbol ? 'checked' : '') + '> Require symbol</label>';
+      }
+      if (key === 'lockout') {
+        return '<div class="flex items-center justify-between"><label class="text-xs text-slate-600">Failed Attempts Before Lockout</label>' +
+          '<input type="number" id="fldMaxAttempts" min="1" max="20" value="' + p.maxAttempts + '" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-20 text-right"></div>' +
+          '<div class="flex items-center justify-between"><label class="text-xs text-slate-600">Lockout Duration (minutes)</label>' +
+          '<input type="number" id="fldLockoutMinutes" min="1" max="1440" value="' + p.lockoutMinutes + '" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-20 text-right"></div>';
+      }
+      return '<div class="flex items-center justify-between"><label class="text-xs text-slate-600">Log Retention (days)</label>' +
+        '<input type="number" id="fldRetentionDays" min="7" max="365" value="' + p.retentionDays + '" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-20 text-right"></div>';
+    }
+
+    function openPolicyModal(key) {
+      currentPolicyKey = key;
+      draftPolicyEnabled = state.policies[key].enabled;
+      document.getElementById('policyModalTitle').textContent = POLICY_META[key].title;
+      document.getElementById('policyFields').innerHTML = policyFieldsHtml(key);
+      setToggleVisual(document.getElementById('policyEnabledToggle'), draftPolicyEnabled);
+      document.getElementById('policyModal').classList.remove('hidden');
+    }
+    function closePolicyModal() {
+      document.getElementById('policyModal').classList.add('hidden');
+      currentPolicyKey = null;
+    }
+    document.getElementById('policyModalClose').addEventListener('click', closePolicyModal);
+    document.getElementById('policyModalCancel').addEventListener('click', closePolicyModal);
+    document.getElementById('policyModal').addEventListener('click', function(e) {
+      if (e.target.id === 'policyModal') closePolicyModal();
+    });
+    document.getElementById('policyEnabledToggle').addEventListener('click', function() {
+      draftPolicyEnabled = !draftPolicyEnabled;
+      setToggleVisual(this, draftPolicyEnabled);
+    });
+    document.getElementById('policyModalSave').addEventListener('click', function() {
+      if (!currentPolicyKey) return;
+      const p = state.policies[currentPolicyKey];
+      p.enabled = draftPolicyEnabled;
+      if (currentPolicyKey === 'password') {
+        p.minLength = Math.max(6, Math.min(32, parseInt(document.getElementById('fldMinLength').value, 10) || 8));
+        p.requireUpper = document.getElementById('fldReqUpper').checked;
+        p.requireLower = document.getElementById('fldReqLower').checked;
+        p.requireNumber = document.getElementById('fldReqNumber').checked;
+        p.requireSymbol = document.getElementById('fldReqSymbol').checked;
+      } else if (currentPolicyKey === 'lockout') {
+        p.maxAttempts = Math.max(1, Math.min(20, parseInt(document.getElementById('fldMaxAttempts').value, 10) || 5));
+        p.lockoutMinutes = Math.max(1, Math.min(1440, parseInt(document.getElementById('fldLockoutMinutes').value, 10) || 15));
+      } else {
+        p.retentionDays = Math.max(7, Math.min(365, parseInt(document.getElementById('fldRetentionDays').value, 10) || 90));
+      }
+      renderPolicyList();
+      saveState();
+      closePolicyModal();
+    });
+
+    function renderSecuritySettings() {
+      setToggleVisual(document.getElementById('toggle2fa'), state.settings.twoFactor);
+      setToggleVisual(document.getElementById('toggleSessionTimeout'), state.settings.sessionTimeoutEnabled);
+      const select = document.getElementById('timeoutDuration');
+      select.value = String(state.settings.timeoutMinutes);
+      updateTimeoutDesc();
+      updateTimeoutDisabledState();
+    }
+    function updateTimeoutDesc() {
+      const desc = document.getElementById('timeoutDescText');
+      desc.textContent = state.settings.sessionTimeoutEnabled
+        ? 'Users will be logged out after ' + state.settings.timeoutMinutes + ' minutes of inactivity.'
+        : 'Automatic session timeout is disabled.';
+    }
+    function updateTimeoutDisabledState() {
+      const select = document.getElementById('timeoutDuration');
+      select.disabled = !state.settings.sessionTimeoutEnabled;
+      select.classList.toggle('opacity-50', !state.settings.sessionTimeoutEnabled);
+    }
+
+    document.getElementById('toggle2fa').addEventListener('click', function() {
+      state.settings.twoFactor = !state.settings.twoFactor;
+      setToggleVisual(this, state.settings.twoFactor);
+      saveState();
+    });
+    document.getElementById('toggleSessionTimeout').addEventListener('click', function() {
+      state.settings.sessionTimeoutEnabled = !state.settings.sessionTimeoutEnabled;
+      setToggleVisual(this, state.settings.sessionTimeoutEnabled);
+      updateTimeoutDesc();
+      updateTimeoutDisabledState();
+      saveState();
+    });
+    document.getElementById('timeoutDuration').addEventListener('change', function() {
+      state.settings.timeoutMinutes = parseInt(this.value, 10);
+      updateTimeoutDesc();
+      saveState();
+    });
+
+    renderRbacTable();
+    renderPolicyList();
+    renderSecuritySettings();
+    renderLastUpdated();
+  })();
+</script>
 
 </body>
 </html>

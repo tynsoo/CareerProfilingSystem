@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring Details — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="bg-[#f9fafb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
+
+    <!-- Logo Area -->
+    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
+      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+      <p class="text-sm text-gray-500">Admin Dashboard</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
+      <div class="px-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
+            Student Information
+          </a>
+        </li>
+        <li>
+          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
+            Career Data Set
+          </a>
+        </li>
+        <li>
+          <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+            Analytics
+          </a>
+        </li>
+        <li>
+          <a href="monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+            <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
+            Monitoring
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-6 pt-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Security &amp; System</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="security-configuration.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
+            Security Configuration
+          </a>
+        </li>
+        <li>
+          <a href="audit-log.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
+            Audit Log
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
+      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+        <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0">
+      <button type="button" id="menuToggle" class="w-5 h-4">
+        <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-6">
+        <button type="button" class="relative w-5 h-5">
+          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+        </button>
+        <button type="button" class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+          </span>
+          <span class="text-left">
+            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+            <span class="block text-xs text-gray-500">Administrator</span>
+          </span>
+          <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <!-- Page Header -->
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-6">
+        <div>
+          <a href="monitoring.html" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-[#ed1c24] mb-2">
+            <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5 rotate-180">
+            Back to Monitoring
+          </a>
+          <h1 class="text-[30px] font-bold text-slate-900">Monitoring Details</h1>
+          <p class="text-sm text-slate-500 mt-1">Full list view for each monitoring category.</p>
+        </div>
+        <div class="relative w-full sm:w-72">
+          <input id="searchInput" type="text" placeholder="Search students..." class="w-full bg-white border border-slate-300 rounded-md pl-4 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400">
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex flex-wrap gap-2 mb-6" id="tabBar">
+        <button type="button" data-tab="needs-review" class="tab-btn px-4 py-2.5 rounded-md text-sm font-medium border">Needs Review <span class="tab-count"></span></button>
+        <button type="button" data-tab="completed" class="tab-btn px-4 py-2.5 rounded-md text-sm font-medium border">Completed Today <span class="tab-count"></span></button>
+        <button type="button" data-tab="pending" class="tab-btn px-4 py-2.5 rounded-md text-sm font-medium border">Pending Assessments <span class="tab-count"></span></button>
+        <button type="button" data-tab="counseling" class="tab-btn px-4 py-2.5 rounded-md text-sm font-medium border">Counseling Queue <span class="tab-count"></span></button>
+      </div>
+
+      <!-- Data Table -->
+      <div class="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
+        <div class="border-b border-slate-100 px-5 py-4">
+          <p id="tableTitle" class="text-sm font-bold text-slate-900"></p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[900px]">
+            <thead class="bg-slate-50 border-b border-slate-100">
+              <tr id="tableHeadRow"></tr>
+            </thead>
+            <tbody id="tableBody" class="divide-y divide-slate-50"></tbody>
+          </table>
+        </div>
+        <div class="border-t border-slate-100 px-4 py-4">
+          <p id="resultCount" class="text-sm text-slate-500"></p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <h3 class="text-lg font-bold text-slate-900">Review Recommendation</h3>
+      <button type="button" id="reviewModalClose" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Student</p>
+        <p id="reviewStudentName" class="text-sm font-medium text-slate-900"></p>
+        <p id="reviewStudentId" class="text-xs text-slate-500"></p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase">Strand</p>
+          <p id="reviewStrand" class="text-sm text-slate-800"></p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-500 uppercase">Match</p>
+          <p id="reviewMatch" class="text-sm text-slate-800"></p>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Recommended Career</p>
+        <p id="reviewCareer" class="text-sm text-slate-800"></p>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Flag Reason</p>
+        <p id="reviewReason" class="text-sm text-slate-800"></p>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 flex flex-wrap gap-2 justify-end">
+      <button type="button" data-action="dismiss" class="review-action-btn px-3.5 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Dismiss Flag</button>
+      <button type="button" data-action="escalate" class="review-action-btn px-3.5 py-2 text-sm font-medium text-orange-600 border border-orange-200 bg-orange-50 rounded-md hover:bg-orange-100">Escalate to Counselor</button>
+      <button type="button" data-action="approve" class="review-action-btn px-3.5 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:bg-red-600">Approve Recommendation</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('hidden');
+  });
+
+  (function() {
+    const REVIEW_KEY = 'monitoringReviews';
+    const FIRST_NAMES = ['Miguel','Andrea','Joshua','Kimberly','Rafael','Angela','Vincent','Patricia','Nathaniel','Bea','Carlos','Samantha','Dominic','Faith','Julian','Grace','Xavier','Nicole','Elijah','Trisha','Marco','Isabel','Lorenzo','Denise','Adrian','Kaye','Renzo','Michelle','Paolo','Erika'];
+    const LAST_NAMES = ['Reyes','Santos','Cruz','Bautista','Garcia','Torres','Flores','Rivera','Ramos','Castillo','Mendoza','Villanueva','Aquino','Delacruz','Fernandez','Gonzales','Perez','Diaz','Navarro','Domingo'];
+    const STRANDS = ['STEM','HUMSS','ABM','GAS','TVL'];
+    const CAREERS = ['Information Technology','Industrial Engineering','Psychology','Software Development','Civil Engineering','Nursing','Accountancy','Business Administration','Marketing','Architecture'];
+    const REASONS = ['Below minimum confidence threshold','Counselor requested second review','Inconsistent RIASEC pattern','Conflicting strand and career signal','Assessment flagged for manual audit'];
+    const PRIORITIES = ['High','Medium','Low'];
+
+    function seededRandom(seed) {
+      let t = seed + 0x6D2B79F5;
+      return function() {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function pick(rand, arr) { return arr[Math.floor(rand() * arr.length)]; }
+
+    function studentAt(index) {
+      const first = FIRST_NAMES[index % FIRST_NAMES.length];
+      const last = LAST_NAMES[Math.floor(index / FIRST_NAMES.length) % LAST_NAMES.length];
+      return last + ', ' + first;
+    }
+
+    function buildNeedsReview() {
+      const rows = [
+        { id: '2026-0001', name: 'Gomez, Gerome Grant', strand: 'STEM', career: 'Information Technology', match: '52%', reason: 'Below minimum confidence threshold', priority: 'High' },
+        { id: '2026-0002', name: 'Solis, Christeen Ann', strand: 'HUMSS', career: 'Industrial Engineering', match: '76%', reason: 'Counselor requested second review', priority: 'Medium' }
+      ];
+      for (let i = 3; i <= 18; i++) {
+        const rand = seededRandom(i * 97);
+        const idNum = String(i).padStart(4, '0');
+        rows.push({
+          id: '2026-' + idNum,
+          name: studentAt(i),
+          strand: pick(rand, STRANDS),
+          career: pick(rand, CAREERS),
+          match: (40 + Math.floor(rand() * 55)) + '%',
+          reason: pick(rand, REASONS),
+          priority: pick(rand, PRIORITIES)
+        });
+      }
+      return rows;
+    }
+
+    function buildCompleted() {
+      const rows = [];
+      for (let i = 1; i <= 42; i++) {
+        const rand = seededRandom(i * 131);
+        const hour = 7 + Math.floor(rand() * 9);
+        const min = Math.floor(rand() * 60);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = ((hour + 11) % 12) + 1;
+        rows.push({
+          id: '2026-C' + String(i).padStart(3, '0'),
+          name: studentAt(i + 40),
+          strand: pick(rand, STRANDS),
+          career: pick(rand, CAREERS),
+          match: (60 + Math.floor(rand() * 38)) + '%',
+          time: hour12 + ':' + String(min).padStart(2, '0') + ' ' + ampm
+        });
+      }
+      return rows;
+    }
+
+    function buildPending() {
+      const rows = [];
+      const statuses = ['Not Started', 'In Progress'];
+      for (let i = 1; i <= 71; i++) {
+        const rand = seededRandom(i * 173);
+        const day = 1 + Math.floor(rand() * 28);
+        rows.push({
+          id: '2026-P' + String(i).padStart(3, '0'),
+          name: studentAt(i + 90),
+          strand: pick(rand, STRANDS),
+          assigned: '2026-08-' + String(day).padStart(2, '0'),
+          status: pick(rand, statuses)
+        });
+      }
+      return rows;
+    }
+
+    function buildCounseling() {
+      const rows = [];
+      for (let i = 1; i <= 12; i++) {
+        const rand = seededRandom(i * 211);
+        const day = 1 + Math.floor(rand() * 28);
+        rows.push({
+          id: '2026-Q' + String(i).padStart(3, '0'),
+          name: studentAt(i + 170),
+          strand: pick(rand, STRANDS),
+          career: pick(rand, CAREERS),
+          reason: pick(rand, REASONS),
+          date: '2026-08-' + String(day).padStart(2, '0')
+        });
+      }
+      return rows;
+    }
+
+    const DATA = {
+      'needs-review': { label: 'Needs Review', title: 'Flagged Recommendations Needing Review', rows: buildNeedsReview() },
+      'completed': { label: 'Completed Today', title: 'Assessments Completed Today', rows: buildCompleted() },
+      'pending': { label: 'Pending Assessments', title: 'Students with Pending Assessments', rows: buildPending() },
+      'counseling': { label: 'Counseling Queue', title: 'Students Queued for Counseling', rows: buildCounseling() }
+    };
+
+    function loadReviews() {
+      try { return JSON.parse(localStorage.getItem(REVIEW_KEY)) || {}; } catch (e) { return {}; }
+    }
+    function saveReviews(obj) {
+      localStorage.setItem(REVIEW_KEY, JSON.stringify(obj));
+    }
+    function labelFor(action) {
+      return action === 'approve' ? 'Approved' : action === 'escalate' ? 'Escalated' : 'Dismissed';
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    let activeTab = 'needs-review';
+    let currentReviewId = null;
+
+    function headForTab(tab) {
+      if (tab === 'needs-review') return ['Student', 'Strand', 'Recommended Career', 'Match', 'Flag Reason', 'Priority', 'Action'];
+      if (tab === 'completed') return ['Student', 'Strand', 'Recommended Career', 'Match', 'Completed At'];
+      if (tab === 'pending') return ['Student', 'Strand', 'Assigned Date', 'Status'];
+      return ['Student', 'Strand', 'Requested Career', 'Reason', 'Queue Date'];
+    }
+
+    function rowHtml(tab, r) {
+      const reviews = loadReviews();
+      if (tab === 'needs-review') {
+        const reviewed = reviews[r.id];
+        const priorityColor = r.priority === 'High' ? 'bg-red-50 border-red-100 text-[#ed1c24]' : r.priority === 'Medium' ? 'bg-orange-50 border-orange-100 text-orange-600' : 'bg-slate-50 border-slate-200 text-slate-600';
+        const actionCell = reviewed
+          ? '<span class="text-xs font-semibold text-green-600">' + labelFor(reviewed.action) + ' &#10003;</span>'
+          : '<a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-id="' + escapeHtml(r.id) + '">Review</a>';
+        return '<tr data-student-id="' + escapeHtml(r.id) + '" data-student-name="' + escapeHtml(r.name) + '" data-strand="' + escapeHtml(r.strand) + '" data-career="' + escapeHtml(r.career) + '" data-match="' + escapeHtml(r.match) + '" data-reason="' + escapeHtml(r.reason) + '">' +
+          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.id) + '</p></td>' +
+          '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
+          '<td class="px-6 py-3 text-sm font-bold text-slate-700">' + escapeHtml(r.match) + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
+          '<td class="px-6 py-3"><span class="border text-xs font-bold px-2.5 py-1 rounded-md ' + priorityColor + '">' + escapeHtml(r.priority) + '</span></td>' +
+          '<td class="px-6 py-3 review-cell">' + actionCell + '</td>' +
+        '</tr>';
+      }
+      if (tab === 'completed') {
+        return '<tr>' +
+          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.id) + '</p></td>' +
+          '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
+          '<td class="px-6 py-3 text-sm font-bold text-green-600">' + escapeHtml(r.match) + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.time) + '</td>' +
+        '</tr>';
+      }
+      if (tab === 'pending') {
+        const statusColor = r.status === 'In Progress' ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-slate-50 border-slate-200 text-slate-600';
+        return '<tr>' +
+          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.id) + '</p></td>' +
+          '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.assigned) + '</td>' +
+          '<td class="px-6 py-3"><span class="border text-xs font-bold px-2.5 py-1 rounded-md ' + statusColor + '">' + escapeHtml(r.status) + '</span></td>' +
+        '</tr>';
+      }
+      return '<tr>' +
+        '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.id) + '</p></td>' +
+        '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
+        '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
+        '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
+        '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.date) + '</td>' +
+      '</tr>';
+    }
+
+    function render() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const set = DATA[activeTab];
+      const rows = q ? set.rows.filter(r => r.name.toLowerCase().includes(q)) : set.rows;
+
+      document.getElementById('tableTitle').textContent = set.title;
+      document.getElementById('tableHeadRow').innerHTML = headForTab(activeTab)
+        .map(h => '<th class="px-6 py-3 text-sm font-bold text-slate-500">' + h + '</th>').join('');
+      document.getElementById('tableBody').innerHTML = rows.map(r => rowHtml(activeTab, r)).join('');
+      document.getElementById('resultCount').textContent = 'Showing ' + rows.length + ' of ' + set.rows.length + ' entries';
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === activeTab;
+        btn.className = 'tab-btn px-4 py-2.5 rounded-md text-sm font-medium border ' +
+          (isActive ? 'bg-[#ed1c24] border-[#ed1c24] text-white' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50');
+        btn.querySelector('.tab-count').textContent = '(' + DATA[btn.dataset.tab].rows.length + ')';
+      });
+
+      bindReviewLinks();
+    }
+
+    function bindReviewLinks() {
+      document.querySelectorAll('.review-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const row = e.currentTarget.closest('tr[data-student-id]');
+          if (row) openReviewModal(row);
+        });
+      });
+    }
+
+    function openReviewModal(row) {
+      currentReviewId = row.dataset.studentId;
+      document.getElementById('reviewStudentName').textContent = row.dataset.studentName || '';
+      document.getElementById('reviewStudentId').textContent = row.dataset.studentId || '';
+      document.getElementById('reviewStrand').textContent = row.dataset.strand || '';
+      document.getElementById('reviewMatch').textContent = row.dataset.match || '';
+      document.getElementById('reviewCareer').textContent = row.dataset.career || '';
+      document.getElementById('reviewReason').textContent = row.dataset.reason || '';
+      document.getElementById('reviewModal').classList.remove('hidden');
+    }
+    function closeReviewModal() {
+      document.getElementById('reviewModal').classList.add('hidden');
+      currentReviewId = null;
+    }
+
+    document.getElementById('reviewModalClose').addEventListener('click', closeReviewModal);
+    document.getElementById('reviewModal').addEventListener('click', function(e) {
+      if (e.target.id === 'reviewModal') closeReviewModal();
+    });
+    document.querySelectorAll('.review-action-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!currentReviewId) return;
+        const reviews = loadReviews();
+        reviews[currentReviewId] = { action: btn.dataset.action, at: new Date().toISOString() };
+        saveReviews(reviews);
+        closeReviewModal();
+        render();
+      });
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        activeTab = btn.dataset.tab;
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', activeTab);
+        window.history.replaceState(null, '', url);
+        render();
+      });
+    });
+
+    document.getElementById('searchInput').addEventListener('input', render);
+
+    const params = new URLSearchParams(window.location.search);
+    const requestedTab = params.get('tab');
+    if (requestedTab && DATA[requestedTab]) activeTab = requestedTab;
+
+    render();
+  })();
+</script>
+
+</body>
+</html>
