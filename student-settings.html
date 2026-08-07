@@ -40,7 +40,7 @@
       </a>
     </nav>
     <div class="border-t border-white/5 pt-[25px] pb-6 flex flex-col gap-0.5">
-      <a href="#" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+      <a href="help-center.html" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
         <img src="images/student/nav-help-center.svg" alt="" class="w-[16.7px] h-[16.7px]">
         Help Center
       </a>
@@ -55,14 +55,34 @@
   <div class="flex-1 flex flex-col min-w-0">
 
     <header class="h-16 shrink-0 flex items-center justify-end gap-6 px-6 bg-white/60 backdrop-blur-md sticky top-0 z-10">
-      <button type="button" class="w-[14.7px] h-[18.3px]">
-        <img src="images/student/icon-bell.svg" alt="Notifications" class="w-full h-full">
-      </button>
-      <div class="flex items-center gap-4 border-l border-slate-200 pl-[25px]">
-        <p class="text-[15px] font-semibold text-[#001a40]" id="headerName">Student</p>
-        <span class="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center">
-          <img src="images/student/icon-avatar.svg" alt="" class="w-[21.7px] h-[21.7px]">
-        </span>
+      <div class="relative">
+        <button type="button" id="notifBtn" class="relative w-[14.7px] h-[18.3px]">
+          <img src="images/student/icon-bell.svg" alt="Notifications" class="w-full h-full">
+          <span id="notifDot" class="hidden absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-[#ed1c24] border border-white"></span>
+        </button>
+        <div id="notifPanel" class="hidden absolute right-0 top-[calc(100%+16px)] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
+          <div class="px-4 py-3 border-b border-gray-100">
+            <p class="text-sm font-semibold text-gray-900">Notifications</p>
+          </div>
+          <ul id="notifList" class="max-h-80 overflow-auto divide-y divide-gray-100"></ul>
+        </div>
+      </div>
+      <div class="relative border-l border-slate-200 pl-[25px]">
+        <button type="button" id="profileBtn" class="flex items-center gap-4">
+          <p class="text-[15px] font-semibold text-[#001a40]" id="headerName">Student</p>
+          <span class="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center">
+            <img src="images/student/icon-avatar.svg" alt="" class="w-[21.7px] h-[21.7px]">
+          </span>
+        </button>
+        <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+16px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
+          <div class="px-4 py-3 border-b border-gray-100">
+            <p class="text-sm font-semibold text-gray-900" id="profilePanelName">Student</p>
+            <p class="text-xs text-gray-500" id="profilePanelMeta">—</p>
+          </div>
+          <a href="student-settings.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">Settings</a>
+          <a href="help-center.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Help Center</a>
+          <a href="#" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+        </div>
       </div>
     </header>
 
@@ -99,7 +119,21 @@
             </div>
           </div>
           <div class="bg-blue-50 border-t border-blue-100 px-6 py-4">
-            <p class="text-xs text-blue-800">Editing your profile details is coming soon. Contact your guidance counselor if any of this information needs to be corrected.</p>
+            <p class="text-xs text-blue-800">Contact your guidance counselor if your name, strand, or grade level needs to be corrected.</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mt-6">
+          <div class="border-b border-gray-200 px-6 py-5">
+            <h2 class="text-base font-bold text-gray-900">Security</h2>
+            <p class="text-xs text-gray-500 mt-1">Manage your password and account security.</p>
+          </div>
+          <div class="px-6 py-5 flex items-center justify-between gap-4">
+            <div>
+              <p class="text-sm font-medium text-gray-800">Password</p>
+              <p class="text-xs text-gray-500">Change your password. You'll need to verify a one-time code sent to confirm it's really you.</p>
+            </div>
+            <a href="change-password.html" class="shrink-0 border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-5 py-2.5 hover:bg-gray-50">Change Password</a>
           </div>
         </div>
       </div>
@@ -124,12 +158,49 @@
     document.getElementById('profileSince').textContent = currentUser.registeredAt
       ? new Date(currentUser.registeredAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
       : '—';
+    document.getElementById('profilePanelName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+    document.getElementById('profilePanelMeta').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
 
-    document.getElementById('sidebarLogout').addEventListener('click', (e) => {
+    function doLogout(e) {
       e.preventDefault();
       localStorage.removeItem('currentUser');
       window.location.href = 'login.html';
-    });
+    }
+    document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+    document.getElementById('profileLogout').addEventListener('click', doLogout);
+
+    const notifBtn = document.getElementById('notifBtn');
+    const notifPanel = document.getElementById('notifPanel');
+    const profileBtn = document.getElementById('profileBtn');
+    const profilePanel = document.getElementById('profilePanel');
+    function toggleDropdown(panel, other) {
+      other.classList.add('hidden');
+      panel.classList.toggle('hidden');
+    }
+    notifBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
+    profileBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
+    document.addEventListener('click', function() { notifPanel.classList.add('hidden'); profilePanel.classList.add('hidden'); });
+    notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
+    profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
+
+    (function renderNotifications() {
+      const statusNow = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
+      const notes = [];
+      if (!statusNow || !statusNow.completed) {
+        notes.push('Complete your RIASEC Career Interest Assessment to unlock your results and Career Worksheet.');
+      } else {
+        notes.push('Your RIASEC results are ready to review under Career Results.');
+      }
+      const list = document.getElementById('notifList');
+      const dot = document.getElementById('notifDot');
+      if (notes.length) {
+        list.innerHTML = notes.map(function(n) { return '<li class="px-4 py-3 text-sm text-gray-700">' + n + '</li>'; }).join('');
+        dot.classList.remove('hidden');
+      } else {
+        list.innerHTML = '<li class="px-4 py-4 text-sm text-gray-500 text-center">You\'re all caught up.</li>';
+        dot.classList.add('hidden');
+      }
+    })();
   })();
 </script>
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Assessments — Career Profiling System</title>
+<title>Help Center — Career Profiling System</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,8 +18,6 @@
 
   <!-- Sidebar -->
   <aside class="w-[260px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
-
-    <!-- Logo Area -->
     <div class="flex items-center gap-3 px-6 py-8">
       <img src="images/student/profilepath-logo.png" alt="ProfilePath logo" class="w-[76px] h-[78px] object-contain">
       <div>
@@ -27,10 +25,8 @@
         <p class="text-sm text-white/60 mt-1">Student Portal</p>
       </div>
     </div>
-
-    <!-- Navigation -->
     <nav class="flex-1 flex flex-col gap-0.5 py-4 overflow-auto">
-      <a href="assessment.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
+      <a href="assessment.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <img src="images/student/nav-assessments.svg" alt="" class="w-[15px] h-[16.7px]">
         Assessments
       </a>
@@ -43,10 +39,8 @@
         Settings
       </a>
     </nav>
-
-    <!-- Bottom Links -->
     <div class="border-t border-white/5 pt-[25px] pb-6 flex flex-col gap-0.5">
-      <a href="help-center.html" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+      <a href="help-center.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
         <img src="images/student/nav-help-center.svg" alt="" class="w-[16.7px] h-[16.7px]">
         Help Center
       </a>
@@ -60,7 +54,6 @@
   <!-- Main Content -->
   <div class="flex-1 flex flex-col min-w-0">
 
-    <!-- Top Header -->
     <header class="h-16 shrink-0 flex items-center justify-end gap-6 px-6 bg-white/60 backdrop-blur-md sticky top-0 z-10">
       <div class="relative">
         <button type="button" id="notifBtn" class="relative w-[14.7px] h-[18.3px]">
@@ -96,53 +89,71 @@
       </div>
     </header>
 
-    <!-- Page Content -->
-    <main class="flex-1 px-9 py-10 max-w-[1152px]">
+    <main class="flex-1 px-9 py-10 max-w-[1000px]">
 
-      <div class="mb-10">
-        <h1 class="text-[32px] font-bold text-[#001a40] tracking-tight">My Assessments</h1>
-        <p class="text-base text-slate-500 mt-2">Overview of your career profiling tasks.</p>
+      <div class="mb-8">
+        <h1 class="text-[32px] font-bold text-[#001a40] tracking-tight">Help Center</h1>
+        <p class="text-base text-slate-500 mt-2">Answers to common questions, and a direct line to the Guidance Office.</p>
       </div>
 
-      <div class="flex flex-col gap-6">
+      <!-- FAQ -->
+      <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-6">
+        <div class="border-b border-slate-200 px-6 py-5">
+          <h2 class="text-lg font-bold text-gray-900">Frequently Asked Questions</h2>
+        </div>
+        <div id="faqList" class="divide-y divide-slate-100"></div>
+      </div>
 
-        <!-- RIASEC Card -->
-        <div class="bg-white border border-slate-200 rounded-lg shadow-[0px_2px_15px_0px_rgba(0,26,64,0.04)] p-[33px] flex items-center justify-between gap-8 flex-wrap">
-          <div class="flex-1 min-w-[280px] flex flex-col gap-3">
-            <h2 class="text-lg font-semibold text-[#001a40]">RIASEC Career Interest Assessment</h2>
-            <p class="text-base text-slate-500 max-w-[672px] leading-[26px]">A career interest inventory based on Holland's RIASEC theory. This must be completed first before the worksheet is unlocked.</p>
-            <div class="pt-3">
-              <span id="riasecStatusPill" class="inline-flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-full px-3.5 py-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-                <span class="text-base text-orange-500" id="riasecStatusText">Ready to take</span>
-              </span>
-            </div>
+      <!-- Contact the Guidance Office -->
+      <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-6">
+        <div class="border-b border-slate-200 px-6 py-5">
+          <h2 class="text-lg font-bold text-gray-900">Contact the Guidance Office</h2>
+          <p class="text-xs text-gray-500 mt-1">Center for Guidance and Counseling — Mapúa Malayan Colleges Laguna</p>
+        </div>
+        <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Email</p>
+            <p class="text-sm text-gray-800">cgc@mmcl.mcl.edu.ph</p>
           </div>
-          <div class="border-l border-slate-100 pl-10 shrink-0">
-            <a href="assessment-instructions.html" id="riasecActionBtn" class="inline-block bg-[#ed1c24] text-white text-[15px] font-semibold rounded-md px-8 py-3.5 shadow-sm hover:opacity-90">Take Assessment</a>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Office Hours</p>
+            <p class="text-sm text-gray-800">Mon–Fri, 8:00 AM–5:00 PM</p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Location</p>
+            <p class="text-sm text-gray-800">CGC Office, Ground Floor</p>
           </div>
         </div>
+      </div>
 
-        <!-- Career Worksheet Card -->
-        <div id="worksheetCard" class="bg-white/60 border border-slate-200 rounded-lg shadow-[0px_2px_15px_0px_rgba(0,26,64,0.04)] p-[33px] flex items-center justify-between gap-8 flex-wrap opacity-90">
-          <div class="flex-1 min-w-[280px] flex flex-col gap-3">
-            <div class="flex items-center gap-2">
-              <h2 class="text-lg font-semibold text-[#001a40]">Career Worksheet</h2>
-              <img src="images/student/icon-lock-small.svg" alt="" id="worksheetTitleLock" class="w-3 h-4">
-            </div>
-            <p class="text-base text-slate-500 max-w-[672px] leading-[26px]">Write down the career you are considering and choose electives aligned to your strand and your RIASEC results.</p>
-            <div class="pt-3">
-              <span id="worksheetStatusPill" class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-full px-3.5 py-1.5">
-                <img src="images/student/icon-lock-pill.svg" alt="" class="w-2.5 h-3.5">
-                <span class="text-base text-slate-500" id="worksheetStatusText">Locked</span>
-              </span>
-            </div>
-          </div>
-          <div class="border-l border-slate-100 pl-10 shrink-0">
-            <a href="career-worksheet.html" id="worksheetActionBtn" class="inline-block bg-slate-200 text-slate-400 text-[15px] font-semibold rounded-md px-8 py-3.5 pointer-events-none">Take Assessment</a>
-          </div>
+      <!-- Send a message -->
+      <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="border-b border-slate-200 px-6 py-5">
+          <h2 class="text-lg font-bold text-gray-900">Send a Message</h2>
+          <p class="text-xs text-gray-500 mt-1">Can't find what you're looking for? Send a message and a counselor will follow up.</p>
         </div>
-
+        <div id="messageIdle" class="px-6 py-5">
+          <form id="helpForm" class="flex flex-col gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Subject</label>
+              <input type="text" id="helpSubject" required class="w-full border border-gray-300 rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Message</label>
+              <textarea id="helpMessage" required rows="4" class="w-full border border-gray-300 rounded-md px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
+            </div>
+            <div>
+              <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Send Message</button>
+            </div>
+          </form>
+        </div>
+        <div id="messageSent" class="hidden px-6 py-8 flex flex-col items-center text-center gap-2">
+          <span class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          </span>
+          <p class="text-sm font-medium text-gray-800">Message sent</p>
+          <p class="text-sm text-gray-500">A counselor will get back to you soon.</p>
+        </div>
       </div>
 
     </main>
@@ -156,7 +167,6 @@
       window.location.replace('login.html');
       return;
     }
-
     document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
     document.getElementById('headerSub').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
     document.getElementById('profilePanelName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
@@ -184,49 +194,72 @@
     notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
     profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
 
-    const assessment = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
-
     (function renderNotifications() {
+      const statusNow = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
       const notes = [];
-      if (!assessment || !assessment.completed) {
+      if (!statusNow || !statusNow.completed) {
         notes.push('Complete your RIASEC Career Interest Assessment to unlock your results and Career Worksheet.');
       } else {
-        notes.push('Your RIASEC results are ready — view them under Career Results.');
+        notes.push('Your RIASEC results are ready to review under Career Results.');
       }
       const list = document.getElementById('notifList');
       const dot = document.getElementById('notifDot');
-      if (notes.length) {
-        list.innerHTML = notes.map(function(n) { return '<li class="px-4 py-3 text-sm text-gray-700">' + n + '</li>'; }).join('');
-        dot.classList.remove('hidden');
-      } else {
-        list.innerHTML = '<li class="px-4 py-4 text-sm text-gray-500 text-center">You\'re all caught up.</li>';
-        dot.classList.add('hidden');
-      }
+      list.innerHTML = notes.map(function(n) { return '<li class="px-4 py-3 text-sm text-gray-700">' + n + '</li>'; }).join('');
+      dot.classList.toggle('hidden', !notes.length);
     })();
-    if (assessment && assessment.completed) {
-      const pill = document.getElementById('riasecStatusPill');
-      pill.className = 'inline-flex items-center gap-2 bg-green-50 border border-green-100 rounded-full px-3.5 py-1.5';
-      pill.querySelector('span:first-child').className = 'w-1.5 h-1.5 rounded-full bg-green-600';
-      const statusText = document.getElementById('riasecStatusText');
-      statusText.textContent = 'Completed';
-      statusText.className = 'text-base text-green-600';
 
-      const btn = document.getElementById('riasecActionBtn');
-      btn.textContent = 'View Results';
-      btn.setAttribute('href', 'results.html');
-      btn.className = 'inline-block bg-white border border-[#ed1c24] text-[#ed1c24] text-[15px] font-semibold rounded-md px-8 py-3.5 shadow-sm hover:bg-red-50';
+    // FAQ accordion
+    const FAQS = [
+      { q: 'What is the RIASEC Career Interest Assessment?', a: 'It\'s a 60-question inventory based on Holland\'s RIASEC theory. Your answers show how strongly you lean toward each of six interest areas — Realistic, Investigative, Artistic, Social, Enterprising, and Conventional — which are then used to suggest careers that fit you.' },
+      { q: 'Can I pause and come back later?', a: 'Yes. Your answers are saved automatically as you go, so you can close the page and continue from where you left off.' },
+      { q: 'Can I retake the assessment?', a: 'Right now each account keeps a single result. If you believe your results don\'t reflect you accurately, message the Guidance Office below and a counselor can help.' },
+      { q: 'What is the Career Worksheet?', a: 'It unlocks after you finish the RIASEC assessment. You\'ll write down a career you\'re considering and pick electives aligned to your strand and results.' },
+      { q: 'How do I change my password?', a: 'Go to Settings, then Change Password. You\'ll set a new password and confirm it with a one-time verification code.' }
+    ];
+    document.getElementById('faqList').innerHTML = FAQS.map(function(f, i) {
+      return '<div class="faq-item">' +
+        '<button type="button" class="faq-toggle w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-gray-50" data-index="' + i + '">' +
+          '<span class="text-sm font-medium text-gray-800">' + f.q + '</span>' +
+          '<svg class="faq-chevron w-4 h-4 text-gray-400 shrink-0 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>' +
+        '</button>' +
+        '<div class="faq-answer hidden px-6 pb-4">' +
+          '<p class="text-sm text-gray-500 leading-relaxed">' + f.a + '</p>' +
+        '</div>' +
+      '</div>';
+    }).join('');
 
-      const wCard = document.getElementById('worksheetCard');
-      wCard.className = 'bg-white border border-slate-200 rounded-lg shadow-[0px_2px_15px_0px_rgba(0,26,64,0.04)] p-[33px] flex items-center justify-between gap-8 flex-wrap';
-      document.getElementById('worksheetTitleLock').classList.add('hidden');
+    document.querySelectorAll('.faq-toggle').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const answer = btn.nextElementSibling;
+        const chevron = btn.querySelector('.faq-chevron');
+        const isOpen = !answer.classList.contains('hidden');
+        answer.classList.toggle('hidden', isOpen);
+        chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+      });
+    });
 
-      const wPill = document.getElementById('worksheetStatusPill');
-      wPill.className = 'inline-flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-full px-3.5 py-1.5';
-      wPill.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span><span class="text-base text-orange-500">Ready to take</span>';
+    // Help message form
+    document.getElementById('helpForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const subject = document.getElementById('helpSubject').value.trim();
+      const message = document.getElementById('helpMessage').value.trim();
+      if (!subject || !message) return;
 
-      const wBtn = document.getElementById('worksheetActionBtn');
-      wBtn.className = 'inline-block bg-[#ed1c24] text-white text-[15px] font-semibold rounded-md px-8 py-3.5 shadow-sm hover:opacity-90';
-    }
+      const key = 'helpRequests';
+      let list = [];
+      try { list = JSON.parse(localStorage.getItem(key)) || []; } catch (err) {}
+      list.push({
+        schoolId: currentUser.schoolId,
+        name: currentUser.firstName + ' ' + currentUser.lastName,
+        subject: subject,
+        message: message,
+        sentAt: new Date().toISOString()
+      });
+      localStorage.setItem(key, JSON.stringify(list));
+
+      document.getElementById('messageIdle').classList.add('hidden');
+      document.getElementById('messageSent').classList.remove('hidden');
+    });
   })();
 </script>
 
