@@ -19,7 +19,9 @@
 
         <h2>Create Account</h2>
 
-        <form action="register.php" method="POST">
+        <p id="formMessage" class="form-message" style="display:none;"></p>
+
+        <form id="registerForm" action="register.php" method="POST">
 
             <div class="name-row">
                 <input type="text"
@@ -100,6 +102,63 @@
     </div>
 
 </div>
+
+<script>
+  (function() {
+    const STORAGE_KEY = 'studentAccounts';
+
+    function loadAccounts() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { return []; }
+    }
+    function saveAccounts(list) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+    function showMessage(text, isError) {
+      const msg = document.getElementById('formMessage');
+      msg.textContent = text;
+      msg.style.display = 'block';
+      msg.style.color = isError ? '#ffb3b3' : '#b6f0c2';
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const firstName = form.first_name.value.trim();
+      const lastName = form.last_name.value.trim();
+      const schoolId = form.school_id.value.trim();
+      const strand = form.strand.value;
+      const gradeLevel = form.querySelector('input[name="grade_level"]:checked');
+      const password = form.password.value;
+
+      if (!firstName || !lastName || !schoolId || !strand || !gradeLevel || !password) {
+        showMessage('Please fill out all fields.', true);
+        return;
+      }
+
+      const accounts = loadAccounts();
+      if (accounts.some(a => a.schoolId.toLowerCase() === schoolId.toLowerCase())) {
+        showMessage('An account with this School ID already exists.', true);
+        return;
+      }
+
+      accounts.push({
+        schoolId: schoolId,
+        firstName: firstName,
+        lastName: lastName,
+        strand: strand,
+        gradeLevel: gradeLevel.value,
+        password: password,
+        registeredAt: new Date().toISOString()
+      });
+      saveAccounts(accounts);
+
+      showMessage('Account created! Redirecting to login...', false);
+      setTimeout(function() {
+        window.location.href = 'login.html';
+      }, 900);
+    });
+  })();
+</script>
 
 </body>
 </html>

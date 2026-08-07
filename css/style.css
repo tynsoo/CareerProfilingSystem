@@ -150,6 +150,12 @@ a:hover{
     margin-bottom:25px;
 }
 
+.form-message{
+    text-align:center;
+    font-size:13px;
+    margin-bottom:15px;
+}
+
 .name-row{
     display:flex;
     gap:15px;

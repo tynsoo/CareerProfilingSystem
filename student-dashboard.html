@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="bg-[#f9fafb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
+
+    <!-- Logo Area -->
+    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
+      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+      <p class="text-sm text-gray-500">Student Portal</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
+      <div class="px-6">
+        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
+      </div>
+      <ul class="flex flex-col gap-1 px-2">
+        <li>
+          <a href="student-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="assessment.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
+            My Assessment
+          </a>
+        </li>
+        <li>
+          <a href="results.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+            My Recommendations
+          </a>
+        </li>
+        <li>
+          <a href="student-dashboard.html#counseling" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/monitoring/card-icon-counseling.svg" alt="" class="w-4 h-4">
+            Counseling
+          </a>
+        </li>
+        <li>
+          <a href="student-settings.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+            My Profile
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
+      <a href="#" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+        <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 flex items-center justify-between px-6 h-16 shrink-0 relative z-20">
+      <button type="button" id="menuToggle" class="w-5 h-4">
+        <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-6">
+
+        <!-- Notifications -->
+        <div class="relative">
+          <button type="button" id="notifBtn" class="relative w-5 h-5">
+            <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+            <span id="notifDot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ed1c24]"></span>
+          </button>
+          <div id="notifPanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <p class="text-sm font-semibold text-gray-900">Notifications</p>
+            </div>
+            <ul id="notifList" class="max-h-80 overflow-auto divide-y divide-gray-100"></ul>
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="relative">
+          <button type="button" id="profileBtn" class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+              <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+            </span>
+            <span class="text-left">
+              <span class="block text-sm font-semibold text-gray-800" id="headerName">Student</span>
+              <span class="block text-xs text-gray-500" id="headerSub">—</span>
+            </span>
+            <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+          </button>
+          <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <a href="student-settings.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+            <a href="#" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <!-- Welcome -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900" id="welcomeHeading">Welcome back!</h1>
+        <p class="text-sm text-gray-500 mt-1" id="welcomeSub">Here's an overview of your career profiling journey.</p>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start justify-between pb-4">
+            <span class="w-12 h-12 rounded-lg bg-[#ffedd5] flex items-center justify-center">
+              <img src="images/admin/card-icon-assessments.svg" alt="" class="w-4 h-5">
+            </span>
+          </div>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Assessment Status</p>
+            <p class="text-xl font-bold text-gray-900 mt-1" id="statAssessment">Pending</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start justify-between pb-4">
+            <span class="w-12 h-12 rounded-lg bg-[#f3e8ff] flex items-center justify-center">
+              <img src="images/admin/card-icon-graduation.svg" alt="" class="w-5 h-5">
+            </span>
+          </div>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Top RIASEC Type</p>
+            <p class="text-xl font-bold text-gray-900 mt-1" id="statRiasec">Not yet assessed</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start justify-between pb-4">
+            <span class="w-12 h-12 rounded-lg bg-[#dbeafe] flex items-center justify-center">
+              <img src="images/admin/card-icon-briefcase.svg" alt="" class="w-5 h-5">
+            </span>
+          </div>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Recommended Careers</p>
+            <p class="text-xl font-bold text-gray-900 mt-1" id="statCareers">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start justify-between pb-4">
+            <span class="w-12 h-12 rounded-lg bg-[#dcfce7] flex items-center justify-center">
+              <img src="images/admin/card-icon-counseling.svg" alt="" class="w-5 h-5">
+            </span>
+          </div>
+          <div>
+            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Counseling Status</p>
+            <p class="text-xl font-bold text-gray-900 mt-1" id="statCounseling">Not Requested</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assessment CTA -->
+      <div id="assessmentCard" class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6 flex items-center justify-between flex-wrap gap-4">
+        <div class="flex items-start gap-4">
+          <span class="w-12 h-12 rounded-lg bg-[#fbe2e3] flex items-center justify-center shrink-0">
+            <img src="images/admin/card-icon-assessments.svg" alt="" class="w-4 h-5">
+          </span>
+          <div>
+            <h2 class="text-base font-bold text-gray-900" id="assessmentCardTitle">You haven't completed your RIASEC assessment yet</h2>
+            <p class="text-sm text-gray-500 mt-1" id="assessmentCardDesc">Answer a short set of questions so we can recommend careers that match your interests and strengths.</p>
+          </div>
+        </div>
+        <a href="assessment.html" id="assessmentCardBtn" class="shrink-0 bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90 whitespace-nowrap">Start Assessment</a>
+      </div>
+
+      <!-- Recommended Careers Preview -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-6">
+        <div class="border-b border-gray-200 px-6 py-5 flex items-center justify-between flex-wrap gap-3">
+          <h2 class="text-lg font-bold text-gray-900">Recommended Careers</h2>
+          <a href="results.html" class="text-sm font-medium text-[#ed1c24] hover:underline">View Full Results</a>
+        </div>
+        <div id="careersEmptyState" class="px-6 py-10 flex flex-col items-center text-center gap-2">
+          <span class="w-12 h-12 rounded-lg bg-[#dbeafe] flex items-center justify-center mb-2">
+            <img src="images/admin/card-icon-briefcase.svg" alt="" class="w-5 h-5">
+          </span>
+          <p class="text-sm font-medium text-gray-800">No recommendations yet</p>
+          <p class="text-sm text-gray-500 max-w-sm">Complete your RIASEC assessment to see careers matched to your interests.</p>
+        </div>
+      </div>
+
+      <!-- Counseling -->
+      <div id="counseling" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-6 scroll-mt-6">
+        <div class="border-b border-gray-200 px-6 py-5">
+          <h2 class="text-lg font-bold text-gray-900">Guidance Counseling</h2>
+          <p class="text-xs text-gray-500 mt-1">Request a one-on-one session with a guidance counselor to discuss your results or any concerns.</p>
+        </div>
+        <div id="counselingIdle" class="px-6 py-5 flex items-center justify-between flex-wrap gap-4">
+          <p class="text-sm text-gray-600">You have not requested a counseling session.</p>
+          <button type="button" id="requestCounselingBtn" class="shrink-0 bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Request Counseling</button>
+        </div>
+        <div id="counselingActive" class="hidden px-6 py-5 flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <span class="inline-flex items-center gap-1.5 bg-[#fff7ed] border border-[#fed7aa] text-amber-600 text-xs font-medium px-3 py-1 rounded-full mb-2">
+              <img src="images/admin/dot-orange.svg" alt="" class="w-3 h-3"> Pending
+            </span>
+            <p class="text-sm text-gray-800" id="counselingReasonText"></p>
+            <p class="text-xs text-gray-400 mt-1" id="counselingDateText"></p>
+          </div>
+          <button type="button" id="cancelCounselingBtn" class="shrink-0 border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-5 py-2.5 hover:bg-gray-50">Cancel Request</button>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="border-b border-gray-200 px-6 py-5">
+          <h2 class="text-lg font-bold text-gray-900">Recent Activity</h2>
+        </div>
+        <ul id="activityList" class="divide-y divide-gray-100"></ul>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Counseling Request Modal -->
+<div id="counselingModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h3 class="text-lg font-bold text-gray-900">Request Counseling</h3>
+      <button type="button" id="counselingModalClose" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+    </div>
+    <form id="counselingForm">
+      <div class="px-6 py-5 flex flex-col gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Student</label>
+          <input type="text" id="counselingName" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-600">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Reason for Counseling</label>
+          <textarea id="counselingReason" required rows="4" placeholder="Briefly describe what you'd like to talk about..." class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+        <button type="button" id="counselingModalCancel" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Submit Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (!currentUser || currentUser.role !== 'student') {
+      window.location.replace('login.html');
+      return;
+    }
+
+    document.getElementById('menuToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('hidden');
+    });
+
+    function toggleDropdown(panel, ...others) {
+      others.forEach(p => p.classList.add('hidden'));
+      panel.classList.toggle('hidden');
+    }
+    const notifBtn = document.getElementById('notifBtn');
+    const notifPanel = document.getElementById('notifPanel');
+    const profileBtn = document.getElementById('profileBtn');
+    const profilePanel = document.getElementById('profilePanel');
+    notifBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
+    profileBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
+    document.addEventListener('click', () => { notifPanel.classList.add('hidden'); profilePanel.classList.add('hidden'); });
+    notifPanel.addEventListener('click', (e) => e.stopPropagation());
+
+    function doLogout(e) {
+      e.preventDefault();
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    }
+    document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+    document.getElementById('profileLogout').addEventListener('click', doLogout);
+
+    const fullName = currentUser.firstName + ' ' + currentUser.lastName;
+    document.getElementById('headerName').textContent = fullName;
+    document.getElementById('headerSub').textContent = currentUser.strand + ' • Grade ' + currentUser.gradeLevel;
+    document.getElementById('welcomeHeading').textContent = 'Welcome back, ' + currentUser.firstName + '!';
+    document.getElementById('welcomeSub').textContent = currentUser.strand + ' • Grade ' + currentUser.gradeLevel + ' • ID: ' + currentUser.schoolId;
+    document.getElementById('counselingName').value = fullName + ' (' + currentUser.schoolId + ')';
+
+    const ASSESSMENT_KEY = 'assessmentStatus_' + currentUser.schoolId;
+    const assessment = JSON.parse(localStorage.getItem(ASSESSMENT_KEY) || 'null');
+
+    if (assessment && assessment.completed) {
+      document.getElementById('statAssessment').textContent = 'Completed';
+      document.getElementById('statRiasec').textContent = assessment.topTypes ? assessment.topTypes[0] : '—';
+      document.getElementById('statCareers').textContent = String((assessment.careers || []).length);
+      document.getElementById('assessmentCardTitle').textContent = 'Your RIASEC assessment is complete';
+      document.getElementById('assessmentCardDesc').textContent = 'View your personalized career recommendations based on your results.';
+      const btn = document.getElementById('assessmentCardBtn');
+      btn.textContent = 'View Full Results';
+      btn.setAttribute('href', 'results.html');
+    }
+
+    const CR_KEY = 'counselingRequests';
+    function loadRequests() {
+      try { return JSON.parse(localStorage.getItem(CR_KEY)) || []; } catch (e) { return []; }
+    }
+    function saveRequests(list) { localStorage.setItem(CR_KEY, JSON.stringify(list)); }
+    function myActiveRequest() {
+      return loadRequests().find(r => r.schoolId === currentUser.schoolId && r.status === 'Pending');
+    }
+
+    function renderCounseling() {
+      const active = myActiveRequest();
+      document.getElementById('counselingIdle').classList.toggle('hidden', !!active);
+      document.getElementById('counselingActive').classList.toggle('hidden', !active);
+      document.getElementById('statCounseling').textContent = active ? 'Pending' : 'Not Requested';
+      if (active) {
+        document.getElementById('counselingReasonText').textContent = active.reason;
+        document.getElementById('counselingDateText').textContent = 'Requested on ' + new Date(active.requestedAt).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      }
+    }
+    renderCounseling();
+
+    const counselingModal = document.getElementById('counselingModal');
+    function openCounselingModal() {
+      document.getElementById('counselingReason').value = '';
+      counselingModal.classList.remove('hidden');
+    }
+    function closeCounselingModal() { counselingModal.classList.add('hidden'); }
+
+    document.getElementById('requestCounselingBtn').addEventListener('click', openCounselingModal);
+    document.getElementById('counselingModalClose').addEventListener('click', closeCounselingModal);
+    document.getElementById('counselingModalCancel').addEventListener('click', closeCounselingModal);
+    counselingModal.addEventListener('click', (e) => { if (e.target.id === 'counselingModal') closeCounselingModal(); });
+
+    document.getElementById('counselingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const reason = document.getElementById('counselingReason').value.trim();
+      if (!reason) return;
+      const list = loadRequests();
+      list.push({
+        schoolId: currentUser.schoolId,
+        name: fullName,
+        strand: currentUser.strand,
+        reason: reason,
+        requestedAt: new Date().toISOString(),
+        status: 'Pending'
+      });
+      saveRequests(list);
+      closeCounselingModal();
+      renderCounseling();
+      renderActivity();
+    });
+
+    document.getElementById('cancelCounselingBtn').addEventListener('click', function() {
+      const list = loadRequests().filter(r => !(r.schoolId === currentUser.schoolId && r.status === 'Pending'));
+      saveRequests(list);
+      renderCounseling();
+      renderActivity();
+    });
+
+    function renderActivity() {
+      const items = [];
+      if (currentUser.registeredAt) {
+        items.push({ text: 'Account created', at: currentUser.registeredAt });
+      }
+      const active = myActiveRequest();
+      if (active) {
+        items.push({ text: 'Counseling session requested', at: active.requestedAt });
+      }
+      items.sort((a, b) => new Date(b.at) - new Date(a.at));
+
+      const list = document.getElementById('activityList');
+      if (!items.length) {
+        list.innerHTML = '<li class="px-6 py-6 text-sm text-gray-500 text-center">No recent activity yet.</li>';
+        return;
+      }
+      list.innerHTML = items.map(item =>
+        '<li class="px-6 py-3.5 flex items-center justify-between gap-4">' +
+        '<p class="text-sm text-gray-800">' + item.text + '</p>' +
+        '<p class="text-xs text-gray-400 whitespace-nowrap">' + new Date(item.at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + '</p>' +
+        '</li>'
+      ).join('');
+    }
+    renderActivity();
+
+    function renderNotifications() {
+      const notes = [];
+      if (!assessment || !assessment.completed) {
+        notes.push('You haven\'t completed your RIASEC assessment yet.');
+      }
+      const list = document.getElementById('notifList');
+      const dot = document.getElementById('notifDot');
+      if (!notes.length) {
+        list.innerHTML = '<li class="px-4 py-4 text-sm text-gray-500 text-center">You\'re all caught up.</li>';
+        dot.classList.add('hidden');
+      } else {
+        list.innerHTML = notes.map(n => '<li class="px-4 py-3 text-sm text-gray-800">' + n + '</li>').join('');
+        dot.classList.remove('hidden');
+      }
+    }
+    renderNotifications();
+
+    if (window.location.hash === '#counseling') {
+      document.getElementById('counseling').scrollIntoView({ behavior: 'smooth' });
+    }
+  })();
+</script>
+
+</body>
+</html>

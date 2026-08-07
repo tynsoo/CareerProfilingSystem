@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Results — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="bg-[#f8f9fb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-[260px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
+    <div class="flex items-center gap-3 px-6 py-8">
+      <img src="images/student/profilepath-logo.png" alt="ProfilePath logo" class="w-[76px] h-[78px] object-contain">
+      <div>
+        <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+        <p class="text-sm text-white/60 mt-1">Student Portal</p>
+      </div>
+    </div>
+    <nav class="flex-1 flex flex-col gap-0.5 py-4 overflow-auto">
+      <a href="assessment.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-assessments.svg" alt="" class="w-[15px] h-[16.7px]">
+        Assessments
+      </a>
+      <a href="results.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
+        <img src="images/student/nav-career-results.svg" alt="" class="w-[15px] h-[15px]">
+        Career Results
+      </a>
+      <a href="student-settings.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="border-t border-white/5 pt-[25px] pb-6 flex flex-col gap-0.5">
+      <a href="#" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-help-center.svg" alt="" class="w-[16.7px] h-[16.7px]">
+        Help Center
+      </a>
+      <a href="#" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-logout.svg" alt="" class="w-[15px] h-[15px]">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <header class="h-16 shrink-0 flex items-center justify-end gap-6 px-6 bg-white/60 backdrop-blur-md sticky top-0 z-10">
+      <button type="button" class="w-[14.7px] h-[18.3px]">
+        <img src="images/student/icon-bell.svg" alt="Notifications" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-4 border-l border-slate-200 pl-[25px]">
+        <div class="text-right">
+          <p class="text-[15px] font-semibold text-[#001a40]" id="headerName">Student</p>
+          <p class="text-base text-slate-500" id="headerSub">—</p>
+        </div>
+        <span class="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center">
+          <img src="images/student/icon-avatar.svg" alt="" class="w-[21.7px] h-[21.7px]">
+        </span>
+      </div>
+    </header>
+
+    <main class="flex-1 px-9 py-10 max-w-[1152px]">
+
+      <!-- Empty state: no assessment yet -->
+      <div id="emptyState" class="hidden bg-white border border-slate-200 rounded-xl shadow-sm p-12 max-w-md flex flex-col items-center text-center gap-4">
+        <span class="w-16 h-16 rounded-xl bg-[#dbeafe] flex items-center justify-center">
+          <img src="images/admin/card-icon-briefcase.svg" alt="" class="w-6 h-6">
+        </span>
+        <h1 class="text-xl font-bold text-[#001a40]">No Results Yet</h1>
+        <p class="text-sm text-slate-500">Complete the RIASEC Career Interest Assessment to see your Holland Code profile here.</p>
+        <a href="assessment.html" class="mt-2 bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Go to My Assessments</a>
+      </div>
+
+      <!-- Results -->
+      <div id="resultsView" class="hidden">
+
+        <div class="flex items-start gap-5 mb-8">
+          <a href="assessment.html" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
+            <img src="images/student/icon-back-pill.svg" alt="Back" class="w-4 h-4">
+          </a>
+          <div>
+            <h1 class="text-[32px] font-bold text-[#001a40] tracking-tight">RIASEC Results</h1>
+            <p class="text-sm text-[#5e3f3c] mt-1">Holland Code Assessment Profile</p>
+          </div>
+        </div>
+
+        <!-- Primary Interest Area -->
+        <div class="bg-white border border-[#e0e3e5] rounded-lg p-6 mb-4 flex gap-8 flex-wrap overflow-hidden relative">
+          <div class="border-r border-[#e0e3e5] pr-5 flex flex-col gap-2 shrink-0 w-full sm:w-[260px]">
+            <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase">Primary Interest Area</p>
+            <p class="flex items-baseline gap-3">
+              <span class="text-[32px] font-bold text-[#001c43]" id="primaryTypeName">—</span>
+              <span class="text-lg text-[#bb0013] font-bold" id="primaryTypeLetter">—</span>
+            </p>
+            <div class="flex flex-wrap gap-2 mt-2" id="primaryTraits"></div>
+          </div>
+          <div class="flex-1 min-w-[280px] flex flex-col gap-2">
+            <p class="text-[15px] text-[#191c1e] leading-relaxed" id="primaryDescription">—</p>
+            <p class="text-[13px] text-[#5e3f3c] leading-relaxed" id="primaryFit">—</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          <!-- Radar Chart -->
+          <div class="bg-white border border-[#e0e3e5] rounded-lg p-6 flex flex-col">
+            <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-4">RIASEC Profile Overview</p>
+            <div class="flex-1 flex items-center justify-center py-4">
+              <svg id="radarChart" viewBox="0 0 280 280" class="w-full max-w-[280px]"></svg>
+            </div>
+            <div class="border-t border-[#e0e3e5] pt-4 flex items-center justify-between">
+              <span class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c]">Holland Code:</span>
+              <span class="text-xl font-bold text-[#001c43] tracking-[2px]" id="hollandCode">—</span>
+            </div>
+          </div>
+
+          <!-- Interest Intensity -->
+          <div class="bg-white border border-[#e0e3e5] rounded-lg p-6">
+            <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-6">Interest Intensity</p>
+            <div id="intensityList" class="flex flex-col gap-6"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+(function() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  if (!currentUser || currentUser.role !== 'student') {
+    window.location.replace('login.html');
+    return;
+  }
+  document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+  document.getElementById('headerSub').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
+  document.getElementById('sidebarLogout').addEventListener('click', function(e) {
+    e.preventDefault();
+    localStorage.removeItem('currentUser');
+    window.location.href = 'login.html';
+  });
+
+  const TYPE_INFO = {
+    Realistic: {
+      letter: 'R', nickname: 'The Doers',
+      description: '"The Doers" — You prefer hands-on, practical work over abstract discussion. You enjoy working with tools, machines, and the outdoors.',
+      fit: 'Strong fit for trades, engineering, or technical roles. Often avoids highly social or paperwork-heavy positions.',
+      traits: ['Practical', 'Mechanical', 'Hands-on'],
+      color: '#b7c8e1'
+    },
+    Investigate: {
+      letter: 'I', nickname: 'The Thinkers',
+      description: '"The Thinkers" — You prefer working with ideas and require an extensive amount of thinking. You enjoy searching for facts and figuring out problems mentally.',
+      fit: 'Strong fit for roles requiring research, mathematics, or scientific analysis. Often avoids highly structured or persuasive leadership roles.',
+      traits: ['Analytical', 'Intellectual', 'Scientific'],
+      color: '#bb0013'
+    },
+    Artistic: {
+      letter: 'A', nickname: 'The Creators',
+      description: '"The Creators" — You prefer creative, unstructured activities that let you express original ideas. You enjoy art, writing, music, or design.',
+      fit: 'Strong fit for design, media, or performing arts. Often avoids highly routine or rigidly structured tasks.',
+      traits: ['Creative', 'Expressive', 'Original'],
+      color: '#b7c8e1'
+    },
+    Social: {
+      letter: 'S', nickname: 'The Helpers',
+      description: '"The Helpers" — You prefer working with and helping other people. You enjoy teaching, caring for, or supporting others.',
+      fit: 'Strong fit for teaching, counseling, or healthcare roles. Often avoids solitary, mechanical, or highly technical work.',
+      traits: ['Empathetic', 'Cooperative', 'Supportive'],
+      color: '#b7c8e1'
+    },
+    Enterprising: {
+      letter: 'E', nickname: 'The Persuaders',
+      description: '"The Persuaders" — You prefer leading, persuading, and managing others toward a goal. You enjoy taking initiative and influencing outcomes.',
+      fit: 'Strong fit for business, sales, or management roles. Often avoids highly analytical or purely observational tasks.',
+      traits: ['Ambitious', 'Assertive', 'Persuasive'],
+      color: '#495e88'
+    },
+    Conventional: {
+      letter: 'C', nickname: 'The Organizers',
+      description: '"The Organizers" — You prefer structured, detail-oriented, and orderly tasks. You enjoy organizing information and following clear procedures.',
+      fit: 'Strong fit for accounting, administration, or data management. Often avoids ambiguous or unstructured creative work.',
+      traits: ['Detail-oriented', 'Organized', 'Efficient'],
+      color: '#495e88'
+    }
+  };
+  const AXIS_ORDER = ['Realistic', 'Investigate', 'Artistic', 'Social', 'Enterprising', 'Conventional'];
+  const MAX_SCORE = 50;
+
+  const status = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
+
+  if (!status || !status.completed) {
+    document.getElementById('emptyState').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('resultsView').classList.remove('hidden');
+
+  const scores = status.scores;
+  const ranked = AXIS_ORDER
+    .map(function(name) { return { name: name, score: scores[name === 'Investigate' ? 'I' : name[0]] }; })
+    .sort(function(a, b) { return b.score - a.score; });
+
+  const primary = ranked[0];
+  const info = TYPE_INFO[primary.name];
+  document.getElementById('primaryTypeName').textContent = primary.name === 'Investigate' ? 'Investigative' : primary.name;
+  document.getElementById('primaryTypeLetter').textContent = info.letter;
+  document.getElementById('primaryDescription').textContent = info.description;
+  document.getElementById('primaryFit').textContent = info.fit;
+  document.getElementById('primaryTraits').innerHTML = info.traits.map(function(t) {
+    return '<span class="bg-slate-100 border border-[#e8bcb7] text-[#5e3f3c] text-xs font-semibold px-3 py-1 rounded-full">' + t + '</span>';
+  }).join('');
+
+  document.getElementById('hollandCode').textContent = ranked.slice(0, 3).map(function(r) { return r.name === 'Investigate' ? 'I' : r.name[0]; }).join(' ');
+
+  const intensityHtml = ranked.map(function(r, i) {
+    const pct = Math.round((r.score / MAX_SCORE) * 100);
+    const dim = i < 3 ? '' : 'opacity-60';
+    const barColor = i === 0 ? '#bb0013' : (i < 3 ? '#001c43' : '#b7c8e1');
+    const pctColor = i === 0 ? 'text-[#bb0013]' : (i < 3 ? 'text-[#495e88]' : 'text-slate-500');
+    const displayName = r.name === 'Investigate' ? 'Investigative' : r.name;
+    return '<div class="flex flex-col gap-2 ' + dim + '">' +
+      '<div class="flex items-baseline justify-between">' +
+        '<span class="text-xs font-semibold tracking-[0.6px] text-[#001c43]">' + displayName + ' (' + info_letter(r.name) + ')</span>' +
+        '<span class="text-[13px] font-medium ' + pctColor + '">' + pct + '%</span>' +
+      '</div>' +
+      '<div class="bg-slate-100 h-2 rounded-full overflow-hidden">' +
+        '<div class="h-full rounded-full" style="width:' + pct + '%;background:' + barColor + '"></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('intensityList').innerHTML = intensityHtml;
+
+  function info_letter(name) { return TYPE_INFO[name].letter; }
+
+  // Radar chart
+  (function renderRadar() {
+    const svg = document.getElementById('radarChart');
+    const cx = 140, cy = 140, maxR = 105;
+    const n = AXIS_ORDER.length;
+    const angleFor = function(i) { return (-90 + i * (360 / n)) * Math.PI / 180; };
+    const pointAt = function(i, r) {
+      const a = angleFor(i);
+      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    };
+
+    let svgContent = '';
+    [0.33, 0.66, 1].forEach(function(f) {
+      const pts = AXIS_ORDER.map(function(_, i) { return pointAt(i, maxR * f).join(','); }).join(' ');
+      svgContent += '<polygon points="' + pts + '" fill="none" stroke="#e2e8f0" stroke-width="1" />';
+    });
+    AXIS_ORDER.forEach(function(_, i) {
+      const p = pointAt(i, maxR);
+      svgContent += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0] + '" y2="' + p[1] + '" stroke="#e2e8f0" stroke-width="1" />';
+    });
+
+    const dataPts = AXIS_ORDER.map(function(name, i) {
+      const key = name === 'Investigate' ? 'I' : name[0];
+      const r = maxR * (scores[key] / MAX_SCORE);
+      return pointAt(i, r).join(',');
+    }).join(' ');
+    svgContent += '<polygon points="' + dataPts + '" fill="rgba(187,0,19,0.15)" stroke="#bb0013" stroke-width="2" />';
+
+    AXIS_ORDER.forEach(function(name, i) {
+      const p = pointAt(i, maxR + 16);
+      const letter = name === 'Investigate' ? 'I' : name[0];
+      const isTop = ranked[0].name === name;
+      svgContent += '<text x="' + p[0] + '" y="' + p[1] + '" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="' + (isTop ? '#bb0013' : '#001c43') + '">' + letter + '</text>';
+    });
+
+    svg.innerHTML = svgContent;
+  })();
+})();
+</script>
+
+</body>
+</html>

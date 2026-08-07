@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="bg-[#f8f9fb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-[260px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
+    <div class="flex items-center gap-3 px-6 py-8">
+      <img src="images/student/profilepath-logo.png" alt="ProfilePath logo" class="w-[76px] h-[78px] object-contain">
+      <div>
+        <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+        <p class="text-sm text-white/60 mt-1">Student Portal</p>
+      </div>
+    </div>
+    <nav class="flex-1 flex flex-col gap-0.5 py-4 overflow-auto">
+      <a href="assessment.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-assessments.svg" alt="" class="w-[15px] h-[16.7px]">
+        Assessments
+      </a>
+      <a href="results.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-career-results.svg" alt="" class="w-[15px] h-[15px]">
+        Career Results
+      </a>
+      <a href="student-settings.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
+        <svg class="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="border-t border-white/5 pt-[25px] pb-6 flex flex-col gap-0.5">
+      <a href="#" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-help-center.svg" alt="" class="w-[16.7px] h-[16.7px]">
+        Help Center
+      </a>
+      <a href="#" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-logout.svg" alt="" class="w-[15px] h-[15px]">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <header class="h-16 shrink-0 flex items-center justify-end gap-6 px-6 bg-white/60 backdrop-blur-md sticky top-0 z-10">
+      <button type="button" class="w-[14.7px] h-[18.3px]">
+        <img src="images/student/icon-bell.svg" alt="Notifications" class="w-full h-full">
+      </button>
+      <div class="flex items-center gap-4 border-l border-slate-200 pl-[25px]">
+        <p class="text-[15px] font-semibold text-[#001a40]" id="headerName">Student</p>
+        <span class="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center">
+          <img src="images/student/icon-avatar.svg" alt="" class="w-[21.7px] h-[21.7px]">
+        </span>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-8 overflow-auto">
+
+      <div class="max-w-2xl mx-auto">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="border-b border-gray-200 px-6 py-5 flex items-center gap-4">
+            <span class="w-14 h-14 rounded-full bg-[#001c43] flex items-center justify-center shrink-0">
+              <img src="images/admin/icon-avatar.svg" alt="" class="w-5 h-6">
+            </span>
+            <div>
+              <h1 class="text-lg font-bold text-gray-900" id="profileName">—</h1>
+              <p class="text-sm text-gray-500" id="profileMeta">—</p>
+            </div>
+          </div>
+          <div class="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">School ID</p>
+              <p class="text-sm text-gray-800" id="profileSchoolId">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Strand</p>
+              <p class="text-sm text-gray-800" id="profileStrand">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Grade Level</p>
+              <p class="text-sm text-gray-800" id="profileGrade">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Member Since</p>
+              <p class="text-sm text-gray-800" id="profileSince">—</p>
+            </div>
+          </div>
+          <div class="bg-blue-50 border-t border-blue-100 px-6 py-4">
+            <p class="text-xs text-blue-800">Editing your profile details is coming soon. Contact your guidance counselor if any of this information needs to be corrected.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (!currentUser || currentUser.role !== 'student') {
+      window.location.replace('login.html');
+      return;
+    }
+    document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+    document.getElementById('profileName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+    document.getElementById('profileMeta').textContent = currentUser.strand + ' • Grade ' + currentUser.gradeLevel;
+    document.getElementById('profileSchoolId').textContent = currentUser.schoolId;
+    document.getElementById('profileStrand').textContent = currentUser.strand;
+    document.getElementById('profileGrade').textContent = 'Grade ' + currentUser.gradeLevel;
+    document.getElementById('profileSince').textContent = currentUser.registeredAt
+      ? new Date(currentUser.registeredAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      : '—';
+
+    document.getElementById('sidebarLogout').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    });
+  })();
+</script>
+
+</body>
+</html>
