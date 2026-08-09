@@ -194,6 +194,12 @@
     notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
     profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
 
+    const prefillSubject = new URLSearchParams(window.location.search).get('subject');
+    if (prefillSubject) {
+      document.getElementById('helpSubject').value = prefillSubject;
+      document.getElementById('helpMessage').focus();
+    }
+
     (function renderNotifications() {
       const statusNow = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
       const notes = [];

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worksheet Results — Career Profiling System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+</head>
+<body class="bg-[#f8f9fb]">
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-[260px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
+    <div class="flex items-center gap-3 px-6 py-8">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[64px]">
+      <div>
+        <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+        <p class="text-sm text-white/60 mt-1">Student Portal</p>
+      </div>
+    </div>
+    <nav class="flex-1 flex flex-col gap-0.5 py-4 overflow-auto">
+      <a href="assessment.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-assessments.svg" alt="" class="w-[15px] h-[16.7px]">
+        Assessments
+      </a>
+      <a href="results.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-career-results.svg" alt="" class="w-[15px] h-[15px]">
+        Career Results
+      </a>
+      <a href="student-settings.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="border-t border-white/5 pt-[25px] pb-6 flex flex-col gap-0.5">
+      <a href="help-center.html" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-help-center.svg" alt="" class="w-[16.7px] h-[16.7px]">
+        Help Center
+      </a>
+      <a href="#" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+        <img src="images/student/nav-logout.svg" alt="" class="w-[15px] h-[15px]">
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <header class="h-16 shrink-0 flex items-center justify-end gap-6 px-6 bg-white/60 backdrop-blur-md sticky top-0 z-10">
+      <div class="relative">
+        <button type="button" id="notifBtn" class="relative w-[14.7px] h-[18.3px]">
+          <img src="images/student/icon-bell.svg" alt="Notifications" class="w-full h-full">
+          <span id="notifDot" class="hidden absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-[#ed1c24] border border-white"></span>
+        </button>
+        <div id="notifPanel" class="hidden absolute right-0 top-[calc(100%+16px)] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
+          <div class="px-4 py-3 border-b border-gray-100">
+            <p class="text-sm font-semibold text-gray-900">Notifications</p>
+          </div>
+          <ul id="notifList" class="max-h-80 overflow-auto divide-y divide-gray-100"></ul>
+        </div>
+      </div>
+      <div class="relative border-l border-slate-200 pl-[25px]">
+        <button type="button" id="profileBtn" class="flex items-center gap-4">
+          <div class="text-right">
+            <p class="text-[15px] font-semibold text-[#001a40]" id="headerName">Student</p>
+            <p class="text-base text-slate-500" id="headerSub">—</p>
+          </div>
+          <span class="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center">
+            <img src="images/student/icon-avatar.svg" alt="" class="w-[21.7px] h-[21.7px]">
+          </span>
+        </button>
+        <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+16px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
+          <div class="px-4 py-3 border-b border-gray-100">
+            <p class="text-sm font-semibold text-gray-900" id="profilePanelName">Student</p>
+            <p class="text-xs text-gray-500" id="profilePanelMeta">—</p>
+          </div>
+          <a href="student-settings.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">Settings</a>
+          <a href="help-center.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Help Center</a>
+          <a href="#" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 px-9 py-10 max-w-[1200px]">
+
+      <div class="flex items-center gap-3 mb-8">
+        <a href="career-worksheet.html" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#5e3f3c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h1 class="text-[28px] font-semibold text-[#191c1e]">Worksheet Results</h1>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+        <!-- Your Worksheet -->
+        <div class="lg:col-span-5">
+          <div class="bg-white border border-[#e0e3e5] rounded-[4px] px-[17px] pt-[17px] pb-[39px]">
+            <h2 class="text-xl font-semibold text-[#191c1e] border-b border-[#e0e3e5] pb-2 mb-4">Your Worksheet</h2>
+            <p class="text-xs text-[#5e3f3c] mb-4">The career goal you set out at the start of your worksheet.</p>
+
+            <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-1">Chosen Career Goal</p>
+            <p class="text-base font-semibold text-[#191c1e] mb-4" id="careerGoalText">—</p>
+
+            <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">Key Skills Identified</p>
+            <div class="flex flex-wrap gap-2" id="keySkillsList"></div>
+          </div>
+        </div>
+
+        <!-- Alignment -->
+        <div class="lg:col-span-7">
+          <div class="bg-white border border-[#e0e3e5] rounded-[4px] p-[17px] flex flex-col gap-4">
+            <div class="flex items-start justify-between border-b border-[#e0e3e5] pb-2 gap-4 flex-wrap">
+              <div>
+                <h2 class="text-xl font-semibold text-[#191c1e]">Alignment with RIASEC Results</h2>
+                <p class="text-xs text-[#5e3f3c] mt-1">How your chosen goal matches with your assessed personality traits.</p>
+              </div>
+              <span id="alignBadge" class="inline-flex items-center gap-2 rounded px-4 py-2"></span>
+            </div>
+            <div class="flex gap-4 justify-center flex-wrap">
+              <div class="flex-1 min-w-[180px]">
+                <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-1">Your RIASEC Profile</p>
+                <div class="flex gap-3 items-center">
+                  <p class="text-xl font-bold text-[#bb0013]" id="profileCode">—</p>
+                  <p class="text-xs text-[#5e3f3c] border-l border-[#e8bcb7] pl-3" id="profileLabels">—</p>
+                </div>
+              </div>
+              <div class="flex-1 min-w-[180px]">
+                <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-1">Top Interest Area</p>
+                <p class="text-sm font-medium text-[#191c1e]" id="topInterestArea">—</p>
+              </div>
+            </div>
+            <div class="bg-[#f2f4f6] border border-[#e0e3e5] rounded p-3">
+              <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">Analysis</p>
+              <p class="text-xs text-[#191c1e] leading-relaxed" id="analysisText">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-8">
+        <a href="results.html" class="bg-[#ed1c24] text-white text-sm font-semibold rounded-md px-8 py-3.5 hover:opacity-90">View Career Results</a>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+(function() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  if (!currentUser || currentUser.role !== 'student') {
+    window.location.replace('login.html');
+    return;
+  }
+  document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+  document.getElementById('headerSub').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
+  document.getElementById('profilePanelName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+  document.getElementById('profilePanelMeta').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
+
+  function doLogout(e) {
+    e.preventDefault();
+    localStorage.removeItem('currentUser');
+    window.location.href = 'login.html';
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+  document.getElementById('profileLogout').addEventListener('click', doLogout);
+
+  const notifBtn = document.getElementById('notifBtn');
+  const notifPanel = document.getElementById('notifPanel');
+  const profileBtn = document.getElementById('profileBtn');
+  const profilePanel = document.getElementById('profilePanel');
+  function toggleDropdown(panel, other) {
+    other.classList.add('hidden');
+    panel.classList.toggle('hidden');
+  }
+  notifBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
+  profileBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
+  document.addEventListener('click', function() { notifPanel.classList.add('hidden'); profilePanel.classList.add('hidden'); });
+  notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
+  profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
+
+  const assessment = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
+  const worksheet = JSON.parse(localStorage.getItem('worksheetStatus_' + currentUser.schoolId) || 'null');
+
+  document.getElementById('notifList').innerHTML = '<li class="px-4 py-3 text-sm text-gray-700">Your worksheet has been saved. Check your Career Results for personalized matches.</li>';
+  document.getElementById('notifDot').classList.remove('hidden');
+
+  if (!assessment || !assessment.completed || !worksheet || !worksheet.completed) {
+    window.location.replace('assessment.html');
+    return;
+  }
+
+  const LABEL_TO_LETTER = { Realistic: 'R', Investigate: 'I', Artistic: 'A', Social: 'S', Enterprising: 'E', Conventional: 'C' };
+  const INTEREST_AREA = {
+    R: 'Technical & Mechanical Systems',
+    I: 'Scientific & Analytical Research',
+    A: 'Creative & Design Systems',
+    S: 'People & Community Services',
+    E: 'Business & Leadership',
+    C: 'Organization & Data Management'
+  };
+  const KEYWORDS_BY_LETTER = {
+    R: ['engineer', 'technician', 'mechanic', 'electrician', 'construction', 'pilot', 'driver', 'agriculture'],
+    I: ['scientist', 'analyst', 'researcher', 'doctor', 'data', 'developer', 'programmer', 'engineer'],
+    A: ['designer', 'artist', 'writer', 'musician', 'architect', 'photographer', 'creative'],
+    S: ['teacher', 'nurse', 'counselor', 'social worker', 'therapist', 'psychologist', 'hr'],
+    E: ['manager', 'entrepreneur', 'sales', 'business', 'marketing', 'lawyer', 'executive'],
+    C: ['accountant', 'bookkeeper', 'clerk', 'administrator', 'auditor', 'analyst', 'secretary']
+  };
+
+  const topTypes = worksheet.topTypes || assessment.topTypes || [];
+  const topLetters = topTypes.map(function(t) { return LABEL_TO_LETTER[t] || t[0]; });
+
+  document.getElementById('careerGoalText').textContent = worksheet.careerGoal;
+  document.getElementById('keySkillsList').innerHTML = (worksheet.electives || []).map(function(skill) {
+    return '<span class="bg-[#f2f4f6] border border-[#e0e3e5] rounded-full px-3.5 py-1.5 text-xs text-[#191c1e]">' + skill + '</span>';
+  }).join('') || '<span class="text-xs text-[#5e3f3c]">No electives selected.</span>';
+
+  document.getElementById('profileCode').textContent = topLetters.join(' - ');
+  document.getElementById('profileLabels').textContent = topTypes.map(function(t) { return t === 'Investigate' ? 'Investigative' : t; }).join(', ');
+  document.getElementById('topInterestArea').textContent = INTEREST_AREA[topLetters[0]] || '—';
+
+  const goalLower = worksheet.careerGoal.toLowerCase();
+  const isAligned = topLetters.slice(0, 2).some(function(letter) {
+    return (KEYWORDS_BY_LETTER[letter] || []).some(function(kw) { return goalLower.indexOf(kw) !== -1; });
+  });
+
+  const badge = document.getElementById('alignBadge');
+  if (isAligned) {
+    badge.className = 'inline-flex items-center gap-2 bg-[#ecfdf5] border border-[#a7f3d0] rounded px-4 py-2';
+    badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span class="text-xs font-bold text-[#047857] uppercase tracking-wide">Aligned</span>';
+  } else {
+    badge.className = 'inline-flex items-center gap-2 bg-orange-50 border border-orange-200 rounded px-4 py-2';
+    badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.007M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-xs font-bold text-orange-700 uppercase tracking-wide">Worth a Second Look</span>';
+  }
+
+  const primaryLabel = topTypes[0] === 'Investigate' ? 'Investigative' : topTypes[0];
+  const secondaryLabel = topTypes[1] === 'Investigate' ? 'Investigative' : topTypes[1];
+  const analysis = isAligned
+    ? 'Your top interests — ' + primaryLabel + ' and ' + secondaryLabel + ' — commonly align with "' + worksheet.careerGoal + '." The electives you chose reinforce the skills this path typically calls for.'
+    : 'Your top interests are ' + primaryLabel + ' and ' + secondaryLabel + ', which don\'t obviously overlap with "' + worksheet.careerGoal + '" based on common role descriptions. That doesn\'t rule it out — consider discussing this with a counselor to explore how your strengths could still support this goal.';
+  document.getElementById('analysisText').textContent = analysis;
+})();
+</script>
+
+</body>
+</html>
