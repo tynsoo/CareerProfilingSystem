@@ -41,15 +41,19 @@
   <div class="bg-white border border-black/[0.12] rounded-[20px] p-8">
     <h2 class="text-base font-semibold text-black text-center mb-2">Career of Interest</h2>
     <p class="text-[#757575] text-sm mb-4">Write the career you are currently considering, even if you are not yet certain.</p>
-    <input type="text" id="careerGoal" placeholder="e.g. Civil Engineer" class="w-full max-w-[400px] border border-black rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#bb0013]">
+    <input type="text" id="careerGoal" placeholder="e.g. Graphic Designer" class="w-full max-w-[400px] border border-black rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#bb0013]">
   </div>
 
   <!-- Elective Selection -->
   <div class="bg-white border border-black/[0.12] rounded-[20px] p-8">
     <h2 class="text-base font-semibold text-black text-center mb-2">Elective Selection</h2>
-    <p class="text-[#757575] text-sm mb-6">Select the electives available to your strand that best support the career you wrote above.</p>
+    <p class="text-[#757575] text-sm mb-6" id="electivesHint">Select the electives available to your strand that best support the career you wrote above.</p>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-6" id="electiveColumns"></div>
+    <div id="electivesEmpty" class="text-center py-8 text-sm text-[#757575] border border-dashed border-black/[0.2] rounded-[13px]">
+      Enter a career above to see the electives that best support it.
+    </div>
+
+    <div id="electiveGroups" class="hidden flex flex-col gap-6"></div>
 
     <div class="flex justify-end mt-8">
       <button type="button" id="submitWorksheetBtn" disabled class="bg-slate-300 text-white text-sm font-bold rounded-[12px] px-6 py-2.5 cursor-not-allowed transition-opacity">Submit Worksheet</button>
@@ -76,16 +80,6 @@
   }
 
   const LABEL_TO_LETTER = { Realistic: 'R', Investigate: 'I', Artistic: 'A', Social: 'S', Enterprising: 'E', Conventional: 'C' };
-
-  const ELECTIVE_BANK = {
-    R: ['Technical Drawing', 'Applied Electronics'],
-    I: ['Research Methods', 'Applied Statistics'],
-    A: ['Digital Arts & Design', 'Creative Writing'],
-    S: ['Community Health Care', 'Child Development'],
-    E: ['Entrepreneurship', 'Business Marketing'],
-    C: ['Bookkeeping', 'Computer Programming']
-  };
-
   const topTypes = (assessment.topTypes && assessment.topTypes.length === 3) ? assessment.topTypes : ['Realistic', 'Investigate', 'Artistic'];
   const topLetters = topTypes.map(function(t) { return LABEL_TO_LETTER[t] || t[0]; });
 
@@ -95,19 +89,149 @@
       return '<div class="flex flex-col items-center gap-1"><p class="text-xs font-bold text-black">Dimension ' + (i + 1) + '</p><p class="text-sm text-black">' + label + '</p></div>';
     }).join('');
 
-  document.getElementById('electiveColumns').innerHTML = topTypes.map(function(label, i) {
-    const letter = topLetters[i];
-    const options = ELECTIVE_BANK[letter] || [];
-    return '<div class="flex flex-col gap-3">' +
-      options.map(function(opt) {
-        const id = 'elective_' + letter + '_' + opt.replace(/[^a-zA-Z0-9]/g, '');
-        return '<label for="' + id + '" class="elective-option flex items-center gap-3 border border-black rounded-[12px] h-[59px] px-4 cursor-pointer hover:bg-slate-50">' +
-          '<input type="checkbox" id="' + id + '" class="elective-check w-4 h-4 accent-[#bb0013]" data-label="' + opt + '">' +
-          '<span class="text-sm text-black">' + opt + '</span>' +
-        '</label>';
-      }).join('') +
-    '</div>';
-  }).join('');
+  // Real MMCL SHS elective clusters
+  const CLUSTERS = {
+    'Arts, Social Sciences and Humanities Cluster': [
+      'Introduction to the Philosophy of the Human Person', 'Creative Writing', 'Citizenship and Civic Engagement',
+      'Creative Industries (Music, Dance, Theater)', 'Creative Industries (Visual, Media and Traditional Art)', 'The Social Sciences in Theory and Practice'
+    ],
+    'Business and Entrepreneurship Cluster': [
+      'Introduction to Organization and Management', 'Basic Accounting', 'Business Finance and Income Taxation',
+      'Contemporary Marketing and Business Economics', 'Entrepreneurship'
+    ],
+    'Information and Communication Technology Cluster': [
+      'Animation', 'Contact Center Services', 'Computer Programming (JAVA)'
+    ],
+    'Sports, Health, and Wellness Cluster': [
+      'Physical Education (Sports and Dance)'
+    ],
+    'Field Experience': [
+      'Research Methods', 'Design and Innovation'
+    ],
+    'Science, Technology, Engineering and Mathematics Cluster': [
+      'Biology 1-2', 'Chemistry 1-2', 'Physics 1-2', 'Pre-Calculus 1-2', 'Trigonometry 1-2', 'Earth and Space Science 1-2'
+    ]
+  };
+
+  // Career keyword -> recommended electives (drawn from the clusters above)
+  const CAREER_PROFILES = [
+    { keywords: ['graphic designer', 'visual artist', 'illustrator', 'animator', 'multimedia artist'],
+      electives: ['Creative Industries (Visual, Media and Traditional Art)', 'Animation', 'Design and Innovation', 'Creative Writing'] },
+    { keywords: ['programmer', 'software developer', 'software engineer', 'web developer', 'app developer', 'game developer'],
+      electives: ['Computer Programming (JAVA)', 'Design and Innovation', 'Research Methods'] },
+    { keywords: ['entrepreneur', 'business owner', 'businessman', 'businesswoman'],
+      electives: ['Entrepreneurship', 'Introduction to Organization and Management', 'Basic Accounting', 'Contemporary Marketing and Business Economics'] },
+    { keywords: ['accountant', 'bookkeeper', 'auditor'],
+      electives: ['Basic Accounting', 'Business Finance and Income Taxation', 'Introduction to Organization and Management'] },
+    { keywords: ['marketing', 'sales', 'advertising'],
+      electives: ['Contemporary Marketing and Business Economics', 'Entrepreneurship', 'Creative Writing'] },
+    { keywords: ['engineer', 'engineering'],
+      electives: ['Physics 1-2', 'Pre-Calculus 1-2', 'Trigonometry 1-2', 'Research Methods', 'Design and Innovation'] },
+    { keywords: ['scientist', 'researcher', 'biologist', 'chemist'],
+      electives: ['Biology 1-2', 'Chemistry 1-2', 'Research Methods', 'Earth and Space Science 1-2'] },
+    { keywords: ['doctor', 'nurse', 'physician', 'medical', 'healthcare', 'dentist'],
+      electives: ['Biology 1-2', 'Chemistry 1-2', 'Research Methods', 'Physical Education (Sports and Dance)'] },
+    { keywords: ['teacher', 'educator', 'professor'],
+      electives: ['Introduction to the Philosophy of the Human Person', 'The Social Sciences in Theory and Practice', 'Citizenship and Civic Engagement'] },
+    { keywords: ['psychologist', 'counselor', 'guidance counselor', 'therapist'],
+      electives: ['The Social Sciences in Theory and Practice', 'Introduction to the Philosophy of the Human Person', 'Research Methods'] },
+    { keywords: ['lawyer', 'attorney', 'political scientist', 'politician', 'judge'],
+      electives: ['Citizenship and Civic Engagement', 'The Social Sciences in Theory and Practice', 'Introduction to the Philosophy of the Human Person'] },
+    { keywords: ['writer', 'journalist', 'author', 'content creator', 'blogger'],
+      electives: ['Creative Writing', 'Citizenship and Civic Engagement', 'The Social Sciences in Theory and Practice'] },
+    { keywords: ['musician', 'singer', 'performer', 'dancer', 'actor', 'artist'],
+      electives: ['Creative Industries (Music, Dance, Theater)', 'Physical Education (Sports and Dance)'] },
+    { keywords: ['athlete', 'coach', 'trainer', 'fitness instructor'],
+      electives: ['Physical Education (Sports and Dance)', 'Introduction to the Philosophy of the Human Person'] },
+    { keywords: ['call center', 'customer service', 'bpo agent'],
+      electives: ['Contact Center Services', 'Citizenship and Civic Engagement'] },
+    { keywords: ['architect'],
+      electives: ['Design and Innovation', 'Pre-Calculus 1-2', 'Trigonometry 1-2', 'Physics 1-2'] },
+    { keywords: ['chef', 'cook', 'culinary'],
+      electives: ['Entrepreneurship', 'Creative Industries (Visual, Media and Traditional Art)'] },
+    { keywords: ['data scientist', 'data analyst', 'statistician'],
+      electives: ['Computer Programming (JAVA)', 'Pre-Calculus 1-2', 'Research Methods'] },
+    { keywords: ['pilot', 'aviation'],
+      electives: ['Physics 1-2', 'Trigonometry 1-2', 'Earth and Space Science 1-2'] },
+    { keywords: ['social worker', 'human resources', 'hr specialist'],
+      electives: ['The Social Sciences in Theory and Practice', 'Citizenship and Civic Engagement', 'Introduction to Organization and Management'] }
+  ];
+
+  function clusterOf(electiveName) {
+    for (const cluster in CLUSTERS) {
+      if (CLUSTERS[cluster].indexOf(electiveName) !== -1) return cluster;
+    }
+    return 'Other';
+  }
+
+  function matchElectives(careerText) {
+    const q = careerText.toLowerCase().trim();
+    if (!q) return [];
+    const matched = [];
+    CAREER_PROFILES.forEach(function(profile) {
+      if (profile.keywords.some(function(kw) { return q.indexOf(kw) !== -1; })) {
+        profile.electives.forEach(function(e) {
+          if (matched.indexOf(e) === -1) matched.push(e);
+        });
+      }
+    });
+    return matched;
+  }
+
+  const electivesEmpty = document.getElementById('electivesEmpty');
+  const electiveGroups = document.getElementById('electiveGroups');
+  const electivesHint = document.getElementById('electivesHint');
+
+  function renderElectives(careerText) {
+    const matches = matchElectives(careerText);
+
+    if (!careerText.trim()) {
+      electivesEmpty.textContent = 'Enter a career above to see the electives that best support it.';
+      electivesEmpty.classList.remove('hidden');
+      electiveGroups.classList.add('hidden');
+      electiveGroups.innerHTML = '';
+      updateSubmitState();
+      return;
+    }
+
+    if (!matches.length) {
+      electivesEmpty.textContent = "We don't have a specific match for \"" + careerText.trim() + "\" yet. Browse all clusters below and pick what fits best.";
+      electivesEmpty.classList.remove('hidden');
+      electiveGroups.classList.remove('hidden');
+      renderGroupedElectives(Object.keys(CLUSTERS).reduce(function(acc, c) { return acc.concat(CLUSTERS[c]); }, []));
+      updateSubmitState();
+      return;
+    }
+
+    electivesEmpty.classList.add('hidden');
+    electiveGroups.classList.remove('hidden');
+    renderGroupedElectives(matches);
+    updateSubmitState();
+  }
+
+  function renderGroupedElectives(electiveList) {
+    const byCluster = {};
+    electiveList.forEach(function(e) {
+      const c = clusterOf(e);
+      if (!byCluster[c]) byCluster[c] = [];
+      byCluster[c].push(e);
+    });
+
+    electiveGroups.innerHTML = Object.keys(byCluster).map(function(cluster) {
+      return '<div>' +
+        '<p class="text-xs font-bold tracking-wide text-[#5c5a5a] uppercase mb-3">' + cluster + '</p>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+          byCluster[cluster].map(function(opt) {
+            const id = 'elective_' + opt.replace(/[^a-zA-Z0-9]/g, '');
+            return '<label for="' + id + '" class="elective-option flex items-center gap-3 border border-black rounded-[12px] h-[59px] px-4 cursor-pointer hover:bg-slate-50">' +
+              '<input type="checkbox" id="' + id + '" class="elective-check w-4 h-4 accent-[#bb0013]" data-label="' + opt + '">' +
+              '<span class="text-sm text-black">' + opt + '</span>' +
+            '</label>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
 
   const careerGoalInput = document.getElementById('careerGoal');
   const submitBtn = document.getElementById('submitWorksheetBtn');
@@ -124,7 +248,11 @@
       : 'bg-slate-300 text-white text-sm font-bold rounded-[12px] px-6 py-2.5 cursor-not-allowed transition-opacity';
   }
 
-  careerGoalInput.addEventListener('input', updateSubmitState);
+  let debounceHandle = null;
+  careerGoalInput.addEventListener('input', function() {
+    clearTimeout(debounceHandle);
+    debounceHandle = setTimeout(function() { renderElectives(careerGoalInput.value); }, 300);
+  });
   document.addEventListener('change', function(e) {
     if (e.target.classList.contains('elective-check')) updateSubmitState();
   });
@@ -149,6 +277,8 @@
 
     window.location.href = 'worksheet-results.html';
   });
+
+  renderElectives('');
 })();
 </script>
 
