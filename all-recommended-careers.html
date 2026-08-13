@@ -17,8 +17,11 @@
 
 <div class="flex min-h-screen">
 
+  <!-- Mobile sidebar backdrop -->
+  <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/40 z-30 md:hidden"></div>
+
   <!-- Sidebar -->
-  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col sticky top-0 h-screen overflow-y-auto">
+  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col fixed inset-y-0 left-0 z-40 -translate-x-full transition-transform duration-200 md:static md:translate-x-0 h-screen overflow-y-auto">
 
     <!-- Logo Area -->
     <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
@@ -96,20 +99,54 @@
         <img src="images/admin/icon-menu.svg" alt="Menu" class="w-full h-full">
       </button>
       <div class="flex items-center gap-6">
-        <button type="button" class="relative w-5 h-5">
-          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
-          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
-        </button>
-        <button type="button" class="flex items-center gap-3">
-          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
-            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
-          </span>
-          <span class="text-left">
-            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-            <span class="block text-xs text-gray-500">Administrator</span>
-          </span>
-          <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
-        </button>
+
+        <!-- Notifications -->
+        <div class="relative">
+          <button type="button" id="notifBtn" class="relative w-5 h-5">
+            <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+            <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+          </button>
+          <div id="notifPanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <p class="text-sm font-semibold text-gray-900">Notifications</p>
+              <span class="text-xs text-gray-500">3 new</span>
+            </div>
+            <ul class="max-h-80 overflow-auto divide-y divide-gray-100">
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">New student registered</span> — Gomez, Jerome Grant just signed up.</p>
+                <p class="text-xs text-gray-400 mt-1">5 minutes ago</p>
+              </li>
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">Assessment flagged</span> — RIASEC confidence below threshold.</p>
+                <p class="text-xs text-gray-400 mt-1">1 hour ago</p>
+              </li>
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">Counseling request</span> — Solis, Christeen Ann requested counseling.</p>
+                <p class="text-xs text-gray-400 mt-1">2 hours ago</p>
+              </li>
+            </ul>
+            <a href="monitoring.html" class="block text-center text-sm font-medium text-[#ed1c24] px-4 py-3 border-t border-gray-100 hover:bg-gray-50">View all notifications</a>
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="relative">
+          <button type="button" id="profileBtn" class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+              <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+            </span>
+            <span class="text-left">
+              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+              <span class="block text-xs text-gray-500">Administrator</span>
+            </span>
+            <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+          </button>
+          <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+            <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
+            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -161,9 +198,35 @@
 </div>
 
 <script>
-  document.getElementById('menuToggle').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('hidden');
-  });
+  (function() {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    function openSidebar() { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
+    function closeSidebar() { sidebar.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); }
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.contains('-translate-x-full') ? openSidebar() : closeSidebar();
+    });
+    backdrop.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
+  })();
+
+  (function() {
+    const notifBtn = document.getElementById('notifBtn');
+    const notifPanel = document.getElementById('notifPanel');
+    const profileBtn = document.getElementById('profileBtn');
+    const profilePanel = document.getElementById('profilePanel');
+    function toggleDropdown(panel, ...others) {
+      others.forEach(p => p.classList.add('hidden'));
+      panel.classList.toggle('hidden');
+    }
+    notifBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
+    profileBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
+    document.addEventListener('click', () => {
+      notifPanel.classList.add('hidden');
+      profilePanel.classList.add('hidden');
+    });
+  })();
 
   const CAREERS = [
     { title: 'Information Technology Specialist', students: 210, width: 85, percent: '16.8%', trend: 'up', change: '12.4%' },

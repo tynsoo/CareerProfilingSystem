@@ -95,19 +95,49 @@
         <img src="images/admin/icon-menu.svg" alt="Back" class="w-full h-full">
       </button>
       <div class="flex items-center gap-6">
-        <button type="button" class="relative w-5 h-5">
-          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
-          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
-        </button>
-        <a href="profile.html" class="flex items-center gap-3">
-          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
-            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
-          </span>
-          <span class="text-left">
-            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-            <span class="block text-xs text-gray-500">Administrator</span>
-          </span>
-        </a>
+        <div class="relative">
+          <button type="button" id="notifBtn" class="relative w-5 h-5">
+            <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+            <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+          </button>
+          <div id="notifPanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <p class="text-sm font-semibold text-gray-900">Notifications</p>
+              <span class="text-xs text-gray-500">3 new</span>
+            </div>
+            <ul class="max-h-80 overflow-auto divide-y divide-gray-100">
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">New student registered</span> — Gomez, Jerome Grant just signed up.</p>
+                <p class="text-xs text-gray-400 mt-1">5 minutes ago</p>
+              </li>
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">Assessment flagged</span> — RIASEC confidence below threshold.</p>
+                <p class="text-xs text-gray-400 mt-1">1 hour ago</p>
+              </li>
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">Counseling request</span> — Solis, Christeen Ann requested counseling.</p>
+                <p class="text-xs text-gray-400 mt-1">2 hours ago</p>
+              </li>
+            </ul>
+            <a href="monitoring.html" class="block text-center text-sm font-medium text-[#ed1c24] px-4 py-3 border-t border-gray-100 hover:bg-gray-50">View all notifications</a>
+          </div>
+        </div>
+        <div class="relative">
+          <button type="button" id="profileBtn" class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+              <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+            </span>
+            <span class="text-left">
+              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+              <span class="block text-xs text-gray-500">Administrator</span>
+            </span>
+            <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+          </button>
+          <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -174,12 +204,25 @@
 </div>
 
 <script>
+  const OVERRIDES_KEY = 'studentRecordOverrides';
+  function loadOverrides() {
+    try { return JSON.parse(localStorage.getItem(OVERRIDES_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveOverride(studentName, data) {
+    const overrides = loadOverrides();
+    overrides[studentName] = data;
+    localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides));
+  }
+
   const params = new URLSearchParams(window.location.search);
   const name = params.get('name') || 'Unknown Student';
   const strand = params.get('strand') || '—';
-  const status = params.get('status') || 'Pending';
   const riasec = params.get('riasec') || '—';
-  const counseling = params.get('counseling') || '';
+
+  const overrides = loadOverrides();
+  const override = overrides[name];
+  const status = (override && override.status) || params.get('status') || 'Pending';
+  const counseling = (override && override.counseling !== undefined) ? override.counseling : (params.get('counseling') || '');
 
   document.getElementById('studentName').textContent = name;
   document.getElementById('avatarName').textContent = name;
@@ -194,8 +237,29 @@
   const counselingSelect = document.getElementById('counselingField');
   if ([...counselingSelect.options].some(o => o.value === counseling)) counselingSelect.value = counseling;
 
+  (function() {
+    const notifBtn = document.getElementById('notifBtn');
+    const notifPanel = document.getElementById('notifPanel');
+    const profileBtn = document.getElementById('profileBtn');
+    const profilePanel = document.getElementById('profilePanel');
+    function toggleDropdown(panel, ...others) {
+      others.forEach(p => p.classList.add('hidden'));
+      panel.classList.toggle('hidden');
+    }
+    notifBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
+    profileBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
+    document.addEventListener('click', () => {
+      notifPanel.classList.add('hidden');
+      profilePanel.classList.add('hidden');
+    });
+  })();
+
   document.getElementById('studentForm').addEventListener('submit', (e) => {
     e.preventDefault();
+    saveOverride(name, {
+      status: statusSelect.value,
+      counseling: counselingSelect.value
+    });
     const msg = document.getElementById('saveMessage');
     msg.classList.remove('hidden');
     setTimeout(() => msg.classList.add('hidden'), 3000);

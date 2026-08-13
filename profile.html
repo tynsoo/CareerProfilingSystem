@@ -95,18 +95,48 @@
         <img src="images/admin/icon-menu.svg" alt="Back" class="w-full h-full">
       </button>
       <div class="flex items-center gap-6">
-        <button type="button" class="relative w-5 h-5">
-          <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
-          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
-        </button>
-        <div class="flex items-center gap-3">
-          <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
-            <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
-          </span>
-          <span class="text-left">
-            <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-            <span class="block text-xs text-gray-500">Administrator</span>
-          </span>
+        <div class="relative">
+          <button type="button" id="notifBtn" class="relative w-5 h-5">
+            <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
+            <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+          </button>
+          <div id="notifPanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <p class="text-sm font-semibold text-gray-900">Notifications</p>
+              <span class="text-xs text-gray-500">3 new</span>
+            </div>
+            <ul class="max-h-80 overflow-auto divide-y divide-gray-100">
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">New student registered</span> — Gomez, Jerome Grant just signed up.</p>
+                <p class="text-xs text-gray-400 mt-1">5 minutes ago</p>
+              </li>
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">Assessment flagged</span> — RIASEC confidence below threshold.</p>
+                <p class="text-xs text-gray-400 mt-1">1 hour ago</p>
+              </li>
+              <li class="px-4 py-3 hover:bg-gray-50">
+                <p class="text-sm text-gray-800"><span class="font-medium">Counseling request</span> — Solis, Christeen Ann requested counseling.</p>
+                <p class="text-xs text-gray-400 mt-1">2 hours ago</p>
+              </li>
+            </ul>
+            <a href="monitoring.html" class="block text-center text-sm font-medium text-[#ed1c24] px-4 py-3 border-t border-gray-100 hover:bg-gray-50">View all notifications</a>
+          </div>
+        </div>
+        <div class="relative">
+          <button type="button" id="profileBtn" class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+              <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
+            </span>
+            <span class="text-left">
+              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
+              <span class="block text-xs text-gray-500">Administrator</span>
+            </span>
+            <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+          </button>
+          <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">Account Settings</a>
+            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+          </div>
         </div>
       </div>
     </header>
@@ -124,12 +154,13 @@
 
         <!-- Avatar card -->
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col items-center text-center">
-          <span class="w-24 h-24 rounded-full bg-[#001c43] flex items-center justify-center mb-4">
-            <img src="images/admin/icon-avatar.svg" alt="" class="w-8 h-9">
+          <span id="avatarWrap" class="w-24 h-24 rounded-full bg-[#001c43] flex items-center justify-center mb-4 overflow-hidden">
+            <img id="avatarIcon" src="images/admin/icon-avatar.svg" alt="" class="w-8 h-9">
           </span>
           <p class="text-base font-semibold text-gray-900">Admin User</p>
           <p class="text-sm text-gray-500">Administrator</p>
-          <button type="button" class="mt-4 w-full border border-gray-300 rounded-md py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Change Photo</button>
+          <input type="file" id="photoInput" accept="image/*" class="hidden">
+          <button type="button" id="changePhotoBtn" class="mt-4 w-full border border-gray-300 rounded-md py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Change Photo</button>
         </div>
 
         <!-- Details form -->
@@ -156,19 +187,20 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="sm:col-span-2">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Current Password</label>
-                <input type="password" placeholder="Enter current password" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+                <input type="password" id="currentPassword" placeholder="Enter current password" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">New Password</label>
-                <input type="password" placeholder="Enter new password" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+                <input type="password" id="newPassword" placeholder="Enter new password" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Confirm New Password</label>
-                <input type="password" placeholder="Confirm new password" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+                <input type="password" id="confirmPassword" placeholder="Confirm new password" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
               </div>
             </div>
           </div>
 
+          <div id="passwordError" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-md px-4 py-2.5"></div>
           <div id="saveMessage" class="hidden bg-green-50 border border-green-200 text-green-700 text-sm rounded-md px-4 py-2.5">Changes saved.</div>
 
           <div class="flex items-center gap-3 pt-2">
@@ -183,9 +215,67 @@
 </div>
 
 <script>
+  (function() {
+    const notifBtn = document.getElementById('notifBtn');
+    const notifPanel = document.getElementById('notifPanel');
+    const profileBtn = document.getElementById('profileBtn');
+    const profilePanel = document.getElementById('profilePanel');
+    function toggleDropdown(panel, ...others) {
+      others.forEach(p => p.classList.add('hidden'));
+      panel.classList.toggle('hidden');
+    }
+    notifBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
+    profileBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
+    document.addEventListener('click', () => {
+      notifPanel.classList.add('hidden');
+      profilePanel.classList.add('hidden');
+    });
+  })();
+
+  const photoInput = document.getElementById('photoInput');
+  const changePhotoBtn = document.getElementById('changePhotoBtn');
+  changePhotoBtn.addEventListener('click', () => photoInput.click());
+  photoInput.addEventListener('change', () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const avatarWrap = document.getElementById('avatarWrap');
+      avatarWrap.innerHTML = `<img src="${reader.result}" alt="" class="w-full h-full object-cover">`;
+    };
+    reader.readAsDataURL(file);
+  });
+
   document.getElementById('profileForm').addEventListener('submit', (e) => {
     e.preventDefault();
+    const errorBox = document.getElementById('passwordError');
     const msg = document.getElementById('saveMessage');
+    const current = document.getElementById('currentPassword').value;
+    const next = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    errorBox.classList.add('hidden');
+
+    if (current || next || confirm) {
+      if (!current) {
+        errorBox.textContent = 'Enter your current password to change it.';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+      if (next.length < 6) {
+        errorBox.textContent = 'New password must be at least 6 characters.';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+      if (next !== confirm) {
+        errorBox.textContent = 'New password and confirmation do not match.';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+    }
+
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
     msg.classList.remove('hidden');
     setTimeout(() => msg.classList.add('hidden'), 3000);
   });
