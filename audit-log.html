@@ -88,7 +88,7 @@
 
     <!-- Logout -->
     <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
-      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+      <a href="login.html" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
         <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
         Logout
       </a>
@@ -141,15 +141,15 @@
               <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
             </span>
             <span class="text-left">
-              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-              <span class="block text-xs text-gray-500">Administrator</span>
+              <span class="block text-sm font-semibold text-gray-800" id="headerUserName">Admin User</span>
+              <span class="block text-xs text-gray-500" id="headerUserRole">Administrator</span>
             </span>
             <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
           </button>
           <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
             <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
-            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+            <a href="login.html" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
           </div>
         </div>
       </div>
@@ -178,15 +178,15 @@
               <div class="flex flex-col gap-1 mb-3">
                 <label class="text-xs font-medium text-gray-600">Status</label>
                 <select id="filterStatus" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                  <option>All Status</option>
-                  <option>Success</option>
-                  <option>Failed</option>
+                  <option value="All">All Status</option>
+                  <option value="Success">Success</option>
+                  <option value="Failed">Failed</option>
                 </select>
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-xs font-medium text-gray-600">Module</label>
                 <select id="filterModule" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                  <option>All Modules</option>
+                  <option value="All">All Modules</option>
                 </select>
               </div>
             </div>
@@ -203,8 +203,8 @@
           </span>
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Total Activities</p>
-            <p class="text-3xl font-bold text-gray-900">1,248</p>
-            <p class="text-xs mt-1"><span class="text-green-600 font-medium">↑ 12.4%</span> <span class="text-gray-400">vs. May 13 - May 19, 2025</span></p>
+            <p class="text-3xl font-bold text-gray-900" id="summaryTotal">—</p>
+            <p class="text-xs mt-1 text-gray-400">All logged actions</p>
           </div>
         </div>
 
@@ -214,8 +214,8 @@
           </span>
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Successful</p>
-            <p class="text-3xl font-bold text-gray-900">1,186</p>
-            <p class="text-xs mt-1"><span class="text-green-600 font-medium">95.0%</span> <span class="text-gray-400">of total</span></p>
+            <p class="text-3xl font-bold text-gray-900" id="summarySuccess">—</p>
+            <p class="text-xs mt-1"><span class="text-green-600 font-medium" id="summarySuccessPct">—</span> <span class="text-gray-400">of total</span></p>
           </div>
         </div>
 
@@ -225,8 +225,8 @@
           </span>
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Failed</p>
-            <p class="text-3xl font-bold text-gray-900">62</p>
-            <p class="text-xs mt-1"><span class="text-red-600 font-medium">5.0%</span> <span class="text-gray-400">of total</span></p>
+            <p class="text-3xl font-bold text-gray-900" id="summaryFailed">—</p>
+            <p class="text-xs mt-1"><span class="text-red-600 font-medium" id="summaryFailedPct">—</span> <span class="text-gray-400">of total</span></p>
           </div>
         </div>
 
@@ -236,8 +236,8 @@
           </span>
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Users Active</p>
-            <p class="text-3xl font-bold text-gray-900">24</p>
-            <p class="text-xs mt-1"><span class="text-green-600 font-medium">↑ 9.1%</span> <span class="text-gray-400">vs. previous 7 days</span></p>
+            <p class="text-3xl font-bold text-gray-900" id="summaryActive">—</p>
+            <p class="text-xs mt-1 text-gray-400">last 7 days</p>
           </div>
         </div>
       </div>
@@ -272,115 +272,14 @@
               </tr>
             </thead>
             <tbody id="auditTableBody" class="divide-y divide-gray-100">
-              <tr data-order="9" data-user="Admin User" data-role="Administrator" data-action="Logged in" data-module="Authentication" data-status="Success">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 10:24:35 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Admin User</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Administrator</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Logged in</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Authentication</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.10</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
-              </tr>
-              <tr data-order="8" data-user="Juan Dela Cruz" data-role="Guidance Counselor" data-action="Updated student profile" data-module="Student Information" data-status="Success">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 10:18:12 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Juan Dela Cruz</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Guidance Counselor</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Updated student profile</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Student Information</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.25</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
-              </tr>
-              <tr data-order="7" data-user="Maria Santos" data-role="Data Manager" data-action="Imported career data set" data-module="Career Data Set" data-status="Success">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 10:15:47 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Maria Santos</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Data Manager</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Imported career data set</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Career Data Set</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.32</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
-              </tr>
-              <tr data-order="6" data-user="Kyle Reyes" data-role="Guidance Counselor" data-action="Marked assessment as completed" data-module="Assessments" data-status="Success">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:58:03 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Kyle Reyes</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Guidance Counselor</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Marked assessment as completed</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Assessments</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.25</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
-              </tr>
-              <tr data-order="5" data-user="Admin User" data-role="Administrator" data-action="Created new user account" data-module="User Management" data-status="Success">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:47:21 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Admin User</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Administrator</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Created new user account</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">User Management</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.10</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
-              </tr>
-              <tr data-order="4" data-user="Maria Santos" data-role="Data Manager" data-action="Deleted career data" data-module="Career Data Set" data-status="Failed">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:35:10 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Maria Santos</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Data Manager</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Deleted career data</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Career Data Set</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.32</td>
-                <td class="px-6 py-4"><span class="bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded-full">Failed</span></td>
-              </tr>
-              <tr data-order="3" data-user="Juan Dela Cruz" data-role="Guidance Counselor" data-action="Viewed student report" data-module="Reports" data-status="Success">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:31:45 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Juan Dela Cruz</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Guidance Counselor</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Viewed student report</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Reports</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.25</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
-              </tr>
-              <tr data-order="2" data-user="System" data-role="System" data-action="Scheduled backup executed" data-module="System" data-status="Success">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:21:34 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">System</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">System</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Scheduled backup executed</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">System</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">127.0.0.1</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
-              </tr>
-              <tr data-order="1" data-user="Kyle Reyes" data-role="Guidance Counselor" data-action="Updated counseling status" data-module="Counseling" data-status="Success">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:10:11 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Kyle Reyes</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Guidance Counselor</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Updated counseling status</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Counseling</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.25</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span></td>
-              </tr>
-              <tr data-order="0" data-user="Unknown" data-role="—" data-action="Failed login attempt" data-module="Authentication" data-status="Failed">
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">May 27, 2025 09:02:55 AM</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Unknown</td>
-                <td class="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">—</td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Failed login attempt</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">Authentication</td>
-                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">192.168.1.50</td>
-                <td class="px-6 py-4"><span class="bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded-full">Failed</span></td>
-              </tr>
+              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">Loading audit log…</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="border-t border-gray-200 flex items-center justify-between px-6 py-4 flex-wrap gap-3">
-          <p class="text-sm text-gray-700">Showing 1 to 10 of 1,248 logs</p>
-          <div class="flex items-center gap-1" id="paginationBar">
-            <button type="button" class="page-nav-btn w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md">
-              <img src="images/audit/icon-page-prev.svg" alt="Previous" class="w-1.5 h-2.5">
-            </button>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md bg-[#ed1c24] text-white text-sm">1</button>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm">2</button>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm">3</button>
-            <span class="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm">125</button>
-            <button type="button" class="page-nav-btn w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md">
-              <img src="images/audit/icon-page-next.svg" alt="Next" class="w-1.5 h-2.5">
-            </button>
-          </div>
+          <p class="text-sm text-gray-700" id="paginationSummary">Loading…</p>
+          <div class="flex items-center gap-1" id="paginationBar"></div>
         </div>
       </div>
 
@@ -395,6 +294,26 @@
 </div>
 
 <script>
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+  const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
+  document.getElementById('headerUserName').textContent = currentUser.username;
+  document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
+
+  function doLogout(e) {
+    e.preventDefault();
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+  document.getElementById('profileLogout').addEventListener('click', doLogout);
+
   (function() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -436,10 +355,11 @@
     const sortIcon = document.getElementById('sortIcon');
     const exportBtn = document.getElementById('exportBtn');
     const paginationBar = document.getElementById('paginationBar');
+    const paginationSummary = document.getElementById('paginationSummary');
 
-    // Populate Module filter from rows present in the table
-    const modules = Array.from(new Set(Array.from(tbody.querySelectorAll('tr')).map(r => r.dataset.module))).sort();
-    filterModule.innerHTML = '<option>All Modules</option>' + modules.map(m => `<option>${m}</option>`).join('');
+    const state = { page: 1, sort: 'desc', search: '', status: 'All', module: 'All' };
+    let modulesLoaded = false;
+    let searchDebounce = null;
 
     filtersBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -448,66 +368,157 @@
     filtersPanel.addEventListener('click', (e) => e.stopPropagation());
     document.addEventListener('click', () => filtersPanel.classList.add('hidden'));
 
-    function applyFilters() {
-      const search = searchInput.value.trim().toLowerCase();
-      const status = filterStatus.value;
-      const module = filterModule.value;
-      Array.from(tbody.querySelectorAll('tr')).forEach(row => {
-        const text = row.textContent.toLowerCase();
-        const matchesSearch = !search || text.includes(search);
-        const matchesStatus = status === 'All Status' || row.dataset.status === status;
-        const matchesModule = module === 'All Modules' || row.dataset.module === module;
-        row.classList.toggle('hidden', !(matchesSearch && matchesStatus && matchesModule));
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function currentQuery(extra) {
+      const params = new URLSearchParams(Object.assign({
+        page: state.page,
+        sort: state.sort,
+        status: state.status,
+        module: state.module,
+        search: state.search,
+      }, extra || {}));
+      return params.toString();
+    }
+
+    async function load() {
+      tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">Loading audit log…</td></tr>';
+      const res = await fetch('api/audit-log.php?' + currentQuery());
+      if (res.status === 401) { window.location.replace('login.html'); return; }
+      if (res.status === 403) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-red-500">You do not have access to the audit log.</td></tr>';
+        paginationSummary.textContent = '';
+        paginationBar.innerHTML = '';
+        return;
+      }
+      const data = await res.json();
+      state.page = data.page;
+
+      if (!modulesLoaded) {
+        filterModule.innerHTML = '<option value="All">All Modules</option>' +
+          data.modules.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        filterModule.value = state.module;
+        modulesLoaded = true;
+      }
+
+      renderSummary(data.summary);
+      renderRows(data.rows);
+      renderPagination(data.page, data.totalPages, data.total, data.rows.length);
+    }
+
+    function renderSummary(summary) {
+      document.getElementById('summaryTotal').textContent = summary.total.toLocaleString();
+      document.getElementById('summarySuccess').textContent = summary.successful.toLocaleString();
+      document.getElementById('summaryFailed').textContent = summary.failed.toLocaleString();
+      document.getElementById('summaryActive').textContent = summary.usersActive.toLocaleString();
+      const pct = (n) => summary.total > 0 ? ((n / summary.total) * 100).toFixed(1) + '%' : '—';
+      document.getElementById('summarySuccessPct').textContent = pct(summary.successful);
+      document.getElementById('summaryFailedPct').textContent = pct(summary.failed);
+    }
+
+    function renderRows(rows) {
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">No matching audit log entries.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(function(r) {
+        const badge = r.status === 'Failed'
+          ? '<span class="bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded-full">Failed</span>'
+          : '<span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Success</span>';
+        return '<tr>' +
+          '<td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">' + escapeHtml(r.timestamp) + '</td>' +
+          '<td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + escapeHtml(r.user) + '</td>' +
+          '<td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">' + escapeHtml(r.role) + '</td>' +
+          '<td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">' + escapeHtml(r.action) + '</td>' +
+          '<td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">' + escapeHtml(r.module) + '</td>' +
+          '<td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">' + escapeHtml(r.ip) + '</td>' +
+          '<td class="px-6 py-4">' + badge + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function goToPage(p) {
+      state.page = p;
+      load();
+    }
+
+    function renderPagination(page, totalPages, total, rowCount) {
+      const startRow = total === 0 ? 0 : (page - 1) * 10 + 1;
+      const endRow = total === 0 ? 0 : startRow + rowCount - 1;
+      paginationSummary.textContent = `Showing ${startRow} to ${endRow} of ${total.toLocaleString()} logs`;
+
+      const btnBase = 'w-9 h-9 flex items-center justify-center rounded-md text-sm';
+      const active = 'bg-[#ed1c24] text-white';
+      const inactive = 'border border-gray-300 text-gray-700 hover:bg-gray-50';
+
+      // Windowed page numbers: first, last, and up to 2 pages on either side of current.
+      const pages = [];
+      for (let p = 1; p <= totalPages; p++) {
+        if (p === 1 || p === totalPages || Math.abs(p - page) <= 2) pages.push(p);
+      }
+      const withEllipses = [];
+      let prevPage = 0;
+      pages.forEach(p => {
+        if (prevPage && p - prevPage > 1) withEllipses.push('...');
+        withEllipses.push(p);
+        prevPage = p;
+      });
+
+      let html = `<button type="button" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''} class="page-nav-btn w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md ${page <= 1 ? 'opacity-40 cursor-not-allowed' : ''}">
+        <img src="images/audit/icon-page-prev.svg" alt="Previous" class="w-1.5 h-2.5"></button>`;
+      withEllipses.forEach(p => {
+        if (p === '...') {
+          html += '<span class="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>';
+        } else {
+          html += `<button type="button" data-page="${p}" class="page-btn ${btnBase} ${p === page ? active : inactive}">${p}</button>`;
+        }
+      });
+      html += `<button type="button" data-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''} class="page-nav-btn w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md ${page >= totalPages ? 'opacity-40 cursor-not-allowed' : ''}">
+        <img src="images/audit/icon-page-next.svg" alt="Next" class="w-1.5 h-2.5"></button>`;
+
+      paginationBar.innerHTML = html;
+      paginationBar.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', () => goToPage(Number(btn.dataset.page)));
       });
     }
-    searchInput.addEventListener('input', applyFilters);
-    filterStatus.addEventListener('change', applyFilters);
-    filterModule.addEventListener('change', applyFilters);
 
-    // Sortable Timestamp column (toggles order of the sample rows)
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        state.search = searchInput.value.trim();
+        state.page = 1;
+        load();
+      }, 300);
+    });
+    filterStatus.addEventListener('change', () => {
+      state.status = filterStatus.value;
+      state.page = 1;
+      load();
+    });
+    filterModule.addEventListener('change', () => {
+      state.module = filterModule.value;
+      state.page = 1;
+      load();
+    });
+
     let sortAscending = false;
     sortTimestampBtn.addEventListener('click', () => {
       sortAscending = !sortAscending;
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      rows.sort((a, b) => sortAscending
-        ? Number(a.dataset.order) - Number(b.dataset.order)
-        : Number(b.dataset.order) - Number(a.dataset.order));
-      rows.forEach(row => tbody.appendChild(row));
+      state.sort = sortAscending ? 'asc' : 'desc';
       sortIcon.textContent = sortAscending ? '↑' : '↓';
+      state.page = 1;
+      load();
     });
 
-    // Export currently-visible rows as CSV
     exportBtn.addEventListener('click', () => {
-      const header = ['Timestamp', 'User', 'Role', 'Action', 'Module', 'IP Address', 'Status'];
-      const visibleRows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('hidden'));
-      const lines = visibleRows.map(row => {
-        const cells = Array.from(row.querySelectorAll('td')).map(td => `"${td.textContent.trim().replace(/"/g, '""')}"`);
-        return cells.join(',');
-      });
-      const csv = [header.join(','), ...lines].join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'audit-log-export.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      window.location.href = 'api/audit-log.php?' + currentQuery({ export: 1 });
     });
 
-    // Pagination (cosmetic, matches existing precedent elsewhere)
-    paginationBar.querySelectorAll('.page-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        paginationBar.querySelectorAll('.page-btn').forEach(b => {
-          b.classList.remove('bg-[#ed1c24]', 'text-white');
-          b.classList.add('border', 'border-gray-300', 'text-gray-700');
-        });
-        btn.classList.remove('border', 'border-gray-300', 'text-gray-700');
-        btn.classList.add('bg-[#ed1c24]', 'text-white');
-      });
-    });
+    load();
   })();
+})();
 </script>
 
 </body>
