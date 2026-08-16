@@ -158,8 +158,9 @@
 </div>
 
 <script>
-  (function() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  (async function() {
+    const sessionData = await (await fetch('api/session.php')).json();
+    const currentUser = sessionData.user;
     if (!currentUser || currentUser.role !== 'student') {
       window.location.replace('login.html');
       return;
@@ -185,8 +186,9 @@
 
     function doLogout(e) {
       e.preventDefault();
-      localStorage.removeItem('currentUser');
-      window.location.href = 'login.html';
+      fetch('api/logout.php', { method: 'POST' }).finally(function() {
+        window.location.href = 'login.html';
+      });
     }
     document.getElementById('sidebarLogout').addEventListener('click', doLogout);
     document.getElementById('profileLogout').addEventListener('click', doLogout);
@@ -205,7 +207,10 @@
     notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
     profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
 
-    const assessment = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
+    const assessmentStatusData = await (await fetch('api/assessment-status.php')).json();
+    const assessment = assessmentStatusData.completed ? assessmentStatusData : null;
+    // worksheetStatus is still read from localStorage — migrates to a real
+    // endpoint in Phase 6, once the worksheet backend exists.
 
     (function renderNotifications() {
       const notes = [];

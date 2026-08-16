@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add Career — Career Profiling System</title>
+<title>Question Bank — Career Profiling System</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   body{ font-family:'Inter', sans-serif; }
-  select{ appearance:none; -webkit-appearance:none; }
 </style>
 </head>
 <body class="bg-[#f9fafb]">
@@ -21,7 +20,7 @@
   <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/40 z-30 md:hidden"></div>
 
   <!-- Sidebar -->
-  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col fixed inset-y-0 left-0 z-40 -translate-x-full transition-transform duration-200 md:sticky md:top-0 md:translate-x-0 h-screen">
+  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col fixed inset-y-0 left-0 z-40 -translate-x-full transition-transform duration-200 md:sticky md:top-0 md:translate-x-0 h-screen overflow-y-auto">
 
     <!-- Logo Area -->
     <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
@@ -43,7 +42,7 @@
           </a>
         </li>
         <li>
-          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
+          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
             <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
             Career Data Set
           </a>
@@ -79,7 +78,7 @@
           </a>
         </li>
         <li>
-          <a href="question-bank.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+          <a href="question-bank.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
             <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
             Question Bank
           </a>
@@ -89,7 +88,7 @@
 
     <!-- Logout -->
     <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
-      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+      <a href="#" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
         <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
         Logout
       </a>
@@ -150,7 +149,7 @@
           <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
             <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
-            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+            <a href="#" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
           </div>
         </div>
       </div>
@@ -159,79 +158,51 @@
     <!-- Page Content -->
     <main class="flex-1 p-8 overflow-auto">
 
-      <!-- Page Header -->
-      <div class="flex items-center gap-3 mb-6">
-        <a href="career-dataset.html" class="text-slate-400 hover:text-slate-600">
-          <img src="images/admin/icon-chevron-left.svg" alt="Back" class="w-2.5 h-4">
-        </a>
-        <div>
-          <h1 class="text-2xl font-bold text-slate-900">Add Career</h1>
-          <p class="text-sm text-slate-500 mt-1">Add a new career to the career knowledge base.</p>
-        </div>
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-900">RIASEC Question Bank</h1>
+        <p class="text-sm text-slate-500 mt-1">Edit wording or activate/deactivate questions. The count is fixed at 10 per dimension.</p>
       </div>
 
-      <div id="successBanner" class="hidden bg-[#dcfce7] text-[#16a34a] text-sm font-medium rounded-lg px-4 py-3 mb-6">
-        Career added successfully.
-      </div>
-
-      <form id="addCareerForm" class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 max-w-2xl flex flex-col gap-5">
-        <div class="flex flex-col gap-1">
-          <label class="text-xs font-medium text-slate-600">Career Title <span class="text-[#ed1c24]">*</span></label>
-          <input type="text" id="titleInput" required placeholder="e.g. Software Engineer" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="text-xs font-medium text-slate-600">Related MMCL Program <span class="text-[#ed1c24]">*</span></label>
-          <input type="text" id="programInput" required placeholder="e.g. BS Computer Science" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-slate-600">Department <span class="text-[#ed1c24]">*</span></label>
-            <select id="departmentInput" required class="border border-slate-300 rounded-md px-3 py-2.5 text-sm">
-              <option value="">Select department</option>
-              <option>CCIS</option>
-              <option>MITL</option>
-              <option>CON</option>
-              <option>ETYCB</option>
-              <option>CAS</option>
-            </select>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-slate-600">Status</label>
-            <select id="statusInput" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm">
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-slate-600">RIASEC Code <span class="text-[#ed1c24]">*</span> (choose up to 3)</label>
-          <div class="flex flex-wrap gap-4">
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="R"> R &mdash; Realistic</label>
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="I"> I &mdash; Investigative</label>
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="A"> A &mdash; Artistic</label>
-          </div>
-          <div class="flex flex-wrap gap-4">
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="S"> S &mdash; Social</label>
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="E"> E &mdash; Enterprising</label>
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="C"> C &mdash; Conventional</label>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
-          <a href="career-dataset.html" class="px-4 py-2.5 text-sm font-medium text-slate-600 rounded-md border border-slate-300 hover:bg-slate-50">Cancel</a>
-          <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Save Career</button>
-        </div>
-      </form>
+      <div id="dimensionGroups" class="flex flex-col gap-6 max-w-4xl"></div>
 
     </main>
   </div>
 </div>
 
+<!-- Edit Question Modal -->
+<div id="editQuestionModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+      <h2 class="text-lg font-bold text-slate-900">Edit Question</h2>
+      <button type="button" class="edit-question-close-btn text-slate-400 hover:text-slate-600 text-xl leading-none" aria-label="Close">&times;</button>
+    </div>
+    <form id="editQuestionForm" class="px-6 py-5 flex flex-col gap-4">
+      <input type="hidden" id="editQuestionId">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-slate-600">Question Text</label>
+        <textarea id="editQuestionText" required rows="3" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
+      </div>
+      <label class="flex items-center gap-2 text-sm text-slate-700">
+        <input type="checkbox" id="editQuestionActive" class="accent-[#ed1c24]">
+        Active (shown to students taking the assessment)
+      </label>
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" class="edit-question-close-btn px-4 py-2 text-sm font-medium text-slate-600 rounded-md border border-slate-300 hover:bg-slate-50">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-(function () {
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+
   (function() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -262,78 +233,109 @@
     });
   })();
 
-  const STORAGE_KEY = 'careerDataset';
+  function doLogout(e) {
+    e.preventDefault();
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+  document.getElementById('profileLogout').addEventListener('click', doLogout);
 
-  const DEFAULT_CAREERS = [
-    { id: 1, title: 'Information Technology Specialist', riasec: ['I', 'R', 'C'], program: 'BS Information Technology', department: 'CCIS', status: 'Active' },
-    { id: 2, title: 'Civil Engineer', riasec: ['R', 'I', 'C'], program: 'BS Civil Engineering', department: 'MITL', status: 'Active' },
-    { id: 3, title: 'Registered Nurse', riasec: ['S', 'I', 'A'], program: 'BS Nursing', department: 'CON', status: 'Active' },
-    { id: 4, title: 'Accountant', riasec: ['C', 'I', 'E'], program: 'BS Accountancy', department: 'ETYCB', status: 'Active' },
-    { id: 5, title: 'Psychologist', riasec: ['S', 'I', 'A'], program: 'BS Psychology', department: 'CAS', status: 'Active' },
-    { id: 6, title: 'Mechanical Engineer', riasec: ['R', 'I', 'C'], program: 'BS Mechanical Engineering', department: 'MITL', status: 'Inactive' },
-    { id: 7, title: 'Architect', riasec: ['R', 'I', 'A'], program: 'BS Architecture', department: 'MITL', status: 'Active' },
-    { id: 8, title: 'Elementary Teacher', riasec: ['S', 'A', 'E'], program: 'BEEd Elementary Education', department: 'CAS', status: 'Active' },
-    { id: 9, title: 'Entrepreneur', riasec: ['E', 'R', 'I'], program: 'BS Entrepreneurship', department: 'ETYCB', status: 'Active' },
-    { id: 10, title: 'Data Analyst', riasec: ['I', 'C', 'R'], program: 'BS Data Science', department: 'CCIS', status: 'Active' }
+  const DIMENSIONS = [
+    { code: 'R', label: 'Realistic' },
+    { code: 'I', label: 'Investigate' },
+    { code: 'A', label: 'Artistic' },
+    { code: 'S', label: 'Social' },
+    { code: 'E', label: 'Enterprising' },
+    { code: 'C', label: 'Conventional' }
   ];
 
-  function loadCareers() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length) return parsed;
-      }
-    } catch (e) { /* fall through to defaults */ }
-    return DEFAULT_CAREERS.slice();
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  function saveCareers(list) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  let questions = [];
+
+  async function loadQuestions() {
+    const data = await (await fetch('api/assessment-questions.php?all=1')).json();
+    questions = data.questions;
+    render();
   }
 
-  const form = document.getElementById('addCareerForm');
-  const titleInput = document.getElementById('titleInput');
-  const programInput = document.getElementById('programInput');
-  const departmentInput = document.getElementById('departmentInput');
-  const statusInput = document.getElementById('statusInput');
-  const riasecChecks = () => Array.from(document.querySelectorAll('.riasec-check'));
-  const successBanner = document.getElementById('successBanner');
+  function render() {
+    const wrap = document.getElementById('dimensionGroups');
+    wrap.innerHTML = DIMENSIONS.map(function(dim) {
+      const rows = questions.filter(q => q.dimension === dim.code).sort((a, b) => a.orderIndex - b.orderIndex);
+      const rowsHtml = rows.map(function(q) {
+        const activeBadge = q.isActive
+          ? '<span class="bg-green-50 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Active</span>'
+          : '<span class="bg-slate-100 text-slate-500 text-xs font-medium px-2.5 py-1 rounded-full">Inactive</span>';
+        return '<div class="flex items-center justify-between gap-4 px-5 py-3' + (q.isActive ? '' : ' opacity-60') + '">' +
+          '<div class="flex items-center gap-3 min-w-0">' +
+            '<span class="text-xs font-semibold text-slate-400 w-6 shrink-0">#' + q.orderIndex + '</span>' +
+            '<p class="text-sm text-slate-800 truncate">' + escapeHtml(q.text) + '</p>' +
+          '</div>' +
+          '<div class="flex items-center gap-3 shrink-0">' +
+            activeBadge +
+            '<button type="button" class="edit-question-btn" data-id="' + q.id + '"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
 
-  riasecChecks().forEach(chk => {
-    chk.addEventListener('change', () => {
-      const checked = riasecChecks().filter(c => c.checked);
-      if (checked.length > 3) chk.checked = false;
+      return '<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">' +
+        '<div class="border-b border-slate-200 px-5 py-4">' +
+          '<h2 class="text-base font-bold text-slate-900">' + dim.label + ' (' + dim.code + ')</h2>' +
+        '</div>' +
+        '<div class="divide-y divide-slate-100">' + rowsHtml + '</div>' +
+      '</div>';
+    }).join('');
+
+    wrap.querySelectorAll('.edit-question-btn').forEach(function(btn) {
+      btn.addEventListener('click', () => openEditModal(btn.dataset.id));
     });
-  });
+  }
 
-  form.addEventListener('submit', (e) => {
+  const editModal = document.getElementById('editQuestionModal');
+  const editForm = document.getElementById('editQuestionForm');
+
+  function openEditModal(id) {
+    const q = questions.find(q => String(q.id) === String(id));
+    if (!q) return;
+    document.getElementById('editQuestionId').value = q.id;
+    document.getElementById('editQuestionText').value = q.text;
+    document.getElementById('editQuestionActive').checked = q.isActive;
+    editModal.classList.remove('hidden');
+  }
+  function closeEditModal() {
+    editModal.classList.add('hidden');
+    editForm.reset();
+  }
+  document.querySelectorAll('.edit-question-close-btn').forEach(btn => btn.addEventListener('click', closeEditModal));
+  editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+
+  editForm.addEventListener('submit', async function(e) {
     e.preventDefault();
+    const id = parseInt(document.getElementById('editQuestionId').value, 10);
+    const text = document.getElementById('editQuestionText').value.trim();
+    const isActive = document.getElementById('editQuestionActive').checked;
+    if (!text) { alert('Question text is required.'); return; }
 
-    const selectedRiasec = riasecChecks().filter(c => c.checked).map(c => c.value);
-    if (!titleInput.value.trim()) { alert('Career title is required.'); titleInput.focus(); return; }
-    if (!programInput.value.trim()) { alert('Related MMCL Program is required.'); programInput.focus(); return; }
-    if (!departmentInput.value) { alert('Please select a department.'); departmentInput.focus(); return; }
-    if (!selectedRiasec.length) { alert('Select at least one RIASEC code.'); return; }
-
-    const careers = loadCareers();
-    const nextId = careers.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
-
-    careers.push({
-      id: nextId,
-      title: titleInput.value.trim(),
-      program: programInput.value.trim(),
-      department: departmentInput.value,
-      status: statusInput.value,
-      riasec: selectedRiasec
+    const res = await fetch('api/assessment-questions.php', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, text, isActive })
     });
-
-    saveCareers(careers);
-
-    successBanner.classList.remove('hidden');
-    form.classList.add('opacity-50', 'pointer-events-none');
-    setTimeout(() => { window.location.href = 'career-dataset.html'; }, 700);
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.error || 'Failed to save changes.');
+      return;
+    }
+    await loadQuestions();
+    closeEditModal();
   });
+
+  await loadQuestions();
 })();
 </script>
 

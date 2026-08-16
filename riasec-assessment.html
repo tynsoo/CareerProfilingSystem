@@ -73,8 +73,10 @@
 </div>
 
 <script>
-(function() {
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+(async function() {
+  const sessionRes = await fetch('api/session.php');
+  const sessionData = await sessionRes.json();
+  const currentUser = sessionData.user;
   if (!currentUser || currentUser.role !== 'student') {
     window.location.replace('login.html');
     return;
@@ -92,93 +94,17 @@
     { code: 'C', label: 'Conventional' }
   ];
 
-  const QUESTION_BANK = {
-    R: [
-      'I enjoy repairing broken equipment.',
-      'I like working with tools and machinery.',
-      'I enjoy building or assembling things.',
-      'I prefer practical tasks over theoretical discussions.',
-      'I like working outdoors.',
-      'I enjoy operating vehicles or heavy equipment.',
-      'I am interested in construction projects.',
-      'I enjoy fixing electrical or mechanical problems.',
-      'I like working with plants, animals, or natural resources.',
-      'I prefer physical activities to office work.'
-    ],
-    I: [
-      'I enjoy solving complex problems.',
-      'I like conducting experiments.',
-      'I enjoy learning about scientific discoveries.',
-      'I like analyzing information before making decisions.',
-      'I enjoy researching topics in depth.',
-      'I like finding patterns in data.',
-      'I enjoy mathematics and logical reasoning.',
-      'I am curious about how things work.',
-      'I enjoy investigating causes of problems.',
-      'I like studying subjects that require critical thinking.'
-    ],
-    A: [
-      'I enjoy drawing, painting, or designing.',
-      'I like expressing myself creatively.',
-      'I enjoy writing stories, poems, or articles.',
-      'I like creating original ideas.',
-      'I enjoy performing music, dance, or theater.',
-      'I prefer flexible environments over strict rules.',
-      'I enjoy designing visual materials.',
-      'I like exploring different forms of art.',
-      'I enjoy imaginative activities.',
-      'I prefer creative projects to routine tasks.'
-    ],
-    S: [
-      'I enjoy helping people solve their problems.',
-      'I like teaching others new skills.',
-      'I enjoy working in teams.',
-      'I like volunteering for community activities.',
-      "I enjoy listening to people's concerns.",
-      'I am interested in counseling or mentoring others.',
-      'I enjoy caring for people.',
-      'I like participating in group discussions.',
-      'I enjoy motivating others.',
-      'I prefer jobs that involve interacting with people.'
-    ],
-    E: [
-      'I enjoy leading a group.',
-      'I like convincing others to support my ideas.',
-      'I enjoy organizing projects and events.',
-      'I like taking initiative in group situations.',
-      'I enjoy setting goals and achieving them.',
-      'I am interested in starting a business.',
-      'I enjoy making decisions for a team.',
-      'I like negotiating with others.',
-      'I enjoy selling products or services.',
-      'I am comfortable taking risks to achieve success.'
-    ],
-    C: [
-      'I enjoy organizing files and records.',
-      'I like following established procedures.',
-      'I enjoy working with numbers and data.',
-      'I prefer clear instructions when completing tasks.',
-      'I enjoy planning schedules and timelines.',
-      'I like maintaining accurate records.',
-      'I enjoy administrative or office work.',
-      'I pay attention to details.',
-      'I enjoy tasks that require precision.',
-      'I prefer structured environments over unpredictable ones.'
-    ]
-  };
-
   const OPTIONS = ['Dislike', 'Slightly Dislike', 'Neutral', 'Slightly Enjoy', 'Enjoy'];
 
-  const QUESTIONS = [];
-  DIMENSIONS.forEach(function(dim) {
-    QUESTION_BANK[dim.code].forEach(function(text, i) {
-      QUESTIONS.push({ dimension: dim.code, label: dim.label, indexInDim: i + 1, text: text });
-    });
+  const questionsRes = await fetch('api/assessment-questions.php');
+  const questionsData = await questionsRes.json();
+  const dimensionLabels = Object.fromEntries(DIMENSIONS.map(function(d) { return [d.code, d.label]; }));
+  const QUESTIONS = questionsData.questions.map(function(q) {
+    return { id: q.id, dimension: q.dimension, label: dimensionLabels[q.dimension], indexInDim: q.orderIndex, text: q.text };
   });
   const TOTAL = QUESTIONS.length;
 
   const PROGRESS_KEY = 'assessmentProgress_' + currentUser.schoolId;
-  const STATUS_KEY = 'assessmentStatus_' + currentUser.schoolId;
 
   function loadProgress() {
     try {
@@ -256,31 +182,30 @@
     updateNextButton();
   }
 
-  function computeResults() {
-    const totals = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-    QUESTIONS.forEach(function(q, i) {
-      totals[q.dimension] += state.answers[i] || 0;
-    });
-    const ranked = DIMENSIONS
-      .map(function(d) { return { code: d.code, label: d.label, score: totals[d.code] }; })
-      .sort(function(a, b) { return b.score - a.score; });
-    return { totals: totals, ranked: ranked };
-  }
-
-  document.getElementById('nextBtn').addEventListener('click', function() {
+  document.getElementById('nextBtn').addEventListener('click', async function() {
     if (state.answers[currentIndex] === null) return;
 
     if (currentIndex === TOTAL - 1) {
-      const results = computeResults();
-      localStorage.setItem(STATUS_KEY, JSON.stringify({
-        completed: true,
-        completedAt: new Date().toISOString(),
-        scores: results.totals,
-        topTypes: results.ranked.slice(0, 3).map(function(r) { return r.label; }),
-        careers: []
-      }));
-      localStorage.removeItem(PROGRESS_KEY);
-      window.location.href = 'results.html';
+      const nextBtn = document.getElementById('nextBtn');
+      nextBtn.disabled = true;
+      try {
+        const res = await fetch('api/assessment-submit.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ answers: state.answers })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.error || 'Failed to submit assessment. Please try again.');
+          nextBtn.disabled = false;
+          return;
+        }
+        localStorage.removeItem(PROGRESS_KEY);
+        window.location.href = 'results.html';
+      } catch (err) {
+        alert('Unable to reach the server. Please try again.');
+        nextBtn.disabled = false;
+      }
       return;
     }
 
