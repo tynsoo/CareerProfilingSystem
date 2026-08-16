@@ -12,8 +12,9 @@ desktop.ini
 .env
 .env.local
 
-# PHP dependency folder (if Composer is added later)
-vendor/
+# Note: vendor/ is intentionally NOT ignored — packagist.org is unreachable from the
+# dev sandbox, so third-party PHP libraries (PHPMailer) are vendored directly instead
+# of pulled via Composer. Commit vendor/ as-is.
 
 # Logs
 *.log
