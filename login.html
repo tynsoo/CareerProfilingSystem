@@ -53,7 +53,7 @@
         </div>
 
         <!-- Form -->
-        <form id="loginForm" action="login.php" method="POST" class="flex flex-col gap-5">
+        <form id="loginForm" class="flex flex-col gap-5">
 
           <p id="loginError" class="hidden text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5"></p>
 
@@ -119,9 +119,6 @@
   });
 
   (function() {
-    function loadAccounts() {
-      try { return JSON.parse(localStorage.getItem('studentAccounts')) || []; } catch (e) { return []; }
-    }
     function showError(text) {
       const el = document.getElementById('loginError');
       el.textContent = text;
@@ -131,38 +128,33 @@
       document.getElementById('loginError').classList.add('hidden');
     }
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       hideError();
       const form = e.target;
       const username = form.username.value.trim();
       const password = form.password.value;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
 
-      if (username.toLowerCase() === 'admin') {
-        localStorage.setItem('currentUser', JSON.stringify({ role: 'admin', name: 'Admin User' }));
-        window.location.href = 'admin-dashboard.html';
-        return;
+      try {
+        const res = await fetch('api/login.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          window.location.href = data.redirect;
+          return;
+        }
+        showError(data.error || 'Invalid username or password.');
+      } catch (err) {
+        showError('Unable to reach the server. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
       }
-
-      const account = loadAccounts().find(a =>
-        a.schoolId.toLowerCase() === username.toLowerCase() && a.password === password
-      );
-
-      if (account) {
-        localStorage.setItem('currentUser', JSON.stringify({
-          role: 'student',
-          schoolId: account.schoolId,
-          firstName: account.firstName,
-          lastName: account.lastName,
-          strand: account.strand,
-          gradeLevel: account.gradeLevel,
-          registeredAt: account.registeredAt
-        }));
-        window.location.href = 'assessment.html';
-        return;
-      }
-
-      showError('Invalid username or password. Students: sign in with your School ID. New here? Create an account first.');
     });
   })();
 </script>
