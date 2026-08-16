@@ -163,15 +163,15 @@
       <div class="flex items-start justify-between flex-wrap gap-4 mb-8">
         <div>
           <h1 class="text-2xl font-bold text-slate-900">Career Dataset</h1>
-          <p class="text-sm text-slate-500 mt-1">Manage the career knowledge base used for student career recommendations.</p>
+          <p class="text-sm text-slate-500 mt-1">Manage the MMCL program dataset used for student career recommendations.</p>
         </div>
         <div class="flex items-center gap-3">
           <div class="relative">
             <img src="images/admin/icon-search2.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4">
-            <input type="text" id="searchInput" placeholder="Search careers..." class="w-64 pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+            <input type="text" id="searchInput" placeholder="Search programs..." class="w-64 pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
           </div>
           <a href="add-career.html" class="flex items-center gap-2 bg-[#ed1c24] text-white rounded-md px-5 py-2.5 text-sm font-medium shadow-sm hover:opacity-90">
-            <span class="font-black">+</span> Add Career
+            <span class="font-black">+</span> Add Program
           </a>
         </div>
       </div>
@@ -183,9 +183,9 @@
             <img src="images/admin/card-icon-briefcase.svg" alt="" class="w-6 h-6">
           </span>
           <div>
-            <p class="text-sm font-medium text-slate-500">Total Careers</p>
-            <p class="text-3xl font-bold text-slate-900">126</p>
-            <p class="text-xs text-slate-500">Active careers in the system</p>
+            <p class="text-sm font-medium text-slate-500">Total Programs</p>
+            <p class="text-3xl font-bold text-slate-900" id="statTotal">—</p>
+            <p class="text-xs text-slate-500">All programs in the dataset</p>
           </div>
         </div>
         <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-6 flex items-center gap-5">
@@ -193,9 +193,9 @@
             <img src="images/admin/card-icon-graduation.svg" alt="" class="w-7 h-5">
           </span>
           <div>
-            <p class="text-sm font-medium text-slate-500">MMCL Programs</p>
-            <p class="text-3xl font-bold text-slate-900">18</p>
-            <p class="text-xs text-slate-500">Related degree programs</p>
+            <p class="text-sm font-medium text-slate-500">Active Programs</p>
+            <p class="text-3xl font-bold text-slate-900" id="statActive">—</p>
+            <p class="text-xs text-slate-500">Available for student matching</p>
           </div>
         </div>
         <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-6 flex items-center gap-5">
@@ -203,9 +203,9 @@
             <img src="images/admin/card-icon-department.svg" alt="" class="w-4 h-6">
           </span>
           <div>
-            <p class="text-sm font-medium text-slate-500">Departments</p>
-            <p class="text-3xl font-bold text-slate-900">5</p>
-            <p class="text-xs text-slate-500">Academic departments</p>
+            <p class="text-sm font-medium text-slate-500">Colleges</p>
+            <p class="text-3xl font-bold text-slate-900" id="statColleges">—</p>
+            <p class="text-xs text-slate-500">Academic colleges</p>
           </div>
         </div>
       </div>
@@ -217,24 +217,10 @@
         <div class="border-b border-slate-200 px-5 py-5 flex items-end justify-between flex-wrap gap-4">
           <div class="flex items-start gap-4 flex-wrap">
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-slate-600">Department</label>
+              <label class="text-xs font-medium text-slate-600">College</label>
               <div class="relative">
                 <select id="filterDepartment" class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[162px]">
-                  <option>All Departments</option>
-                  <option>CCIS</option>
-                  <option>MITL</option>
-                  <option>CON</option>
-                  <option>ETYCB</option>
-                  <option>CAS</option>
-                </select>
-                <img src="images/admin/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-1.5 pointer-events-none">
-              </div>
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-slate-600">MMCL Program</label>
-              <div class="relative">
-                <select id="filterProgram" class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[139px]">
-                  <option>All Programs</option>
+                  <option value="All">All Colleges</option>
                 </select>
                 <img src="images/admin/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-1.5 pointer-events-none">
               </div>
@@ -243,7 +229,7 @@
               <label class="text-xs font-medium text-slate-600">RIASEC Code</label>
               <div class="relative">
                 <select id="filterRiasec" class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[121px]">
-                  <option>All Codes</option>
+                  <option value="All">All Codes</option>
                   <option>R</option><option>I</option><option>A</option>
                   <option>S</option><option>E</option><option>C</option>
                 </select>
@@ -254,7 +240,7 @@
               <label class="text-xs font-medium text-slate-600">Status</label>
               <div class="relative">
                 <select id="filterStatus" class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[117px]">
-                  <option>All Status</option>
+                  <option value="All">All Status</option>
                   <option>Active</option>
                   <option>Inactive</option>
                 </select>
@@ -273,10 +259,9 @@
           <table class="w-full text-left border-collapse min-w-[1000px]">
             <thead class="bg-slate-50">
               <tr>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Career Title</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Program Title</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">RIASEC Code</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Related MMCL Program</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Department</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">College</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Status</th>
                 <th class="px-6 py-4"></th>
               </tr>
@@ -335,19 +320,13 @@
     <form id="editCareerForm" class="px-6 py-5 flex flex-col gap-4">
       <input type="hidden" id="editCareerId">
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-slate-600">Career Title</label>
+        <label class="text-xs font-medium text-slate-600">Program Title</label>
         <input type="text" id="editTitle" required class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-      </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-slate-600">Related MMCL Program</label>
-        <input type="text" id="editProgram" required class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div class="flex flex-col gap-1">
-          <label class="text-xs font-medium text-slate-600">Department</label>
-          <select id="editDepartment" class="border border-slate-300 rounded-md px-3 py-2 text-sm">
-            <option>CCIS</option><option>MITL</option><option>CON</option><option>ETYCB</option><option>CAS</option>
-          </select>
+          <label class="text-xs font-medium text-slate-600">College</label>
+          <select id="editDepartment" class="border border-slate-300 rounded-md px-3 py-2 text-sm"></select>
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-xs font-medium text-slate-600">Status</label>
@@ -357,15 +336,9 @@
         </div>
       </div>
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-slate-600">RIASEC Code (choose up to 3)</label>
-        <div class="flex flex-wrap gap-3">
-          <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="edit-riasec-check accent-[#ed1c24]" value="R"> R</label>
-          <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="edit-riasec-check accent-[#ed1c24]" value="I"> I</label>
-          <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="edit-riasec-check accent-[#ed1c24]" value="A"> A</label>
-          <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="edit-riasec-check accent-[#ed1c24]" value="S"> S</label>
-          <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="edit-riasec-check accent-[#ed1c24]" value="E"> E</label>
-          <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="edit-riasec-check accent-[#ed1c24]" value="C"> C</label>
-        </div>
+        <label class="text-xs font-medium text-slate-600">Holland Code (exactly 3 distinct letters, in priority order)</label>
+        <input type="text" id="editHollandCode" required maxlength="3" placeholder="e.g. RIC" class="border border-slate-300 rounded-md px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+        <p class="text-xs text-slate-500">Letter order matters — the 1st letter is weighted highest in career matching.</p>
       </div>
       <div class="flex items-center justify-end gap-3 pt-2">
         <button type="button" class="edit-career-close-btn px-4 py-2 text-sm font-medium text-slate-600 rounded-md border border-slate-300 hover:bg-slate-50">Cancel</button>
@@ -376,7 +349,14 @@
 </div>
 
 <script>
-(function () {
+(async function () {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+
   (function() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -407,54 +387,28 @@
     });
   })();
 
-  const STORAGE_KEY = 'careerDataset';
-
-  const DEFAULT_CAREERS = [
-    { id: 1, title: 'Information Technology Specialist', riasec: ['I', 'R', 'C'], program: 'BS Information Technology', department: 'CCIS', status: 'Active' },
-    { id: 2, title: 'Civil Engineer', riasec: ['R', 'I', 'C'], program: 'BS Civil Engineering', department: 'MITL', status: 'Active' },
-    { id: 3, title: 'Registered Nurse', riasec: ['S', 'I', 'A'], program: 'BS Nursing', department: 'CON', status: 'Active' },
-    { id: 4, title: 'Accountant', riasec: ['C', 'I', 'E'], program: 'BS Accountancy', department: 'ETYCB', status: 'Active' },
-    { id: 5, title: 'Psychologist', riasec: ['S', 'I', 'A'], program: 'BS Psychology', department: 'CAS', status: 'Active' },
-    { id: 6, title: 'Mechanical Engineer', riasec: ['R', 'I', 'C'], program: 'BS Mechanical Engineering', department: 'MITL', status: 'Inactive' },
-    { id: 7, title: 'Architect', riasec: ['R', 'I', 'A'], program: 'BS Architecture', department: 'MITL', status: 'Active' },
-    { id: 8, title: 'Elementary Teacher', riasec: ['S', 'A', 'E'], program: 'BEEd Elementary Education', department: 'CAS', status: 'Active' },
-    { id: 9, title: 'Entrepreneur', riasec: ['E', 'R', 'I'], program: 'BS Entrepreneurship', department: 'ETYCB', status: 'Active' },
-    { id: 10, title: 'Data Analyst', riasec: ['I', 'C', 'R'], program: 'BS Data Science', department: 'CCIS', status: 'Active' }
+  const COLLEGE_COLORS = [
+    { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
+    { bg: 'bg-[#fee2e2]', text: 'text-[#dc2626]' },
+    { bg: 'bg-[#fef9c3]', text: 'text-[#ca8a04]' },
+    { bg: 'bg-[#f3e8ff]', text: 'text-[#9333ea]' },
+    { bg: 'bg-[#e0e7ff]', text: 'text-[#4f46e5]' },
+    { bg: 'bg-[#e0f2fe]', text: 'text-[#0369a1]' },
+    { bg: 'bg-[#fae8ff]', text: 'text-[#a21caf]' },
+    { bg: 'bg-[#ffedd5]', text: 'text-[#c2410c]' }
   ];
-
-  const DEPT_COLORS = {
-    CCIS:  { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
-    MITL:  { bg: 'bg-[#fee2e2]', text: 'text-[#dc2626]' },
-    CON:   { bg: 'bg-[#fef9c3]', text: 'text-[#ca8a04]' },
-    ETYCB: { bg: 'bg-[#f3e8ff]', text: 'text-[#9333ea]' },
-    CAS:   { bg: 'bg-[#e0e7ff]', text: 'text-[#4f46e5]' }
-  };
   const STATUS_COLORS = {
     Active:   { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
     Inactive: { bg: 'bg-slate-100', text: 'text-slate-500' }
   };
 
-  function loadCareers() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length) return parsed;
-      }
-    } catch (e) { /* fall through to defaults */ }
-    return DEFAULT_CAREERS.slice();
-  }
-
-  function saveCareers(list) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  }
-
-  let careers = loadCareers();
+  let programs = [];
+  let colleges = [];
+  let collegeColor = {};
 
   const tbody = document.getElementById('careerTableBody');
   const searchInput = document.getElementById('searchInput');
   const filterDepartment = document.getElementById('filterDepartment');
-  const filterProgram = document.getElementById('filterProgram');
   const filterRiasec = document.getElementById('filterRiasec');
   const filterStatus = document.getElementById('filterStatus');
   const clearFiltersBtn = document.getElementById('clearFiltersBtn');
@@ -469,34 +423,25 @@
       .replace(/"/g, '&quot;');
   }
 
-  function populateProgramFilter() {
-    const programs = Array.from(new Set(careers.map(c => c.program))).sort();
-    const current = filterProgram.value;
-    filterProgram.innerHTML = '<option>All Programs</option>' +
-      programs.map(p => `<option>${escapeHtml(p)}</option>`).join('');
-    if (programs.includes(current)) filterProgram.value = current;
-  }
-
-  function riasecBadges(codes) {
-    return codes.map(code =>
+  function riasecBadges(hollandCode) {
+    return hollandCode.split('').map(code =>
       `<span class="w-6 h-6 rounded-full bg-[#eff6ff] text-[#3b82f6] text-xs font-semibold flex items-center justify-center">${escapeHtml(code)}</span>`
     ).join('');
   }
 
-  function renderRow(career) {
-    const dept = DEPT_COLORS[career.department] || { bg: 'bg-slate-100', text: 'text-slate-600' };
-    const status = STATUS_COLORS[career.status] || STATUS_COLORS.Active;
-    const rowOpacity = career.status === 'Inactive' ? ' opacity-60' : '';
+  function renderRow(program) {
+    const dept = collegeColor[program.collegeCode] || { bg: 'bg-slate-100', text: 'text-slate-600' };
+    const status = STATUS_COLORS[program.status] || STATUS_COLORS.Active;
+    const rowOpacity = program.status === 'Inactive' ? ' opacity-60' : '';
     return `
-      <tr data-id="${career.id}" class="${rowOpacity}">
-        <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">${escapeHtml(career.title)}</td>
-        <td class="px-6 py-4"><div class="flex gap-1.5">${riasecBadges(career.riasec)}</div></td>
-        <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">${escapeHtml(career.program)}</td>
-        <td class="px-6 py-4"><span class="inline-block ${dept.bg} ${dept.text} text-xs font-medium px-3 py-1 rounded-full">${escapeHtml(career.department)}</span></td>
-        <td class="px-6 py-4"><span class="inline-block ${status.bg} ${status.text} text-xs font-medium px-3 py-1 rounded-full">${escapeHtml(career.status)}</span></td>
+      <tr data-id="${program.id}" class="${rowOpacity}">
+        <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">${escapeHtml(program.title)}</td>
+        <td class="px-6 py-4"><div class="flex gap-1.5">${riasecBadges(program.hollandCode)}</div></td>
+        <td class="px-6 py-4"><span class="inline-block ${dept.bg} ${dept.text} text-xs font-medium px-3 py-1 rounded-full">${escapeHtml(program.collegeCode)}</span></td>
+        <td class="px-6 py-4"><span class="inline-block ${status.bg} ${status.text} text-xs font-medium px-3 py-1 rounded-full">${escapeHtml(program.status)}</span></td>
         <td class="px-6 py-4"><div class="flex items-center gap-3">
-          <button type="button" class="edit-career-btn" data-id="${career.id}"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
-          <button type="button" class="delete-career-btn" data-id="${career.id}" data-title="${escapeHtml(career.title)}"><img src="images/admin/icon-row-delete.svg" alt="Delete" class="w-1 h-3"></button>
+          <button type="button" class="edit-career-btn" data-id="${program.id}"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
+          <button type="button" class="delete-career-btn" data-id="${program.id}" data-title="${escapeHtml(program.title)}"><img src="images/admin/icon-row-delete.svg" alt="Deactivate" class="w-1 h-3"></button>
         </div></td>
       </tr>`;
   }
@@ -504,25 +449,24 @@
   function applyFilters() {
     const search = searchInput.value.trim().toLowerCase();
     const dept = filterDepartment.value;
-    const program = filterProgram.value;
     const riasec = filterRiasec.value;
     const status = filterStatus.value;
 
-    const filtered = careers.filter(c => {
-      const matchesSearch = !search || c.title.toLowerCase().includes(search) || c.program.toLowerCase().includes(search);
-      const matchesDept = dept === 'All Departments' || c.department === dept;
-      const matchesProgram = program === 'All Programs' || c.program === program;
-      const matchesRiasec = riasec === 'All Codes' || c.riasec.includes(riasec);
-      const matchesStatus = status === 'All Status' || c.status === status;
-      return matchesSearch && matchesDept && matchesProgram && matchesRiasec && matchesStatus;
+    const filtered = programs.filter(p => {
+      const matchesSearch = !search || p.title.toLowerCase().includes(search);
+      const matchesDept = dept === 'All' || p.collegeCode === dept;
+      const matchesRiasec = riasec === 'All' || p.hollandCode.includes(riasec);
+      const matchesStatus = status === 'All' || p.status === status;
+      return matchesSearch && matchesDept && matchesRiasec && matchesStatus;
     });
 
     tbody.innerHTML = filtered.length
       ? filtered.map(renderRow).join('')
-      : '<tr><td colspan="6" class="px-6 py-12 text-center text-sm text-slate-500">No careers match your filters.</td></tr>';
+      : '<tr><td colspan="5" class="px-6 py-12 text-center text-sm text-slate-500">No programs match your filters.</td></tr>';
 
     filterFrom.textContent = filtered.length ? '1' : '0';
     filterTo.textContent = String(filtered.length);
+    document.getElementById('filterTotal').textContent = String(programs.length);
 
     bindEditButtons();
   }
@@ -536,7 +480,7 @@
     });
   }
 
-  // ---- Delete modal ----
+  // ---- Delete (soft: sets status to Inactive) modal ----
   const deleteModal = document.getElementById('deleteCareerModal');
   const deleteCareerText = document.getElementById('deleteCareerText');
   const deleteCareerCancel = document.getElementById('deleteCareerCancel');
@@ -545,7 +489,7 @@
 
   function openDeleteModal(id, title) {
     pendingDeleteId = id;
-    deleteCareerText.textContent = `Are you sure you want to delete "${title}"? This action cannot be undone.`;
+    deleteCareerText.textContent = `Deactivate "${title}"? It will no longer be offered as a career match, but can be re-activated later.`;
     deleteModal.classList.remove('hidden');
   }
   function closeDeleteModal() {
@@ -554,12 +498,12 @@
   }
   deleteCareerCancel.addEventListener('click', closeDeleteModal);
   deleteModal.addEventListener('click', (e) => { if (e.target === deleteModal) closeDeleteModal(); });
-  deleteCareerConfirm.addEventListener('click', () => {
+  deleteCareerConfirm.addEventListener('click', async () => {
     if (pendingDeleteId == null) return;
-    careers = careers.filter(c => String(c.id) !== String(pendingDeleteId));
-    saveCareers(careers);
-    populateProgramFilter();
-    applyFilters();
+    await fetch('api/programs.php', {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: Number(pendingDeleteId) })
+    });
+    await loadData();
     closeDeleteModal();
   });
 
@@ -582,19 +526,17 @@
   const editCareerId = document.getElementById('editCareerId');
   const editTitle = document.getElementById('editTitle');
   const editDepartment = document.getElementById('editDepartment');
-  const editProgram = document.getElementById('editProgram');
+  const editHollandCode = document.getElementById('editHollandCode');
   const editStatus = document.getElementById('editStatus');
-  const editRiasecChecks = () => Array.from(document.querySelectorAll('.edit-riasec-check'));
 
   function openEditModal(id) {
-    const career = careers.find(c => String(c.id) === String(id));
-    if (!career) return;
-    editCareerId.value = career.id;
-    editTitle.value = career.title;
-    editDepartment.value = career.department;
-    editProgram.value = career.program;
-    editStatus.value = career.status;
-    editRiasecChecks().forEach(chk => { chk.checked = career.riasec.includes(chk.value); });
+    const program = programs.find(p => String(p.id) === String(id));
+    if (!program) return;
+    editCareerId.value = program.id;
+    editTitle.value = program.title;
+    editDepartment.value = program.collegeId;
+    editHollandCode.value = program.hollandCode;
+    editStatus.value = program.status;
     editModal.classList.remove('hidden');
   }
 
@@ -606,51 +548,64 @@
   document.querySelectorAll('.edit-career-close-btn').forEach(btn => btn.addEventListener('click', closeEditModal));
   editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
 
-  editRiasecChecks().forEach(chk => {
-    chk.addEventListener('change', () => {
-      const checked = editRiasecChecks().filter(c => c.checked);
-      if (checked.length > 3) chk.checked = false;
-    });
-  });
-
-  editForm.addEventListener('submit', (e) => {
+  editForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const id = editCareerId.value;
-    const selectedRiasec = editRiasecChecks().filter(c => c.checked).map(c => c.value);
-    if (!editTitle.value.trim()) { alert('Career title is required.'); return; }
-    if (!editProgram.value.trim()) { alert('Related MMCL Program is required.'); return; }
-    if (!selectedRiasec.length) { alert('Select at least one RIASEC code.'); return; }
+    const id = Number(editCareerId.value);
+    const hollandCode = editHollandCode.value.trim().toUpperCase();
+    if (!editTitle.value.trim()) { alert('Program title is required.'); return; }
+    if (!/^[RIASEC]{3}$/.test(hollandCode) || new Set(hollandCode.split('')).size !== 3) {
+      alert('Holland code must be exactly 3 distinct letters from R, I, A, S, E, C.');
+      return;
+    }
 
-    careers = careers.map(c => String(c.id) === String(id) ? {
-      ...c,
-      title: editTitle.value.trim(),
-      department: editDepartment.value,
-      program: editProgram.value.trim(),
-      status: editStatus.value,
-      riasec: selectedRiasec
-    } : c);
+    const res = await fetch('api/programs.php', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: id, title: editTitle.value.trim(), collegeId: Number(editDepartment.value),
+        hollandCode: hollandCode, status: editStatus.value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      alert(data.error || 'Failed to save changes.');
+      return;
+    }
 
-    saveCareers(careers);
-    populateProgramFilter();
-    applyFilters();
+    await loadData();
     closeEditModal();
   });
 
   // ---- Filters wiring ----
   searchInput.addEventListener('input', applyFilters);
-  [filterDepartment, filterProgram, filterRiasec, filterStatus].forEach(el => el.addEventListener('change', applyFilters));
+  [filterDepartment, filterRiasec, filterStatus].forEach(el => el.addEventListener('change', applyFilters));
   clearFiltersBtn.addEventListener('click', () => {
     searchInput.value = '';
-    filterDepartment.value = 'All Departments';
-    filterProgram.value = 'All Programs';
-    filterRiasec.value = 'All Codes';
-    filterStatus.value = 'All Status';
+    filterDepartment.value = 'All';
+    filterRiasec.value = 'All';
+    filterStatus.value = 'All';
     applyFilters();
   });
 
   // ---- Init ----
-  populateProgramFilter();
-  applyFilters();
+  async function loadData() {
+    const data = await (await fetch('api/programs.php?all=1&meta=1')).json();
+    programs = data.programs;
+    colleges = data.colleges;
+    collegeColor = {};
+    colleges.forEach((c, i) => { collegeColor[c.code] = COLLEGE_COLORS[i % COLLEGE_COLORS.length]; });
+
+    const collegeOptions = '<option value="All">All Colleges</option>' +
+      colleges.map(c => `<option value="${c.code}">${escapeHtml(c.code)}</option>`).join('');
+    filterDepartment.innerHTML = collegeOptions;
+    editDepartment.innerHTML = colleges.map(c => `<option value="${c.id}">${escapeHtml(c.code)} — ${escapeHtml(c.name)}</option>`).join('');
+
+    document.getElementById('statTotal').textContent = programs.length;
+    document.getElementById('statActive').textContent = programs.filter(p => p.status === 'Active').length;
+    document.getElementById('statColleges').textContent = colleges.length;
+
+    applyFilters();
+  }
+  loadData();
 })();
 </script>
 

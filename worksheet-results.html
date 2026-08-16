@@ -162,8 +162,9 @@
 </div>
 
 <script>
-(function() {
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
   if (!currentUser || currentUser.role !== 'student') {
     window.location.replace('login.html');
     return;
@@ -188,8 +189,9 @@
 
   function doLogout(e) {
     e.preventDefault();
-    localStorage.removeItem('currentUser');
-    window.location.href = 'login.html';
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
   }
   document.getElementById('sidebarLogout').addEventListener('click', doLogout);
   document.getElementById('profileLogout').addEventListener('click', doLogout);
@@ -208,13 +210,13 @@
   notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
   profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
 
-  const assessment = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
-  const worksheet = JSON.parse(localStorage.getItem('worksheetStatus_' + currentUser.schoolId) || 'null');
+  const assessment = await (await fetch('api/assessment-status.php')).json();
+  const recommendation = await (await fetch('api/recommendations.php')).json();
 
   document.getElementById('notifList').innerHTML = '<li class="px-4 py-3 text-sm text-gray-700">Your worksheet has been saved. Check your Career Results for personalized matches.</li>';
   document.getElementById('notifDot').classList.remove('hidden');
 
-  if (!assessment || !assessment.completed || !worksheet || !worksheet.completed) {
+  if (!assessment.completed || !recommendation.hasRecommendation) {
     window.location.replace('assessment.html');
     return;
   }
@@ -228,20 +230,13 @@
     E: 'Business & Leadership',
     C: 'Organization & Data Management'
   };
-  const KEYWORDS_BY_LETTER = {
-    R: ['engineer', 'technician', 'mechanic', 'electrician', 'construction', 'pilot', 'driver', 'agriculture'],
-    I: ['scientist', 'analyst', 'researcher', 'doctor', 'data', 'developer', 'programmer', 'engineer'],
-    A: ['designer', 'artist', 'writer', 'musician', 'architect', 'photographer', 'creative'],
-    S: ['teacher', 'nurse', 'counselor', 'social worker', 'therapist', 'psychologist', 'hr'],
-    E: ['manager', 'entrepreneur', 'sales', 'business', 'marketing', 'lawyer', 'executive'],
-    C: ['accountant', 'bookkeeper', 'clerk', 'administrator', 'auditor', 'analyst', 'secretary']
-  };
 
-  const topTypes = worksheet.topTypes || assessment.topTypes || [];
+  const topTypes = assessment.topTypes || [];
   const topLetters = topTypes.map(function(t) { return LABEL_TO_LETTER[t] || t[0]; });
+  const statedProgram = recommendation.statedProgram;
 
-  document.getElementById('careerGoalText').textContent = worksheet.careerGoal;
-  document.getElementById('keySkillsList').innerHTML = (worksheet.electives || []).map(function(skill) {
+  document.getElementById('careerGoalText').textContent = statedProgram ? statedProgram.title : '—';
+  document.getElementById('keySkillsList').innerHTML = (recommendation.electives || []).map(function(skill) {
     return '<span class="bg-[#f2f4f6] border border-[#e0e3e5] rounded-full px-3.5 py-1.5 text-xs text-[#191c1e]">' + skill + '</span>';
   }).join('') || '<span class="text-xs text-[#5e3f3c]">No electives selected.</span>';
 
@@ -249,10 +244,9 @@
   document.getElementById('profileLabels').textContent = topTypes.map(function(t) { return t === 'Investigate' ? 'Investigative' : t; }).join(', ');
   document.getElementById('topInterestArea').textContent = INTEREST_AREA[topLetters[0]] || '—';
 
-  const goalLower = worksheet.careerGoal.toLowerCase();
-  const isAligned = topLetters.slice(0, 2).some(function(letter) {
-    return (KEYWORDS_BY_LETTER[letter] || []).some(function(kw) { return goalLower.indexOf(kw) !== -1; });
-  });
+  // "Aligned" is a real, computed fact: does the program the student stated on the
+  // worksheet actually land in their own top-3 CBF recommendation (0.70*cosine + 0.30*indicator)?
+  const isAligned = recommendation.statedOutsideTop3 === null;
 
   const badge = document.getElementById('alignBadge');
   if (isAligned) {
@@ -263,11 +257,11 @@
     badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.007M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-xs font-bold text-orange-700 uppercase tracking-wide">Worth a Second Look</span>';
   }
 
-  const primaryLabel = topTypes[0] === 'Investigate' ? 'Investigative' : topTypes[0];
-  const secondaryLabel = topTypes[1] === 'Investigate' ? 'Investigative' : topTypes[1];
+  const goalTitle = statedProgram ? statedProgram.title : 'your stated program';
+  const cosinePct = statedProgram ? Math.round(statedProgram.cosine * 100) : 0;
   const analysis = isAligned
-    ? 'Your top interests — ' + primaryLabel + ' and ' + secondaryLabel + ' — commonly align with "' + worksheet.careerGoal + '." The electives you chose reinforce the skills this path typically calls for.'
-    : 'Your top interests are ' + primaryLabel + ' and ' + secondaryLabel + ', which don\'t obviously overlap with "' + worksheet.careerGoal + '" based on common role descriptions. That doesn\'t rule it out — consider discussing this with a counselor to explore how your strengths could still support this goal.';
+    ? 'Your RIASEC profile is a ' + cosinePct + '% cosine match with "' + goalTitle + '," which is why it lands in your own top-3 career recommendations. The electives you chose reinforce the skills this path typically calls for.'
+    : 'Your RIASEC profile is only a ' + cosinePct + '% cosine match with "' + goalTitle + ',"  so it did not make your own top-3 recommendation list based purely on interest fit. That doesn\'t rule it out — consider discussing this with a counselor to explore how your strengths could still support this goal.';
   document.getElementById('analysisText').textContent = analysis;
 })();
 </script>

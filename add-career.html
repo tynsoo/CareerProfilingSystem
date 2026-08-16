@@ -165,36 +165,27 @@
           <img src="images/admin/icon-chevron-left.svg" alt="Back" class="w-2.5 h-4">
         </a>
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Add Career</h1>
-          <p class="text-sm text-slate-500 mt-1">Add a new career to the career knowledge base.</p>
+          <h1 class="text-2xl font-bold text-slate-900">Add Program</h1>
+          <p class="text-sm text-slate-500 mt-1">Add a new MMCL program to the career dataset.</p>
         </div>
       </div>
 
       <div id="successBanner" class="hidden bg-[#dcfce7] text-[#16a34a] text-sm font-medium rounded-lg px-4 py-3 mb-6">
-        Career added successfully.
+        Program added successfully.
       </div>
+      <div id="errorBanner" class="hidden bg-[#fee2e2] text-[#dc2626] text-sm font-medium rounded-lg px-4 py-3 mb-6"></div>
 
       <form id="addCareerForm" class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 max-w-2xl flex flex-col gap-5">
         <div class="flex flex-col gap-1">
-          <label class="text-xs font-medium text-slate-600">Career Title <span class="text-[#ed1c24]">*</span></label>
-          <input type="text" id="titleInput" required placeholder="e.g. Software Engineer" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="text-xs font-medium text-slate-600">Related MMCL Program <span class="text-[#ed1c24]">*</span></label>
-          <input type="text" id="programInput" required placeholder="e.g. BS Computer Science" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+          <label class="text-xs font-medium text-slate-600">Program Title <span class="text-[#ed1c24]">*</span></label>
+          <input type="text" id="titleInput" required placeholder="e.g. BS Computer Science" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div class="flex flex-col gap-1">
-            <label class="text-xs font-medium text-slate-600">Department <span class="text-[#ed1c24]">*</span></label>
+            <label class="text-xs font-medium text-slate-600">College <span class="text-[#ed1c24]">*</span></label>
             <select id="departmentInput" required class="border border-slate-300 rounded-md px-3 py-2.5 text-sm">
-              <option value="">Select department</option>
-              <option>CCIS</option>
-              <option>MITL</option>
-              <option>CON</option>
-              <option>ETYCB</option>
-              <option>CAS</option>
+              <option value="">Select college</option>
             </select>
           </div>
           <div class="flex flex-col gap-1">
@@ -207,22 +198,14 @@
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-slate-600">RIASEC Code <span class="text-[#ed1c24]">*</span> (choose up to 3)</label>
-          <div class="flex flex-wrap gap-4">
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="R"> R &mdash; Realistic</label>
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="I"> I &mdash; Investigative</label>
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="A"> A &mdash; Artistic</label>
-          </div>
-          <div class="flex flex-wrap gap-4">
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="S"> S &mdash; Social</label>
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="E"> E &mdash; Enterprising</label>
-            <label class="flex items-center gap-1.5 text-sm text-slate-700"><input type="checkbox" class="riasec-check accent-[#ed1c24]" value="C"> C &mdash; Conventional</label>
-          </div>
+          <label class="text-xs font-medium text-slate-600">Holland Code <span class="text-[#ed1c24]">*</span> (exactly 3 distinct letters, in priority order)</label>
+          <input type="text" id="hollandCodeInput" required maxlength="3" placeholder="e.g. RIC" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm uppercase max-w-[160px] focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+          <p class="text-xs text-slate-500">Letter order matters — the 1st letter (R, I, A, S, E, or C) is weighted highest in career matching.</p>
         </div>
 
         <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
           <a href="career-dataset.html" class="px-4 py-2.5 text-sm font-medium text-slate-600 rounded-md border border-slate-300 hover:bg-slate-50">Cancel</a>
-          <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Save Career</button>
+          <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Save Program</button>
         </div>
       </form>
 
@@ -231,7 +214,14 @@
 </div>
 
 <script>
-(function () {
+(async function () {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+
   (function() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -262,73 +252,44 @@
     });
   })();
 
-  const STORAGE_KEY = 'careerDataset';
-
-  const DEFAULT_CAREERS = [
-    { id: 1, title: 'Information Technology Specialist', riasec: ['I', 'R', 'C'], program: 'BS Information Technology', department: 'CCIS', status: 'Active' },
-    { id: 2, title: 'Civil Engineer', riasec: ['R', 'I', 'C'], program: 'BS Civil Engineering', department: 'MITL', status: 'Active' },
-    { id: 3, title: 'Registered Nurse', riasec: ['S', 'I', 'A'], program: 'BS Nursing', department: 'CON', status: 'Active' },
-    { id: 4, title: 'Accountant', riasec: ['C', 'I', 'E'], program: 'BS Accountancy', department: 'ETYCB', status: 'Active' },
-    { id: 5, title: 'Psychologist', riasec: ['S', 'I', 'A'], program: 'BS Psychology', department: 'CAS', status: 'Active' },
-    { id: 6, title: 'Mechanical Engineer', riasec: ['R', 'I', 'C'], program: 'BS Mechanical Engineering', department: 'MITL', status: 'Inactive' },
-    { id: 7, title: 'Architect', riasec: ['R', 'I', 'A'], program: 'BS Architecture', department: 'MITL', status: 'Active' },
-    { id: 8, title: 'Elementary Teacher', riasec: ['S', 'A', 'E'], program: 'BEEd Elementary Education', department: 'CAS', status: 'Active' },
-    { id: 9, title: 'Entrepreneur', riasec: ['E', 'R', 'I'], program: 'BS Entrepreneurship', department: 'ETYCB', status: 'Active' },
-    { id: 10, title: 'Data Analyst', riasec: ['I', 'C', 'R'], program: 'BS Data Science', department: 'CCIS', status: 'Active' }
-  ];
-
-  function loadCareers() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length) return parsed;
-      }
-    } catch (e) { /* fall through to defaults */ }
-    return DEFAULT_CAREERS.slice();
-  }
-
-  function saveCareers(list) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  }
-
   const form = document.getElementById('addCareerForm');
   const titleInput = document.getElementById('titleInput');
-  const programInput = document.getElementById('programInput');
   const departmentInput = document.getElementById('departmentInput');
   const statusInput = document.getElementById('statusInput');
-  const riasecChecks = () => Array.from(document.querySelectorAll('.riasec-check'));
+  const hollandCodeInput = document.getElementById('hollandCodeInput');
   const successBanner = document.getElementById('successBanner');
+  const errorBanner = document.getElementById('errorBanner');
 
-  riasecChecks().forEach(chk => {
-    chk.addEventListener('change', () => {
-      const checked = riasecChecks().filter(c => c.checked);
-      if (checked.length > 3) chk.checked = false;
-    });
-  });
+  const meta = await (await fetch('api/programs.php?meta=1')).json();
+  departmentInput.innerHTML = '<option value="">Select college</option>' +
+    meta.colleges.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    errorBanner.classList.add('hidden');
 
-    const selectedRiasec = riasecChecks().filter(c => c.checked).map(c => c.value);
-    if (!titleInput.value.trim()) { alert('Career title is required.'); titleInput.focus(); return; }
-    if (!programInput.value.trim()) { alert('Related MMCL Program is required.'); programInput.focus(); return; }
-    if (!departmentInput.value) { alert('Please select a department.'); departmentInput.focus(); return; }
-    if (!selectedRiasec.length) { alert('Select at least one RIASEC code.'); return; }
+    const hollandCode = hollandCodeInput.value.trim().toUpperCase();
+    if (!titleInput.value.trim()) { alert('Program title is required.'); titleInput.focus(); return; }
+    if (!departmentInput.value) { alert('Please select a college.'); departmentInput.focus(); return; }
+    if (!/^[RIASEC]{3}$/.test(hollandCode) || new Set(hollandCode.split('')).size !== 3) {
+      alert('Holland code must be exactly 3 distinct letters from R, I, A, S, E, C.');
+      hollandCodeInput.focus();
+      return;
+    }
 
-    const careers = loadCareers();
-    const nextId = careers.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
-
-    careers.push({
-      id: nextId,
-      title: titleInput.value.trim(),
-      program: programInput.value.trim(),
-      department: departmentInput.value,
-      status: statusInput.value,
-      riasec: selectedRiasec
+    const res = await fetch('api/programs.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: titleInput.value.trim(), collegeId: Number(departmentInput.value),
+        hollandCode: hollandCode, status: statusInput.value
+      })
     });
-
-    saveCareers(careers);
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      errorBanner.textContent = data.error || 'Failed to add program.';
+      errorBanner.classList.remove('hidden');
+      return;
+    }
 
     successBanner.classList.remove('hidden');
     form.classList.add('opacity-50', 'pointer-events-none');

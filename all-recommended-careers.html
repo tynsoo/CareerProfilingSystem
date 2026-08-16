@@ -185,10 +185,10 @@
             <thead class="bg-slate-50/50">
               <tr>
                 <th class="px-5 py-3 text-xs font-semibold text-slate-500">#</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-500">Career</th>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">Program</th>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">College</th>
                 <th class="px-5 py-3 text-xs font-semibold text-slate-500">Students Matched</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-500">% of Total Students</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-500">Trend vs. Last SY</th>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">% of Students with Recommendations</th>
               </tr>
             </thead>
             <tbody id="careersTableBody" class="divide-y divide-slate-100"></tbody>
@@ -204,6 +204,14 @@
 </div>
 
 <script>
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+
   (function() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -234,63 +242,34 @@
     });
   })();
 
-  const CAREERS = [
-    { title: 'Information Technology Specialist', students: 210, width: 85, percent: '16.8%', trend: 'up', change: '12.4%' },
-    { title: 'Psychologist', students: 184, width: 75, percent: '14.7%', trend: 'up', change: '8.7%' },
-    { title: 'Software Developer', students: 176, width: 70, percent: '14.1%', trend: 'up', change: '10.2%' },
-    { title: 'Data Analyst', students: 142, width: 58, percent: '11.4%', trend: 'up', change: '6.5%' },
-    { title: 'Civil Engineer', students: 128, width: 50, percent: '10.3%', trend: 'down', change: '-3.1%' },
-    { title: 'Nurse', students: 118, width: 48, percent: '9.5%', trend: 'up', change: '5.2%' },
-    { title: 'Accountant', students: 109, width: 44, percent: '8.7%', trend: 'up', change: '4.6%' },
-    { title: 'Business Analyst', students: 101, width: 41, percent: '8.1%', trend: 'up', change: '7.3%' },
-    { title: 'Mechanical Engineer', students: 95, width: 38, percent: '7.6%', trend: 'down', change: '-1.8%' },
-    { title: 'Electrical Engineer', students: 88, width: 36, percent: '7.1%', trend: 'up', change: '3.4%' },
-    { title: 'Marketing Specialist', students: 82, width: 33, percent: '6.6%', trend: 'up', change: '6.1%' },
-    { title: 'Human Resources Specialist', students: 77, width: 31, percent: '6.2%', trend: 'up', change: '2.9%' },
-    { title: 'Cybersecurity Analyst', students: 71, width: 29, percent: '5.7%', trend: 'up', change: '9.8%' },
-    { title: 'UX/UI Designer', students: 66, width: 27, percent: '5.3%', trend: 'up', change: '8.4%' },
-    { title: 'Financial Analyst', students: 61, width: 25, percent: '4.9%', trend: 'down', change: '-2.2%' },
-    { title: 'Network Administrator', students: 57, width: 23, percent: '4.6%', trend: 'up', change: '3.1%' },
-    { title: 'Graphic Designer', students: 53, width: 21, percent: '4.2%', trend: 'up', change: '5.5%' },
-    { title: 'Architect', students: 49, width: 20, percent: '3.9%', trend: 'up', change: '1.7%' },
-    { title: 'Teacher / Educator', students: 45, width: 18, percent: '3.6%', trend: 'down', change: '-0.9%' },
-    { title: 'Chemical Engineer', students: 42, width: 17, percent: '3.4%', trend: 'up', change: '4.2%' },
-    { title: 'Hotel and Restaurant Manager', students: 39, width: 16, percent: '3.1%', trend: 'up', change: '2.6%' },
-    { title: 'Criminologist', students: 36, width: 15, percent: '2.9%', trend: 'up', change: '6.7%' },
-    { title: 'Social Worker', students: 33, width: 13, percent: '2.6%', trend: 'down', change: '-1.4%' },
-    { title: 'Multimedia Artist', students: 30, width: 12, percent: '2.4%', trend: 'up', change: '3.8%' },
-    { title: 'Chef / Culinary Arts Specialist', students: 28, width: 11, percent: '2.2%', trend: 'up', change: '2.0%' }
-  ];
-
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
   }
 
+  let CAREERS = [];
+
   function renderRow(career, index) {
-    const trendIcon = career.trend === 'up' ? 'icon-trend-up-table.svg' : 'icon-trend-down-table.svg';
-    const trendColor = career.trend === 'up' ? 'text-[#1b8a47]' : 'text-[#ed1c24]';
     return `
       <tr>
         <td class="px-5 py-4 text-sm text-slate-600">${index + 1}</td>
         <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">${escapeHtml(career.title)}</td>
+        <td class="px-5 py-4 text-sm text-slate-500">${escapeHtml(career.collegeCode)}</td>
         <td class="px-5 py-4"><div class="flex items-center gap-3">
           <span class="text-sm text-slate-600 w-8">${career.students}</span>
           <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:${career.width}%"></div></div>
         </div></td>
-        <td class="px-5 py-4 text-sm text-slate-600">${career.percent}</td>
-        <td class="px-5 py-4"><div class="flex items-center gap-1.5">
-          <img src="images/analytics/${trendIcon}" alt="" class="w-2 h-2.5">
-          <span class="text-sm font-medium ${trendColor}">${career.change}</span>
-        </div></td>
+        <td class="px-5 py-4 text-sm text-slate-600">${career.percent.toFixed(1)}%</td>
       </tr>`;
   }
 
   function render(list) {
     const tbody = document.getElementById('careersTableBody');
-    tbody.innerHTML = list.map((c, i) => renderRow(c, i)).join('');
-    document.getElementById('resultCount').textContent = `Showing ${list.length} of ${CAREERS.length} careers`;
+    tbody.innerHTML = list.length
+      ? list.map((c, i) => renderRow(c, i)).join('')
+      : '<tr><td colspan="5" class="px-5 py-12 text-center text-sm text-slate-500">No students have matched to any program yet.</td></tr>';
+    document.getElementById('resultCount').textContent = `Showing ${list.length} of ${CAREERS.length} programs`;
   }
 
   document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -299,7 +278,29 @@
     render(filtered);
   });
 
-  render(CAREERS);
+  (async function loadData() {
+    const data = await (await fetch('api/programs.php?all=1&stats=1')).json();
+    const counts = data.stats.matchedCounts;
+    const total = data.stats.totalStudentsWithRecommendations;
+    const maxCount = Math.max(1, ...Object.values(counts).map(Number));
+
+    CAREERS = data.programs
+      .filter(p => counts[p.id])
+      .map(p => {
+        const students = counts[p.id];
+        return {
+          title: p.title,
+          collegeCode: p.collegeCode,
+          students: students,
+          width: Math.round((students / maxCount) * 100),
+          percent: total > 0 ? (students / total) * 100 : 0,
+        };
+      })
+      .sort((a, b) => b.students - a.students);
+
+    render(CAREERS);
+  })();
+})();
 </script>
 
 </body>

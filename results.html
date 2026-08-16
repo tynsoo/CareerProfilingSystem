@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Career Results — Career Profiling System</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -144,7 +145,7 @@
           <div class="bg-white border border-[#e0e3e5] rounded-lg p-6 flex flex-col">
             <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-4">RIASEC Profile Overview</p>
             <div class="flex-1 flex items-center justify-center py-4">
-              <svg id="radarChart" viewBox="0 0 280 280" class="w-full max-w-[280px]"></svg>
+              <canvas id="radarChart" class="w-full max-w-[280px]"></canvas>
             </div>
             <div class="border-t border-[#e0e3e5] pt-4 flex items-center justify-between">
               <span class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c]">Holland Code:</span>
@@ -228,8 +229,9 @@
 </div>
 
 <script>
-(function() {
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
   if (!currentUser || currentUser.role !== 'student') {
     window.location.replace('login.html');
     return;
@@ -254,11 +256,14 @@
 
   function doLogout(e) {
     e.preventDefault();
-    localStorage.removeItem('currentUser');
-    window.location.href = 'login.html';
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
   }
   document.getElementById('sidebarLogout').addEventListener('click', doLogout);
   document.getElementById('profileLogout').addEventListener('click', doLogout);
+
+  const status = await (await fetch('api/assessment-status.php')).json();
 
   (function() {
     const notifBtn = document.getElementById('notifBtn');
@@ -275,9 +280,8 @@
     notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
     profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
 
-    const statusNow = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
     const notes = [];
-    if (!statusNow || !statusNow.completed) {
+    if (!status.completed) {
       notes.push('Complete your RIASEC Career Interest Assessment to unlock your results and Career Worksheet.');
     } else {
       notes.push('Your RIASEC results are ready to review below.');
@@ -340,10 +344,7 @@
   const AXIS_ORDER = ['Realistic', 'Investigate', 'Artistic', 'Social', 'Enterprising', 'Conventional'];
   const MAX_SCORE = 50;
 
-  const status = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
-  const worksheetStatus = JSON.parse(localStorage.getItem('worksheetStatus_' + currentUser.schoolId) || 'null');
-
-  if (!status || !status.completed) {
+  if (!status.completed) {
     document.getElementById('emptyState').classList.remove('hidden');
     return;
   }
@@ -353,9 +354,10 @@
     .map(function(name) { return { name: name, score: scores[name === 'Investigate' ? 'I' : name[0]] }; })
     .sort(function(a, b) { return b.score - a.score; });
 
-  if (worksheetStatus && worksheetStatus.completed) {
+  const recommendation = await (await fetch('api/recommendations.php')).json();
+  if (recommendation.hasRecommendation) {
     document.getElementById('careerResultsView').classList.remove('hidden');
-    renderCareerResults(status);
+    await renderCareerResults(recommendation);
     return;
   }
 
@@ -393,187 +395,116 @@
 
   function info_letter(name) { return TYPE_INFO[name].letter; }
 
-  // Radar chart
+  // RIASEC hexagon via Chart.js's native radar chart type.
   (function renderRadar() {
-    const svg = document.getElementById('radarChart');
-    const cx = 140, cy = 140, maxR = 105;
-    const n = AXIS_ORDER.length;
-    const angleFor = function(i) { return (-90 + i * (360 / n)) * Math.PI / 180; };
-    const pointAt = function(i, r) {
-      const a = angleFor(i);
-      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-    };
-
-    let svgContent = '';
-    [0.33, 0.66, 1].forEach(function(f) {
-      const pts = AXIS_ORDER.map(function(_, i) { return pointAt(i, maxR * f).join(','); }).join(' ');
-      svgContent += '<polygon points="' + pts + '" fill="none" stroke="#e2e8f0" stroke-width="1" />';
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: AXIS_ORDER.map(function(name) { return name === 'Investigate' ? 'I' : name[0]; }),
+        datasets: [{
+          data: AXIS_ORDER.map(function(name) { return scores[name === 'Investigate' ? 'I' : name[0]]; }),
+          backgroundColor: 'rgba(187,0,19,0.15)',
+          borderColor: '#bb0013',
+          borderWidth: 2,
+          pointBackgroundColor: '#bb0013',
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          r: {
+            min: 0, max: MAX_SCORE,
+            ticks: { display: false },
+            grid: { color: '#e2e8f0' },
+            angleLines: { color: '#e2e8f0' },
+            pointLabels: { font: { size: 14, weight: '700' }, color: '#001c43' }
+          }
+        }
+      }
     });
-    AXIS_ORDER.forEach(function(_, i) {
-      const p = pointAt(i, maxR);
-      svgContent += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0] + '" y2="' + p[1] + '" stroke="#e2e8f0" stroke-width="1" />';
-    });
-
-    const dataPts = AXIS_ORDER.map(function(name, i) {
-      const key = name === 'Investigate' ? 'I' : name[0];
-      const r = maxR * (scores[key] / MAX_SCORE);
-      return pointAt(i, r).join(',');
-    }).join(' ');
-    svgContent += '<polygon points="' + dataPts + '" fill="rgba(187,0,19,0.15)" stroke="#bb0013" stroke-width="2" />';
-
-    AXIS_ORDER.forEach(function(name, i) {
-      const p = pointAt(i, maxR + 16);
-      const letter = name === 'Investigate' ? 'I' : name[0];
-      const isTop = ranked[0].name === name;
-      svgContent += '<text x="' + p[0] + '" y="' + p[1] + '" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="' + (isTop ? '#bb0013' : '#001c43') + '">' + letter + '</text>';
-    });
-
-    svg.innerHTML = svgContent;
   })();
 
-  function renderCareerResults(riasecStatus) {
-    const CAREER_BANK = [
-      { name: 'Software Engineer', category: 'Information Technology & Software Development', letters: ['I', 'R'],
-        description: 'Software Engineers design, develop, and test software systems and applications. This role perfectly aligns with your strong Investigative (I) and Realistic (R) traits, requiring analytical problem-solving and technical implementation.',
-        skills: ['Programming (Java, Python, C++)', 'System Architecture', 'Debugging & Testing'],
-        education: 'B.S. in Computer Science, Software Engineering, or Information Technology.',
-        details: 'Software engineers typically start as junior developers contributing to existing codebases before progressing to designing full systems. Strong alignment with Investigative and Realistic types reflects comfort with both abstract problem-solving and hands-on building.' },
-      { name: 'Systems Analyst', category: 'Information Technology & Business Operations', letters: ['I', 'E'],
-        description: "Systems Analysts study an organization's current computer systems and procedures and design information systems solutions to help the organization operate more efficiently. Aligns well with your Investigative (I) and Enterprising (E) traits.",
-        skills: ['Data Analysis', 'Business Requirements Gathering', 'System Integration'],
-        education: 'B.S. in Information Systems, Computer Science, or Business Administration with an IT focus.',
-        details: 'Systems analysts bridge the gap between technical teams and business stakeholders, translating operational needs into system requirements. The Enterprising trait supports stakeholder communication, while Investigative supports the underlying analysis.' },
-      { name: 'UX/UI Designer', category: 'Creative Technology', letters: ['A', 'I'],
-        description: 'UX/UI Designers shape how people experience digital products, balancing visual creativity with an investigative understanding of user behavior and needs.',
-        skills: ['User Research', 'Wireframing & Prototyping', 'Visual & Interaction Design'],
-        education: 'B.A./B.S. in Multimedia Arts, Industrial Design, or Human-Computer Interaction.',
-        details: 'UX/UI designers conduct user interviews and usability tests, then translate findings into wireframes and polished interfaces. This blends Artistic craft with Investigative curiosity about how people behave.' },
-      { name: 'Network Administrator', category: 'IT Infrastructure', letters: ['R', 'C'],
-        description: "Network Administrators keep an organization's computer networks running reliably, combining hands-on technical work with careful, methodical maintenance routines.",
-        skills: ['Network Configuration', 'Troubleshooting', 'Security Protocols'],
-        education: 'B.S. in Information Technology, or a professional networking certification (e.g. CCNA).',
-        details: 'Network administrators monitor infrastructure, respond to outages, and enforce security policy — a mix of Realistic hands-on troubleshooting and Conventional, procedure-driven upkeep.' },
-      { name: 'Data Scientist', category: 'Data & Analytics', letters: ['I', 'C'],
-        description: 'Data Scientists extract insights from large datasets to guide decisions, pairing investigative curiosity with the structured rigor of statistical methods.',
-        skills: ['Statistical Modeling', 'Data Visualization', 'Machine Learning Basics'],
-        education: 'B.S. in Data Science, Computer Science, Statistics, or Applied Mathematics.',
-        details: 'Data scientists spend much of their time cleaning and modeling data before presenting findings to non-technical stakeholders, drawing on both Investigative analysis and Conventional rigor.' },
-      { name: 'Guidance Counselor', category: 'Education & Human Services', letters: ['S', 'I'],
-        description: "Guidance Counselors support students' academic, social, and emotional growth, combining a genuine interest in people with careful assessment of individual needs.",
-        skills: ['Active Listening', 'Assessment & Case Documentation', 'Empathy & Rapport-Building'],
-        education: 'B.S. in Psychology or Guidance and Counseling.',
-        details: 'Counselors balance one-on-one and group support with case documentation and referrals, reflecting both Social care for people and Investigative assessment skills.' },
-      { name: 'Entrepreneur / Business Manager', category: 'Business & Management', letters: ['E', 'C'],
-        description: 'Entrepreneurs and business managers build and run organizations, drawing on leadership drive and the organizational discipline needed to keep operations on track.',
-        skills: ['Leadership', 'Financial Planning', 'Negotiation'],
-        education: 'B.S. in Business Administration, Entrepreneurship, or Management.',
-        details: 'Whether running a startup or a department, this path rewards Enterprising initiative paired with Conventional discipline around budgets, schedules, and process.' },
-      { name: 'Civil Engineer', category: 'Engineering & Construction', letters: ['R', 'I'],
-        description: 'Civil Engineers plan and oversee construction of infrastructure like roads and buildings, applying hands-on technical skill alongside rigorous analysis.',
-        skills: ['Structural Analysis', 'AutoCAD / BIM Software', 'Project Management'],
-        education: 'B.S. in Civil Engineering.',
-        details: 'Civil engineers move between site visits and detailed structural calculations, a natural fit for the Realistic-Investigative combination.' },
-      { name: 'Marketing Specialist', category: 'Marketing & Media', letters: ['E', 'A'],
-        description: 'Marketing Specialists craft campaigns that connect brands with audiences, blending persuasive business instincts with creative storytelling.',
-        skills: ['Content Creation', 'Market Research', 'Campaign Strategy'],
-        education: 'B.S. in Marketing, Communication, or Business Administration.',
-        details: 'Marketing work mixes Enterprising strategy and pitching with Artistic execution — copywriting, visuals, and campaign concepts.' },
-      { name: 'Nurse', category: 'Healthcare', letters: ['S', 'R'],
-        description: 'Nurses provide direct patient care in clinical settings, combining genuine care for people with the hands-on precision of clinical procedures.',
-        skills: ['Patient Care', 'Clinical Procedures', 'Communication'],
-        education: 'B.S. in Nursing.',
-        details: 'Nursing calls for Social empathy in patient interactions alongside Realistic comfort with hands-on clinical tasks and equipment.' },
-      { name: 'Accountant', category: 'Finance & Accounting', letters: ['C', 'E'],
-        description: "Accountants track and report on an organization's finances, applying meticulous attention to detail within a structured, rule-based environment.",
-        skills: ['Financial Reporting', 'Auditing', 'Attention to Detail'],
-        education: 'B.S. in Accountancy.',
-        details: 'Accounting rewards Conventional precision and rule-following, with an Enterprising edge useful for client-facing advisory work.' },
-      { name: 'Multimedia Artist', category: 'Creative Arts', letters: ['A', 'R'],
-        description: 'Multimedia Artists produce illustrations, animations, and visual content for games, film, and branding, turning creative vision into tangible output.',
-        skills: ['Illustration & Animation', 'Branding & Visual Identity', 'Digital Art Tools (Photoshop, Blender)'],
-        education: 'B.A. in Multimedia Arts or Fine Arts.',
-        details: 'This path pairs Artistic vision with the Realistic, tool-driven craft of actually producing finished artwork and animation.' }
-    ];
-
-    const rankMap = {};
-    ranked.forEach(function(r, i) {
-      rankMap[r.name === 'Investigate' ? 'I' : r.name[0]] = 6 - i;
-    });
-
-    CAREER_BANK.forEach(function(c) {
-      const w = (rankMap[c.letters[0]] || 0) * 0.6 + (rankMap[c.letters[1]] || 0) * 0.4;
-      c.match = Math.round(60 + (w / 5.6) * 39);
-    });
-    CAREER_BANK.sort(function(a, b) { return b.match - a.match; });
-
+  async function renderCareerResults(recommendation) {
     document.getElementById('cr-code').textContent = ranked.slice(0, 3).map(function(r) { return r.name === 'Investigate' ? 'I' : r.name[0]; }).join(' - ');
 
-    const SAVE_KEY = 'savedCareers_' + currentUser.schoolId;
-    function loadSaved() {
-      try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || []; } catch (e) { return []; }
-    }
-    function isSaved(name) { return loadSaved().indexOf(name) !== -1; }
-    function toggleSaved(name) {
-      const list = loadSaved();
-      const idx = list.indexOf(name);
-      if (idx === -1) list.push(name); else list.splice(idx, 1);
-      localStorage.setItem(SAVE_KEY, JSON.stringify(list));
-    }
+    const savedData = await (await fetch('api/saved-programs.php')).json();
+    let savedIds = savedData.programIds || [];
+    function isSaved(id) { return savedIds.indexOf(id) !== -1; }
 
-    function saveBtnHtml(name) {
-      const saved = isSaved(name);
+    function saveBtnHtml(program) {
+      const saved = isSaved(program.id);
       return '<button type="button" class="save-career-btn border text-xs font-semibold text-center tracking-wide uppercase px-4 py-2.5 rounded ' +
-        (saved ? 'border-green-600 text-green-700 bg-green-50' : 'border-[#495e88] text-[#495e88]') + '" data-name="' + name + '">' +
+        (saved ? 'border-green-600 text-green-700 bg-green-50' : 'border-[#495e88] text-[#495e88]') + '" data-id="' + program.id + '">' +
         (saved ? 'Saved ✓' : 'Save Career') + '</button>';
     }
 
-    const topMatches = CAREER_BANK.slice(0, 2);
-    const suggested = CAREER_BANK.slice(2, 5);
+    function describeProgram(p) {
+      return 'This program is a ' + p.matchPercent + '% match to your RIASEC profile, based on its Holland Code (' + p.hollandCode + ') and your assessment results.';
+    }
 
-    document.getElementById('cr-topMatches').innerHTML = topMatches.map(function(c) {
+    const allPrograms = {};
+    recommendation.top3.forEach(function(p) { allPrograms[p.id] = p; });
+    if (recommendation.statedOutsideTop3) allPrograms[recommendation.statedOutsideTop3.id] = recommendation.statedOutsideTop3;
+
+    const topMatches = recommendation.top3.slice(0, 2);
+    const suggested = recommendation.top3.slice(2);
+    if (recommendation.statedOutsideTop3) suggested.push(recommendation.statedOutsideTop3);
+
+    document.getElementById('cr-topMatches').innerHTML = topMatches.map(function(p) {
       return '<div class="bg-white border border-[#e8bcb7] rounded p-[17px] flex flex-col gap-4">' +
         '<div class="flex items-start justify-between gap-4 flex-wrap">' +
-          '<div><h3 class="text-xl font-semibold text-[#495e88]">' + c.name + '</h3><p class="text-xs text-[#5e3f3c]">' + c.category + '</p></div>' +
-          '<span class="bg-[rgba(187,0,19,0.1)] border border-[rgba(187,0,19,0.2)] text-[#bb0013] text-xs font-semibold rounded-full px-3.5 py-1.5 shrink-0">' + c.match + '% Match</span>' +
+          '<div><h3 class="text-xl font-semibold text-[#495e88]">' + p.title + '</h3><p class="text-xs text-[#5e3f3c]">' + p.collegeName + '</p></div>' +
+          '<span class="bg-[rgba(187,0,19,0.1)] border border-[rgba(187,0,19,0.2)] text-[#bb0013] text-xs font-semibold rounded-full px-3.5 py-1.5 shrink-0">' + p.matchPercent + '% Match</span>' +
         '</div>' +
-        '<p class="text-sm text-[#191c1e] leading-relaxed max-w-[700px]">' + c.description + '</p>' +
+        '<p class="text-sm text-[#191c1e] leading-relaxed max-w-[700px]">' + describeProgram(p) + '</p>' +
         '<div class="bg-[#f2f4f6] border border-[#e8bcb7] rounded p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">' +
-          '<div><p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">Key Skills</p><ul class="text-xs text-[#191c1e] flex flex-col gap-1">' +
-            c.skills.map(function(s) { return '<li>&bull; ' + s + '</li>'; }).join('') +
-          '</ul></div>' +
-          '<div><p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">Education Path</p><p class="text-xs text-[#191c1e]">' + c.education + '</p></div>' +
+          '<div><p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">Holland Code</p><p class="text-xs text-[#191c1e]">' + p.hollandCode + '</p></div>' +
+          '<div><p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">College</p><p class="text-xs text-[#191c1e]">' + p.collegeCode + ' — ' + p.collegeName + '</p></div>' +
         '</div>' +
         '<div class="flex gap-3">' +
-          '<button type="button" class="view-details-btn bg-[#bb0013] text-white text-xs font-semibold text-center tracking-wide uppercase px-4 py-2.5 rounded hover:opacity-90" data-name="' + c.name + '">View Program Details</button>' +
-          saveBtnHtml(c.name) +
+          '<button type="button" class="view-details-btn bg-[#bb0013] text-white text-xs font-semibold text-center tracking-wide uppercase px-4 py-2.5 rounded hover:opacity-90" data-id="' + p.id + '">View Program Details</button>' +
+          saveBtnHtml(p) +
         '</div>' +
       '</div>';
     }).join('');
 
     const ICON_BG = ['#d3e4fe', '#d7e2ff', '#ffdad6'];
-    document.getElementById('cr-suggested').innerHTML = suggested.map(function(c, i) {
+    document.getElementById('cr-suggested').innerHTML = suggested.map(function(p, i) {
+      const note = (recommendation.statedOutsideTop3 && p.id === recommendation.statedOutsideTop3.id) ? ' (your stated interest)' : '';
       return '<div class="flex items-center justify-between gap-3 py-2.5">' +
         '<div class="flex items-center gap-3">' +
-          '<span class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-[#495e88]" style="background:' + ICON_BG[i % ICON_BG.length] + '">' + c.name[0] + '</span>' +
-          '<div><p class="text-sm font-semibold text-[#495e88]">' + c.name + '</p><p class="text-xs text-[#5e3f3c]">' + c.category.split(' & ')[0] + '</p></div>' +
+          '<span class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-[#495e88]" style="background:' + ICON_BG[i % ICON_BG.length] + '">' + p.title[0] + '</span>' +
+          '<div><p class="text-sm font-semibold text-[#495e88]">' + p.title + note + '</p><p class="text-xs text-[#5e3f3c]">' + p.collegeCode + '</p></div>' +
         '</div>' +
-        '<span class="text-xs font-semibold text-[#495e88] shrink-0">' + c.match + '%</span>' +
+        '<span class="text-xs font-semibold text-[#495e88] shrink-0">' + p.matchPercent + '%</span>' +
       '</div>';
     }).join('');
 
-    document.getElementById('cr-topMatches').addEventListener('click', function(e) {
+    document.getElementById('cr-topMatches').addEventListener('click', async function(e) {
       const detailsBtn = e.target.closest('.view-details-btn');
       if (detailsBtn) {
-        const career = CAREER_BANK.find(function(c) { return c.name === detailsBtn.dataset.name; });
-        document.getElementById('detailsModalTitle').textContent = career.name;
-        document.getElementById('detailsModalBody').textContent = career.details;
+        const program = allPrograms[Number(detailsBtn.dataset.id)];
+        document.getElementById('detailsModalTitle').textContent = program.title;
+        document.getElementById('detailsModalBody').textContent =
+          program.collegeCode + ' — ' + program.collegeName + '. Holland Code: ' + program.hollandCode + '. ' +
+          'Final Match Score = 0.70 × RIASEC similarity (' + Math.round(program.cosine * 100) + '%) + 0.30 × stated-interest indicator (' +
+          (recommendation.statedProgramId === program.id ? '1, since you stated this program on your worksheet' : '0') + ') = ' + program.matchPercent + '%.';
         document.getElementById('detailsModal').classList.remove('hidden');
         return;
       }
       const saveBtn = e.target.closest('.save-career-btn');
       if (saveBtn) {
-        toggleSaved(saveBtn.dataset.name);
-        saveBtn.outerHTML = saveBtnHtml(saveBtn.dataset.name);
+        const programId = Number(saveBtn.dataset.id);
+        const res = await fetch('api/saved-programs.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ programId: programId })
+        });
+        const data = await res.json();
+        savedIds = data.saved ? savedIds.concat([programId]) : savedIds.filter(function(id) { return id !== programId; });
+        saveBtn.outerHTML = saveBtnHtml(allPrograms[programId]);
       }
     });
 
