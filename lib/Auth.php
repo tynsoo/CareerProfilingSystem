@@ -12,6 +12,14 @@ class Auth
             return;
         }
         if (session_status() !== PHP_SESSION_ACTIVE) {
+            // The php:8.4-cli base image doesn't reliably default session.save_path
+            // to a writable directory — pin it explicitly so sessions actually persist.
+            $savePath = sys_get_temp_dir() . '/php-sessions';
+            if (!is_dir($savePath)) {
+                mkdir($savePath, 0700, true);
+            }
+            session_save_path($savePath);
+
             $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
                 || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'); // Render terminates TLS upstream
             session_set_cookie_params([
