@@ -79,7 +79,7 @@
 
     <!-- Logout -->
     <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
-      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+      <a href="#" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
         <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
         Logout
       </a>
@@ -128,14 +128,14 @@
               <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
             </span>
             <span class="text-left">
-              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-              <span class="block text-xs text-gray-500">Administrator</span>
+              <span class="block text-sm font-semibold text-gray-800" id="headerUserName">Admin User</span>
+              <span class="block text-xs text-gray-500" id="headerUserRole">Administrator</span>
             </span>
             <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
           </button>
           <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
-            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+            <a href="#" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
           </div>
         </div>
       </div>
@@ -160,7 +160,7 @@
           <p class="text-sm text-gray-500" id="avatarStrand">—</p>
         </div>
 
-        <form id="studentForm" class="lg:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col gap-5">
+        <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col gap-5">
           <h2 class="text-base font-semibold text-gray-900">Assessment Details</h2>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -170,11 +170,7 @@
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Assessment Status</label>
-              <select id="statusField" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-                <option>Completed</option>
-                <option>In Progress</option>
-                <option>Pending</option>
-              </select>
+              <input type="text" id="statusField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
             </div>
             <div class="sm:col-span-2">
               <label class="block text-xs font-medium text-gray-600 mb-1">Top 3 RIASEC</label>
@@ -182,21 +178,15 @@
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Counseling Status</label>
-              <select id="counselingField" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-                <option value="">Not applicable</option>
-                <option>Availed</option>
-                <option>Did Not Avail</option>
-              </select>
+              <input type="text" id="counselingField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
+              <p class="text-xs text-gray-400 mt-1">Reflects whether this student has submitted a Schedule Advising request. Use Monitoring to take a counselor action on a flagged student.</p>
             </div>
           </div>
 
-          <div id="saveMessage" class="hidden bg-green-50 border border-green-200 text-green-700 text-sm rounded-md px-4 py-2.5">Student record updated.</div>
-
           <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Save Changes</button>
-            <a href="admin-dashboard.html" class="border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-5 py-2.5 hover:bg-gray-50">Cancel</a>
+            <a href="admin-dashboard.html" class="border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-5 py-2.5 hover:bg-gray-50">Back to Dashboard</a>
           </div>
-        </form>
+        </div>
       </div>
 
     </main>
@@ -204,25 +194,32 @@
 </div>
 
 <script>
-  const OVERRIDES_KEY = 'studentRecordOverrides';
-  function loadOverrides() {
-    try { return JSON.parse(localStorage.getItem(OVERRIDES_KEY)) || {}; } catch (e) { return {}; }
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
   }
-  function saveOverride(studentName, data) {
-    const overrides = loadOverrides();
-    overrides[studentName] = data;
-    localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides));
+  const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
+  document.getElementById('headerUserName').textContent = currentUser.username;
+  document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
+
+  function doLogout(e) {
+    e.preventDefault();
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
   }
+  document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+  document.getElementById('profileLogout').addEventListener('click', doLogout);
 
   const params = new URLSearchParams(window.location.search);
   const name = params.get('name') || 'Unknown Student';
   const strand = params.get('strand') || '—';
   const riasec = params.get('riasec') || '—';
-
-  const overrides = loadOverrides();
-  const override = overrides[name];
-  const status = (override && override.status) || params.get('status') || 'Pending';
-  const counseling = (override && override.counseling !== undefined) ? override.counseling : (params.get('counseling') || '');
+  const status = params.get('status') || 'Pending';
+  const counseling = params.get('counseling') || 'Not applicable';
 
   document.getElementById('studentName').textContent = name;
   document.getElementById('avatarName').textContent = name;
@@ -230,40 +227,24 @@
   document.getElementById('strandField').value = strand;
   document.getElementById('riasecField').value = riasec;
   document.getElementById('studentId').textContent = 'Strand: ' + strand;
+  document.getElementById('statusField').value = status;
+  document.getElementById('counselingField').value = counseling;
 
-  const statusSelect = document.getElementById('statusField');
-  if ([...statusSelect.options].some(o => o.value === status)) statusSelect.value = status;
-
-  const counselingSelect = document.getElementById('counselingField');
-  if ([...counselingSelect.options].some(o => o.value === counseling)) counselingSelect.value = counseling;
-
-  (function() {
-    const notifBtn = document.getElementById('notifBtn');
-    const notifPanel = document.getElementById('notifPanel');
-    const profileBtn = document.getElementById('profileBtn');
-    const profilePanel = document.getElementById('profilePanel');
-    function toggleDropdown(panel, ...others) {
-      others.forEach(p => p.classList.add('hidden'));
-      panel.classList.toggle('hidden');
-    }
-    notifBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
-    profileBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
-    document.addEventListener('click', () => {
-      notifPanel.classList.add('hidden');
-      profilePanel.classList.add('hidden');
-    });
-  })();
-
-  document.getElementById('studentForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    saveOverride(name, {
-      status: statusSelect.value,
-      counseling: counselingSelect.value
-    });
-    const msg = document.getElementById('saveMessage');
-    msg.classList.remove('hidden');
-    setTimeout(() => msg.classList.add('hidden'), 3000);
+  const notifBtn = document.getElementById('notifBtn');
+  const notifPanel = document.getElementById('notifPanel');
+  const profileBtn = document.getElementById('profileBtn');
+  const profilePanel = document.getElementById('profilePanel');
+  function toggleDropdown(panel, ...others) {
+    others.forEach(p => p.classList.add('hidden'));
+    panel.classList.toggle('hidden');
+  }
+  notifBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
+  profileBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
+  document.addEventListener('click', () => {
+    notifPanel.classList.add('hidden');
+    profilePanel.classList.add('hidden');
   });
+})();
 </script>
 
 </body>
