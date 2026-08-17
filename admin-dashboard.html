@@ -94,7 +94,7 @@
 
     <!-- Logout -->
     <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
-      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+      <a href="login.html" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
         <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
         Logout
       </a>
@@ -147,15 +147,15 @@
               <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
             </span>
             <span class="text-left">
-              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-              <span class="block text-xs text-gray-500">Administrator</span>
+              <span class="block text-sm font-semibold text-gray-800" id="headerUserName">Admin User</span>
+              <span class="block text-xs text-gray-500" id="headerUserRole">Administrator</span>
             </span>
             <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
           </button>
           <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
             <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
-            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+            <a href="login.html" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
           </div>
         </div>
       </div>
@@ -180,12 +180,8 @@
             </span>
             <div class="text-right">
               <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Total Students</p>
-              <p class="text-3xl font-bold text-gray-900">1,248</p>
+              <p class="text-3xl font-bold text-gray-900" id="cardTotalStudents">—</p>
             </div>
-          </div>
-          <div class="flex items-end justify-between pt-4">
-            <span class="text-sm font-medium text-emerald-500">+18 this month</span>
-            <img src="images/admin/sparkline-blue.svg" alt="" class="w-16 h-8">
           </div>
         </div>
 
@@ -196,12 +192,11 @@
             </span>
             <div class="text-right">
               <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Assessments Completed</p>
-              <p class="text-3xl font-bold text-gray-900">932</p>
+              <p class="text-3xl font-bold text-gray-900" id="cardCompleted">—</p>
             </div>
           </div>
           <div class="flex items-end justify-between pt-4">
-            <span class="text-sm font-medium text-emerald-500">74.7% of total</span>
-            <img src="images/admin/sparkline-green.svg" alt="" class="w-16 h-8">
+            <span class="text-sm font-medium text-emerald-500" id="cardCompletedPct">—</span>
           </div>
         </div>
 
@@ -212,12 +207,11 @@
             </span>
             <div class="text-right">
               <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Pending Assessments</p>
-              <p class="text-3xl font-bold text-gray-900">216</p>
+              <p class="text-3xl font-bold text-gray-900" id="cardPending">—</p>
             </div>
           </div>
           <div class="flex items-end justify-between pt-4">
-            <span class="text-sm font-medium text-amber-500">17.3% of total</span>
-            <img src="images/admin/sparkline-orange.svg" alt="" class="w-16 h-8">
+            <span class="text-sm font-medium text-amber-500" id="cardPendingPct">—</span>
           </div>
         </div>
 
@@ -228,12 +222,11 @@
             </span>
             <div class="text-right">
               <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Availed for Counseling</p>
-              <p class="text-3xl font-bold text-gray-900">384</p>
+              <p class="text-3xl font-bold text-gray-900" id="cardCounseling">—</p>
             </div>
           </div>
           <div class="flex items-end justify-between pt-4">
-            <span class="text-sm font-medium text-purple-500">30.8% of total</span>
-            <img src="images/admin/sparkline-purple.svg" alt="" class="w-16 h-8">
+            <span class="text-sm font-medium text-purple-500" id="cardCounselingPct">—</span>
           </div>
         </div>
       </div>
@@ -260,9 +253,10 @@
                     <select id="filterStrand" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
                       <option value="">All Strands</option>
                       <option>STEM</option>
-                      <option>HUMSS</option>
                       <option>ABM</option>
-                      <option>TVL (ICT)</option>
+                      <option>HUMSS</option>
+                      <option>GAS</option>
+                      <option>TVL</option>
                     </select>
                   </div>
                   <div>
@@ -270,7 +264,6 @@
                     <select id="filterStatus" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
                       <option value="">All Status</option>
                       <option>Completed</option>
-                      <option>In Progress</option>
                       <option>Pending</option>
                     </select>
                   </div>
@@ -307,196 +300,14 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100" id="studentTbody">
-
-              <tr class="student-row" data-name="dela cruz, juan miguel" data-strand="STEM" data-status="Completed" data-counseling="Availed">
-                <td class="px-6 py-4 text-sm text-gray-500">1</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Dela Cruz, Juan Miguel</td>
-                <td class="px-6 py-4 text-sm text-gray-500">STEM</td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Completed
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Investigative, Realistic, Artistic</td>
-                <td class="px-6 py-4 text-center">
-                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Availed
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <a href="student-profile.html?name=Dela%20Cruz%2C%20Juan%20Miguel&strand=STEM&status=Completed&riasec=Investigative%2C%20Realistic%2C%20Artistic&counseling=Availed" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
-                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
-                  </a>
-                </td>
-              </tr>
-
-              <tr class="student-row" data-name="santos, maria angela" data-strand="HUMSS" data-status="Completed" data-counseling="Availed">
-                <td class="px-6 py-4 text-sm text-gray-500">2</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Santos, Maria Angela</td>
-                <td class="px-6 py-4 text-sm text-gray-500">HUMSS</td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Completed
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Social, Enterprising, Artistic</td>
-                <td class="px-6 py-4 text-center">
-                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Availed
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <a href="student-profile.html?name=Santos%2C%20Maria%20Angela&strand=HUMSS&status=Completed&riasec=Social%2C%20Enterprising%2C%20Artistic&counseling=Availed" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
-                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
-                  </a>
-                </td>
-              </tr>
-
-              <tr class="student-row" data-name="reyes, dominic paul" data-strand="ABM" data-status="In Progress" data-counseling="Did Not Avail">
-                <td class="px-6 py-4 text-sm text-gray-500">3</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Reyes, Dominic Paul</td>
-                <td class="px-6 py-4 text-sm text-gray-500">ABM</td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center gap-1.5 bg-[#eff6ff] border border-[#bfdbfe] text-blue-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-blue.svg" alt="" class="w-3 h-3"> In Progress
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Enterprising, Conventional, Realistic</td>
-                <td class="px-6 py-4 text-center">
-                  <span class="inline-flex items-center gap-1.5 bg-[#fef2f2] border border-[#fecaca] text-red-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-red.svg" alt="" class="w-3 h-3"> Did Not Avail
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <a href="student-profile.html?name=Reyes%2C%20Dominic%20Paul&strand=ABM&status=In%20Progress&riasec=Enterprising%2C%20Conventional%2C%20Realistic&counseling=Did%20Not%20Avail" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
-                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
-                  </a>
-                </td>
-              </tr>
-
-              <tr class="student-row" data-name="garcia, andrea nicole" data-strand="STEM" data-status="Completed" data-counseling="Availed">
-                <td class="px-6 py-4 text-sm text-gray-500">4</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Garcia, Andrea Nicole</td>
-                <td class="px-6 py-4 text-sm text-gray-500">STEM</td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Completed
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Investigative, Artistic, Social</td>
-                <td class="px-6 py-4 text-center">
-                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Availed
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <a href="student-profile.html?name=Garcia%2C%20Andrea%20Nicole&strand=STEM&status=Completed&riasec=Investigative%2C%20Artistic%2C%20Social&counseling=Availed" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
-                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
-                  </a>
-                </td>
-              </tr>
-
-              <tr class="student-row" data-name="torres, nathaniel" data-strand="TVL (ICT)" data-status="In Progress" data-counseling="">
-                <td class="px-6 py-4 text-sm text-gray-500">5</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Torres, Nathaniel</td>
-                <td class="px-6 py-4 text-sm text-gray-500">TVL (ICT)</td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center gap-1.5 bg-[#eff6ff] border border-[#bfdbfe] text-blue-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-blue.svg" alt="" class="w-3 h-3"> In Progress
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Realistic, Investigative, Conventional</td>
-                <td class="px-6 py-4 text-center text-gray-400">—</td>
-                <td class="px-6 py-4 text-center">
-                  <a href="student-profile.html?name=Torres%2C%20Nathaniel&strand=TVL%20(ICT)&status=In%20Progress&riasec=Realistic%2C%20Investigative%2C%20Conventional&counseling=" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
-                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
-                  </a>
-                </td>
-              </tr>
-
-              <tr class="student-row" data-name="lim, patricia mae" data-strand="HUMSS" data-status="Pending" data-counseling="">
-                <td class="px-6 py-4 text-sm text-gray-500">6</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Lim, Patricia Mae</td>
-                <td class="px-6 py-4 text-sm text-gray-500">HUMSS</td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center gap-1.5 bg-[#fff7ed] border border-[#fed7aa] text-amber-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-orange.svg" alt="" class="w-3 h-3"> Pending
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Social, Artistic, Enterprising</td>
-                <td class="px-6 py-4 text-center text-gray-400">—</td>
-                <td class="px-6 py-4 text-center">
-                  <a href="student-profile.html?name=Lim%2C%20Patricia%20Mae&strand=HUMSS&status=Pending&riasec=Social%2C%20Artistic%2C%20Enterprising&counseling=" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
-                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
-                  </a>
-                </td>
-              </tr>
-
-              <tr class="student-row" data-name="bautista, kyle andrew" data-strand="STEM" data-status="Completed" data-counseling="Availed">
-                <td class="px-6 py-4 text-sm text-gray-500">7</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Bautista, Kyle Andrew</td>
-                <td class="px-6 py-4 text-sm text-gray-500">STEM</td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Completed
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Investigative, Realistic, Conventional</td>
-                <td class="px-6 py-4 text-center">
-                  <span class="inline-flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-green.svg" alt="" class="w-3 h-3"> Availed
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <a href="student-profile.html?name=Bautista%2C%20Kyle%20Andrew&strand=STEM&status=Completed&riasec=Investigative%2C%20Realistic%2C%20Conventional&counseling=Availed" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
-                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
-                  </a>
-                </td>
-              </tr>
-
-              <tr class="student-row" data-name="navarro, angelica" data-strand="ABM" data-status="In Progress" data-counseling="Did Not Avail">
-                <td class="px-6 py-4 text-sm text-gray-500">8</td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">Navarro, Angelica</td>
-                <td class="px-6 py-4 text-sm text-gray-500">ABM</td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center gap-1.5 bg-[#eff6ff] border border-[#bfdbfe] text-blue-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-blue.svg" alt="" class="w-3 h-3"> In Progress
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">Enterprising, Conventional, Social</td>
-                <td class="px-6 py-4 text-center">
-                  <span class="inline-flex items-center gap-1.5 bg-[#fef2f2] border border-[#fecaca] text-red-500 text-xs font-medium px-3 py-1 rounded-full">
-                    <img src="images/admin/dot-red.svg" alt="" class="w-3 h-3"> Did Not Avail
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <a href="student-profile.html?name=Navarro%2C%20Angelica&strand=ABM&status=In%20Progress&riasec=Enterprising%2C%20Conventional%2C%20Social&counseling=Did%20Not%20Avail" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">
-                    <img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4">
-                  </a>
-                </td>
-              </tr>
-
+              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">Loading…</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="border-t border-gray-200 flex items-center justify-between px-6 py-4 flex-wrap gap-3">
-          <p class="text-sm text-gray-500">
-            Showing <span class="font-medium text-gray-900">1</span> to <span class="font-medium text-gray-900" id="visibleCount">8</span> of <span class="font-medium text-gray-900">1,248</span> students
-          </p>
-          <div class="flex items-center gap-1" id="pagination">
-            <button type="button" id="pagePrev" class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50">
-              <img src="images/admin/icon-chevron-left.svg" alt="Previous" class="w-1.5 h-2.5">
-            </button>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md bg-[#ed1c24] border border-[#ed1c24] text-white text-sm font-medium">1</button>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">2</button>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">3</button>
-            <span class="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">156</button>
-            <button type="button" id="pageNext" class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50">
-              <img src="images/admin/icon-chevron-right.svg" alt="Next" class="w-1.5 h-2.5">
-            </button>
-          </div>
+          <p class="text-sm text-gray-500" id="paginationSummary">Loading…</p>
+          <div class="flex items-center gap-1" id="pagination"></div>
         </div>
       </div>
 
@@ -505,6 +316,26 @@
 </div>
 
 <script>
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+  const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
+  document.getElementById('headerUserName').textContent = currentUser.username;
+  document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
+
+  function doLogout(e) {
+    e.preventDefault();
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+  document.getElementById('profileLogout').addEventListener('click', doLogout);
+
   function toggleDropdown(panel, ...others) {
     others.forEach(p => p.classList.add('hidden'));
     panel.classList.toggle('hidden');
@@ -549,36 +380,135 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
   })();
 
-  // Search + filter
-  const searchInput = document.getElementById('studentSearch');
-  const rows = Array.from(document.querySelectorAll('.student-row'));
-  const noResults = document.getElementById('noResults');
-  const visibleCount = document.getElementById('visibleCount');
-
-  function applyFilters() {
-    const q = searchInput.value.trim().toLowerCase();
-    const strand = document.getElementById('filterStrand').value;
-    const status = document.getElementById('filterStatus').value;
-    const counseling = document.getElementById('filterCounseling').value;
-    let shown = 0;
-
-    rows.forEach(row => {
-      const matchesSearch = !q || row.dataset.name.includes(q);
-      const matchesStrand = !strand || row.dataset.strand === strand;
-      const matchesStatus = !status || row.dataset.status === status;
-      const matchesCounseling = !counseling || row.dataset.counseling === counseling;
-      const visible = matchesSearch && matchesStrand && matchesStatus && matchesCounseling;
-      row.classList.toggle('hidden', !visible);
-      if (visible) shown++;
-    });
-
-    noResults.classList.toggle('hidden', shown !== 0);
-    visibleCount.textContent = shown;
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  searchInput.addEventListener('input', applyFilters);
+  const searchInput = document.getElementById('studentSearch');
+  const noResults = document.getElementById('noResults');
+  const tbody = document.getElementById('studentTbody');
+  const state = { page: 1, search: '', strand: '', status: '', counseling: '' };
+  let debounceHandle = null;
+
+  const STATUS_STYLE = {
+    Completed: { bg: 'bg-[#f0fdf4] border-[#bbf7d0] text-emerald-500', dot: 'images/admin/dot-green.svg' },
+    Pending: { bg: 'bg-[#fff7ed] border-[#fed7aa] text-amber-500', dot: 'images/admin/dot-orange.svg' },
+  };
+  const COUNSELING_STYLE = {
+    Availed: { bg: 'bg-[#f0fdf4] border-[#bbf7d0] text-emerald-500', dot: 'images/admin/dot-green.svg' },
+    'Did Not Avail': { bg: 'bg-[#fef2f2] border-[#fecaca] text-red-500', dot: 'images/admin/dot-red.svg' },
+  };
+
+  function badge(label, style) {
+    return '<span class="inline-flex items-center gap-1.5 ' + style.bg + ' text-xs font-medium px-3 py-1 rounded-full">' +
+      '<img src="' + style.dot + '" alt="" class="w-3 h-3"> ' + label + '</span>';
+  }
+
+  function renderRow(s, index) {
+    const statusCell = badge(s.status, STATUS_STYLE[s.status]);
+    const counselingCell = s.counseling
+      ? badge(s.counseling, COUNSELING_STYLE[s.counseling])
+      : '<span class="text-gray-400">—</span>';
+    const params = new URLSearchParams({
+      name: s.name, strand: s.strand, status: s.status, riasec: s.riasec, counseling: s.counseling,
+    });
+    return '<tr>' +
+      '<td class="px-6 py-4 text-sm text-gray-500">' + index + '</td>' +
+      '<td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + escapeHtml(s.name) + '</td>' +
+      '<td class="px-6 py-4 text-sm text-gray-500">' + escapeHtml(s.strand) + '</td>' +
+      '<td class="px-6 py-4">' + statusCell + '</td>' +
+      '<td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">' + (s.riasec ? escapeHtml(s.riasec) : '<span class="text-gray-400">—</span>') + '</td>' +
+      '<td class="px-6 py-4 text-center">' + counselingCell + '</td>' +
+      '<td class="px-6 py-4 text-center">' +
+        '<a href="student-profile.html?' + params.toString() + '" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">' +
+          '<img src="images/admin/icon-edit.svg" alt="Edit" class="w-4 h-4"></a>' +
+      '</td>' +
+    '</tr>';
+  }
+
+  function renderPagination(page, totalPages) {
+    const bar = document.getElementById('pagination');
+    const btnBase = 'w-9 h-9 flex items-center justify-center rounded-md text-sm font-medium';
+    const active = 'bg-[#ed1c24] border border-[#ed1c24] text-white';
+    const inactive = 'border border-gray-300 text-gray-700 hover:bg-gray-50';
+
+    const pages = [];
+    for (let p = 1; p <= totalPages; p++) {
+      if (p === 1 || p === totalPages || Math.abs(p - page) <= 2) pages.push(p);
+    }
+    const withEllipses = [];
+    let prevPage = 0;
+    pages.forEach(p => {
+      if (prevPage && p - prevPage > 1) withEllipses.push('...');
+      withEllipses.push(p);
+      prevPage = p;
+    });
+
+    let html = '<button type="button" data-page="' + (page - 1) + '" ' + (page <= 1 ? 'disabled' : '') +
+      ' class="page-nav-btn w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 ' + (page <= 1 ? 'opacity-40 cursor-not-allowed' : '') + '">' +
+      '<img src="images/admin/icon-chevron-left.svg" alt="Previous" class="w-1.5 h-2.5"></button>';
+    withEllipses.forEach(p => {
+      if (p === '...') {
+        html += '<span class="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>';
+      } else {
+        html += '<button type="button" data-page="' + p + '" class="page-btn ' + btnBase + ' ' + (p === page ? active : inactive) + '">' + p + '</button>';
+      }
+    });
+    html += '<button type="button" data-page="' + (page + 1) + '" ' + (page >= totalPages ? 'disabled' : '') +
+      ' class="page-nav-btn w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 ' + (page >= totalPages ? 'opacity-40 cursor-not-allowed' : '') + '">' +
+      '<img src="images/admin/icon-chevron-right.svg" alt="Next" class="w-1.5 h-2.5"></button>';
+
+    bar.innerHTML = html;
+    bar.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', () => { state.page = Number(btn.dataset.page); load(); });
+    });
+  }
+
+  async function load() {
+    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">Loading…</td></tr>';
+    const params = new URLSearchParams({
+      page: state.page, search: state.search, strand: state.strand, status: state.status, counseling: state.counseling,
+    });
+    const data = await (await fetch('api/students.php?' + params.toString())).json();
+    state.page = data.page;
+
+    document.getElementById('cardTotalStudents').textContent = data.summary.totalStudents.toLocaleString();
+    document.getElementById('cardCompleted').textContent = data.summary.completedCount.toLocaleString();
+    document.getElementById('cardPending').textContent = data.summary.pendingCount.toLocaleString();
+    document.getElementById('cardCounseling').textContent = data.summary.counselingCount.toLocaleString();
+    const pct = (n) => data.summary.totalStudents > 0 ? Math.round((n / data.summary.totalStudents) * 100) + '% of total' : '—';
+    document.getElementById('cardCompletedPct').textContent = pct(data.summary.completedCount);
+    document.getElementById('cardPendingPct').textContent = pct(data.summary.pendingCount);
+    document.getElementById('cardCounselingPct').textContent = pct(data.summary.counselingCount);
+
+    noResults.classList.toggle('hidden', data.students.length !== 0);
+    tbody.innerHTML = data.students.length
+      ? data.students.map((s, i) => renderRow(s, data.startIndex + i)).join('')
+      : '';
+
+    const endIndex = data.total > 0 ? data.startIndex + data.students.length - 1 : 0;
+    document.getElementById('paginationSummary').innerHTML =
+      'Showing <span class="font-medium text-gray-900">' + data.startIndex + '</span> to ' +
+      '<span class="font-medium text-gray-900">' + endIndex + '</span> of ' +
+      '<span class="font-medium text-gray-900">' + data.total.toLocaleString() + '</span> students';
+
+    renderPagination(data.page, data.totalPages);
+  }
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceHandle);
+    debounceHandle = setTimeout(() => {
+      state.search = searchInput.value.trim();
+      state.page = 1;
+      load();
+    }, 300);
+  });
   document.getElementById('applyFilters').addEventListener('click', () => {
-    applyFilters();
+    state.strand = document.getElementById('filterStrand').value;
+    state.status = document.getElementById('filterStatus').value;
+    state.counseling = document.getElementById('filterCounseling').value;
+    state.page = 1;
+    load();
     filterPanel.classList.add('hidden');
   });
   document.getElementById('clearFilters').addEventListener('click', () => {
@@ -586,20 +516,16 @@
     document.getElementById('filterStatus').value = '';
     document.getElementById('filterCounseling').value = '';
     searchInput.value = '';
-    applyFilters();
+    state.search = '';
+    state.strand = '';
+    state.status = '';
+    state.counseling = '';
+    state.page = 1;
+    load();
   });
 
-  // Pagination (visual state — data is static in this prototype)
-  document.querySelectorAll('.page-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.page-btn').forEach(b => {
-        b.classList.remove('bg-[#ed1c24]', 'border-[#ed1c24]', 'text-white');
-        b.classList.add('border-gray-300', 'text-gray-700');
-      });
-      btn.classList.remove('border-gray-300', 'text-gray-700');
-      btn.classList.add('bg-[#ed1c24]', 'border-[#ed1c24]', 'text-white');
-    });
-  });
+  await load();
+})();
 </script>
 
 </body>

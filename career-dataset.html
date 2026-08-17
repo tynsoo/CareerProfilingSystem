@@ -279,22 +279,10 @@
 
         <!-- Pagination -->
         <div class="border-t border-slate-200 flex items-center justify-between px-6 py-4 flex-wrap gap-3">
-          <p class="text-sm text-slate-600">
+          <p class="text-sm text-slate-600" id="paginationSummary">
             Showing <span class="font-medium" id="filterFrom">1</span> to <span class="font-medium" id="filterTo">10</span> of <span class="font-medium" id="filterTotal">126</span> careers
           </p>
-          <div class="flex items-center gap-1" id="paginationBar">
-            <button type="button" class="page-nav-btn w-9 h-9 flex items-center justify-center border border-slate-300 rounded-md">
-              <img src="images/admin/icon-page-prev.svg" alt="Previous" class="w-1.5 h-2.5">
-            </button>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md bg-[#ed1c24] border border-[#ed1c24] text-white text-sm font-medium">1</button>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-slate-300 text-slate-700 text-sm font-medium">2</button>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-slate-300 text-slate-700 text-sm font-medium">3</button>
-            <span class="w-9 h-9 flex items-center justify-center text-slate-500 text-sm">...</span>
-            <button type="button" class="page-btn w-9 h-9 flex items-center justify-center rounded-md border border-slate-300 text-slate-700 text-sm font-medium">12</button>
-            <button type="button" class="page-nav-btn w-9 h-9 flex items-center justify-center border border-slate-300 rounded-md">
-              <img src="images/admin/icon-page-next.svg" alt="Next" class="w-1.5 h-2.5">
-            </button>
-          </div>
+          <div class="flex items-center gap-1" id="paginationBar"></div>
         </div>
       </div>
 
@@ -452,7 +440,15 @@
       </tr>`;
   }
 
+  const PAGE_SIZE = 8;
+  const state = { page: 1 };
+
   function applyFilters() {
+    state.page = 1;
+    render();
+  }
+
+  function render() {
     const search = searchInput.value.trim().toLowerCase();
     const dept = filterDepartment.value;
     const riasec = filterRiasec.value;
@@ -466,15 +462,59 @@
       return matchesSearch && matchesDept && matchesRiasec && matchesStatus;
     });
 
-    tbody.innerHTML = filtered.length
-      ? filtered.map(renderRow).join('')
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    state.page = Math.min(state.page, totalPages);
+    const offset = (state.page - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(offset, offset + PAGE_SIZE);
+
+    tbody.innerHTML = pageItems.length
+      ? pageItems.map(renderRow).join('')
       : '<tr><td colspan="5" class="px-6 py-12 text-center text-sm text-slate-500">No programs match your filters.</td></tr>';
 
-    filterFrom.textContent = filtered.length ? '1' : '0';
-    filterTo.textContent = String(filtered.length);
-    document.getElementById('filterTotal').textContent = String(programs.length);
+    filterFrom.textContent = filtered.length ? String(offset + 1) : '0';
+    filterTo.textContent = String(offset + pageItems.length);
+    document.getElementById('filterTotal').textContent = String(filtered.length);
 
+    renderPagination(state.page, totalPages);
     bindEditButtons();
+  }
+
+  function renderPagination(page, totalPages) {
+    const bar = document.getElementById('paginationBar');
+    const btnBase = 'w-9 h-9 flex items-center justify-center rounded-md text-sm font-medium';
+    const active = 'bg-[#ed1c24] border border-[#ed1c24] text-white';
+    const inactive = 'border border-slate-300 text-slate-700 hover:bg-slate-50';
+
+    const pages = [];
+    for (let p = 1; p <= totalPages; p++) {
+      if (p === 1 || p === totalPages || Math.abs(p - page) <= 2) pages.push(p);
+    }
+    const withEllipses = [];
+    let prevPage = 0;
+    pages.forEach(p => {
+      if (prevPage && p - prevPage > 1) withEllipses.push('...');
+      withEllipses.push(p);
+      prevPage = p;
+    });
+
+    let html = '<button type="button" data-page="' + (page - 1) + '" ' + (page <= 1 ? 'disabled' : '') +
+      ' class="page-nav-btn w-9 h-9 flex items-center justify-center border border-slate-300 rounded-md hover:bg-slate-50 ' + (page <= 1 ? 'opacity-40 cursor-not-allowed' : '') + '">' +
+      '<img src="images/admin/icon-page-prev.svg" alt="Previous" class="w-1.5 h-2.5"></button>';
+    withEllipses.forEach(p => {
+      if (p === '...') {
+        html += '<span class="w-9 h-9 flex items-center justify-center text-slate-500 text-sm">...</span>';
+      } else {
+        html += '<button type="button" data-page="' + p + '" class="page-btn ' + btnBase + ' ' + (p === page ? active : inactive) + '">' + p + '</button>';
+      }
+    });
+    html += '<button type="button" data-page="' + (page + 1) + '" ' + (page >= totalPages ? 'disabled' : '') +
+      ' class="page-nav-btn w-9 h-9 flex items-center justify-center border border-slate-300 rounded-md hover:bg-slate-50 ' + (page >= totalPages ? 'opacity-40 cursor-not-allowed' : '') + '">' +
+      '<img src="images/admin/icon-page-next.svg" alt="Next" class="w-1.5 h-2.5"></button>';
+
+    bar.innerHTML = html;
+    bar.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', () => { state.page = Number(btn.dataset.page); render(); });
+    });
   }
 
   function bindEditButtons() {
@@ -511,19 +551,6 @@
     });
     await loadData();
     closeDeleteModal();
-  });
-
-  // ---- Pagination (cosmetic, matches existing precedent elsewhere) ----
-  const paginationBar = document.getElementById('paginationBar');
-  paginationBar.querySelectorAll('.page-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      paginationBar.querySelectorAll('.page-btn').forEach(b => {
-        b.classList.remove('bg-[#ed1c24]', 'border-[#ed1c24]', 'text-white');
-        b.classList.add('border-slate-300', 'text-slate-700');
-      });
-      btn.classList.remove('border-slate-300', 'text-slate-700');
-      btn.classList.add('bg-[#ed1c24]', 'border-[#ed1c24]', 'text-white');
-    });
   });
 
   // ---- Edit modal ----
