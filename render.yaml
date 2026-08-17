@@ -1,0 +1,51 @@
+databases:
+  - name: profilepath-db
+    plan: free
+    databaseName: profilepath
+    user: profilepath
+
+services:
+  - type: web
+    name: profilepath
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_URL
+        sync: false
+      - key: APP_AES_KEY
+        sync: false
+      - key: DB_HOST
+        fromDatabase:
+          name: profilepath-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: profilepath-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: profilepath-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: profilepath-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: profilepath-db
+          property: password
+      - key: SMTP_HOST
+        value: smtp-relay.brevo.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM_EMAIL
+        value: no-reply@profilepath.local
+      - key: SMTP_FROM_NAME
+        value: ProfilePath
