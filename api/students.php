@@ -27,15 +27,13 @@ $rows = $pdo->query(
      ORDER BY s.registered_at DESC'
 )->fetchAll();
 
-// A student "availed" counseling if any of their flags were ever escalated to a
-// counselor — the real signal this app has for that concept. monitoring_flags.status
-// is overwritten in place (pending -> escalated -> approved/dismissed), so a flag
-// that was escalated and later resolved wouldn't show status='escalated' anymore;
-// the audit log is the only place that history survives.
+// A student "availed" counseling if they've submitted a Schedule Advising request
+// from Help Center (results.html links there with a fixed subject line). This is
+// distinct from monitoring escalation, which is a counselor-initiated review of a
+// low-confidence recommendation, not the student asking for advising themselves.
 $counseledIds = array_flip($pdo->query(
-    "SELECT DISTINCT mf.student_id FROM audit_log al
-     JOIN monitoring_flags mf ON mf.id = al.target_id::int
-     WHERE al.action = 'monitoring_escalate'"
+    "SELECT DISTINCT student_id FROM help_requests
+     WHERE subject = 'Request for Academic Advising' AND student_id IS NOT NULL"
 )->fetchAll(PDO::FETCH_COLUMN));
 
 $labels = ['R' => 'Realistic', 'I' => 'Investigate', 'A' => 'Artistic', 'S' => 'Social', 'E' => 'Enterprising', 'C' => 'Conventional'];
