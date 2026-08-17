@@ -209,8 +209,6 @@
 
     const assessmentStatusData = await (await fetch('api/assessment-status.php')).json();
     const assessment = assessmentStatusData.completed ? assessmentStatusData : null;
-    // worksheetStatus is still read from localStorage — migrates to a real
-    // endpoint in Phase 6, once the worksheet backend exists.
 
     (function renderNotifications() {
       const notes = [];
@@ -248,9 +246,9 @@
 
       const wPill = document.getElementById('worksheetStatusPill');
       const wBtn = document.getElementById('worksheetActionBtn');
-      const worksheet = JSON.parse(localStorage.getItem('worksheetStatus_' + currentUser.schoolId) || 'null');
+      const recommendation = await (await fetch('api/recommendations.php')).json();
 
-      if (worksheet && worksheet.completed) {
+      if (recommendation.hasRecommendation) {
         wPill.className = 'inline-flex items-center gap-2 bg-green-50 border border-green-100 rounded-full px-3.5 py-1.5';
         wPill.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-green-600"></span><span class="text-base text-green-600">Completed</span>';
         wBtn.textContent = 'View Worksheet Results';
