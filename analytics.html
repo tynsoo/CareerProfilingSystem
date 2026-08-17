@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Analytics Dashboard — Career Profiling System</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -89,7 +90,7 @@
 
     <!-- Logout -->
     <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
-      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+      <a href="login.html" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
         <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
         Logout
       </a>
@@ -142,15 +143,15 @@
               <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
             </span>
             <span class="text-left">
-              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-              <span class="block text-xs text-gray-500">Administrator</span>
+              <span class="block text-sm font-semibold text-gray-800" id="headerUserName">Admin User</span>
+              <span class="block text-xs text-gray-500" id="headerUserRole">Administrator</span>
             </span>
             <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
           </button>
           <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
             <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
-            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+            <a href="login.html" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
           </div>
         </div>
       </div>
@@ -166,13 +167,9 @@
           <p class="text-sm text-slate-500 mt-1">Insights and trends based on student assessments and career profiling data.</p>
         </div>
         <div class="flex items-center gap-3">
-          <div class="relative">
-            <img src="images/analytics/icon-calendar.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-[21px] h-[21px]">
-            <select id="schoolYearSelect" class="appearance-none bg-white border border-slate-300 rounded-md pl-10 pr-9 py-2.5 text-sm font-medium text-slate-700">
-              <option>School Year 2025-2026</option>
-              <option>School Year 2024-2025</option>
-            </select>
-            <img src="images/analytics/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-4 pointer-events-none">
+          <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-md pl-4 pr-4 py-2.5 text-sm font-medium text-slate-700">
+            <img src="images/analytics/icon-calendar.svg" alt="" class="w-[18px] h-[18px]">
+            Live data
           </div>
           <div class="relative">
             <button type="button" id="filtersBtn" class="flex items-center gap-2 bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
@@ -198,17 +195,13 @@
               </span>
               <div>
                 <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Assessment<br>Completion Rate</p>
-                <p id="metricCompletionRate" class="text-[30px] font-bold text-[#19427b] leading-tight mt-1">74.7%</p>
+                <p id="metricCompletionRate" class="text-[30px] font-bold text-[#19427b] leading-tight mt-1">—</p>
               </div>
             </div>
-            <p class="text-sm mb-4"><span id="metricCompletionCount" class="font-semibold text-[#19427b]">932</span> <span class="text-slate-500">of 1,248 students</span></p>
-            <div class="w-full h-1.5 rounded-full bg-slate-100 mb-4">
-              <div id="metricCompletionBar" class="h-1.5 rounded-full bg-[#19427b]" style="width:74.7%"></div>
+            <p class="text-sm mb-4"><span id="metricCompletionCount" class="font-semibold text-[#19427b]">—</span> <span class="text-slate-500" id="metricCompletionOf">of students</span></p>
+            <div class="w-full h-1.5 rounded-full bg-slate-100">
+              <div id="metricCompletionBar" class="h-1.5 rounded-full bg-[#19427b]" style="width:0%"></div>
             </div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <img src="images/analytics/icon-trend-up.svg" alt="" class="w-2.5 h-2.5">
-            <p class="text-xs"><span class="font-semibold text-slate-700">8.6%</span> <span class="text-slate-500">vs. SY 2024-2025</span></p>
           </div>
         </div>
 
@@ -220,18 +213,14 @@
                 <img src="images/analytics/card-icon-counseling.svg" alt="" class="w-6 h-5">
               </span>
               <div>
-                <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Counseling Availment<br>Rate</p>
-                <p id="metricCounselingRate" class="text-[30px] font-bold text-[#1b8a47] leading-tight mt-1">30.8%</p>
+                <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Career Worksheet<br>Completion Rate</p>
+                <p id="metricCounselingRate" class="text-[30px] font-bold text-[#1b8a47] leading-tight mt-1">—</p>
               </div>
             </div>
-            <p class="text-sm mb-4"><span id="metricCounselingCount" class="font-semibold text-[#1b8a47]">384</span> <span class="text-slate-500">of 1,248 students</span></p>
-            <div class="w-full h-1.5 rounded-full bg-slate-100 mb-4">
-              <div id="metricCounselingBar" class="h-1.5 rounded-full bg-[#1b8a47]" style="width:30.8%"></div>
+            <p class="text-sm mb-4"><span id="metricCounselingCount" class="font-semibold text-[#1b8a47]">—</span> <span class="text-slate-500" id="metricCounselingOf">of assessed students</span></p>
+            <div class="w-full h-1.5 rounded-full bg-slate-100">
+              <div id="metricCounselingBar" class="h-1.5 rounded-full bg-[#1b8a47]" style="width:0%"></div>
             </div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <img src="images/analytics/icon-trend-up.svg" alt="" class="w-2.5 h-2.5">
-            <p class="text-xs"><span class="font-semibold text-slate-700">5.4%</span> <span class="text-slate-500">vs. SY 2024-2025</span></p>
           </div>
         </div>
 
@@ -243,18 +232,14 @@
                 <img src="images/analytics/card-icon-institution.svg" alt="" class="w-5 h-5">
               </span>
               <div>
-                <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Students Considering<br>MMCL Programs</p>
-                <p id="metricMmclRate" class="text-[30px] font-bold text-[#db7020] leading-tight mt-1">62.3%</p>
+                <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Recommendation<br>Confidence Rate</p>
+                <p id="metricMmclRate" class="text-[30px] font-bold text-[#db7020] leading-tight mt-1">—</p>
               </div>
             </div>
-            <p class="text-sm mb-4"><span id="metricMmclCount" class="font-semibold text-[#db7020]">777</span> <span class="text-slate-500">of 1,248 students</span></p>
-            <div class="w-full h-1.5 rounded-full bg-slate-100 mb-4">
-              <div id="metricMmclBar" class="h-1.5 rounded-full bg-[#db7020]" style="width:62.3%"></div>
+            <p class="text-sm mb-4"><span id="metricMmclCount" class="font-semibold text-[#db7020]">—</span> <span class="text-slate-500" id="metricMmclOf">of computed recommendations</span></p>
+            <div class="w-full h-1.5 rounded-full bg-slate-100">
+              <div id="metricMmclBar" class="h-1.5 rounded-full bg-[#db7020]" style="width:0%"></div>
             </div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <img src="images/analytics/icon-trend-up.svg" alt="" class="w-2.5 h-2.5">
-            <p class="text-xs"><span class="font-semibold text-slate-700">6.1%</span> <span class="text-slate-500">vs. SY 2024-2025</span></p>
           </div>
         </div>
 
@@ -266,11 +251,11 @@
             </span>
             <div>
               <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Top Strand</p>
-              <p id="metricTopStrand" class="text-[30px] font-bold text-[#673ab7] leading-tight mt-1">STEM</p>
+              <p id="metricTopStrand" class="text-[30px] font-bold text-[#673ab7] leading-tight mt-1">—</p>
             </div>
           </div>
-          <p class="text-sm"><span id="metricStrandPercent" class="font-semibold text-[#673ab7]">28.9%</span> <span class="text-slate-500">of total students</span></p>
-          <p class="text-xs text-slate-400">(<span id="metricStrandCount">361</span> students)</p>
+          <p class="text-sm"><span id="metricStrandPercent" class="font-semibold text-[#673ab7]">—</span> <span class="text-slate-500">of total students</span></p>
+          <p class="text-xs text-slate-400">(<span id="metricStrandCount">0</span> students)</p>
         </div>
       </div>
 
@@ -278,16 +263,16 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
           <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Students by Strand</p>
-          <img src="images/analytics/chart-strand.png" alt="Students by Strand bar chart" class="w-full h-auto">
+          <canvas id="strandChart" height="220"></canvas>
           <div class="border-t border-slate-100 pt-4 mt-4">
-            <p class="text-sm text-slate-500">Total Students: 1,248</p>
+            <p class="text-sm text-slate-500">Total Students: <span id="strandChartTotal">0</span></p>
           </div>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
           <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Average RIASEC Dimension Scores</p>
-          <img src="images/analytics/chart-riasec.png" alt="Average RIASEC Dimension Scores bar chart" class="w-full h-auto">
+          <canvas id="riasecChart" height="220"></canvas>
           <div class="border-t border-slate-100 pt-4 mt-4 text-center">
-            <p class="text-sm text-slate-500">Scores range from 0 to 100</p>
+            <p class="text-sm text-slate-500">Scores range from 0 to 50</p>
           </div>
         </div>
       </div>
@@ -302,83 +287,18 @@
             <thead class="bg-slate-50/50">
               <tr>
                 <th class="px-5 py-3 text-xs font-semibold text-slate-500">#</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-500">Career</th>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">Program</th>
                 <th class="px-5 py-3 text-xs font-semibold text-slate-500">Students Matched</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-500">% of Total Students</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-500">Trend vs. Last SY</th>
+                <th class="px-5 py-3 text-xs font-semibold text-slate-500">% of Recommendations</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
-              <tr>
-                <td class="px-5 py-4 text-sm text-slate-600">1</td>
-                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Information Technology Specialist</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-3">
-                  <span class="text-sm text-slate-600 w-8">210</span>
-                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:85%"></div></div>
-                </div></td>
-                <td class="px-5 py-4 text-sm text-slate-600">16.8%</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
-                  <img src="images/analytics/icon-trend-up-table.svg" alt="" class="w-2 h-2.5">
-                  <span class="text-sm font-medium text-[#1b8a47]">12.4%</span>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="px-5 py-4 text-sm text-slate-600">2</td>
-                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Psychologist</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-3">
-                  <span class="text-sm text-slate-600 w-8">184</span>
-                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:75%"></div></div>
-                </div></td>
-                <td class="px-5 py-4 text-sm text-slate-600">14.7%</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
-                  <img src="images/analytics/icon-trend-up-table.svg" alt="" class="w-2 h-2.5">
-                  <span class="text-sm font-medium text-[#1b8a47]">8.7%</span>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="px-5 py-4 text-sm text-slate-600">3</td>
-                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Software Developer</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-3">
-                  <span class="text-sm text-slate-600 w-8">176</span>
-                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:70%"></div></div>
-                </div></td>
-                <td class="px-5 py-4 text-sm text-slate-600">14.1%</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
-                  <img src="images/analytics/icon-trend-up-table.svg" alt="" class="w-2 h-2.5">
-                  <span class="text-sm font-medium text-[#1b8a47]">10.2%</span>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="px-5 py-4 text-sm text-slate-600">4</td>
-                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Data Analyst</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-3">
-                  <span class="text-sm text-slate-600 w-8">142</span>
-                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:58%"></div></div>
-                </div></td>
-                <td class="px-5 py-4 text-sm text-slate-600">11.4%</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
-                  <img src="images/analytics/icon-trend-up-table.svg" alt="" class="w-2 h-2.5">
-                  <span class="text-sm font-medium text-[#1b8a47]">6.5%</span>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="px-5 py-4 text-sm text-slate-600">5</td>
-                <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">Civil Engineer</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-3">
-                  <span class="text-sm text-slate-600 w-8">128</span>
-                  <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:50%"></div></div>
-                </div></td>
-                <td class="px-5 py-4 text-sm text-slate-600">10.3%</td>
-                <td class="px-5 py-4"><div class="flex items-center gap-1.5">
-                  <img src="images/analytics/icon-trend-down-table.svg" alt="" class="w-2 h-2.5">
-                  <span class="text-sm font-medium text-[#ed1c24]">-3.1%</span>
-                </div></td>
-              </tr>
+            <tbody class="divide-y divide-slate-100" id="topCareersBody">
+              <tr><td colspan="4" class="px-5 py-8 text-center text-sm text-slate-400">Loading…</td></tr>
             </tbody>
           </table>
         </div>
         <div class="border-t border-slate-200 flex items-center justify-between px-4 py-4">
-          <p class="text-sm text-slate-500">Showing top 5 of 25 careers</p>
+          <p class="text-sm text-slate-500" id="topCareersSummary">Loading…</p>
           <a href="all-recommended-careers.html" class="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-[#ed1c24]">
             View all careers
             <img src="images/analytics/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
@@ -391,6 +311,26 @@
 </div>
 
 <script>
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+  const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
+  document.getElementById('headerUserName').textContent = currentUser.username;
+  document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
+
+  function doLogout(e) {
+    e.preventDefault();
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+  document.getElementById('profileLogout').addEventListener('click', doLogout);
+
   (function() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -429,55 +369,78 @@
     document.addEventListener('click', () => filtersPanel.classList.add('hidden'));
   })();
 
-  (function() {
-    const SNAPSHOTS = {
-      'School Year 2025-2026': {
-        completionRate: '74.7%', completionCount: '932', completionBar: '74.7%',
-        counselingRate: '30.8%', counselingCount: '384', counselingBar: '30.8%',
-        mmclRate: '62.3%', mmclCount: '777', mmclBar: '62.3%',
-        topStrand: 'STEM', strandPercent: '28.9%', strandCount: '361'
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  (async function() {
+    const data = await (await fetch('api/analytics.php')).json();
+
+    document.getElementById('metricCompletionRate').textContent = data.completion.rate + '%';
+    document.getElementById('metricCompletionCount').textContent = data.completion.count;
+    document.getElementById('metricCompletionOf').textContent = 'of ' + data.completion.total + ' students';
+    document.getElementById('metricCompletionBar').style.width = data.completion.rate + '%';
+
+    document.getElementById('metricCounselingRate').textContent = data.worksheet.rate + '%';
+    document.getElementById('metricCounselingCount').textContent = data.worksheet.count;
+    document.getElementById('metricCounselingOf').textContent = 'of ' + data.worksheet.total + ' assessed students';
+    document.getElementById('metricCounselingBar').style.width = data.worksheet.rate + '%';
+
+    document.getElementById('metricMmclRate').textContent = data.confidence.rate + '%';
+    document.getElementById('metricMmclCount').textContent = data.confidence.count;
+    document.getElementById('metricMmclOf').textContent = 'of ' + data.confidence.total + ' computed recommendations';
+    document.getElementById('metricMmclBar').style.width = data.confidence.rate + '%';
+
+    if (data.topStrand) {
+      document.getElementById('metricTopStrand').textContent = data.topStrand.strand;
+      document.getElementById('metricStrandPercent').textContent = data.topStrand.percent + '%';
+      document.getElementById('metricStrandCount').textContent = data.topStrand.count;
+    }
+
+    document.getElementById('strandChartTotal').textContent = data.totalStudents;
+    new Chart(document.getElementById('strandChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: data.strandDistribution.map(s => s.strand),
+        datasets: [{ data: data.strandDistribution.map(s => s.count), backgroundColor: '#19427b', borderRadius: 4 }]
       },
-      'School Year 2024-2025': {
-        completionRate: '66.1%', completionCount: '825', completionBar: '66.1%',
-        counselingRate: '25.4%', counselingCount: '317', counselingBar: '25.4%',
-        mmclRate: '56.2%', mmclCount: '701', mmclBar: '56.2%',
-        topStrand: 'STEM', strandPercent: '24.9%', strandCount: '311'
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
       }
-    };
-
-    const select = document.getElementById('schoolYearSelect');
-    const els = {
-      completionRate: document.getElementById('metricCompletionRate'),
-      completionCount: document.getElementById('metricCompletionCount'),
-      completionBar: document.getElementById('metricCompletionBar'),
-      counselingRate: document.getElementById('metricCounselingRate'),
-      counselingCount: document.getElementById('metricCounselingCount'),
-      counselingBar: document.getElementById('metricCounselingBar'),
-      mmclRate: document.getElementById('metricMmclRate'),
-      mmclCount: document.getElementById('metricMmclCount'),
-      mmclBar: document.getElementById('metricMmclBar'),
-      topStrand: document.getElementById('metricTopStrand'),
-      strandPercent: document.getElementById('metricStrandPercent'),
-      strandCount: document.getElementById('metricStrandCount')
-    };
-
-    select.addEventListener('change', () => {
-      const snap = SNAPSHOTS[select.value];
-      if (!snap) return;
-      els.completionRate.textContent = snap.completionRate;
-      els.completionCount.textContent = snap.completionCount;
-      els.completionBar.style.width = snap.completionBar;
-      els.counselingRate.textContent = snap.counselingRate;
-      els.counselingCount.textContent = snap.counselingCount;
-      els.counselingBar.style.width = snap.counselingBar;
-      els.mmclRate.textContent = snap.mmclRate;
-      els.mmclCount.textContent = snap.mmclCount;
-      els.mmclBar.style.width = snap.mmclBar;
-      els.topStrand.textContent = snap.topStrand;
-      els.strandPercent.textContent = snap.strandPercent;
-      els.strandCount.textContent = snap.strandCount;
     });
+
+    const RIASEC_LABELS = ['Realistic', 'Investigative', 'Artistic', 'Social', 'Enterprising', 'Conventional'];
+    const RIASEC_KEYS = ['R', 'I', 'A', 'S', 'E', 'C'];
+    new Chart(document.getElementById('riasecChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: RIASEC_LABELS,
+        datasets: [{ data: RIASEC_KEYS.map(k => data.riasecAverages[k]), backgroundColor: '#db7020', borderRadius: 4 }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, max: 50 } }
+      }
+    });
+
+    const topCareersBody = document.getElementById('topCareersBody');
+    topCareersBody.innerHTML = data.topCareers.length
+      ? data.topCareers.map((c, i) => `
+        <tr>
+          <td class="px-5 py-4 text-sm text-slate-600">${i + 1}</td>
+          <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">${escapeHtml(c.title)}</td>
+          <td class="px-5 py-4"><div class="flex items-center gap-3">
+            <span class="text-sm text-slate-600 w-8">${c.count}</span>
+            <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:${c.percent}%"></div></div>
+          </div></td>
+          <td class="px-5 py-4 text-sm text-slate-600">${c.percent}%</td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" class="px-5 py-8 text-center text-sm text-slate-500">No recommendations computed yet.</td></tr>';
+    document.getElementById('topCareersSummary').textContent =
+      'Showing top ' + data.topCareers.length + ' of ' + data.confidence.total + ' students with a computed recommendation';
   })();
+})();
 </script>
 
 </body>
