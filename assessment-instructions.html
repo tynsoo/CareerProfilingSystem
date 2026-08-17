@@ -95,8 +95,9 @@
 </main>
 
 <script>
-  (function() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  (async function() {
+    const sessionData = await (await fetch('api/session.php')).json();
+    const currentUser = sessionData.user;
     if (!currentUser || currentUser.role !== 'student') {
       window.location.replace('login.html');
       return;
