@@ -88,7 +88,7 @@
 
     <!-- Logout -->
     <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
-      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+      <a href="login.html" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
         <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
         Logout
       </a>
@@ -141,15 +141,15 @@
               <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
             </span>
             <span class="text-left">
-              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-              <span class="block text-xs text-gray-500">Administrator</span>
+              <span class="block text-sm font-semibold text-gray-800" id="headerUserName">Admin User</span>
+              <span class="block text-xs text-gray-500" id="headerUserRole">Administrator</span>
             </span>
             <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
           </button>
           <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
             <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
-            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+            <a href="login.html" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
           </div>
         </div>
       </div>
@@ -244,6 +244,26 @@
 </div>
 
 <script>
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+  const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
+  document.getElementById('headerUserName').textContent = currentUser.username;
+  document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
+
+  function doLogout(e) {
+    e.preventDefault();
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+  document.getElementById('profileLogout').addEventListener('click', doLogout);
+
   (function() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -275,123 +295,12 @@
   })();
 
   (function() {
-    const REVIEW_KEY = 'monitoringReviews';
-    const FIRST_NAMES = ['Miguel','Andrea','Joshua','Kimberly','Rafael','Angela','Vincent','Patricia','Nathaniel','Bea','Carlos','Samantha','Dominic','Faith','Julian','Grace','Xavier','Nicole','Elijah','Trisha','Marco','Isabel','Lorenzo','Denise','Adrian','Kaye','Renzo','Michelle','Paolo','Erika'];
-    const LAST_NAMES = ['Reyes','Santos','Cruz','Bautista','Garcia','Torres','Flores','Rivera','Ramos','Castillo','Mendoza','Villanueva','Aquino','Delacruz','Fernandez','Gonzales','Perez','Diaz','Navarro','Domingo'];
-    const STRANDS = ['STEM','HUMSS','ABM','GAS','TVL'];
-    const CAREERS = ['Information Technology','Industrial Engineering','Psychology','Software Development','Civil Engineering','Nursing','Accountancy','Business Administration','Marketing','Architecture'];
-    const REASONS = ['Below minimum confidence threshold','Counselor requested second review','Inconsistent RIASEC pattern','Conflicting strand and career signal','Assessment flagged for manual audit'];
-    const PRIORITIES = ['High','Medium','Low'];
-
-    function seededRandom(seed) {
-      let t = seed + 0x6D2B79F5;
-      return function() {
-        t += 0x6D2B79F5;
-        let r = Math.imul(t ^ (t >>> 15), 1 | t);
-        r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
-        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-      };
-    }
-
-    function pick(rand, arr) { return arr[Math.floor(rand() * arr.length)]; }
-
-    function studentAt(index) {
-      const first = FIRST_NAMES[index % FIRST_NAMES.length];
-      const last = LAST_NAMES[Math.floor(index / FIRST_NAMES.length) % LAST_NAMES.length];
-      return last + ', ' + first;
-    }
-
-    function buildNeedsReview() {
-      const rows = [
-        { id: '2026-0001', name: 'Gomez, Gerome Grant', strand: 'STEM', career: 'Information Technology', match: '52%', reason: 'Below minimum confidence threshold', priority: 'High' },
-        { id: '2026-0002', name: 'Solis, Christeen Ann', strand: 'HUMSS', career: 'Industrial Engineering', match: '76%', reason: 'Counselor requested second review', priority: 'Medium' }
-      ];
-      for (let i = 3; i <= 18; i++) {
-        const rand = seededRandom(i * 97);
-        const idNum = String(i).padStart(4, '0');
-        rows.push({
-          id: '2026-' + idNum,
-          name: studentAt(i),
-          strand: pick(rand, STRANDS),
-          career: pick(rand, CAREERS),
-          match: (40 + Math.floor(rand() * 55)) + '%',
-          reason: pick(rand, REASONS),
-          priority: pick(rand, PRIORITIES)
-        });
-      }
-      return rows;
-    }
-
-    function buildCompleted() {
-      const rows = [];
-      for (let i = 1; i <= 42; i++) {
-        const rand = seededRandom(i * 131);
-        const hour = 7 + Math.floor(rand() * 9);
-        const min = Math.floor(rand() * 60);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const hour12 = ((hour + 11) % 12) + 1;
-        rows.push({
-          id: '2026-C' + String(i).padStart(3, '0'),
-          name: studentAt(i + 40),
-          strand: pick(rand, STRANDS),
-          career: pick(rand, CAREERS),
-          match: (60 + Math.floor(rand() * 38)) + '%',
-          time: hour12 + ':' + String(min).padStart(2, '0') + ' ' + ampm
-        });
-      }
-      return rows;
-    }
-
-    function buildPending() {
-      const rows = [];
-      const statuses = ['Not Started', 'In Progress'];
-      for (let i = 1; i <= 71; i++) {
-        const rand = seededRandom(i * 173);
-        const day = 1 + Math.floor(rand() * 28);
-        rows.push({
-          id: '2026-P' + String(i).padStart(3, '0'),
-          name: studentAt(i + 90),
-          strand: pick(rand, STRANDS),
-          assigned: '2026-08-' + String(day).padStart(2, '0'),
-          status: pick(rand, statuses)
-        });
-      }
-      return rows;
-    }
-
-    function buildCounseling() {
-      const rows = [];
-      for (let i = 1; i <= 12; i++) {
-        const rand = seededRandom(i * 211);
-        const day = 1 + Math.floor(rand() * 28);
-        rows.push({
-          id: '2026-Q' + String(i).padStart(3, '0'),
-          name: studentAt(i + 170),
-          strand: pick(rand, STRANDS),
-          career: pick(rand, CAREERS),
-          reason: pick(rand, REASONS),
-          date: '2026-08-' + String(day).padStart(2, '0')
-        });
-      }
-      return rows;
-    }
-
-    const DATA = {
-      'needs-review': { label: 'Needs Review', title: 'Flagged Recommendations Needing Review', rows: buildNeedsReview() },
-      'completed': { label: 'Completed Today', title: 'Assessments Completed Today', rows: buildCompleted() },
-      'pending': { label: 'Pending Assessments', title: 'Students with Pending Assessments', rows: buildPending() },
-      'counseling': { label: 'Counseling Queue', title: 'Students Queued for Counseling', rows: buildCounseling() }
+    const TAB_META = {
+      'needs-review': { title: 'Flagged Recommendations Needing Review', hasAction: true },
+      'completed': { title: 'Assessments Completed Today', hasAction: false },
+      'pending': { title: 'Students with Pending Assessments', hasAction: false },
+      'counseling': { title: 'Students Queued for Counseling', hasAction: true },
     };
-
-    function loadReviews() {
-      try { return JSON.parse(localStorage.getItem(REVIEW_KEY)) || {}; } catch (e) { return {}; }
-    }
-    function saveReviews(obj) {
-      localStorage.setItem(REVIEW_KEY, JSON.stringify(obj));
-    }
-    function labelFor(action) {
-      return action === 'approve' ? 'Approved' : action === 'escalate' ? 'Escalated' : 'Dismissed';
-    }
 
     function escapeHtml(str) {
       const div = document.createElement('div');
@@ -400,76 +309,79 @@
     }
 
     let activeTab = 'needs-review';
-    let currentReviewId = null;
+    let currentFlagId = null;
+    let rowsById = {};
+    let debounceHandle = null;
 
     function headForTab(tab) {
       if (tab === 'needs-review') return ['Student', 'Strand', 'Recommended Career', 'Match', 'Flag Reason', 'Priority', 'Action'];
       if (tab === 'completed') return ['Student', 'Strand', 'Recommended Career', 'Match', 'Completed At'];
-      if (tab === 'pending') return ['Student', 'Strand', 'Assigned Date', 'Status'];
-      return ['Student', 'Strand', 'Requested Career', 'Reason', 'Queue Date'];
+      if (tab === 'pending') return ['Student', 'Strand', 'Registered', 'Status'];
+      return ['Student', 'Strand', 'Recommended Career', 'Match', 'Flag Reason', 'Action'];
     }
 
     function rowHtml(tab, r) {
-      const reviews = loadReviews();
-      if (tab === 'needs-review') {
-        const reviewed = reviews[r.id];
-        const priorityColor = r.priority === 'High' ? 'bg-red-50 border-red-100 text-[#ed1c24]' : r.priority === 'Medium' ? 'bg-orange-50 border-orange-100 text-orange-600' : 'bg-slate-50 border-slate-200 text-slate-600';
-        const actionCell = reviewed
-          ? '<span class="text-xs font-semibold text-green-600">' + labelFor(reviewed.action) + ' &#10003;</span>'
-          : '<a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-id="' + escapeHtml(r.id) + '">Review</a>';
-        return '<tr data-student-id="' + escapeHtml(r.id) + '" data-student-name="' + escapeHtml(r.name) + '" data-strand="' + escapeHtml(r.strand) + '" data-career="' + escapeHtml(r.career) + '" data-match="' + escapeHtml(r.match) + '" data-reason="' + escapeHtml(r.reason) + '">' +
-          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.id) + '</p></td>' +
+      if (tab === 'needs-review' || tab === 'counseling') {
+        const priorityCell = tab === 'needs-review'
+          ? '<td class="px-6 py-3"><span class="border text-xs font-bold px-2.5 py-1 rounded-md ' +
+              (r.priority === 'High' ? 'bg-red-50 border-red-100 text-[#ed1c24]' : r.priority === 'Medium' ? 'bg-orange-50 border-orange-100 text-orange-600' : 'bg-slate-50 border-slate-200 text-slate-600') +
+              '">' + escapeHtml(r.priority) + '</span></td>'
+          : '';
+        return '<tr>' +
+          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.schoolId) + '</p></td>' +
           '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
           '<td class="px-6 py-3 text-sm font-bold text-slate-700">' + escapeHtml(r.match) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
-          '<td class="px-6 py-3"><span class="border text-xs font-bold px-2.5 py-1 rounded-md ' + priorityColor + '">' + escapeHtml(r.priority) + '</span></td>' +
-          '<td class="px-6 py-3 review-cell">' + actionCell + '</td>' +
+          priorityCell +
+          '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">Review</a></td>' +
         '</tr>';
       }
       if (tab === 'completed') {
         return '<tr>' +
-          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.id) + '</p></td>' +
+          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.schoolId) + '</p></td>' +
           '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
           '<td class="px-6 py-3 text-sm font-bold text-green-600">' + escapeHtml(r.match) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.time) + '</td>' +
         '</tr>';
       }
-      if (tab === 'pending') {
-        const statusColor = r.status === 'In Progress' ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-slate-50 border-slate-200 text-slate-600';
-        return '<tr>' +
-          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.id) + '</p></td>' +
-          '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
-          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.assigned) + '</td>' +
-          '<td class="px-6 py-3"><span class="border text-xs font-bold px-2.5 py-1 rounded-md ' + statusColor + '">' + escapeHtml(r.status) + '</span></td>' +
-        '</tr>';
-      }
       return '<tr>' +
-        '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.id) + '</p></td>' +
+        '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.schoolId) + '</p></td>' +
         '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
-        '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
-        '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
-        '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.date) + '</td>' +
+        '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.assigned) + '</td>' +
+        '<td class="px-6 py-3"><span class="border text-xs font-bold px-2.5 py-1 rounded-md bg-slate-50 border-slate-200 text-slate-600">' + escapeHtml(r.status) + '</span></td>' +
       '</tr>';
     }
 
-    function render() {
-      const q = document.getElementById('searchInput').value.trim().toLowerCase();
-      const set = DATA[activeTab];
-      const rows = q ? set.rows.filter(r => r.name.toLowerCase().includes(q)) : set.rows;
+    async function render() {
+      const q = document.getElementById('searchInput').value.trim();
+      const url = 'api/monitoring.php?tab=' + encodeURIComponent(activeTab) + (q ? '&search=' + encodeURIComponent(q) : '');
+      const data = await (await fetch(url)).json();
 
-      document.getElementById('tableTitle').textContent = set.title;
+      rowsById = {};
+      if (activeTab === 'needs-review' || activeTab === 'counseling') {
+        data.rows.forEach(r => { rowsById[r.flagId] = r; });
+      }
+
+      document.getElementById('tableTitle').textContent = TAB_META[activeTab].title;
       document.getElementById('tableHeadRow').innerHTML = headForTab(activeTab)
         .map(h => '<th class="px-6 py-3 text-sm font-bold text-slate-500">' + h + '</th>').join('');
-      document.getElementById('tableBody').innerHTML = rows.map(r => rowHtml(activeTab, r)).join('');
-      document.getElementById('resultCount').textContent = 'Showing ' + rows.length + ' of ' + set.rows.length + ' entries';
+      document.getElementById('tableBody').innerHTML = data.rows.length
+        ? data.rows.map(r => rowHtml(activeTab, r)).join('')
+        : '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">No entries in this category.</td></tr>';
+
+      const tabCounts = {
+        'needs-review': data.summary.needsReview, 'completed': data.summary.completedToday,
+        'pending': data.summary.pending, 'counseling': data.summary.counseling,
+      };
+      document.getElementById('resultCount').textContent = 'Showing ' + data.rows.length + ' of ' + tabCounts[activeTab] + ' entries';
 
       document.querySelectorAll('.tab-btn').forEach(btn => {
         const isActive = btn.dataset.tab === activeTab;
         btn.className = 'tab-btn px-4 py-2.5 rounded-md text-sm font-medium border ' +
           (isActive ? 'bg-[#ed1c24] border-[#ed1c24] text-white' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50');
-        btn.querySelector('.tab-count').textContent = '(' + DATA[btn.dataset.tab].rows.length + ')';
+        btn.querySelector('.tab-count').textContent = '(' + tabCounts[btn.dataset.tab] + ')';
       });
 
       bindReviewLinks();
@@ -479,25 +391,24 @@
       document.querySelectorAll('.review-link').forEach(function(link) {
         link.addEventListener('click', function(e) {
           e.preventDefault();
-          const row = e.currentTarget.closest('tr[data-student-id]');
-          if (row) openReviewModal(row);
+          openReviewModal(rowsById[Number(e.currentTarget.dataset.flagId)]);
         });
       });
     }
 
-    function openReviewModal(row) {
-      currentReviewId = row.dataset.studentId;
-      document.getElementById('reviewStudentName').textContent = row.dataset.studentName || '';
-      document.getElementById('reviewStudentId').textContent = row.dataset.studentId || '';
-      document.getElementById('reviewStrand').textContent = row.dataset.strand || '';
-      document.getElementById('reviewMatch').textContent = row.dataset.match || '';
-      document.getElementById('reviewCareer').textContent = row.dataset.career || '';
-      document.getElementById('reviewReason').textContent = row.dataset.reason || '';
+    function openReviewModal(r) {
+      currentFlagId = r.flagId;
+      document.getElementById('reviewStudentName').textContent = r.name;
+      document.getElementById('reviewStudentId').textContent = r.schoolId;
+      document.getElementById('reviewStrand').textContent = r.strand;
+      document.getElementById('reviewMatch').textContent = r.match;
+      document.getElementById('reviewCareer').textContent = r.career;
+      document.getElementById('reviewReason').textContent = r.reason;
       document.getElementById('reviewModal').classList.remove('hidden');
     }
     function closeReviewModal() {
       document.getElementById('reviewModal').classList.add('hidden');
-      currentReviewId = null;
+      currentFlagId = null;
     }
 
     document.getElementById('reviewModalClose').addEventListener('click', closeReviewModal);
@@ -505,13 +416,14 @@
       if (e.target.id === 'reviewModal') closeReviewModal();
     });
     document.querySelectorAll('.review-action-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        if (!currentReviewId) return;
-        const reviews = loadReviews();
-        reviews[currentReviewId] = { action: btn.dataset.action, at: new Date().toISOString() };
-        saveReviews(reviews);
+      btn.addEventListener('click', async function() {
+        if (!currentFlagId) return;
+        await fetch('api/monitoring-action.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ flagId: currentFlagId, action: btn.dataset.action })
+        });
         closeReviewModal();
-        render();
+        await render();
       });
     });
 
@@ -525,14 +437,18 @@
       });
     });
 
-    document.getElementById('searchInput').addEventListener('input', render);
+    document.getElementById('searchInput').addEventListener('input', function() {
+      clearTimeout(debounceHandle);
+      debounceHandle = setTimeout(render, 300);
+    });
 
     const params = new URLSearchParams(window.location.search);
     const requestedTab = params.get('tab');
-    if (requestedTab && DATA[requestedTab]) activeTab = requestedTab;
+    if (requestedTab && TAB_META[requestedTab]) activeTab = requestedTab;
 
     render();
   })();
+})();
 </script>
 
 </body>

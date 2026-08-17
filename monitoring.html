@@ -88,7 +88,7 @@
 
     <!-- Logout -->
     <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
-      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+      <a href="login.html" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
         <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
         Logout
       </a>
@@ -141,15 +141,15 @@
               <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
             </span>
             <span class="text-left">
-              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-              <span class="block text-xs text-gray-500">Administrator</span>
+              <span class="block text-sm font-semibold text-gray-800" id="headerUserName">Admin User</span>
+              <span class="block text-xs text-gray-500" id="headerUserRole">Administrator</span>
             </span>
             <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
           </button>
           <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
             <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
-            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+            <a href="login.html" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
           </div>
         </div>
       </div>
@@ -191,7 +191,7 @@
             <img src="images/monitoring/card-icon-needs-review.svg" alt="" class="w-[38px] h-12">
             <div class="pl-4">
               <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Needs Review</p>
-              <p class="mt-1"><span class="text-3xl font-bold text-[#ed1c24]">18</span> <span class="text-sm text-slate-500">Students</span></p>
+              <p class="mt-1"><span class="text-3xl font-bold text-[#ed1c24]" id="cardNeedsReview">—</span> <span class="text-sm text-slate-500">Students</span></p>
             </div>
           </div>
           <a href="monitoring-details.html?tab=needs-review" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
@@ -205,7 +205,7 @@
             <img src="images/monitoring/card-icon-completed.svg" alt="" class="w-9 h-12">
             <div class="pl-4">
               <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Completed Today</p>
-              <p class="mt-1"><span class="text-3xl font-bold text-[#001c43]">42</span> <span class="text-sm text-slate-500">Assessments</span></p>
+              <p class="mt-1"><span class="text-3xl font-bold text-[#001c43]" id="cardCompleted">—</span> <span class="text-sm text-slate-500">Assessments</span></p>
             </div>
           </div>
           <a href="monitoring-details.html?tab=completed" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
@@ -219,7 +219,7 @@
             <img src="images/monitoring/card-icon-pending.svg" alt="" class="w-9 h-12">
             <div class="pl-4">
               <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Pending Assessments</p>
-              <p class="mt-1"><span class="text-3xl font-bold text-orange-500">71</span> <span class="text-sm text-slate-500">Students</span></p>
+              <p class="mt-1"><span class="text-3xl font-bold text-orange-500" id="cardPending">—</span> <span class="text-sm text-slate-500">Students</span></p>
             </div>
           </div>
           <a href="monitoring-details.html?tab=pending" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
@@ -233,7 +233,7 @@
             <img src="images/monitoring/card-icon-counseling.svg" alt="" class="w-11 h-12">
             <div class="pl-4">
               <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Counseling Queue</p>
-              <p class="mt-1"><span class="text-3xl font-bold text-green-600">12</span> <span class="text-sm text-slate-500">Students</span></p>
+              <p class="mt-1"><span class="text-3xl font-bold text-green-600" id="cardCounseling">—</span> <span class="text-sm text-slate-500">Students</span></p>
             </div>
           </div>
           <a href="monitoring-details.html?tab=counseling" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
@@ -251,7 +251,7 @@
             <div class="pl-3">
               <div class="flex items-center gap-2">
                 <h2 class="text-lg font-bold text-slate-900">Flagged Recommendations</h2>
-                <span class="bg-red-50 border border-red-100 text-[#ed1c24] text-xs font-bold px-2.5 py-0.5 rounded-full">18</span>
+                <span class="bg-red-50 border border-red-100 text-[#ed1c24] text-xs font-bold px-2.5 py-0.5 rounded-full" id="flaggedCount">—</span>
               </div>
               <p class="text-xs text-slate-500">Students whose recommendations require review.</p>
             </div>
@@ -275,73 +275,15 @@
                 <th class="px-6 py-3 text-sm font-bold text-slate-500">Action</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50">
-              <tr data-student-id="2026-0001" data-student-name="Gomez, Gerome Grant" data-strand="STEM" data-career="Information Technology" data-match="52%" data-reason="Below minimum confidence threshold">
-                <td class="px-6 py-3">
-                  <div class="flex items-center gap-3">
-                    <img src="images/monitoring/avatar-1.png" alt="" class="w-8 h-8 rounded-full">
-                    <div>
-                      <p class="text-sm text-slate-900">Gomez, Gerome Grant</p>
-                      <p class="text-xs text-slate-500">2026-0001</p>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-3 text-sm text-slate-900">STEM</td>
-                <td class="px-6 py-3 text-sm text-slate-600">Information Technology</td>
-                <td class="px-6 py-3 text-sm font-bold text-[#ed1c24]">52%</td>
-                <td class="px-6 py-3 text-sm text-slate-600">Below minimum confidence threshold</td>
-                <td class="px-6 py-3">
-                  <span class="bg-red-50 border border-red-100 text-[#ed1c24] text-xs font-bold px-2.5 py-1 rounded-md">High</span>
-                </td>
-                <td class="px-6 py-3 review-cell">
-                  <a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline">
-                    Review
-                    <img src="images/monitoring/icon-chevron-right3.svg" alt="" class="w-1.5 h-2.5">
-                  </a>
-                </td>
-              </tr>
-              <tr data-student-id="2026-0002" data-student-name="Solis, Christeen Ann" data-strand="HUMSS" data-career="Industrial Engineering" data-match="76%" data-reason="Counselor requested second review">
-                <td class="px-6 py-3">
-                  <div class="flex items-center gap-3">
-                    <img src="images/monitoring/avatar-2.png" alt="" class="w-8 h-8 rounded-full">
-                    <div>
-                      <p class="text-sm text-slate-900">Solis, Christeen Ann</p>
-                      <p class="text-xs text-slate-500">2026-0002</p>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-3 text-sm text-slate-900">HUMSS</td>
-                <td class="px-6 py-3 text-sm text-slate-600">Industrial Engineering</td>
-                <td class="px-6 py-3 text-sm font-bold text-green-600">76%</td>
-                <td class="px-6 py-3 text-sm text-slate-600">Counselor requested second review</td>
-                <td class="px-6 py-3">
-                  <span class="bg-orange-50 border border-orange-100 text-orange-600 text-xs font-bold px-2.5 py-1 rounded-md">Medium</span>
-                </td>
-                <td class="px-6 py-3 review-cell">
-                  <a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline">
-                    Review
-                    <img src="images/monitoring/icon-chevron-right3.svg" alt="" class="w-1.5 h-2.5">
-                  </a>
-                </td>
-              </tr>
+            <tbody class="divide-y divide-slate-50" id="flaggedTableBody">
+              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">Loading…</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="bg-slate-50 border-t border-slate-100 flex items-center justify-between px-4 py-4 flex-wrap gap-3">
-          <p class="text-sm text-slate-500">Showing 1 to 5 of 18 flagged recommendations</p>
-          <div class="flex items-center gap-1" id="paginationBar">
-            <button type="button" class="page-nav-btn w-8 h-8 flex items-center justify-center border border-slate-200 rounded-md opacity-50">
-              <img src="images/monitoring/icon-page-prev.svg" alt="Previous" class="w-1.5 h-2.5">
-            </button>
-            <button type="button" class="page-btn w-8 h-8 flex items-center justify-center rounded-md bg-[#ed1c24] border border-[#ed1c24] text-white text-sm">1</button>
-            <button type="button" class="page-btn w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-700 text-sm">2</button>
-            <button type="button" class="page-btn w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-700 text-sm">3</button>
-            <button type="button" class="page-btn w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-700 text-sm">4</button>
-            <button type="button" class="page-nav-btn w-8 h-8 flex items-center justify-center border border-slate-200 rounded-md">
-              <img src="images/monitoring/icon-page-next.svg" alt="Next" class="w-1.5 h-2.5">
-            </button>
-          </div>
+          <p class="text-sm text-slate-500" id="flaggedSummary">Loading…</p>
+          <a href="monitoring-details.html?tab=needs-review" class="text-sm font-medium text-[#ed1c24] hover:underline">View all flagged recommendations</a>
         </div>
       </div>
 
@@ -390,6 +332,26 @@
 </div>
 
 <script>
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+  const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
+  document.getElementById('headerUserName').textContent = currentUser.username;
+  document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
+
+  function doLogout(e) {
+    e.preventDefault();
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+  document.getElementById('profileLogout').addEventListener('click', doLogout);
+
   (function() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -420,95 +382,102 @@
     });
   })();
 
-  (function() {
-    const REVIEW_KEY = 'monitoringReviews';
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
 
-    function loadReviews() {
-      try { return JSON.parse(localStorage.getItem(REVIEW_KEY)) || {}; } catch (e) { return {}; }
-    }
-    function saveReviews(obj) {
-      localStorage.setItem(REVIEW_KEY, JSON.stringify(obj));
-    }
-    function labelFor(action) {
-      return action === 'approve' ? 'Approved' : action === 'escalate' ? 'Escalated' : 'Dismissed';
-    }
-    function markRowReviewed(row, action) {
-      const cell = row.querySelector('.review-cell');
-      if (cell) {
-        cell.innerHTML = `<span class="text-xs font-semibold text-green-600">${labelFor(action)} &#10003;</span>`;
-      }
-    }
+  const priorityClass = {
+    High: 'bg-red-50 border-red-100 text-[#ed1c24]',
+    Medium: 'bg-orange-50 border-orange-100 text-orange-600',
+    Low: 'bg-slate-50 border-slate-200 text-slate-600',
+  };
+  const matchClass = (matchStr) => {
+    const pct = parseInt(matchStr, 10) || 0;
+    return pct >= 70 ? 'text-green-600' : pct >= 50 ? 'text-orange-600' : 'text-[#ed1c24]';
+  };
 
-    let currentReviewId = null;
+  const flaggedTableBody = document.getElementById('flaggedTableBody');
+  let rowsById = {};
 
-    function openReviewModal(row) {
-      currentReviewId = row.dataset.studentId;
-      document.getElementById('reviewStudentName').textContent = row.dataset.studentName || '';
-      document.getElementById('reviewStudentId').textContent = row.dataset.studentId || '';
-      document.getElementById('reviewStrand').textContent = row.dataset.strand || '';
-      document.getElementById('reviewMatch').textContent = row.dataset.match || '';
-      document.getElementById('reviewCareer').textContent = row.dataset.career || '';
-      document.getElementById('reviewReason').textContent = row.dataset.reason || '';
-      document.getElementById('reviewModal').classList.remove('hidden');
-    }
-    function closeReviewModal() {
-      document.getElementById('reviewModal').classList.add('hidden');
-      currentReviewId = null;
-    }
+  function renderRow(r) {
+    return '<tr data-flag-id="' + r.flagId + '">' +
+      '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p><p class="text-xs text-slate-500">' + escapeHtml(r.schoolId) + '</p></td>' +
+      '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
+      '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
+      '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
+      '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
+      '<td class="px-6 py-3"><span class="border text-xs font-bold px-2.5 py-1 rounded-md ' + (priorityClass[r.priority] || priorityClass.Low) + '">' + escapeHtml(r.priority) + '</span></td>' +
+      '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">Review' +
+        '<img src="images/monitoring/icon-chevron-right3.svg" alt="" class="w-1.5 h-2.5"></a></td>' +
+    '</tr>';
+  }
 
-    document.querySelectorAll('.review-link').forEach(function(link) {
+  async function load() {
+    const data = await (await fetch('api/monitoring.php?tab=needs-review&limit=5')).json();
+    rowsById = {};
+    data.rows.forEach(r => { rowsById[r.flagId] = r; });
+
+    document.getElementById('cardNeedsReview').textContent = data.summary.needsReview;
+    document.getElementById('cardCompleted').textContent = data.summary.completedToday;
+    document.getElementById('cardPending').textContent = data.summary.pending;
+    document.getElementById('cardCounseling').textContent = data.summary.counseling;
+    document.getElementById('flaggedCount').textContent = data.summary.needsReview;
+
+    flaggedTableBody.innerHTML = data.rows.length
+      ? data.rows.map(renderRow).join('')
+      : '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">No flagged recommendations right now.</td></tr>';
+    document.getElementById('flaggedSummary').textContent =
+      'Showing ' + data.rows.length + ' of ' + data.summary.needsReview + ' flagged recommendations';
+
+    bindReviewLinks();
+    document.getElementById('lastUpdatedTime').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function bindReviewLinks() {
+    flaggedTableBody.querySelectorAll('.review-link').forEach(function(link) {
       link.addEventListener('click', function(e) {
         e.preventDefault();
-        const row = e.currentTarget.closest('tr[data-student-id]');
-        if (row) openReviewModal(row);
+        openReviewModal(rowsById[Number(e.currentTarget.dataset.flagId)]);
       });
     });
+  }
 
-    document.getElementById('reviewModalClose').addEventListener('click', closeReviewModal);
-    document.getElementById('reviewModal').addEventListener('click', function(e) {
-      if (e.target.id === 'reviewModal') closeReviewModal();
-    });
+  let currentFlagId = null;
+  function openReviewModal(r) {
+    currentFlagId = r.flagId;
+    document.getElementById('reviewStudentName').textContent = r.name;
+    document.getElementById('reviewStudentId').textContent = r.schoolId;
+    document.getElementById('reviewStrand').textContent = r.strand;
+    document.getElementById('reviewMatch').textContent = r.match;
+    document.getElementById('reviewCareer').textContent = r.career;
+    document.getElementById('reviewReason').textContent = r.reason;
+    document.getElementById('reviewModal').classList.remove('hidden');
+  }
+  function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+    currentFlagId = null;
+  }
+  document.getElementById('reviewModalClose').addEventListener('click', closeReviewModal);
+  document.getElementById('reviewModal').addEventListener('click', function(e) {
+    if (e.target.id === 'reviewModal') closeReviewModal();
+  });
 
-    document.querySelectorAll('.review-action-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        if (!currentReviewId) return;
-        const reviews = loadReviews();
-        reviews[currentReviewId] = { action: btn.dataset.action, at: new Date().toISOString() };
-        saveReviews(reviews);
-        const row = document.querySelector('tr[data-student-id="' + currentReviewId + '"]');
-        if (row) markRowReviewed(row, btn.dataset.action);
-        closeReviewModal();
+  document.querySelectorAll('.review-action-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!currentFlagId) return;
+      await fetch('api/monitoring-action.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagId: currentFlagId, action: btn.dataset.action })
       });
+      closeReviewModal();
+      await load();
     });
+  });
 
-    (function applyExistingReviewStatus() {
-      const reviews = loadReviews();
-      document.querySelectorAll('tr[data-student-id]').forEach(function(row) {
-        const id = row.dataset.studentId;
-        if (reviews[id]) markRowReviewed(row, reviews[id].action);
-      });
-    })();
-  })();
+  document.getElementById('refreshBtn').addEventListener('click', load);
 
-  (function() {
-    const refreshBtn = document.getElementById('refreshBtn');
-    const lastUpdatedTime = document.getElementById('lastUpdatedTime');
-    refreshBtn.addEventListener('click', () => {
-      lastUpdatedTime.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    });
-
-    const paginationBar = document.getElementById('paginationBar');
-    paginationBar.querySelectorAll('.page-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        paginationBar.querySelectorAll('.page-btn').forEach(b => {
-          b.classList.remove('bg-[#ed1c24]', 'border-[#ed1c24]', 'text-white');
-          b.classList.add('border-slate-200', 'text-slate-700');
-        });
-        btn.classList.remove('border-slate-200', 'text-slate-700');
-        btn.classList.add('bg-[#ed1c24]', 'border-[#ed1c24]', 'text-white');
-      });
-    });
-  })();
+  await load();
+})();
 </script>
 
 </body>
