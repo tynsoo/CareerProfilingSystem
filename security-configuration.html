@@ -89,7 +89,7 @@
 
     <!-- Logout -->
     <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
-      <a href="login.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+      <a href="login.html" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
         <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
         Logout
       </a>
@@ -142,15 +142,15 @@
               <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
             </span>
             <span class="text-left">
-              <span class="block text-sm font-semibold text-gray-800">Admin User</span>
-              <span class="block text-xs text-gray-500">Administrator</span>
+              <span class="block text-sm font-semibold text-gray-800" id="headerUserName">Admin User</span>
+              <span class="block text-xs text-gray-500" id="headerUserRole">Administrator</span>
             </span>
             <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
           </button>
           <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
             <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
-            <a href="login.html" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+            <a href="login.html" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
           </div>
         </div>
       </div>
@@ -218,10 +218,6 @@
               <div class="flex items-center gap-2">
                 <span class="inline-flex w-4 h-4 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="" class="w-2 h-2"></span>
                 <span class="text-xs text-slate-500">No Access</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-px bg-slate-400"></span>
-                <span class="text-xs text-slate-500">Not Applicable</span>
               </div>
             </div>
           </div>
@@ -310,27 +306,28 @@
             </div>
             <div class="p-5 grid grid-cols-2 gap-4">
               <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
-                <p class="text-2xl font-bold text-slate-800">98%</p>
-                <p class="text-xs font-medium text-slate-600">Security Score</p>
-                <p class="text-[10px] text-green-600 mt-1">Good</p>
+                <img src="images/security/icon-overview-alerts.svg" alt="" class="w-[21px] h-6 mb-2">
+                <p class="text-2xl font-bold text-slate-800" id="overviewFailedLogins">—</p>
+                <p class="text-xs font-medium text-slate-600">Failed Logins</p>
+                <p class="text-[10px] text-slate-500 mt-1">Last 7 days</p>
               </div>
               <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
                 <img src="images/security/icon-overview-users.svg" alt="" class="w-[30px] h-6 mb-2">
-                <p class="text-2xl font-bold text-slate-800">24</p>
+                <p class="text-2xl font-bold text-slate-800" id="overviewActiveUsers">—</p>
                 <p class="text-xs font-medium text-slate-600">Active Users</p>
                 <p class="text-[10px] text-slate-500 mt-1">Today</p>
               </div>
               <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
                 <img src="images/security/icon-overview-alerts.svg" alt="" class="w-[21px] h-6 mb-2">
-                <p class="text-2xl font-bold text-slate-800">0</p>
-                <p class="text-xs font-medium text-slate-600">Security Alerts</p>
-                <p class="text-[10px] text-green-600 mt-1">Last 7 days</p>
+                <p class="text-2xl font-bold text-slate-800" id="overviewPendingFlags">—</p>
+                <p class="text-xs font-medium text-slate-600">Pending Monitoring Flags</p>
+                <p class="text-[10px] text-slate-500 mt-1">Awaiting review</p>
               </div>
               <div class="border border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
                 <img src="images/security/icon-overview-backup.svg" alt="" class="w-[18px] h-6 mb-2">
-                <p class="text-2xl font-bold text-slate-800">100%</p>
-                <p class="text-xs font-medium text-slate-600">Data Backup</p>
-                <p class="text-[10px] text-green-600 mt-1">Up to date</p>
+                <p class="text-2xl font-bold text-slate-800" id="overviewEncryptedRecords">—</p>
+                <p class="text-xs font-medium text-slate-600">Encrypted Records</p>
+                <p class="text-[10px] text-slate-500 mt-1">AES-256 protected</p>
               </div>
             </div>
           </div>
@@ -397,6 +394,27 @@
 </div>
 
 <script>
+(async function() {
+  const sessionData = await (await fetch('api/session.php')).json();
+  const currentUser = sessionData.user;
+  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
+    window.location.replace('login.html');
+    return;
+  }
+  const isAdmin = currentUser.role === 'admin';
+  const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
+  document.getElementById('headerUserName').textContent = currentUser.username;
+  document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
+
+  function doLogout(e) {
+    e.preventDefault();
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login.html';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', doLogout);
+  document.getElementById('profileLogout').addEventListener('click', doLogout);
+
   (function() {
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
@@ -427,9 +445,7 @@
     });
   })();
 
-  (function() {
-    const STORAGE_KEY = 'securityConfig';
-
+  (async function() {
     const MODULES = [
       { id: 'career', label: 'Career Profile Input', desc: 'Create and edit student profiles', icon: 'images/security/icon-module-career.svg', iconClass: 'w-[17.5px] h-4 mt-0.5' },
       { id: 'rac', label: 'RAC Assessment', desc: 'View and manage assessments', icon: 'images/security/icon-module-rac.svg', iconClass: 'w-[10.5px] h-4 mt-0.5' },
@@ -438,60 +454,40 @@
       { id: 'monitoring', label: 'Student Monitoring', desc: 'View student progress and status', icon: 'images/security/icon-module-monitoring.svg', iconClass: 'w-4 h-4 mt-0.5' }
     ];
     const ROLES = ['admin', 'counselor', 'student'];
-    const LEVEL_LABEL = { full: 'Full Access', limited: 'Limited Access', none: 'No Access', na: 'Not Applicable' };
+    const LEVEL_LABEL = { full: 'Full Access', limited: 'Limited Access', none: 'No Access' };
 
-    const DEFAULT_STATE = {
-      rbac: {
-        career: { admin: 'full', counselor: 'limited', student: 'none' },
-        rac: { admin: 'full', counselor: 'full', student: 'none' },
-        recommendations: { admin: 'full', counselor: 'full', student: 'full' },
-        counselor: { admin: 'full', counselor: 'full', student: 'none' },
-        monitoring: { admin: 'full', counselor: 'full', student: 'none' }
-      },
-      policies: {
-        password: { enabled: true, minLength: 8, requireUpper: true, requireLower: true, requireNumber: true, requireSymbol: true },
-        lockout: { enabled: true, maxAttempts: 5, lockoutMinutes: 15 },
-        monitoring: { enabled: true, retentionDays: 90 }
-      },
-      settings: { twoFactor: true, sessionTimeoutEnabled: true, timeoutMinutes: 30 },
-      lastUpdated: null
-    };
+    let state = null;
 
-    function loadState() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (!saved) return JSON.parse(JSON.stringify(DEFAULT_STATE));
-        return {
-          rbac: Object.assign({}, DEFAULT_STATE.rbac, saved.rbac),
-          policies: Object.assign({}, DEFAULT_STATE.policies, saved.policies),
-          settings: Object.assign({}, DEFAULT_STATE.settings, saved.settings),
-          lastUpdated: saved.lastUpdated || null
-        };
-      } catch (e) {
-        return JSON.parse(JSON.stringify(DEFAULT_STATE));
-      }
-    }
-    function saveState() {
-      state.lastUpdated = new Date().toISOString();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    async function loadState() {
+      state = await (await fetch('api/security-config.php')).json();
+      renderRbacTable();
+      renderPolicyList();
+      renderSecuritySettings();
+      renderOverview();
       renderLastUpdated();
     }
 
-    let state = loadState();
+    function renderOverview() {
+      document.getElementById('overviewFailedLogins').textContent = state.overview.failedLogins7d;
+      document.getElementById('overviewActiveUsers').textContent = state.overview.activeUsersToday;
+      document.getElementById('overviewPendingFlags').textContent = state.overview.pendingFlags;
+      document.getElementById('overviewEncryptedRecords').textContent = state.overview.encryptedRecords;
+    }
 
     function renderLastUpdated() {
       const el = document.getElementById('lastUpdatedText');
       if (state.lastUpdated) {
         const d = new Date(state.lastUpdated);
         el.textContent = 'Last updated: ' + d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      } else {
+        el.textContent = 'No changes recorded yet.';
       }
     }
 
     function permIcon(level) {
       if (level === 'full') return '<span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-green-600"><img src="images/security/icon-check-green.svg" alt="Full Access" class="w-2.5 h-2"></span>';
       if (level === 'limited') return '<span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-amber-500"><img src="images/security/icon-dash-orange.svg" alt="Limited Access" class="w-2 h-0.5"></span>';
-      if (level === 'none') return '<span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span>';
-      return '<span class="inline-flex w-5 h-5 items-center justify-center"><span class="w-3 h-px bg-slate-400"></span></span>';
+      return '<span class="inline-flex w-5 h-5 items-center justify-center rounded-full border border-red-500"><img src="images/security/icon-x-red.svg" alt="No Access" class="w-2.5 h-2.5"></span>';
     }
 
     function renderRbacTable() {
@@ -510,6 +506,11 @@
       const tbody = document.getElementById('rolesModalBody');
       tbody.innerHTML = MODULES.map(m => {
         const cells = ROLES.map(r => {
+          // Administrator access is fixed at Full — it's never editable here since there's no
+          // recovery path if an admin accidentally revokes their own access (backend enforces this too).
+          if (r === 'admin') {
+            return '<td class="py-2.5 px-1 text-center"><span class="text-xs text-slate-400" title="Administrator access cannot be changed">Full (fixed)</span></td>';
+          }
           const options = Object.keys(LEVEL_LABEL).map(lvl =>
             '<option value="' + lvl + '"' + (state.rbac[m.id][r] === lvl ? ' selected' : '') + '>' + LEVEL_LABEL[lvl] + '</option>'
           ).join('');
@@ -519,22 +520,32 @@
       }).join('');
     }
 
-    document.getElementById('editRolesBtn').addEventListener('click', function() {
-      renderRolesModal();
-      document.getElementById('rolesModal').classList.remove('hidden');
-    });
+    if (isAdmin) {
+      document.getElementById('editRolesBtn').addEventListener('click', function() {
+        renderRolesModal();
+        document.getElementById('rolesModal').classList.remove('hidden');
+      });
+    } else {
+      document.getElementById('editRolesBtn').remove();
+    }
     function closeRolesModal() { document.getElementById('rolesModal').classList.add('hidden'); }
     document.getElementById('rolesModalClose').addEventListener('click', closeRolesModal);
     document.getElementById('rolesModalCancel').addEventListener('click', closeRolesModal);
     document.getElementById('rolesModal').addEventListener('click', function(e) {
       if (e.target.id === 'rolesModal') closeRolesModal();
     });
-    document.getElementById('rolesModalSave').addEventListener('click', function() {
-      document.querySelectorAll('.rbac-select').forEach(function(sel) {
-        state.rbac[sel.dataset.module][sel.dataset.role] = sel.value;
+    document.getElementById('rolesModalSave').addEventListener('click', async function() {
+      const changes = Array.from(document.querySelectorAll('.rbac-select')).map(function(sel) {
+        return { module: sel.dataset.module, role: sel.dataset.role, level: sel.value };
       });
-      renderRbacTable();
-      saveState();
+      const res = await fetch('api/security-config.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'rbac', changes: changes })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadState();
+      }
       closeRolesModal();
     });
 
@@ -568,15 +579,18 @@
         const badge = p.enabled
           ? '<span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-md">Enabled</span>'
           : '<span class="bg-slate-100 text-slate-500 text-xs font-medium px-2 py-1 rounded-md">Disabled</span>';
-        return '<button type="button" class="policy-row w-full flex items-center justify-between p-4 rounded-lg text-left hover:bg-slate-50' + (idx > 0 ? ' border-t border-slate-100' : '') + '" data-policy="' + key + '">' +
+        const tag = isAdmin ? 'button' : 'div';
+        return '<' + tag + ' type="button" class="policy-row w-full flex items-center justify-between p-4 rounded-lg text-left' + (isAdmin ? ' hover:bg-slate-50' : '') + (idx > 0 ? ' border-t border-slate-100' : '') + '" data-policy="' + key + '">' +
           '<div><p class="text-sm font-medium text-slate-800">' + POLICY_META[key].title + '</p><p class="text-xs text-slate-500 policy-desc">' + policyDesc(key) + '</p></div>' +
-          '<div class="flex items-center gap-2">' + badge + '<img src="images/security/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5"></div>' +
-          '</button>';
+          '<div class="flex items-center gap-2">' + badge + (isAdmin ? '<img src="images/security/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">' : '') + '</div>' +
+          '</' + tag + '>';
       }).join('');
 
-      document.querySelectorAll('.policy-row').forEach(function(row) {
-        row.addEventListener('click', function() { openPolicyModal(row.dataset.policy); });
-      });
+      if (isAdmin) {
+        document.querySelectorAll('.policy-row').forEach(function(row) {
+          row.addEventListener('click', function() { openPolicyModal(row.dataset.policy); });
+        });
+      }
     }
 
     let currentPolicyKey = null;
@@ -630,24 +644,29 @@
       draftPolicyEnabled = !draftPolicyEnabled;
       setToggleVisual(this, draftPolicyEnabled);
     });
-    document.getElementById('policyModalSave').addEventListener('click', function() {
+    document.getElementById('policyModalSave').addEventListener('click', async function() {
       if (!currentPolicyKey) return;
-      const p = state.policies[currentPolicyKey];
-      p.enabled = draftPolicyEnabled;
+      const body = { type: 'policy', key: currentPolicyKey, enabled: draftPolicyEnabled };
       if (currentPolicyKey === 'password') {
-        p.minLength = Math.max(6, Math.min(32, parseInt(document.getElementById('fldMinLength').value, 10) || 8));
-        p.requireUpper = document.getElementById('fldReqUpper').checked;
-        p.requireLower = document.getElementById('fldReqLower').checked;
-        p.requireNumber = document.getElementById('fldReqNumber').checked;
-        p.requireSymbol = document.getElementById('fldReqSymbol').checked;
+        body.minLength = parseInt(document.getElementById('fldMinLength').value, 10) || 8;
+        body.requireUpper = document.getElementById('fldReqUpper').checked;
+        body.requireLower = document.getElementById('fldReqLower').checked;
+        body.requireNumber = document.getElementById('fldReqNumber').checked;
+        body.requireSymbol = document.getElementById('fldReqSymbol').checked;
       } else if (currentPolicyKey === 'lockout') {
-        p.maxAttempts = Math.max(1, Math.min(20, parseInt(document.getElementById('fldMaxAttempts').value, 10) || 5));
-        p.lockoutMinutes = Math.max(1, Math.min(1440, parseInt(document.getElementById('fldLockoutMinutes').value, 10) || 15));
+        body.maxAttempts = parseInt(document.getElementById('fldMaxAttempts').value, 10) || 5;
+        body.lockoutMinutes = parseInt(document.getElementById('fldLockoutMinutes').value, 10) || 15;
       } else {
-        p.retentionDays = Math.max(7, Math.min(365, parseInt(document.getElementById('fldRetentionDays').value, 10) || 90));
+        body.retentionDays = parseInt(document.getElementById('fldRetentionDays').value, 10) || 90;
       }
-      renderPolicyList();
-      saveState();
+
+      const res = await fetch('api/security-config.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadState();
+      }
       closePolicyModal();
     });
 
@@ -658,6 +677,12 @@
       select.value = String(state.settings.timeoutMinutes);
       updateTimeoutDesc();
       updateTimeoutDisabledState();
+      if (!isAdmin) {
+        [document.getElementById('toggle2fa'), document.getElementById('toggleSessionTimeout'), select].forEach(el => {
+          el.disabled = true;
+          el.classList.add('opacity-60', 'cursor-not-allowed');
+        });
+      }
     }
     function updateTimeoutDesc() {
       const desc = document.getElementById('timeoutDescText');
@@ -667,33 +692,44 @@
     }
     function updateTimeoutDisabledState() {
       const select = document.getElementById('timeoutDuration');
-      select.disabled = !state.settings.sessionTimeoutEnabled;
+      select.disabled = select.disabled || !state.settings.sessionTimeoutEnabled;
       select.classList.toggle('opacity-50', !state.settings.sessionTimeoutEnabled);
     }
 
-    document.getElementById('toggle2fa').addEventListener('click', function() {
-      state.settings.twoFactor = !state.settings.twoFactor;
-      setToggleVisual(this, state.settings.twoFactor);
-      saveState();
-    });
-    document.getElementById('toggleSessionTimeout').addEventListener('click', function() {
-      state.settings.sessionTimeoutEnabled = !state.settings.sessionTimeoutEnabled;
-      setToggleVisual(this, state.settings.sessionTimeoutEnabled);
-      updateTimeoutDesc();
-      updateTimeoutDisabledState();
-      saveState();
-    });
-    document.getElementById('timeoutDuration').addEventListener('change', function() {
-      state.settings.timeoutMinutes = parseInt(this.value, 10);
-      updateTimeoutDesc();
-      saveState();
-    });
+    async function saveSettings() {
+      const res = await fetch('api/security-config.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'settings', twoFactor: state.settings.twoFactor, sessionTimeoutEnabled: state.settings.sessionTimeoutEnabled, timeoutMinutes: state.settings.timeoutMinutes })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadState();
+      }
+    }
 
-    renderRbacTable();
-    renderPolicyList();
-    renderSecuritySettings();
-    renderLastUpdated();
+    if (isAdmin) {
+      document.getElementById('toggle2fa').addEventListener('click', function() {
+        state.settings.twoFactor = !state.settings.twoFactor;
+        setToggleVisual(this, state.settings.twoFactor);
+        saveSettings();
+      });
+      document.getElementById('toggleSessionTimeout').addEventListener('click', function() {
+        state.settings.sessionTimeoutEnabled = !state.settings.sessionTimeoutEnabled;
+        setToggleVisual(this, state.settings.sessionTimeoutEnabled);
+        updateTimeoutDesc();
+        updateTimeoutDisabledState();
+        saveSettings();
+      });
+      document.getElementById('timeoutDuration').addEventListener('change', function() {
+        state.settings.timeoutMinutes = parseInt(this.value, 10);
+        updateTimeoutDesc();
+        saveSettings();
+      });
+    }
+
+    await loadState();
   })();
+})();
 </script>
 
 </body>
