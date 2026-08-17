@@ -139,7 +139,7 @@
           <div class="px-6 py-5 flex items-center justify-between gap-4">
             <div>
               <p class="text-sm font-medium text-gray-800">Password</p>
-              <p class="text-xs text-gray-500">Change your password. You'll need to verify a one-time code sent to confirm it's really you.</p>
+              <p class="text-xs text-gray-500">Change your password. You'll need to enter your current password to confirm it's really you.</p>
             </div>
             <a href="change-password.html" class="shrink-0 border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-5 py-2.5 hover:bg-gray-50">Change Password</a>
           </div>
@@ -151,8 +151,9 @@
 </div>
 
 <script>
-  (function() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+(async function() {
+    const sessionData = await (await fetch('api/session.php')).json();
+    const currentUser = sessionData.user;
     if (!currentUser || currentUser.role !== 'student') {
       window.location.replace('login.html');
       return;
@@ -184,8 +185,9 @@
 
     function doLogout(e) {
       e.preventDefault();
-      localStorage.removeItem('currentUser');
-      window.location.href = 'login.html';
+      fetch('api/logout.php', { method: 'POST' }).finally(function() {
+        window.location.href = 'login.html';
+      });
     }
     document.getElementById('sidebarLogout').addEventListener('click', doLogout);
     document.getElementById('profileLogout').addEventListener('click', doLogout);
@@ -204,10 +206,10 @@
     notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
     profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
 
-    (function renderNotifications() {
-      const statusNow = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
+    (async function renderNotifications() {
+      const statusNow = await (await fetch('api/assessment-status.php')).json();
       const notes = [];
-      if (!statusNow || !statusNow.completed) {
+      if (!statusNow.completed) {
         notes.push('Complete your RIASEC Career Interest Assessment to unlock your results and Career Worksheet.');
       } else {
         notes.push('Your RIASEC results are ready to review under Career Results.');
@@ -222,7 +224,7 @@
         dot.classList.add('hidden');
       }
     })();
-  })();
+})();
 </script>
 
 </body>

@@ -169,8 +169,9 @@
 </div>
 
 <script>
-  (function() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+(async function() {
+    const sessionData = await (await fetch('api/session.php')).json();
+    const currentUser = sessionData.user;
     if (!currentUser || currentUser.role !== 'student') {
       window.location.replace('login.html');
       return;
@@ -195,8 +196,9 @@
 
     function doLogout(e) {
       e.preventDefault();
-      localStorage.removeItem('currentUser');
-      window.location.href = 'login.html';
+      fetch('api/logout.php', { method: 'POST' }).finally(function() {
+        window.location.href = 'login.html';
+      });
     }
     document.getElementById('sidebarLogout').addEventListener('click', doLogout);
     document.getElementById('profileLogout').addEventListener('click', doLogout);
@@ -221,10 +223,10 @@
       document.getElementById('helpMessage').focus();
     }
 
-    (function renderNotifications() {
-      const statusNow = JSON.parse(localStorage.getItem('assessmentStatus_' + currentUser.schoolId) || 'null');
+    (async function renderNotifications() {
+      const statusNow = await (await fetch('api/assessment-status.php')).json();
       const notes = [];
-      if (!statusNow || !statusNow.completed) {
+      if (!statusNow.completed) {
         notes.push('Complete your RIASEC Career Interest Assessment to unlock your results and Career Worksheet.');
       } else {
         notes.push('Your RIASEC results are ready to review under Career Results.');
@@ -266,28 +268,25 @@
     });
 
     // Help message form
-    document.getElementById('helpForm').addEventListener('submit', function(e) {
+    document.getElementById('helpForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const subject = document.getElementById('helpSubject').value.trim();
       const message = document.getElementById('helpMessage').value.trim();
       if (!subject || !message) return;
 
-      const key = 'helpRequests';
-      let list = [];
-      try { list = JSON.parse(localStorage.getItem(key)) || []; } catch (err) {}
-      list.push({
-        schoolId: currentUser.schoolId,
-        name: currentUser.firstName + ' ' + currentUser.lastName,
-        subject: subject,
-        message: message,
-        sentAt: new Date().toISOString()
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      const res = await fetch('api/help-requests.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: subject, message: message })
       });
-      localStorage.setItem(key, JSON.stringify(list));
+      submitBtn.disabled = false;
+      if (!res.ok) return;
 
       document.getElementById('messageIdle').classList.add('hidden');
       document.getElementById('messageSent').classList.remove('hidden');
     });
-  })();
+})();
 </script>
 
 </body>
