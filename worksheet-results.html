@@ -57,8 +57,8 @@
   <!-- Main Content -->
   <div class="flex-1 flex flex-col min-w-0">
 
-    <header class="h-16 shrink-0 flex items-center justify-between gap-6 px-6 bg-white/60 backdrop-blur-md sticky top-0 z-10">
-      <button type="button" id="menuToggle" class="w-10 h-10 -m-2 flex items-center justify-center text-[#001a40] md:invisible">
+    <header class="h-16 shrink-0 flex items-center justify-between gap-6 px-6 bg-white/60 backdrop-blur-md sticky top-0 z-50">
+      <button type="button" id="menuToggle" class="relative z-50 w-10 h-10 -m-2 flex items-center justify-center text-[#001a40] md:invisible">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
       <div class="flex items-center gap-6">
@@ -67,7 +67,7 @@
           <img src="images/student/icon-bell.svg" alt="Notifications" class="w-full h-full">
           <span id="notifDot" class="hidden absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-[#ed1c24] border border-white"></span>
         </button>
-        <div id="notifPanel" class="hidden absolute right-0 top-[calc(100%+16px)] w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
+        <div id="notifPanel" class="hidden fixed left-4 right-4 top-20 z-50 sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+16px)] sm:w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-100">
             <p class="text-sm font-semibold text-gray-900">Notifications</p>
           </div>
