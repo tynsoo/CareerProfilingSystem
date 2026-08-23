@@ -120,12 +120,15 @@ a:hover img[src*="chevron-left"] {
   box-shadow: 0 14px 28px -12px rgba(15, 23, 42, 0.18);
 }
 
-/* ---------- Sidebar navigation ---------- */
+/* ---------- Sidebar navigation ----------
+   Background-only — no transform. Rows sit edge-to-edge with no gap in a
+   tightly packed vertical list, so a horizontal shift under a moving
+   cursor (hovering down the list) reads as jitter rather than polish,
+   and risks nudging a near-full-width label (e.g. "Security
+   Configuration") across its wrap boundary on every hover. */
 aside nav a {
-  transition: background-color var(--dur-micro) ease, transform var(--dur-micro) var(--ease-standard);
-}
-aside nav a:hover {
-  transform: translateX(3px);
+  transition: background-color var(--dur-micro) ease;
+  white-space: nowrap;
 }
 
 /* Reusable animated-underline utility for any hand-authored horizontal nav link */
