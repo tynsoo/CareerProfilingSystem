@@ -26,7 +26,7 @@
   }
 
   var header = document.querySelector('header');
-  if (header) markReveal(header, 'down', 40);
+  if (header) markReveal(header, 'fade', 40);
 
   document.querySelectorAll('main').forEach(function (main) {
     var step = 0;

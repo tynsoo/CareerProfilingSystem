@@ -30,7 +30,6 @@ html {
   opacity: 0;
   transform: translateY(16px);
   transition: opacity var(--dur-reveal) var(--ease-soft), transform var(--dur-reveal) var(--ease-soft);
-  will-change: opacity, transform;
 }
 [data-reveal="down"],
 [data-auto-reveal="down"] { transform: translateY(-12px); }
@@ -40,6 +39,13 @@ html {
 [data-auto-reveal="right"] { transform: translateX(16px); }
 [data-reveal="scale"],
 [data-auto-reveal="scale"] { transform: scale(0.97); }
+/* Opacity-only — for elements (like <header>) that contain absolutely-
+   positioned descendants (dropdowns/panels) which must escape into the
+   normal stacking order once revealed. Any non-none `transform` (and
+   `will-change: transform`, even at rest) would trap those descendants
+   inside this element's own stacking context instead. */
+[data-reveal="fade"],
+[data-auto-reveal="fade"] { transform: none; }
 
 [data-reveal].in-view,
 [data-auto-reveal].in-view {
