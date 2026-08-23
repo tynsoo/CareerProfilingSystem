@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../config/env.php';
+require_once __DIR__ . '/DbSessionHandler.php';
 
 class Auth
 {
@@ -12,13 +13,10 @@ class Auth
             return;
         }
         if (session_status() !== PHP_SESSION_ACTIVE) {
-            // The php:8.4-cli base image doesn't reliably default session.save_path
-            // to a writable directory — pin it explicitly so sessions actually persist.
-            $savePath = sys_get_temp_dir() . '/php-sessions';
-            if (!is_dir($savePath)) {
-                mkdir($savePath, 0700, true);
-            }
-            session_save_path($savePath);
+            // Sessions live in Postgres (see DbSessionHandler) rather than local
+            // disk, since Render's free web service tier wipes local disk every
+            // time the container spins down after idling and restarts.
+            session_set_save_handler(new DbSessionHandler(), true);
 
             $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
                 || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'); // Render terminates TLS upstream

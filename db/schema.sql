@@ -19,6 +19,15 @@ CREATE TABLE users (
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Backs lib/DbSessionHandler.php — PHP sessions stored here instead of local
+-- disk, since Render's free web service tier wipes local disk on every
+-- restart after idling.
+CREATE TABLE sessions (
+    id              VARCHAR(128) PRIMARY KEY,
+    data            TEXT NOT NULL DEFAULT '',
+    last_activity   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE colleges (
     id      SERIAL PRIMARY KEY,
     code    VARCHAR(10) NOT NULL UNIQUE,
