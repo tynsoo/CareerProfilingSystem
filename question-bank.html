@@ -21,87 +21,56 @@
   <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/40 z-30 md:hidden"></div>
 
   <!-- Sidebar -->
-  <aside id="sidebar" class="w-[256px] shrink-0 bg-[#001c43] flex flex-col fixed inset-y-0 left-0 z-40 -translate-x-full transition-transform duration-200 md:sticky md:top-0 md:translate-x-0 h-screen overflow-y-auto">
-
-    <!-- Logo Area -->
-    <div class="flex flex-col items-center gap-3 border-b border-gray-700/50 pt-8 pb-6 px-6">
-      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[72px]">
-      <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
-      <p class="text-sm text-gray-500">Admin Dashboard</p>
+  <aside id="sidebar" class="w-[260px] shrink-0 bg-[#001c43] flex flex-col fixed inset-y-0 left-0 z-40 -translate-x-full transition-transform duration-200 md:sticky md:top-0 md:translate-x-0 h-screen">
+    <div class="flex items-center gap-3 px-6 py-8">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[64px]">
+      <div>
+        <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+        <p class="text-sm text-white/60 mt-1">Admin Dashboard</p>
+      </div>
     </div>
-
-    <!-- Navigation -->
-    <nav class="flex-1 flex flex-col gap-2 py-4 overflow-auto">
-      <div class="px-6">
-        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Main Menu</p>
-      </div>
-      <ul class="flex flex-col gap-1 px-2">
-        <li>
-          <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
-            <img src="images/admin/nav-student-info.svg" alt="" class="w-5 h-4">
-            Student Information
-          </a>
-        </li>
-        <li>
-          <a href="career-dataset.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
-            <img src="images/admin/nav-career-data.svg" alt="" class="w-3.5 h-4">
-            Career Data Set
-          </a>
-        </li>
-        <li>
-          <a href="analytics.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
-            <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
-            Analytics
-          </a>
-        </li>
-        <li>
-          <a href="monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
-            <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
-            Monitoring
-          </a>
-        </li>
-      </ul>
-
-      <div class="px-6 pt-6">
-        <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Security &amp; System</p>
-      </div>
-      <ul class="flex flex-col gap-1 px-2">
-        <li>
-          <a href="security-configuration.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
-            <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
-            Security Configuration
-          </a>
-        </li>
-        <li>
-          <a href="audit-log.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
-            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
-            Audit Log
-          </a>
-        </li>
-        <li>
-          <a href="question-bank.html" class="flex items-center gap-3 px-4 py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium">
-            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
-            Question Bank
-          </a>
-        </li>
-        <li>
-          <a href="help-requests.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
-            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
-            Help Requests
-          </a>
-        </li>
-        <li>
-          <a href="staff-accounts.html" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
-            <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
-            Staff Accounts
-          </a>
-        </li>
-      </ul>
+    <nav class="flex-1 flex flex-col gap-0.5 py-2 overflow-auto">
+      <p class="px-6 pt-2 pb-2 text-xs font-semibold tracking-wide text-white/40 uppercase">Main Menu</p>
+      <a href="admin-dashboard.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/admin/nav-student-info.svg" alt="" class="w-4 h-4">
+        Student Information
+      </a>
+      <a href="career-dataset.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/admin/nav-career-data.svg" alt="" class="w-4 h-4">
+        Career Data Set
+      </a>
+      <a href="analytics.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/admin/nav-analytics.svg" alt="" class="w-4 h-4">
+        Analytics
+      </a>
+      <a href="monitoring.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/admin/nav-monitoring.svg" alt="" class="w-4 h-4">
+        Monitoring
+      </a>
+      <p class="px-6 pt-6 pb-2 text-xs font-semibold tracking-wide text-white/40 uppercase">Security &amp; System</p>
+      <a href="security-configuration.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/admin/nav-security.svg" alt="" class="w-4 h-4">
+        Security Configuration
+      </a>
+      <a href="audit-log.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <img src="images/admin/nav-audit-log.svg" alt="" class="w-4 h-4">
+        Audit Log
+      </a>
+      <a href="question-bank.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 13H8M16 17H8M10 9H8"/></svg>
+        Question Bank
+      </a>
+      <a href="help-requests.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        Help Requests
+      </a>
+      <a href="staff-accounts.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Staff Accounts
+      </a>
     </nav>
-
-    <!-- Logout -->
-    <div class="border-t border-gray-700/50 px-4 pt-4 pb-4">
-      <a href="#" id="sidebarLogout" class="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 text-sm font-medium hover:bg-white/5">
+    <div class="border-t border-white/5 pt-[25px] pb-6">
+      <a href="login.html" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <img src="images/admin/nav-logout.svg" alt="" class="w-4 h-4">
         Logout
       </a>
@@ -148,7 +117,7 @@
             </span>
             <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
           </button>
-          <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+          <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
             <a href="profile.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
             <a href="security-configuration.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Account Settings</a>
             <a href="#" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>

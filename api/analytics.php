@@ -9,37 +9,79 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 Rbac::requireAccess('monitoring', 'full');
 $pdo = Database::get();
 
-$totalStudents = (int) $pdo->query('SELECT COUNT(*) FROM students')->fetchColumn();
+// Optional ?strand=STEM filter — narrows every metric below to that strand's
+// students, except strandDistribution (kept unfiltered so it stays useful as
+// a population-wide breakdown regardless of which strand is selected).
+$validStrands = ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'];
+$strand = trim((string) ($_GET['strand'] ?? ''));
+if (!in_array($strand, $validStrands, true)) {
+    $strand = '';
+}
+$hasStrand = $strand !== '';
 
-$assessedCount = (int) $pdo->query('SELECT COUNT(*) FROM assessments WHERE is_latest = TRUE')->fetchColumn();
-$worksheetCount = (int) $pdo->query(
-    'SELECT COUNT(DISTINCT student_id) FROM worksheets w
-     WHERE w.attempt_number = (SELECT MAX(attempt_number) FROM assessments a WHERE a.student_id = w.student_id)'
-)->fetchColumn();
+$totalStudents = (int) (function () use ($pdo, $hasStrand, $strand) {
+    $sql = 'SELECT COUNT(*) FROM students' . ($hasStrand ? ' WHERE strand = ?' : '');
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($hasStrand ? [$strand] : []);
+    return $stmt->fetchColumn();
+})();
+
+$assessedCount = (int) (function () use ($pdo, $hasStrand, $strand) {
+    $sql = 'SELECT COUNT(*) FROM assessments a JOIN students s ON s.user_id = a.student_id WHERE a.is_latest = TRUE'
+        . ($hasStrand ? ' AND s.strand = ?' : '');
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($hasStrand ? [$strand] : []);
+    return $stmt->fetchColumn();
+})();
+
+$worksheetCount = (int) (function () use ($pdo, $hasStrand, $strand) {
+    $sql = 'SELECT COUNT(DISTINCT w.student_id) FROM worksheets w
+            JOIN students s ON s.user_id = w.student_id
+            WHERE w.attempt_number = (SELECT MAX(attempt_number) FROM assessments a WHERE a.student_id = w.student_id)'
+        . ($hasStrand ? ' AND s.strand = ?' : '');
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($hasStrand ? [$strand] : []);
+    return $stmt->fetchColumn();
+})();
 
 $thresholdRow = $pdo->query("SELECT value FROM security_policies WHERE key = 'monitoring.lowConfidenceThreshold'")->fetchColumn();
 $threshold = $thresholdRow !== false ? (float) $thresholdRow : 0.50;
 
-$latestRecScores = $pdo->query(
-    'SELECT DISTINCT ON (student_id) top_score FROM recommendations ORDER BY student_id, computed_at DESC'
-)->fetchAll(PDO::FETCH_COLUMN);
+$latestRecScores = (function () use ($pdo, $hasStrand, $strand) {
+    $sql = 'SELECT DISTINCT ON (r.student_id) r.top_score FROM recommendations r'
+        . ($hasStrand ? ' JOIN students s ON s.user_id = r.student_id WHERE s.strand = ?' : '')
+        . ' ORDER BY r.student_id, r.computed_at DESC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($hasStrand ? [$strand] : []);
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+})();
 $recCount = count($latestRecScores);
 $confidentCount = count(array_filter($latestRecScores, fn($s) => (float) $s >= $threshold));
 
+// Always the full population breakdown, regardless of the strand filter.
 $strandRows = $pdo->query('SELECT strand, COUNT(*) AS cnt FROM students GROUP BY strand ORDER BY cnt DESC')->fetchAll();
 $topStrand = $strandRows[0] ?? null;
 
-$riasecRow = $pdo->query(
-    'SELECT AVG(score_r) AS r, AVG(score_i) AS i, AVG(score_a) AS a, AVG(score_s) AS s, AVG(score_e) AS e, AVG(score_c) AS c
-     FROM assessments WHERE is_latest = TRUE'
-)->fetch();
+$riasecRow = (function () use ($pdo, $hasStrand, $strand) {
+    $sql = 'SELECT AVG(a.score_r) AS r, AVG(a.score_i) AS i, AVG(a.score_a) AS a, AVG(a.score_s) AS s, AVG(a.score_e) AS e, AVG(a.score_c) AS c
+            FROM assessments a JOIN students s ON s.user_id = a.student_id WHERE a.is_latest = TRUE'
+        . ($hasStrand ? ' AND s.strand = ?' : '');
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($hasStrand ? [$strand] : []);
+    return $stmt->fetch();
+})();
 
-$careerCounts = $pdo->query(
-    "SELECT top_program_id, COUNT(*) AS cnt FROM (
-        SELECT DISTINCT ON (student_id) student_id, top_program_id
-        FROM recommendations ORDER BY student_id, computed_at DESC
-     ) latest GROUP BY top_program_id ORDER BY cnt DESC LIMIT 5"
-)->fetchAll();
+$careerCounts = (function () use ($pdo, $hasStrand, $strand) {
+    $sql = "SELECT top_program_id, COUNT(*) AS cnt FROM (
+                SELECT DISTINCT ON (r.student_id) r.student_id, r.top_program_id
+                FROM recommendations r"
+        . ($hasStrand ? ' JOIN students s ON s.user_id = r.student_id WHERE s.strand = ?' : '')
+        . " ORDER BY r.student_id, r.computed_at DESC
+            ) latest GROUP BY top_program_id ORDER BY cnt DESC LIMIT 5";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($hasStrand ? [$strand] : []);
+    return $stmt->fetchAll();
+})();
 
 $programIds = array_map(fn($r) => (int) $r['top_program_id'], $careerCounts);
 $titles = [];
@@ -63,6 +105,7 @@ function pct(int $n, int $total): float
 }
 
 jsonResponse([
+    'strand' => $strand,
     'totalStudents' => $totalStudents,
     'completion' => ['rate' => pct($assessedCount, $totalStudents), 'count' => $assessedCount, 'total' => $totalStudents],
     'worksheet' => ['rate' => pct($worksheetCount, $assessedCount), 'count' => $worksheetCount, 'total' => $assessedCount],
