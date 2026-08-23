@@ -73,6 +73,8 @@ try {
     jsonResponse(['success' => false, 'error' => 'Failed to reset password. Please try again.'], 500);
 }
 
-AuditLogger::log($reset['user_id'], 'student', 'reset_password', 'user', (string) $reset['user_id']);
+$actorRole = $pdo->prepare('SELECT role FROM users WHERE id = ?');
+$actorRole->execute([$reset['user_id']]);
+AuditLogger::log($reset['user_id'], (string) $actorRole->fetchColumn(), 'reset_password', 'user', (string) $reset['user_id']);
 
 jsonResponse(['success' => true]);
