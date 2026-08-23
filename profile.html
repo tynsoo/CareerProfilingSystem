@@ -127,7 +127,7 @@
         </div>
         <div class="relative">
           <button type="button" id="profileBtn" class="flex items-center gap-3">
-            <span class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center">
+            <span id="headerAvatarWrap" class="w-9 h-9 rounded-full bg-[#001c43] flex items-center justify-center overflow-hidden shrink-0">
               <img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">
             </span>
             <span class="text-left">
@@ -162,9 +162,10 @@
           </span>
           <p class="text-base font-semibold text-gray-900" id="avatarName">—</p>
           <p class="text-sm text-gray-500" id="avatarRole">—</p>
-          <input type="file" id="photoInput" accept="image/*" class="hidden">
+          <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden">
           <button type="button" id="changePhotoBtn" class="mt-4 w-full border border-gray-300 rounded-md py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Change Photo</button>
-          <p class="text-xs text-gray-400 mt-2">Preview only — not saved.</p>
+          <button type="button" id="removePhotoBtn" class="hidden mt-2 text-xs text-gray-500 hover:text-[#ed1c24]">Remove photo</button>
+          <p id="photoError" class="hidden text-xs text-[#ed1c24] mt-2"></p>
         </div>
 
         <!-- Details form -->
@@ -231,6 +232,22 @@
   document.getElementById('usernameField').value = currentUser.username;
   document.getElementById('roleField').value = roleLabel;
 
+  const avatarWrap = document.getElementById('avatarWrap');
+  const headerAvatarWrap = document.getElementById('headerAvatarWrap');
+  const removePhotoBtn = document.getElementById('removePhotoBtn');
+  function renderAvatar(url) {
+    if (url) {
+      avatarWrap.innerHTML = `<img src="${url}" alt="" class="w-full h-full object-cover">`;
+      headerAvatarWrap.innerHTML = `<img src="${url}" alt="" class="w-full h-full object-cover">`;
+      removePhotoBtn.classList.remove('hidden');
+    } else {
+      avatarWrap.innerHTML = '<img src="images/admin/icon-avatar.svg" alt="" class="w-8 h-9">';
+      headerAvatarWrap.innerHTML = '<img src="images/admin/icon-avatar.svg" alt="" class="w-3.5 h-4">';
+      removePhotoBtn.classList.add('hidden');
+    }
+  }
+  renderAvatar(currentUser.avatarUrl);
+
   function doLogout(e) {
     e.preventDefault();
     fetch('api/logout.php', { method: 'POST' }).finally(function() {
@@ -278,17 +295,42 @@
 
   const photoInput = document.getElementById('photoInput');
   const changePhotoBtn = document.getElementById('changePhotoBtn');
+  const photoError = document.getElementById('photoError');
+
+  function showPhotoError(msg) {
+    photoError.textContent = msg;
+    photoError.classList.remove('hidden');
+  }
+
+  async function saveAvatar(dataUrl) {
+    photoError.classList.add('hidden');
+    const res = await fetch('api/update-avatar.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatarDataUrl: dataUrl })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      showPhotoError(data.error || 'Failed to save photo.');
+      return;
+    }
+    renderAvatar(data.avatarUrl);
+  }
+
   changePhotoBtn.addEventListener('click', () => photoInput.click());
   photoInput.addEventListener('change', () => {
     const file = photoInput.files[0];
     if (!file) return;
+    if (file.size > 750 * 1024) {
+      showPhotoError('Photo is too large. Please use an image under 750KB.');
+      photoInput.value = '';
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = () => {
-      const avatarWrap = document.getElementById('avatarWrap');
-      avatarWrap.innerHTML = `<img src="${reader.result}" alt="" class="w-full h-full object-cover">`;
-    };
+    reader.onload = () => saveAvatar(reader.result);
     reader.readAsDataURL(file);
   });
+  removePhotoBtn.addEventListener('click', () => saveAvatar(null));
 
   document.getElementById('profileForm').addEventListener('submit', async (e) => {
     e.preventDefault();

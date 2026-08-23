@@ -11,6 +11,7 @@ CREATE TABLE users (
     username                VARCHAR(100) NOT NULL UNIQUE,
     password_hash           VARCHAR(255) NOT NULL,
     email                   VARCHAR(255),
+    avatar_data_url         TEXT,
     is_active               BOOLEAN NOT NULL DEFAULT TRUE,
     failed_login_attempts   INT NOT NULL DEFAULT 0,
     locked_until            TIMESTAMPTZ,

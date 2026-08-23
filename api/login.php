@@ -65,6 +65,7 @@ $sessionData = [
     'id' => (int) $user['id'],
     'role' => $user['role'],
     'username' => $user['username'],
+    'avatarUrl' => $user['avatar_data_url'],
 ];
 
 $redirect = 'admin-dashboard.html';
