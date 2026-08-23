@@ -3,50 +3,59 @@
 require_once __DIR__ . '/../config/env.php';
 
 /**
- * Thin wrapper around the vendored PHPMailer + Brevo SMTP. When SMTP_USERNAME/
- * SMTP_PASSWORD aren't set (local dev has no real Brevo account), sending is
- * skipped and the message is written to the PHP error log instead, so the
- * reset/notification flow stays testable without real email credentials.
+ * Sends transactional email via Brevo's HTTPS REST API rather than raw SMTP.
+ * Render's free web service tier blocks outbound SMTP ports (25/587/465)
+ * entirely — PHPMailer/SMTP connections there fail with ETIMEDOUT no matter
+ * how the credentials are set up. HTTPS (443) isn't blocked, so this posts
+ * to Brevo's API endpoint instead of opening an SMTP socket.
+ *
+ * When BREVO_API_KEY isn't set (local dev has no real Brevo account),
+ * sending is skipped and the message is written to the PHP error log
+ * instead, so the reset/notification flow stays testable without real
+ * credentials.
  */
 class Mailer
 {
     public static function send(string $toEmail, string $toName, string $subject, string $bodyHtml, string $bodyText): bool
     {
-        $username = getenv('SMTP_USERNAME');
-        $password = getenv('SMTP_PASSWORD');
-
-        if (!$username || !$password) {
-            error_log("[Mailer] SMTP not configured — logging instead of sending.\nTo: $toName <$toEmail>\nSubject: $subject\n\n$bodyText");
+        $apiKey = getenv('BREVO_API_KEY');
+        if (!$apiKey) {
+            error_log("[Mailer] BREVO_API_KEY not configured — logging instead of sending.\nTo: $toName <$toEmail>\nSubject: $subject\n\n$bodyText");
             return false;
         }
 
-        require_once __DIR__ . '/../vendor/phpmailer/src/Exception.php';
-        require_once __DIR__ . '/../vendor/phpmailer/src/PHPMailer.php';
-        require_once __DIR__ . '/../vendor/phpmailer/src/SMTP.php';
+        $payload = json_encode([
+            'sender' => ['name' => getenv('SMTP_FROM_NAME') ?: 'ProfilePath', 'email' => getenv('SMTP_FROM_EMAIL')],
+            'to' => [['email' => $toEmail, 'name' => $toName]],
+            'subject' => $subject,
+            'htmlContent' => $bodyHtml,
+            'textContent' => $bodyText,
+        ]);
 
-        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-        try {
-            $mail->isSMTP();
-            $mail->Host = getenv('SMTP_HOST');
-            $mail->SMTPAuth = true;
-            $mail->Username = $username;
-            $mail->Password = $password;
-            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = (int) getenv('SMTP_PORT');
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: application/json\r\nAccept: application/json\r\napi-key: $apiKey\r\n",
+                'content' => $payload,
+                'timeout' => 15,
+                'ignore_errors' => true,
+            ],
+        ]);
 
-            $mail->setFrom(getenv('SMTP_FROM_EMAIL'), getenv('SMTP_FROM_NAME'));
-            $mail->addAddress($toEmail, $toName);
+        $result = @file_get_contents('https://api.brevo.com/v3/smtp/email', false, $context);
+        $status = 0;
+        foreach ($http_response_header ?? [] as $header) {
+            if (preg_match('#^HTTP/\S+\s+(\d{3})#', $header, $m)) {
+                $status = (int) $m[1];
+                break;
+            }
+        }
 
-            $mail->isHTML(true);
-            $mail->Subject = $subject;
-            $mail->Body = $bodyHtml;
-            $mail->AltBody = $bodyText;
-
-            $mail->send();
+        if ($status >= 200 && $status < 300) {
             return true;
-        } catch (\PHPMailer\PHPMailer\Exception $e) {
-            error_log('[Mailer] send failed: ' . $mail->ErrorInfo);
-            return false;
         }
+
+        error_log("[Mailer] Brevo API send failed (HTTP $status): " . ($result !== false ? $result : 'no response — request may not have reached Brevo'));
+        return false;
     }
 }
