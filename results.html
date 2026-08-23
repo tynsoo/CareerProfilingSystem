@@ -277,6 +277,14 @@
     notifBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
     profileBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
     document.addEventListener('click', function() { notifPanel.classList.add('hidden'); profilePanel.classList.add('hidden'); });
+
+  // Close open dropdown panels on scroll — they were anchored under their
+  // trigger button, and letting them sit still while the page scrolls away
+  // from that anchor looks broken, so just dismiss them instead.
+  window.addEventListener('scroll', () => {
+    document.getElementById('notifPanel')?.classList.add('hidden');
+    document.getElementById('profilePanel')?.classList.add('hidden');
+  }, { passive: true });
     notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
     profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
 

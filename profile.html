@@ -252,6 +252,14 @@
     profilePanel.classList.add('hidden');
   });
 
+  // Close open dropdown panels on scroll — they were anchored under their
+  // trigger button, and letting them sit still while the page scrolls away
+  // from that anchor looks broken, so just dismiss them instead.
+  window.addEventListener('scroll', () => {
+    document.getElementById('notifPanel')?.classList.add('hidden');
+    document.getElementById('profilePanel')?.classList.add('hidden');
+  }, { passive: true });
+
   const photoInput = document.getElementById('photoInput');
   const changePhotoBtn = document.getElementById('changePhotoBtn');
   changePhotoBtn.addEventListener('click', () => photoInput.click());
