@@ -20,6 +20,29 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ---------- Skip link ----------
+   First focusable element on every page. Hidden until a keyboard user
+   tabs to it, so sighted mouse users never see it — but it lets anyone
+   navigating by keyboard jump straight past the repeated sidebar instead
+   of tabbing through every nav link on every single page. */
+.skip-link {
+  position: absolute;
+  top: -48px;
+  left: 12px;
+  z-index: 100;
+  background: #001c43;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: top var(--dur-micro) ease;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
 /* ---------- Reveal system (page load + scroll-into-view) ----------
    js/motion.js adds [data-auto-reveal] to header/main-children
    automatically, and toggles .in-view via IntersectionObserver. Pages can

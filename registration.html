@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="css/motion.css">
 </head>
 <body class="min-h-screen">
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <div class="relative flex flex-col items-start justify-center min-h-screen overflow-hidden">
 
@@ -43,7 +44,7 @@
 
     <!-- Right: Registration Card -->
     <div class="flex flex-1 items-center justify-center p-8 py-12">
-      <div class="w-full max-w-[520px] bg-white border border-gray-100 rounded-xl shadow-2xl p-10 flex flex-col gap-6" data-reveal="scale" style="transition-delay:120ms">
+      <div id="main-content" class="w-full max-w-[520px] bg-white border border-gray-100 rounded-xl shadow-2xl p-10 flex flex-col gap-6" data-reveal="scale" style="transition-delay:120ms">
 
         <!-- Header -->
         <div class="flex flex-col items-center gap-1">
@@ -94,12 +95,14 @@
               <img src="images/login/icon-mail.svg" alt="" class="w-full h-full">
             </span>
             <input
+              id="emailInput"
               type="email"
               name="email"
               placeholder="Email Address"
               aria-label="Email Address"
               required
               class="w-full pl-10 pr-3 py-3.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+            <p id="emailHint" class="hidden text-xs text-[#ed1c24] mt-1.5" aria-live="polite">Please enter a valid email address.</p>
           </div>
 
           <div class="grid grid-cols-2 gap-4 items-start">
@@ -165,6 +168,25 @@
     const input = document.getElementById('password');
     input.type = input.type === 'password' ? 'text' : 'password';
   });
+
+  // Live feedback on blur, rather than only after a full form submit attempt.
+  (function() {
+    const emailInput = document.getElementById('emailInput');
+    const emailHint = document.getElementById('emailHint');
+    emailInput.addEventListener('blur', function() {
+      const invalid = emailInput.value !== '' && !emailInput.checkValidity();
+      emailHint.classList.toggle('hidden', !invalid);
+      emailInput.classList.toggle('border-[#ed1c24]', invalid);
+      emailInput.classList.toggle('border-gray-300', !invalid);
+    });
+    emailInput.addEventListener('input', function() {
+      if (emailInput.checkValidity() || emailInput.value === '') {
+        emailHint.classList.add('hidden');
+        emailInput.classList.remove('border-[#ed1c24]');
+        emailInput.classList.add('border-gray-300');
+      }
+    });
+  })();
 
   (function() {
     function showMessage(text, isError) {

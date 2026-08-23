@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="css/motion.css">
 </head>
 <body class="min-h-screen">
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <div class="relative flex flex-col items-start justify-center min-h-screen overflow-hidden">
 
@@ -42,7 +43,7 @@
 
     <!-- Right: Activation Card -->
     <div class="flex flex-1 items-center justify-center p-8">
-      <div class="w-full max-w-[448px]" data-reveal="scale" style="transition-delay:120ms">
+      <div id="main-content" class="w-full max-w-[448px]" data-reveal="scale" style="transition-delay:120ms">
         <div class="w-full bg-white border border-gray-100 rounded-xl shadow-2xl p-10 flex flex-col items-center gap-6">
 
           <!-- Step 1: Set password -->
@@ -68,7 +69,7 @@
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Confirm Password</label>
                 <input type="password" id="confirmPassword" required minlength="6" class="w-full border border-gray-300 rounded-md px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-                <p class="text-xs text-gray-500 mt-1.5">Re-enter the same password to verify it before activating your account.</p>
+                <p id="matchHint" class="text-xs text-gray-500 mt-1.5" aria-live="polite">Re-enter the same password to verify it before activating your account.</p>
               </div>
               <button type="submit" id="activateSubmit" class="w-full bg-[#0f2a6b] text-white text-sm font-semibold rounded-md py-3.5 hover:opacity-90">Activate Account</button>
             </form>
@@ -118,6 +119,28 @@
     void errEl.offsetWidth;
     errEl.classList.add('alert-anim');
   }
+
+  // Live feedback as the user re-types their password, rather than only
+  // finding out it didn't match after they submit.
+  const newPasswordInput = document.getElementById('newPassword');
+  const confirmPasswordInput = document.getElementById('confirmPassword');
+  const matchHint = document.getElementById('matchHint');
+  function checkPasswordMatch() {
+    if (!confirmPasswordInput.value) {
+      matchHint.textContent = 'Re-enter the same password to verify it before activating your account.';
+      matchHint.className = 'text-xs text-gray-500 mt-1.5';
+      return;
+    }
+    if (newPasswordInput.value === confirmPasswordInput.value) {
+      matchHint.textContent = 'Passwords match.';
+      matchHint.className = 'text-xs text-green-600 mt-1.5';
+    } else {
+      matchHint.textContent = "Passwords don't match yet.";
+      matchHint.className = 'text-xs text-[#ed1c24] mt-1.5';
+    }
+  }
+  newPasswordInput.addEventListener('input', checkPasswordMatch);
+  confirmPasswordInput.addEventListener('input', checkPasswordMatch);
 
   document.getElementById('activateForm').addEventListener('submit', async function(e) {
     e.preventDefault();
