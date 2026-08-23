@@ -10,12 +10,16 @@ $body = readJsonBody();
 $schoolId = trim((string) ($body['schoolId'] ?? ''));
 $firstName = trim((string) ($body['firstName'] ?? ''));
 $lastName = trim((string) ($body['lastName'] ?? ''));
+$email = trim((string) ($body['email'] ?? ''));
 $strand = (string) ($body['strand'] ?? '');
 $gradeLevel = (string) ($body['gradeLevel'] ?? '');
 $password = (string) ($body['password'] ?? '');
 
-if ($schoolId === '' || $firstName === '' || $lastName === '' || $password === '') {
+if ($schoolId === '' || $firstName === '' || $lastName === '' || $email === '' || $password === '') {
     jsonResponse(['success' => false, 'error' => 'All fields are required.'], 400);
+}
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    jsonResponse(['success' => false, 'error' => 'Enter a valid email address.'], 400);
 }
 if (!in_array($strand, ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'], true)) {
     jsonResponse(['success' => false, 'error' => 'Invalid strand.'], 400);
@@ -68,8 +72,8 @@ if ($existing->fetch()) {
 $pdo->beginTransaction();
 try {
     $hash = password_hash($password, PASSWORD_BCRYPT);
-    $userStmt = $pdo->prepare('INSERT INTO users (role, username, password_hash, is_active) VALUES (?, ?, ?, TRUE) RETURNING id');
-    $userStmt->execute(['student', $schoolId, $hash]);
+    $userStmt = $pdo->prepare('INSERT INTO users (role, username, password_hash, email, is_active) VALUES (?, ?, ?, ?, TRUE) RETURNING id');
+    $userStmt->execute(['student', $schoolId, $hash, $email]);
     $userId = (int) $userStmt->fetchColumn();
 
     $studentStmt = $pdo->prepare(
