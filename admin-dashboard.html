@@ -99,7 +99,7 @@
               <span id="notifCountLabel" class="text-xs text-gray-500">Loading…</span>
             </div>
             <ul id="notifList" class="max-h-80 overflow-auto divide-y divide-gray-100">
-              <li class="px-4 py-6 text-center text-sm text-gray-400">Loading…</li>
+              <li class="px-4 py-6 text-center text-sm text-gray-500">Loading…</li>
             </ul>
             <a href="monitoring.html" class="block text-center text-sm font-medium text-[#ed1c24] px-4 py-3 border-t border-gray-100 hover:bg-gray-50">View all notifications</a>
           </div>
@@ -204,7 +204,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center gap-3">
             <div class="relative w-full sm:w-64">
               <img src="images/admin/icon-search.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4">
-              <input type="text" id="studentSearch" placeholder="Search student..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+              <input type="text" id="studentSearch" placeholder="Search student..." aria-label="Search student" class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
             </div>
             <div class="relative">
               <button type="button" id="filterBtn" class="w-full sm:w-auto flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -265,7 +265,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100" id="studentTbody">
-              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">Loading…</td></tr>
+              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -386,7 +386,7 @@
     const statusCell = badge(s.status, STATUS_STYLE[s.status]);
     const counselingCell = s.counseling
       ? badge(s.counseling, COUNSELING_STYLE[s.counseling])
-      : '<span class="text-gray-400">—</span>';
+      : '<span class="text-gray-500">—</span>';
     const params = new URLSearchParams({
       name: s.name, strand: s.strand, status: s.status, riasec: s.riasec, counseling: s.counseling,
     });
@@ -395,7 +395,7 @@
       '<td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + escapeHtml(s.name) + '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-500">' + escapeHtml(s.strand) + '</td>' +
       '<td class="px-6 py-4">' + statusCell + '</td>' +
-      '<td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">' + (s.riasec ? escapeHtml(s.riasec) : '<span class="text-gray-400">—</span>') + '</td>' +
+      '<td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">' + (s.riasec ? escapeHtml(s.riasec) : '<span class="text-gray-500">—</span>') + '</td>' +
       '<td class="px-6 py-4 text-center">' + counselingCell + '</td>' +
       '<td class="px-6 py-4 text-center">' +
         '<a href="student-profile.html?' + params.toString() + '" class="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded shadow-sm hover:bg-gray-50">' +
@@ -443,7 +443,7 @@
   }
 
   async function load() {
-    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">Loading…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>';
     const params = new URLSearchParams({
       page: state.page, search: state.search, strand: state.strand, status: state.status, counseling: state.counseling,
     });

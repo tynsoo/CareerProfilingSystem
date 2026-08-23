@@ -99,7 +99,7 @@
               <span id="notifCountLabel" class="text-xs text-gray-500">Loading…</span>
             </div>
             <ul id="notifList" class="max-h-80 overflow-auto divide-y divide-gray-100">
-              <li class="px-4 py-6 text-center text-sm text-gray-400">Loading…</li>
+              <li class="px-4 py-6 text-center text-sm text-gray-500">Loading…</li>
             </ul>
             <a href="monitoring.html" class="block text-center text-sm font-medium text-[#ed1c24] px-4 py-3 border-t border-gray-100 hover:bg-gray-50">View all notifications</a>
           </div>
@@ -136,7 +136,7 @@
           <p class="text-sm text-gray-500 mt-1">Track system activities and changes for security and compliance.</p>
         </div>
         <div class="flex items-center gap-3">
-          <button type="button" title="Date filtering not available in this prototype" class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-400 shadow-sm cursor-not-allowed">
+          <button type="button" title="Date filtering not available in this prototype" class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-500 shadow-sm cursor-not-allowed">
             May 20, 2025 - May 27, 2025
             <img src="images/audit/icon-calendar.svg" alt="" class="w-4 h-4 opacity-50">
           </button>
@@ -175,7 +175,7 @@
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Total Activities</p>
             <p class="text-3xl font-bold text-gray-900" id="summaryTotal">—</p>
-            <p class="text-xs mt-1 text-gray-400">All logged actions</p>
+            <p class="text-xs mt-1 text-gray-500">All logged actions</p>
           </div>
         </div>
 
@@ -186,7 +186,7 @@
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Successful</p>
             <p class="text-3xl font-bold text-gray-900" id="summarySuccess">—</p>
-            <p class="text-xs mt-1"><span class="text-green-600 font-medium" id="summarySuccessPct">—</span> <span class="text-gray-400">of total</span></p>
+            <p class="text-xs mt-1"><span class="text-green-600 font-medium" id="summarySuccessPct">—</span> <span class="text-gray-500">of total</span></p>
           </div>
         </div>
 
@@ -197,7 +197,7 @@
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Failed</p>
             <p class="text-3xl font-bold text-gray-900" id="summaryFailed">—</p>
-            <p class="text-xs mt-1"><span class="text-red-600 font-medium" id="summaryFailedPct">—</span> <span class="text-gray-400">of total</span></p>
+            <p class="text-xs mt-1"><span class="text-red-600 font-medium" id="summaryFailedPct">—</span> <span class="text-gray-500">of total</span></p>
           </div>
         </div>
 
@@ -208,7 +208,7 @@
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Users Active</p>
             <p class="text-3xl font-bold text-gray-900" id="summaryActive">—</p>
-            <p class="text-xs mt-1 text-gray-400">last 7 days</p>
+            <p class="text-xs mt-1 text-gray-500">last 7 days</p>
           </div>
         </div>
       </div>
@@ -219,7 +219,7 @@
         <div class="border-b border-gray-200 flex items-center justify-between px-4 py-4 flex-wrap gap-3">
           <div class="relative flex-1 max-w-[448px]">
             <img src="images/audit/icon-search.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4">
-            <input type="text" id="searchInput" placeholder="Search logs..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+            <input type="text" id="searchInput" placeholder="Search logs..." aria-label="Search audit logs" class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
           </div>
           <button type="button" id="exportBtn" class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm">
             <img src="images/audit/icon-export.svg" alt="" class="w-4 h-4">
@@ -232,7 +232,7 @@
             <thead class="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th class="px-6 py-3 text-xs font-semibold text-gray-500">
-                  <button type="button" id="sortTimestampBtn" class="flex items-center gap-1.5">Timestamp <span id="sortIcon" class="text-gray-400">⇅</span></button>
+                  <button type="button" id="sortTimestampBtn" class="flex items-center gap-1.5">Timestamp <span id="sortIcon" class="text-gray-500">⇅</span></button>
                 </th>
                 <th class="px-6 py-3 text-xs font-semibold text-gray-500">User</th>
                 <th class="px-6 py-3 text-xs font-semibold text-gray-500">Role</th>
@@ -243,7 +243,7 @@
               </tr>
             </thead>
             <tbody id="auditTableBody" class="divide-y divide-gray-100">
-              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">Loading audit log…</td></tr>
+              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">Loading audit log…</td></tr>
             </tbody>
           </table>
         </div>
@@ -368,7 +368,7 @@
     }
 
     async function load() {
-      tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">Loading audit log…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">Loading audit log…</td></tr>';
       const res = await fetch('api/audit-log.php?' + currentQuery());
       if (res.status === 401) { window.location.replace('login.html'); return; }
       if (res.status === 403) {
@@ -404,7 +404,7 @@
 
     function renderRows(rows) {
       if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-400">No matching audit log entries.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">No matching audit log entries.</td></tr>';
         return;
       }
       tbody.innerHTML = rows.map(function(r) {
