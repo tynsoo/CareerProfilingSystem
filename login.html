@@ -11,6 +11,7 @@
 <style>
   body{ font-family:'Inter', sans-serif; }
 </style>
+<link rel="stylesheet" href="css/motion.css">
 </head>
 <body class="min-h-screen">
 
@@ -28,7 +29,7 @@
 
     <!-- Left: Branding -->
     <div class="hidden md:flex flex-1 relative overflow-hidden">
-      <div class="relative m-auto max-w-md px-8">
+      <div class="relative m-auto max-w-md px-8" data-reveal="left">
         <img src="images/login/cgc-logo-title.png" alt="Center for Guidance and Counseling — Mapúa MCL" class="w-[280px] mb-4">
         <h1 class="text-[#001c43] text-3xl font-medium leading-tight">Career Profiling System</h1>
         <div class="w-16 h-1 bg-[#ed1c24] mt-4 mb-4"></div>
@@ -41,7 +42,7 @@
 
     <!-- Right: Login Card -->
     <div class="flex flex-1 items-center justify-center p-8">
-      <div class="w-full max-w-[448px] bg-white border border-gray-100 rounded-xl shadow-2xl p-10 flex flex-col gap-6">
+      <div class="w-full max-w-[448px] bg-white border border-gray-100 rounded-xl shadow-2xl p-10 flex flex-col gap-6" data-reveal="scale" style="transition-delay:120ms">
 
         <!-- Header -->
         <div class="flex flex-col items-center gap-1">
@@ -123,6 +124,9 @@
       const el = document.getElementById('loginError');
       el.textContent = text;
       el.classList.remove('hidden');
+      el.classList.remove('alert-anim');
+      void el.offsetWidth;
+      el.classList.add('alert-anim');
     }
     function hideError() {
       document.getElementById('loginError').classList.add('hidden');
@@ -159,5 +163,6 @@
   })();
 </script>
 
+<script src="js/motion.js" defer></script>
 </body>
 </html>
