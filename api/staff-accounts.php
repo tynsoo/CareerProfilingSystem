@@ -91,10 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     AuditLogger::log($user['id'], 'admin', 'create_staff_account', 'user', (string) $newUserId, "Counselor account: $username");
 
-    $response = ['success' => true, 'id' => $newUserId];
-    if (!$sent && getenv('APP_ENV') === 'local') {
-        // Local dev has no real Brevo credentials — surface the link directly so the flow stays testable.
-        $response['debugActivationLink'] = $activationLink;
+    $response = ['success' => true, 'id' => $newUserId, 'emailSent' => $sent];
+    if (!$sent) {
+        // The admin is already authenticated and created this account themselves,
+        // so — unlike the public forgot-password flow — there's no enumeration
+        // risk in handing them the link directly when delivery fails.
+        $response['activationLink'] = $activationLink;
     }
     jsonResponse($response);
 }

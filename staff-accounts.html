@@ -163,8 +163,8 @@
             </div>
             <p id="createError" class="hidden text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5"></p>
             <p id="createSuccess" class="hidden text-sm text-green-700 bg-green-50 border border-green-100 rounded-md px-3.5 py-2.5"></p>
-            <div id="debugLinkBanner" class="hidden bg-blue-50 border border-blue-100 rounded-md px-3.5 py-2.5 text-left break-all">
-              <p class="text-xs text-blue-800">No email server is connected in this local environment — here's the activation link directly: <a id="debugLinkAnchor" href="#" class="font-semibold underline"></a></p>
+            <div id="debugLinkBanner" class="hidden bg-amber-50 border border-amber-100 rounded-md px-3.5 py-2.5 text-left break-all">
+              <p class="text-xs text-amber-800">The activation email couldn't be delivered. Share this link with them directly: <a id="debugLinkAnchor" href="#" class="font-semibold underline"></a></p>
             </div>
             <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Create Account</button>
           </form>
@@ -316,12 +316,14 @@
       return;
     }
 
-    successEl.textContent = 'Counselor account created. An activation email was sent to ' + email + '.';
+    successEl.textContent = data.emailSent
+      ? 'Counselor account created. An activation email was sent to ' + email + '.'
+      : 'Counselor account created.';
     successEl.classList.remove('hidden');
-    if (data.debugActivationLink) {
+    if (data.activationLink) {
       const anchor = document.getElementById('debugLinkAnchor');
-      anchor.href = data.debugActivationLink;
-      anchor.textContent = data.debugActivationLink;
+      anchor.href = data.activationLink;
+      anchor.textContent = data.activationLink;
       debugBanner.classList.remove('hidden');
     }
     e.target.reset();
