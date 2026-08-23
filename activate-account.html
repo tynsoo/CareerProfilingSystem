@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activate Your Account — ProfilePath</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+</style>
+<link rel="stylesheet" href="css/motion.css">
+</head>
+<body class="min-h-screen">
+
+<div class="relative flex flex-col items-start justify-center min-h-screen overflow-hidden">
+
+  <!-- Background photo + triangle accents (matches login page) -->
+  <div class="absolute inset-0">
+    <img src="images/login/campus-bg.png" alt="" class="absolute inset-0 w-full h-full object-cover">
+    <div class="absolute inset-0 bg-white/70"></div>
+    <div class="absolute bottom-0 left-0 w-[500px] h-[400px] pointer-events-none select-none" style="background:#081E3C; clip-path: polygon(0% 0%, 100% 100%, 0% 100%);"></div>
+    <img src="images/login/red-triangle.svg" alt="" class="absolute bottom-0 right-0 w-[640px] pointer-events-none select-none">
+  </div>
+
+  <div class="relative flex w-full min-h-screen">
+
+    <!-- Left: Branding -->
+    <div class="hidden md:flex flex-1 relative overflow-hidden">
+      <div class="relative m-auto max-w-md px-8" data-reveal="left">
+        <img src="images/login/cgc-logo-title.png" alt="Center for Guidance and Counseling — Mapúa MCL" class="w-[280px] mb-4">
+        <h1 class="text-[#001c43] text-3xl font-medium leading-tight">Career Profiling System</h1>
+        <div class="w-16 h-1 bg-[#ed1c24] mt-4 mb-4"></div>
+        <p class="text-[#001c43] text-lg leading-relaxed">
+          Empowering students. Guiding futures.
+          Data-driven insights for informed career decisions.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right: Activation Card -->
+    <div class="flex flex-1 items-center justify-center p-8">
+      <div class="w-full max-w-[448px]" data-reveal="scale" style="transition-delay:120ms">
+        <div class="w-full bg-white border border-gray-100 rounded-xl shadow-2xl p-10 flex flex-col items-center gap-6">
+
+          <!-- Step 1: Set password -->
+          <div id="stepPassword" class="w-full flex flex-col items-center gap-6">
+            <div class="w-16 h-16 rounded-xl bg-[#eef1fb] flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0f2a6b" stroke-width="2" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div class="text-center">
+              <h1 class="text-2xl font-semibold text-[#191c1e]">Welcome to ProfilePath</h1>
+              <p class="text-sm text-[#5c5a5a] mt-2 max-w-[320px]" id="welcomeMessage">
+                An administrator created a Guidance Counselor account for you. Set a password to activate it.
+              </p>
+            </div>
+
+            <p id="loadError" class="hidden w-full text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5"></p>
+
+            <form id="activateForm" class="w-full flex flex-col gap-4">
+              <p id="activateError" class="hidden text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5"></p>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">New Password</label>
+                <input type="password" id="newPassword" required minlength="6" class="w-full border border-gray-300 rounded-md px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Confirm Password</label>
+                <input type="password" id="confirmPassword" required minlength="6" class="w-full border border-gray-300 rounded-md px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+                <p class="text-xs text-gray-400 mt-1.5">Re-enter the same password to verify it before activating your account.</p>
+              </div>
+              <button type="submit" id="activateSubmit" class="w-full bg-[#0f2a6b] text-white text-sm font-semibold rounded-md py-3.5 hover:opacity-90">Activate Account</button>
+            </form>
+          </div>
+
+          <!-- Step 2: Success -->
+          <div id="stepDone" class="hidden w-full flex-col items-center text-center gap-3">
+            <span class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </span>
+            <h2 class="text-lg font-semibold text-[#191c1e]">Account Activated</h2>
+            <p class="text-sm text-[#5c5a5a]">Your password has been verified and set. Redirecting you to Login...</p>
+          </div>
+
+        </div>
+
+        <!-- Security note -->
+        <p class="text-gray-500 text-xs text-center italic mt-6">
+          For additional security assistance, contact the IT Helpdesk at helpdesk@mapua.edu.ph
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const stepPassword = document.getElementById('stepPassword');
+  const stepDone = document.getElementById('stepDone');
+  const loadError = document.getElementById('loadError');
+
+  const token = new URLSearchParams(window.location.search).get('token');
+
+  if (!token) {
+    stepPassword.classList.add('hidden');
+    loadError.textContent = 'This activation link is missing its token. Please use the link from your activation email.';
+    loadError.classList.remove('hidden');
+    document.getElementById('welcomeMessage').classList.add('hidden');
+    return;
+  }
+
+  function showInlineError(text) {
+    const errEl = document.getElementById('activateError');
+    errEl.textContent = text;
+    errEl.classList.remove('hidden');
+    errEl.classList.remove('alert-anim');
+    void errEl.offsetWidth;
+    errEl.classList.add('alert-anim');
+  }
+
+  document.getElementById('activateForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    document.getElementById('activateError').classList.add('hidden');
+
+    const next = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+
+    if (next !== confirm) {
+      showInlineError("Passwords don't match. Please re-enter them to verify.");
+      return;
+    }
+
+    const submitBtn = document.getElementById('activateSubmit');
+    submitBtn.disabled = true;
+    try {
+      const res = await fetch('api/reset-password.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, password: next })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        showInlineError(data.error || 'Failed to activate your account. Please request a new link.');
+        return;
+      }
+
+      stepPassword.classList.add('hidden');
+      stepDone.classList.remove('hidden');
+      stepDone.classList.add('flex', 'step-anim');
+
+      setTimeout(function() {
+        window.location.href = 'login.html';
+      }, 1800);
+    } catch (err) {
+      showInlineError('Unable to reach the server. Please try again.');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+})();
+</script>
+
+<script src="js/motion.js" defer></script>
+</body>
+</html>

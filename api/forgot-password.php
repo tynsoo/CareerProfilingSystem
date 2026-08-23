@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../lib/Mailer.php';
+require_once __DIR__ . '/../lib/EmailTemplate.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
@@ -62,9 +63,16 @@ $insert = $pdo->prepare(
 $insert->execute([$user['id'], $tokenHash]);
 
 $resetLink = rtrim((string) getenv('APP_URL'), '/') . '/forgot-password.html?token=' . $rawToken;
+$safeFirstName = htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8');
 
-$bodyHtml = "<p>Hi $firstName,</p><p>We received a request to reset your ProfilePath password. This link expires in 30 minutes:</p>"
-    . "<p><a href=\"$resetLink\">$resetLink</a></p><p>If you didn't request this, you can ignore this email.</p>";
+$bodyHtml = EmailTemplate::render(
+    'Reset your password',
+    "<p style=\"margin:0 0 12px 0;\">Hi $safeFirstName,</p>"
+        . '<p style="margin:0;">We received a request to reset your ProfilePath password. Click the button below to choose a new one.</p>',
+    'Reset Password',
+    $resetLink,
+    'This link expires in 30 minutes.'
+);
 $bodyText = "Hi $firstName,\n\nWe received a request to reset your ProfilePath password. This link expires in 30 minutes:\n$resetLink\n\nIf you didn't request this, you can ignore this email.";
 
 $sent = Mailer::send($email, $firstName, 'Reset your ProfilePath password', $bodyHtml, $bodyText);

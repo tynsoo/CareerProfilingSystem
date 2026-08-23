@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../lib/Mailer.php';
+require_once __DIR__ . '/../lib/EmailTemplate.php';
 
 $user = Auth::requireLogin();
 if ($user['role'] !== 'admin') {
@@ -81,10 +82,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         jsonResponse(['success' => false, 'error' => 'Failed to create account. Please try again.'], 500);
     }
 
-    $activationLink = rtrim((string) getenv('APP_URL'), '/') . '/forgot-password.html?token=' . $rawToken;
-    $bodyHtml = "<p>Hi $username,</p><p>An administrator created a Guidance Counselor account for you on ProfilePath. "
-        . "Set your password to activate it — this link expires in 3 days:</p>"
-        . "<p><a href=\"$activationLink\">$activationLink</a></p>";
+    $activationLink = rtrim((string) getenv('APP_URL'), '/') . '/activate-account.html?token=' . $rawToken;
+    $safeUsername = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
+
+    $bodyHtml = EmailTemplate::render(
+        'Activate your Guidance Counselor account',
+        "<p style=\"margin:0 0 12px 0;\">Hi $safeUsername,</p>"
+            . '<p style="margin:0;">An administrator created a Guidance Counselor account for you on ProfilePath. '
+            . 'Set and verify your password below to activate it.</p>',
+        'Activate Account',
+        $activationLink,
+        'This link expires in 3 days.'
+    );
     $bodyText = "Hi $username,\n\nAn administrator created a Guidance Counselor account for you on ProfilePath. "
         . "Set your password to activate it — this link expires in 3 days:\n$activationLink";
     $sent = Mailer::send($email, $username, 'Activate your ProfilePath account', $bodyHtml, $bodyText);
