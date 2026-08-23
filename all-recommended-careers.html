@@ -123,26 +123,15 @@
         <div class="relative">
           <button type="button" id="notifBtn" class="relative w-5 h-5">
             <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
-            <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+            <span id="notifBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ed1c24] text-white text-[10px] font-bold flex items-center justify-center"></span>
           </button>
           <div id="notifPanel" class="hidden fixed left-4 right-4 top-[76px] z-50 sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+12px)] sm:w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <p class="text-sm font-semibold text-gray-900">Notifications</p>
-              <span class="text-xs text-gray-500">3 new</span>
+              <span id="notifCountLabel" class="text-xs text-gray-500">Loading…</span>
             </div>
-            <ul class="max-h-80 overflow-auto divide-y divide-gray-100">
-              <li class="px-4 py-3 hover:bg-gray-50">
-                <p class="text-sm text-gray-800"><span class="font-medium">New student registered</span> — Gomez, Jerome Grant just signed up.</p>
-                <p class="text-xs text-gray-400 mt-1">5 minutes ago</p>
-              </li>
-              <li class="px-4 py-3 hover:bg-gray-50">
-                <p class="text-sm text-gray-800"><span class="font-medium">Assessment flagged</span> — RIASEC confidence below threshold.</p>
-                <p class="text-xs text-gray-400 mt-1">1 hour ago</p>
-              </li>
-              <li class="px-4 py-3 hover:bg-gray-50">
-                <p class="text-sm text-gray-800"><span class="font-medium">Counseling request</span> — Solis, Christeen Ann requested counseling.</p>
-                <p class="text-xs text-gray-400 mt-1">2 hours ago</p>
-              </li>
+            <ul id="notifList" class="max-h-80 overflow-auto divide-y divide-gray-100">
+              <li class="px-4 py-6 text-center text-sm text-gray-400">Loading…</li>
             </ul>
             <a href="monitoring.html" class="block text-center text-sm font-medium text-[#ed1c24] px-4 py-3 border-t border-gray-100 hover:bg-gray-50">View all notifications</a>
           </div>
@@ -170,7 +159,7 @@
     </header>
 
     <!-- Page Content -->
-    <main class="flex-1 p-8 overflow-auto">
+    <main class="flex-1 p-4 sm:p-8 overflow-auto">
 
       <!-- Page Header -->
       <div class="flex items-start justify-between flex-wrap gap-4 mb-8">
@@ -243,8 +232,8 @@
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
     const backdrop = document.getElementById('sidebarBackdrop');
-    function openSidebar() { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
-    function closeSidebar() { sidebar.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); }
+    function openSidebar() { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); menuToggle.classList.add('invisible'); }
+    function closeSidebar() { sidebar.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); menuToggle.classList.remove('invisible'); }
     menuToggle.addEventListener('click', () => {
       sidebar.classList.contains('-translate-x-full') ? openSidebar() : closeSidebar();
     });
@@ -339,5 +328,6 @@
 </script>
 
 <script src="js/motion.js" defer></script>
+<script src="js/notifications.js" defer></script>
 </body>
 </html>

@@ -246,8 +246,8 @@
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
     const backdrop = document.getElementById('sidebarBackdrop');
-    function openSidebar() { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
-    function closeSidebar() { sidebar.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); }
+    function openSidebar() { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); menuToggle.classList.add('invisible'); }
+    function closeSidebar() { sidebar.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); menuToggle.classList.remove('invisible'); }
     menuToggle.addEventListener('click', () => {
       sidebar.classList.contains('-translate-x-full') ? openSidebar() : closeSidebar();
     });

@@ -140,7 +140,7 @@
     </header>
 
     <!-- Page Content -->
-    <main class="flex-1 p-8 overflow-auto">
+    <main class="flex-1 p-4 sm:p-8 overflow-auto">
 
       <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
         <div>
@@ -192,8 +192,8 @@
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
     const backdrop = document.getElementById('sidebarBackdrop');
-    function openSidebar() { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
-    function closeSidebar() { sidebar.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); }
+    function openSidebar() { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); menuToggle.classList.add('invisible'); }
+    function closeSidebar() { sidebar.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); menuToggle.classList.remove('invisible'); }
     menuToggle.addEventListener('click', () => {
       sidebar.classList.contains('-translate-x-full') ? openSidebar() : closeSidebar();
     });
