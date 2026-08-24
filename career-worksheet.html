@@ -57,7 +57,7 @@
       Select a program above to see the electives that best support it.
     </div>
 
-    <div id="electiveGroups" class="hidden flex flex-col gap-6"></div>
+    <div id="electiveGroups" class="content-swap hidden flex flex-col gap-6"></div>
 
     <div class="flex justify-end mt-8">
       <button type="button" id="submitWorksheetBtn" disabled class="bg-slate-300 text-white text-sm font-bold rounded-[12px] px-6 py-2.5 cursor-not-allowed transition-opacity">Submit Worksheet</button>
@@ -155,8 +155,12 @@
     const matches = COLLEGE_ELECTIVES[collegeCode] || [];
     electivesEmpty.classList.add('hidden');
     electiveGroups.classList.remove('hidden');
-    renderGroupedElectives(matches);
-    updateSubmitState();
+    electiveGroups.classList.add('is-swapping');
+    setTimeout(function() {
+      renderGroupedElectives(matches);
+      electiveGroups.classList.remove('is-swapping');
+      updateSubmitState();
+    }, 200);
   }
 
   function renderGroupedElectives(electiveList) {

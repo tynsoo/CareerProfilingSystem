@@ -241,6 +241,101 @@ textarea {
   transition: opacity var(--dur-button) var(--ease-standard);
 }
 
+/* ---------- Modal open/close ----------
+   Backdrop element gets class="modal-backdrop", the inner dialog card
+   inside it gets class="modal-card". Toggle a shared "is-open" class on
+   the backdrop (instead of toggling "hidden" directly) to animate both
+   the fade and the card's scale/rise together. */
+.modal-backdrop {
+  opacity: 0;
+  transition: opacity var(--dur-button) var(--ease-standard);
+}
+.modal-backdrop.is-open {
+  opacity: 1;
+}
+.modal-card {
+  transform: scale(0.96) translateY(8px);
+  transition: transform var(--dur-button) var(--ease-soft);
+}
+.modal-backdrop.is-open .modal-card {
+  transform: scale(1) translateY(0);
+}
+
+/* ---------- Question / content swap ----------
+   Add class="content-swap" to a container whose inner content is
+   replaced dynamically (quiz questions, wizard steps). Toggle
+   "is-swapping" on right before replacing innerHTML, then remove it
+   right after — the browser animates the fade+rise back to normal. */
+.content-swap {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--dur-button) var(--ease-soft), transform var(--dur-button) var(--ease-soft);
+}
+.content-swap.is-swapping {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* ---------- Selectable option row pop ----------
+   Add class="option-selected-pop" alongside an option's "selected"
+   state class at the moment it becomes selected (remove on the next
+   render so it can replay). */
+.option-selected-pop {
+  animation: optionPop var(--dur-button) var(--ease-soft);
+}
+@keyframes optionPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Directional icon nudge (opt-in) ----------
+   Add to an inline <svg> (or its wrapping element) inside a button/link
+   that points forward/back, for a subtle nudge on hover/focus. */
+.icon-nudge-right {
+  transition: transform var(--dur-micro) var(--ease-standard);
+}
+button:hover .icon-nudge-right,
+a:hover .icon-nudge-right,
+button:focus-visible .icon-nudge-right,
+a:focus-visible .icon-nudge-right {
+  transform: translateX(3px);
+}
+.icon-nudge-left {
+  transition: transform var(--dur-micro) var(--ease-standard);
+}
+button:hover .icon-nudge-left,
+a:hover .icon-nudge-left,
+button:focus-visible .icon-nudge-left,
+a:focus-visible .icon-nudge-left {
+  transform: translateX(-3px);
+}
+
+/* ---------- Accordion (grid-rows technique) ----------
+   Wrap collapsible content in class="accordion-body", with a single
+   direct child holding the actual padding/text. Toggle "is-open" on the
+   accordion-body to smoothly expand/collapse height without measuring
+   scrollHeight in JS. Pair with class="accordion-chevron" on an
+   indicator icon, toggling "is-open" there too. */
+.accordion-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur-button) var(--ease-standard);
+}
+.accordion-body > * {
+  overflow: hidden;
+  min-height: 0;
+}
+.accordion-body.is-open {
+  grid-template-rows: 1fr;
+}
+.accordion-chevron {
+  transition: transform var(--dur-micro) var(--ease-standard);
+}
+.accordion-chevron.is-open {
+  transform: rotate(180deg);
+}
+
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   html {

@@ -45,7 +45,7 @@
   </div>
 
   <!-- Question Card -->
-  <div class="bg-white border border-black/[0.08] rounded-[20px] p-8 md:p-10 min-h-[440px] flex flex-col">
+  <div id="questionCard" class="content-swap bg-white border border-black/[0.08] rounded-[20px] p-8 md:p-10 min-h-[440px] flex flex-col">
     <p class="text-[#5c5a5a] text-sm md:text-base font-medium mb-3" id="questionMeta">Realistic - Question 1 out of 10</p>
     <h2 class="text-black text-lg md:text-xl font-medium mb-8" id="questionText">—</h2>
 
@@ -55,7 +55,7 @@
     <div class="flex justify-end pt-8">
       <button type="button" id="nextBtn" disabled class="flex items-center gap-2 rounded-[15px] px-7 py-2.5 text-base font-medium border border-black/[0.15] bg-white text-[#5c5a5a] cursor-not-allowed transition-colors">
         <span id="nextBtnLabel">Next</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 icon-nudge-right"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
       </button>
     </div>
   </div>
@@ -63,8 +63,8 @@
 </main>
 
 <!-- Exit confirmation modal -->
-<div id="exitModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+<div id="exitModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
     <h3 class="text-lg font-semibold text-black">Leave the assessment?</h3>
     <p class="text-sm text-[#5c5a5a]">Your progress is saved, so you can pick up right where you left off next time.</p>
     <div class="flex justify-end gap-2 pt-2">
@@ -145,7 +145,8 @@
         : 'bg-[#f1f4fc] border-black/[0.08] hover:border-black/[0.2]';
       const dotCls = isSelected ? 'border-[#0f2a6b]' : 'border-black/40';
       const dotInner = isSelected ? '<span class="w-2.5 h-2.5 rounded-full bg-[#0f2a6b]"></span>' : '';
-      return '<button type="button" data-value="' + value + '" class="option-row flex items-center gap-4 border rounded-[13px] h-14 px-5 text-left text-base text-black transition-colors ' + rowCls + '">' +
+      const popCls = isSelected ? ' option-selected-pop' : '';
+      return '<button type="button" data-value="' + value + '" class="option-row flex items-center gap-4 border rounded-[13px] h-14 px-5 text-left text-base text-black transition-colors ' + rowCls + popCls + '">' +
         '<span class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ' + dotCls + '">' + dotInner + '</span>' +
         label +
         '</button>';
@@ -211,24 +212,38 @@
       return;
     }
 
-    currentIndex++;
-    saveProgress(state);
-    renderQuestion();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const card = document.getElementById('questionCard');
+    card.classList.add('is-swapping');
+    setTimeout(function() {
+      currentIndex++;
+      saveProgress(state);
+      renderQuestion();
+      card.classList.remove('is-swapping');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 200);
   });
 
   const exitModal = document.getElementById('exitModal');
-  document.getElementById('backBtn').addEventListener('click', function() {
+  function openExitModal() {
     exitModal.classList.remove('hidden');
-  });
-  document.getElementById('exitCancel').addEventListener('click', function() {
-    exitModal.classList.add('hidden');
-  });
+    setTimeout(function() {
+      exitModal.classList.add('is-open');
+    }, 16);
+  }
+  function closeExitModal() {
+    exitModal.classList.remove('is-open');
+    setTimeout(function() { exitModal.classList.add('hidden'); }, 260);
+  }
+  document.getElementById('backBtn').addEventListener('click', openExitModal);
+  document.getElementById('exitCancel').addEventListener('click', closeExitModal);
   document.getElementById('exitConfirm').addEventListener('click', function() {
     window.location.href = 'assessment.html';
   });
   exitModal.addEventListener('click', function(e) {
-    if (e.target.id === 'exitModal') exitModal.classList.add('hidden');
+    if (e.target.id === 'exitModal') closeExitModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !exitModal.classList.contains('hidden')) closeExitModal();
   });
 
   renderQuestion();
