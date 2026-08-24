@@ -89,7 +89,7 @@
               required
               class="w-full pl-10 pr-10 py-3.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
             <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-4">
-              <img src="images/login/icon-eye.svg" alt="Toggle password visibility" class="w-full h-full">
+              <img id="togglePasswordIcon" src="images/login/icon-eye.svg" alt="Show password" class="w-full h-full">
             </button>
           </div>
 
@@ -123,7 +123,11 @@
 <script>
   document.getElementById('togglePassword').addEventListener('click', function () {
     const input = document.getElementById('password');
-    input.type = input.type === 'password' ? 'text' : 'password';
+    const icon = document.getElementById('togglePasswordIcon');
+    const willShow = input.type === 'password';
+    input.type = willShow ? 'text' : 'password';
+    icon.src = willShow ? 'images/login/icon-eye-open.svg' : 'images/login/icon-eye.svg';
+    icon.alt = willShow ? 'Hide password' : 'Show password';
   });
 
   (function() {

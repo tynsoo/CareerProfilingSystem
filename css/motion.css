@@ -104,6 +104,19 @@ button:disabled {
   transform: none;
 }
 
+/* Buttons positioned via a transform (e.g. absolute + -translate-y-1/2 to
+   center inside an input, like the password show/hide toggle) must not get
+   the hover/active lift above -- `transform` is a single CSS property, so
+   translateY(-1px) would replace the button's own centering transform
+   outright instead of adding to it, snapping it visibly out of alignment
+   on hover. Reassert the centering transform and skip the lift/press
+   effect entirely for these. */
+button[class*="-translate-y-1/2"]:hover,
+button[class*="-translate-y-1/2"]:active {
+  transform: translateY(-50%);
+  filter: none;
+}
+
 /* Arrow/chevron icons inside buttons or links nudge on hover */
 button img[src*="arrow"],
 button img[src*="chevron"],
