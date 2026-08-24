@@ -106,7 +106,7 @@ try {
 
 AuditLogger::log($userId, 'student', 'register', 'user', (string) $userId, "New student account: $schoolId");
 
-$verifyLink = rtrim((string) getenv('APP_URL'), '/') . '/api/verify-email.php?token=' . $rawToken;
+$verifyLink = rtrim((string) getenv('APP_URL'), '/') . '/verify-email.html?token=' . $rawToken;
 $safeFirstName = htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8');
 
 $bodyHtml = EmailTemplate::render(

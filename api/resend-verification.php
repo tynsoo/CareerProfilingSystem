@@ -43,7 +43,7 @@ $pdo->prepare(
     "INSERT INTO email_verification_tokens (user_id, token_hash, expires_at) VALUES (?, ?, NOW() + INTERVAL '48 hours')"
 )->execute([$user['id'], $tokenHash]);
 
-$verifyLink = rtrim((string) getenv('APP_URL'), '/') . '/api/verify-email.php?token=' . $rawToken;
+$verifyLink = rtrim((string) getenv('APP_URL'), '/') . '/verify-email.html?token=' . $rawToken;
 $safeFirstName = htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8');
 
 $bodyHtml = EmailTemplate::render(

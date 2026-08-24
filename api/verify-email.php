@@ -2,19 +2,22 @@
 
 require_once __DIR__ . '/_bootstrap.php';
 
-// Reached directly by clicking the link in the verification email — a plain
-// browser navigation, not a fetch() call — so this redirects to a page
-// rather than returning JSON.
-$token = (string) ($_GET['token'] ?? '');
-
-function redirectTo(string $status): never
-{
-    header('Location: login.html?verified=' . $status);
-    exit;
+// POST, driven by JS from verify-email.html — not a bare GET the emailed
+// link itself performs. Many email clients silently prefetch/scan links for
+// safety before the user ever clicks, and a plain HTTP GET would burn a
+// single-use token on that scan; those scanners don't execute page
+// JavaScript, so gating the actual verification behind a fetch() call (the
+// same pattern api/reset-password.php already uses from
+// forgot-password.html/activate-account.html) survives that prefetch.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
 }
 
+$body = readJsonBody();
+$token = (string) ($body['token'] ?? '');
+
 if ($token === '') {
-    redirectTo('0');
+    jsonResponse(['success' => false, 'error' => 'Missing verification token.'], 400);
 }
 
 $pdo = Database::get();
@@ -27,7 +30,7 @@ $stmt->execute([$tokenHash]);
 $row = $stmt->fetch();
 
 if (!$row) {
-    redirectTo('0');
+    jsonResponse(['success' => false, 'error' => 'This verification link is invalid or has expired. Request a new one from the login page.'], 400);
 }
 
 $pdo->beginTransaction();
@@ -38,9 +41,9 @@ try {
     $pdo->commit();
 } catch (Throwable $e) {
     $pdo->rollBack();
-    redirectTo('0');
+    jsonResponse(['success' => false, 'error' => 'Failed to verify your email. Please try again.'], 500);
 }
 
 AuditLogger::log((int) $row['user_id'], 'student', 'verify_email', 'user', (string) $row['user_id']);
 
-redirectTo('1');
+jsonResponse(['success' => true]);
