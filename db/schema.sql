@@ -11,12 +11,27 @@ CREATE TABLE users (
     username                VARCHAR(100) NOT NULL UNIQUE,
     password_hash           VARCHAR(255) NOT NULL,
     email                   VARCHAR(255),
+    email_verified_at       TIMESTAMPTZ,
     avatar_data_url         TEXT,
     is_active               BOOLEAN NOT NULL DEFAULT TRUE,
     failed_login_attempts   INT NOT NULL DEFAULT 0,
     locked_until            TIMESTAMPTZ,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Students self-register with a MMCL-issued email (see api/register.php's
+-- domain check) but that only proves the string LOOKS right — this proves
+-- they actually control the inbox before the account can log in. NULL =
+-- not verified yet. Only enforced for role='student'; admin/counselor
+-- accounts are staff-vetted through a different path (api/staff-accounts.php).
+CREATE TABLE email_verification_tokens (
+    id          SERIAL PRIMARY KEY,
+    user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  VARCHAR(255) NOT NULL,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    used_at     TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Backs lib/DbSessionHandler.php — PHP sessions stored here instead of local

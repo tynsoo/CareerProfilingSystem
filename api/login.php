@@ -57,6 +57,17 @@ if (!password_verify($password, $user['password_hash'])) {
     jsonResponse($genericError, 401);
 }
 
+// Only students self-register through the public page and need this check —
+// admin/counselor accounts are staff-vetted through a different path.
+if ($user['role'] === 'student' && $user['email_verified_at'] === null) {
+    AuditLogger::log((int) $user['id'], $user['role'], 'login_failed', 'user', $username, 'Email not verified');
+    jsonResponse([
+        'success' => false,
+        'error' => 'Please verify your email before signing in — check your inbox for the verification link.',
+        'needsVerification' => true,
+    ], 403);
+}
+
 // Success — reset lockout state.
 $reset = $pdo->prepare('UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE id = ?');
 $reset->execute([$user['id']]);

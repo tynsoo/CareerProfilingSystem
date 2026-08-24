@@ -57,7 +57,11 @@
         <!-- Form -->
         <form id="loginForm" class="flex flex-col gap-5">
 
-          <p id="loginError" class="hidden text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5"></p>
+          <p id="verifiedBanner" class="hidden text-sm text-green-700 bg-green-50 border border-green-100 rounded-md px-3.5 py-2.5"></p>
+          <p id="loginError" class="hidden text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5">
+            <span id="loginErrorText"></span>
+            <button type="button" id="resendVerificationBtn" class="hidden block mt-1.5 font-semibold underline">Resend verification email</button>
+          </p>
 
           <div class="relative">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-4">
@@ -123,9 +127,12 @@
   });
 
   (function() {
-    function showError(text) {
+    const resendBtn = document.getElementById('resendVerificationBtn');
+
+    function showError(text, showResend) {
       const el = document.getElementById('loginError');
-      el.textContent = text;
+      document.getElementById('loginErrorText').textContent = text;
+      resendBtn.classList.toggle('hidden', !showResend);
       el.classList.remove('hidden');
       el.classList.remove('alert-anim');
       void el.offsetWidth;
@@ -133,6 +140,16 @@
     }
     function hideError() {
       document.getElementById('loginError').classList.add('hidden');
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const verified = params.get('verified');
+    if (verified === '1') {
+      const banner = document.getElementById('verifiedBanner');
+      banner.textContent = 'Email verified! You can now sign in.';
+      banner.classList.remove('hidden');
+    } else if (verified === '0') {
+      showError('This verification link is invalid or has expired. Try signing in — you can resend a new link from here.', false);
     }
 
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -156,11 +173,29 @@
           window.location.href = data.redirect;
           return;
         }
-        showError(data.error || 'Invalid username or password.');
+        showError(data.error || 'Invalid username or password.', !!data.needsVerification);
       } catch (err) {
-        showError('Unable to reach the server. Please try again.');
+        showError('Unable to reach the server. Please try again.', false);
       } finally {
         submitBtn.disabled = false;
+      }
+    });
+
+    resendBtn.addEventListener('click', async function() {
+      const username = document.querySelector('input[name="username"]').value.trim();
+      if (!username) return;
+      resendBtn.disabled = true;
+      resendBtn.textContent = 'Sending…';
+      try {
+        await fetch('api/resend-verification.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        resendBtn.textContent = 'Sent — check your inbox';
+      } catch (err) {
+        resendBtn.textContent = 'Resend verification email';
+        resendBtn.disabled = false;
       }
     });
   })();

@@ -59,6 +59,9 @@
         <form id="registerForm" class="flex flex-col gap-5">
 
           <p id="formMessage" class="hidden text-sm rounded-md px-3.5 py-2.5"></p>
+          <div id="verifyLinkBanner" class="hidden bg-amber-50 border border-amber-100 rounded-md px-3.5 py-2.5 text-left break-all">
+            <p class="text-xs text-amber-800">The verification email couldn't be delivered. Use this link directly: <a id="verifyLinkAnchor" href="#" class="font-semibold underline"></a></p>
+          </div>
 
           <div class="grid grid-cols-2 gap-4">
             <input
@@ -235,10 +238,14 @@
           return;
         }
 
-        showMessage('Account created! Redirecting to login...', false);
-        setTimeout(function() {
-          window.location.href = 'login.html';
-        }, 900);
+        showMessage('Account created! Check ' + email + ' for a verification link — you\'ll need to click it before you can sign in.', false);
+        if (data.verifyLink) {
+          const anchor = document.getElementById('verifyLinkAnchor');
+          anchor.href = data.verifyLink;
+          anchor.textContent = data.verifyLink;
+          document.getElementById('verifyLinkBanner').classList.remove('hidden');
+        }
+        form.reset();
       } catch (err) {
         showMessage('Unable to reach the server. Please try again.', true);
       } finally {
