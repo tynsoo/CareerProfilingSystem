@@ -83,7 +83,7 @@
             <p class="text-[15px] font-semibold text-[#001a40]" id="headerName">Student</p>
             <p class="text-base text-slate-500" id="headerSub">—</p>
           </div>
-          <span class="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center">
+          <span id="headerAvatarWrap" class="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center overflow-hidden">
             <img src="images/student/icon-avatar.svg" alt="" class="w-[21.7px] h-[21.7px]">
           </span>
         </button>
@@ -92,7 +92,7 @@
             <p class="text-sm font-semibold text-gray-900" id="profilePanelName">Student</p>
             <p class="text-xs text-gray-500" id="profilePanelMeta">—</p>
           </div>
-          <a href="student-settings.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">Settings</a>
+          <a href="student-settings.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
           <a href="help-center.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Help Center</a>
           <a href="#" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
         </div>
@@ -238,6 +238,10 @@
     window.location.replace('login.html');
     return;
   }
+
+    if (currentUser.avatarUrl) {
+      document.getElementById('headerAvatarWrap').innerHTML = '<img src="' + currentUser.avatarUrl + '" alt="" class="w-full h-full object-cover">';
+    }
   document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
   document.getElementById('headerSub').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
   document.getElementById('profilePanelName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
