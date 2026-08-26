@@ -167,10 +167,10 @@
 
         <div class="bg-blue-50 border border-blue-100 rounded-lg p-5 mt-4 flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <p class="text-sm font-semibold text-blue-900">Ready for personalized career matches?</p>
-            <p class="text-xs text-blue-800 mt-0.5">Complete the Career Worksheet to unlock ranked career recommendations based on your profile.</p>
+            <p class="text-sm font-semibold text-blue-900" id="worksheetCtaTitle">Ready for personalized career matches?</p>
+            <p class="text-xs text-blue-800 mt-0.5" id="worksheetCtaBody">Complete the Career Worksheet to unlock ranked career recommendations based on your profile.</p>
           </div>
-          <a href="career-worksheet.html" class="shrink-0 bg-[#001c43] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Go to Career Worksheet</a>
+          <a href="career-worksheet.html" id="worksheetCtaBtn" class="shrink-0 bg-[#001c43] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Go to Career Worksheet</a>
         </div>
       </div>
 
@@ -376,14 +376,28 @@
     .map(function(name) { return { name: name, score: scores[name === 'Investigate' ? 'I' : name[0]] }; })
     .sort(function(a, b) { return b.score - a.score; });
 
+  // A student can land here either from the RIASEC assessment card (which
+  // should always show the RIASEC-only profile, never the worksheet-derived
+  // career matches) or from elsewhere (sidebar nav, worksheet results),
+  // where showing the fuller career-matches view once it exists is correct.
+  const forceRiasecView = new URLSearchParams(window.location.search).get('view') === 'riasec';
+
   const recommendation = await (await fetch('api/recommendations.php')).json();
-  if (recommendation.hasRecommendation) {
+  if (recommendation.hasRecommendation && !forceRiasecView) {
     revealPanel('careerResultsView');
     await renderCareerResults(recommendation);
     return;
   }
 
   revealPanel('resultsView');
+
+  if (recommendation.hasRecommendation) {
+    document.getElementById('worksheetCtaTitle').textContent = "You've already completed your Career Worksheet";
+    document.getElementById('worksheetCtaBody').textContent = 'View your full ranked career matches, based on this RIASEC profile and your stated program of interest.';
+    const ctaBtn = document.getElementById('worksheetCtaBtn');
+    ctaBtn.textContent = 'View Career Results';
+    ctaBtn.setAttribute('href', 'results.html');
+  }
 
   const primary = ranked[0];
   const info = TYPE_INFO[primary.name];
