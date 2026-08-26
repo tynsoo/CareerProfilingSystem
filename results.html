@@ -60,7 +60,7 @@
   <!-- Main Content -->
   <div class="flex-1 flex flex-col min-w-0">
 
-    <header class="h-16 shrink-0 flex items-center justify-between gap-6 px-6 bg-white/60 backdrop-blur-md sticky top-0">
+    <header class="h-16 shrink-0 flex items-center justify-between gap-6 px-6 bg-white sticky top-0 z-10">
       <button type="button" id="menuToggle" class="relative z-50 w-10 h-10 -m-2 flex items-center justify-center text-[#001a40] md:invisible">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
@@ -147,7 +147,9 @@
           <div class="bg-white border border-[#e0e3e5] rounded-lg p-6 flex flex-col">
             <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-4">RIASEC Profile Overview</p>
             <div class="flex-1 flex items-center justify-center py-4">
-              <canvas id="radarChart" class="w-full max-w-[280px]"></canvas>
+              <div class="relative w-full max-w-[280px] aspect-square">
+                <canvas id="radarChart"></canvas>
+              </div>
             </div>
             <div class="border-t border-[#e0e3e5] pt-4 flex items-center justify-between">
               <span class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c]">Holland Code:</span>
