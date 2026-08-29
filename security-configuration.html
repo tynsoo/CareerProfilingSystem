@@ -81,6 +81,11 @@
         Logout
       </a>
     </div>
+
+    <div class="border-t border-white/5 px-6 py-4 flex items-center justify-center gap-3">
+      <img src="images/MMCL-logo.webp" alt="Mapúa Malayan Colleges Laguna" class="h-7 w-auto opacity-80">
+      <img src="images/login/cgc-logo-title.png" alt="Center for Guidance and Counseling" class="h-6 w-auto opacity-80">
+    </div>
   </aside>
 
   <!-- Main Content -->
@@ -244,6 +249,28 @@
                 <p id="accessCodeStatus" class="hidden text-xs" aria-live="polite"></p>
               </div>
 
+            </div>
+          </div>
+
+          <!-- System Customization -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="border-b border-slate-200 flex items-center gap-3 px-5 py-5">
+              <img src="images/security/icon-info.svg" alt="" class="w-4 h-4">
+              <div>
+                <h2 class="text-base font-semibold text-slate-900">System Customization</h2>
+                <p class="text-xs text-slate-500">Content shown to students on the Help Center page.</p>
+              </div>
+            </div>
+            <div class="p-5 flex flex-col gap-6">
+              <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
+                <p class="text-sm font-semibold text-slate-800">Guidance Office Hours</p>
+                <p class="text-xs text-slate-500">Shown on the student Help Center page's "Contact the Guidance Office" card.</p>
+                <div class="flex items-center gap-2">
+                  <input type="text" id="officeHoursInput" maxlength="100" class="flex-1 border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24]" placeholder="e.g. Mon–Fri, 8:00 AM–5:00 PM">
+                  <button type="button" id="officeHoursSave" class="px-4 py-2 text-xs font-semibold text-white bg-[#0f2a6b] rounded-md hover:opacity-90 shrink-0">Save</button>
+                </div>
+                <p id="officeHoursStatus" class="hidden text-xs" aria-live="polite"></p>
+              </div>
             </div>
           </div>
         </div>
@@ -494,6 +521,7 @@
       renderPolicyList();
       renderSecuritySettings();
       renderAssessmentPeriod();
+      renderSystemCustomization();
       renderOverview();
       renderLastUpdated();
     }
@@ -503,6 +531,16 @@
       document.getElementById('accessCodeDisplay').textContent = state.assessment.accessCode || '—';
       if (!isAdmin) {
         [document.getElementById('academicYearInput'), document.getElementById('academicYearSave'), document.getElementById('accessCodeRegenerate')].forEach(el => {
+          el.disabled = true;
+          el.classList.add('opacity-60', 'cursor-not-allowed');
+        });
+      }
+    }
+
+    function renderSystemCustomization() {
+      document.getElementById('officeHoursInput').value = state.officeHours.text;
+      if (!isAdmin) {
+        [document.getElementById('officeHoursInput'), document.getElementById('officeHoursSave')].forEach(el => {
           el.disabled = true;
           el.classList.add('opacity-60', 'cursor-not-allowed');
         });
@@ -801,6 +839,25 @@
           await loadState();
         } else {
           statusEl.textContent = data.error || 'Failed to regenerate.';
+          statusEl.className = 'text-xs text-[#ed1c24]';
+        }
+      });
+
+      document.getElementById('officeHoursSave').addEventListener('click', async function() {
+        const statusEl = document.getElementById('officeHoursStatus');
+        const value = document.getElementById('officeHoursInput').value.trim();
+        const res = await fetch('api/security-config.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'officeHours', text: value })
+        });
+        const data = await res.json();
+        statusEl.classList.remove('hidden');
+        if (data.success) {
+          statusEl.textContent = 'Saved.';
+          statusEl.className = 'text-xs text-green-600';
+          await loadState();
+        } else {
+          statusEl.textContent = data.error || 'Failed to save.';
           statusEl.className = 'text-xs text-[#ed1c24]';
         }
       });

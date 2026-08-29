@@ -59,6 +59,9 @@ function loadPolicies(PDO $pdo): array
         'assessment' => [
             'accessCode' => $s('assessment.accessCode', ''),
         ],
+        'officeHours' => [
+            'text' => $s('officeHours.text', 'Mon–Fri, 8:00 AM–5:00 PM'),
+        ],
     ];
 }
 
@@ -177,6 +180,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute(['academicYear.current', $current, $user['id']]);
 
         AuditLogger::log($user['id'], $user['role'], 'update_academic_year', 'security_policies', 'academicYear.current', "Set to: $current");
+        jsonResponse(['success' => true] + loadPolicies($pdo));
+    }
+
+    if ($type === 'officeHours') {
+        $text = trim((string) ($body['text'] ?? ''));
+        if ($text === '' || mb_strlen($text) > 100) {
+            jsonResponse(['success' => false, 'error' => 'Office Hours must be 1-100 characters.'], 400);
+        }
+        $stmt = $pdo->prepare(
+            'INSERT INTO security_policies (key, value, updated_by) VALUES (?, ?, ?)
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW(), updated_by = EXCLUDED.updated_by'
+        );
+        $stmt->execute(['officeHours.text', $text, $user['id']]);
+
+        AuditLogger::log($user['id'], $user['role'], 'update_office_hours', 'security_policies', 'officeHours.text', "Set to: $text");
         jsonResponse(['success' => true] + loadPolicies($pdo));
     }
 

@@ -127,7 +127,7 @@
           </div>
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Office Hours</p>
-            <p class="text-sm text-gray-800">Mon–Fri, 8:00 AM–5:00 PM</p>
+            <p class="text-sm text-gray-800" id="officeHoursText">Mon–Fri, 8:00 AM–5:00 PM</p>
           </div>
           <div>
             <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Location</p>
@@ -152,6 +152,9 @@
               <label class="block text-xs font-medium text-gray-600 mb-1">Message</label>
               <textarea id="helpMessage" required rows="4" class="w-full border border-gray-300 rounded-md px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
             </div>
+            <p class="text-xs text-gray-500 leading-relaxed">
+              Your message is encrypted and shared only with the Guidance Office, consistent with the Data Privacy Act of 2012.
+            </p>
             <div>
               <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Send Message</button>
             </div>
@@ -236,6 +239,12 @@
       document.getElementById('helpSubject').value = prefillSubject;
       document.getElementById('helpMessage').focus();
     }
+
+    fetch('api/public-settings.php').then(function(r) { return r.json(); }).then(function(data) {
+      if (data && data.officeHours && data.officeHours.text) {
+        document.getElementById('officeHoursText').textContent = data.officeHours.text;
+      }
+    }).catch(function() {});
 
     (async function renderNotifications() {
       const statusNow = await (await fetch('api/assessment-status.php')).json();
