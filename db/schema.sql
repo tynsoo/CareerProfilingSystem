@@ -179,6 +179,23 @@ CREATE TABLE password_reset_tokens (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- The *expected* list of students for an assessment period, uploaded by an
+-- admin (CSV) ahead of time. Intentionally decoupled from users/students —
+-- a roster entry may name a student who hasn't registered an account yet.
+-- Assessment Statistics joins it against real `assessments` rows by
+-- school_id to show expected-vs-completed counts.
+CREATE TABLE assessment_roster (
+    id              SERIAL PRIMARY KEY,
+    academic_year   VARCHAR(20) NOT NULL,
+    school_id       VARCHAR(50) NOT NULL,
+    name_enc        TEXT NOT NULL,
+    strand          VARCHAR(10) NOT NULL CHECK (strand IN ('STEM', 'ABM', 'HUMSS', 'GAS', 'TVL')),
+    section         VARCHAR(20) NOT NULL,
+    uploaded_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    uploaded_by     INT REFERENCES users(id),
+    UNIQUE (academic_year, school_id)
+);
+
 CREATE TABLE help_requests (
     id                  SERIAL PRIMARY KEY,
     student_id          INT REFERENCES students(user_id) ON DELETE SET NULL,

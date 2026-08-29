@@ -164,12 +164,21 @@
                 <option value="GAS">GAS</option>
                 <option value="TVL">TVL</option>
               </select>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Section</label>
+              <input type="text" id="sectionFilter" placeholder="e.g. STEM-11A" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm mb-3">
               <div class="flex items-center gap-2">
                 <button type="button" id="applyStrandFilter" class="flex-1 bg-[#ed1c24] text-white text-sm font-medium rounded-md py-2 hover:opacity-90">Apply</button>
                 <button type="button" id="clearStrandFilter" class="flex-1 border border-slate-300 text-slate-700 text-sm font-medium rounded-md py-2 hover:bg-slate-50">Clear</button>
               </div>
             </div>
           </div>
+          <a id="exportCsvBtn" href="#" class="flex items-center gap-2 bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            Export CSV
+          </a>
+          <button type="button" id="uploadRosterBtn" class="flex items-center gap-2 bg-[#001c43] text-white rounded-md px-4 py-2.5 text-sm font-medium shadow-sm hover:opacity-90">
+            Upload Roster (CSV)
+          </button>
+          <input type="file" id="rosterFileInput" accept=".csv" class="hidden">
         </div>
       </div>
 
@@ -264,6 +273,33 @@
           <div class="border-t border-slate-100 pt-4 mt-4 text-center">
             <p class="text-sm text-slate-500">Scores range from 0 to 50</p>
           </div>
+        </div>
+      </div>
+
+      <!-- Section breakdown + Assessment Statistics -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Students by Section</p>
+          <canvas id="sectionChart" height="220"></canvas>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-1">Assessment Statistics</p>
+          <p class="text-xs text-slate-500 mb-4">Expected vs. completed, from the uploaded roster for Academic Year <span id="statsAy">—</span>.</p>
+          <div class="flex items-end gap-6 mb-4">
+            <div>
+              <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Expected</p>
+              <p id="statsExpected" class="text-3xl font-bold text-slate-800">—</p>
+            </div>
+            <div>
+              <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Completed</p>
+              <p id="statsCompleted" class="text-3xl font-bold text-[#1b8a47]">—</p>
+            </div>
+          </div>
+          <div class="w-full h-1.5 rounded-full bg-slate-100 mb-3">
+            <div id="statsBar" class="h-1.5 rounded-full bg-[#1b8a47]" style="width:0%"></div>
+          </div>
+          <p class="text-xs text-slate-500">Sections in roster: <span id="statsSections">—</span></p>
+          <p id="statsNoRoster" class="hidden text-xs text-amber-600 mt-2">No roster uploaded yet for this Academic Year — upload one above to see expected counts.</p>
         </div>
       </div>
 
@@ -368,6 +404,7 @@
   const filtersPanel = document.getElementById('filtersPanel');
   const filtersBtnLabel = document.getElementById('filtersBtnLabel');
   const strandFilter = document.getElementById('strandFilter');
+  const sectionFilter = document.getElementById('sectionFilter');
 
   filtersBtn.addEventListener('click', (e) => { e.stopPropagation(); filtersPanel.classList.toggle('hidden'); });
   filtersPanel.addEventListener('click', (e) => e.stopPropagation());
@@ -375,12 +412,13 @@
 
   document.getElementById('applyStrandFilter').addEventListener('click', () => {
     filtersPanel.classList.add('hidden');
-    load(strandFilter.value);
+    load(strandFilter.value, sectionFilter.value.trim());
   });
   document.getElementById('clearStrandFilter').addEventListener('click', () => {
     strandFilter.value = '';
+    sectionFilter.value = '';
     filtersPanel.classList.add('hidden');
-    load('');
+    load('', '');
   });
 
   function escapeHtml(str) {
@@ -389,10 +427,17 @@
 
   let strandChartInstance = null;
   let riasecChartInstance = null;
+  let sectionChartInstance = null;
 
-  async function load(strand) {
-    filtersBtnLabel.textContent = strand ? 'Filters: ' + strand : 'Filters';
-    const data = await (await fetch('api/analytics.php?strand=' + encodeURIComponent(strand || ''))).json();
+  async function load(strand, section) {
+    section = section || '';
+    const labelParts = [];
+    if (strand) labelParts.push(strand);
+    if (section) labelParts.push(section);
+    filtersBtnLabel.textContent = labelParts.length ? 'Filters: ' + labelParts.join(', ') : 'Filters';
+    const params = new URLSearchParams({ strand: strand || '', section: section });
+    const data = await (await fetch('api/analytics.php?' + params.toString())).json();
+    updateExportLink(data);
 
     document.getElementById('metricCompletionRate').textContent = data.completion.rate + '%';
     document.getElementById('metricCompletionCount').textContent = data.completion.count;
@@ -459,9 +504,66 @@
       : '<tr><td colspan="4" class="px-5 py-8 text-center text-sm text-slate-500">No recommendations computed yet.</td></tr>';
     document.getElementById('topCareersSummary').textContent =
       'Showing top ' + data.topCareers.length + ' of ' + data.confidence.total + ' students with a computed recommendation';
+
+    if (sectionChartInstance) sectionChartInstance.destroy();
+    sectionChartInstance = new Chart(document.getElementById('sectionChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: data.sectionDistribution.map(s => s.section),
+        datasets: [{ data: data.sectionDistribution.map(s => s.count), backgroundColor: '#673ab7', borderRadius: 4 }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+
+    const stats = data.assessmentStats;
+    document.getElementById('statsAy').textContent = stats.academicYear || '—';
+    document.getElementById('statsExpected').textContent = stats.expectedCount.toLocaleString();
+    document.getElementById('statsCompleted').textContent = stats.completedCount.toLocaleString();
+    document.getElementById('statsBar').style.width = (stats.expectedCount > 0 ? Math.min(100, Math.round(stats.completedCount / stats.expectedCount * 100)) : 0) + '%';
+    document.getElementById('statsSections').textContent = stats.expectedSections.length ? stats.expectedSections.join(', ') : '—';
+    document.getElementById('statsNoRoster').classList.toggle('hidden', stats.expectedCount > 0);
   }
 
-  await load('');
+  function updateExportLink(data) {
+    const ay = data.assessmentStats && data.assessmentStats.academicYear ? data.assessmentStats.academicYear : '';
+    const params = new URLSearchParams({ academicYear: ay, strand: data.strand || '', section: data.section || '' });
+    document.getElementById('exportCsvBtn').href = 'api/analytics-export.php?' + params.toString();
+  }
+
+  document.getElementById('uploadRosterBtn').addEventListener('click', () => {
+    document.getElementById('rosterFileInput').click();
+  });
+  document.getElementById('rosterFileInput').addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+    const btn = document.getElementById('uploadRosterBtn');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Uploading…';
+    try {
+      const formData = new FormData();
+      formData.append('roster', file);
+      const res = await fetch('api/roster-upload.php', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.error + (data.details ? '\n\n' + data.details.join('\n') : ''));
+      } else {
+        alert('Roster uploaded: ' + data.count + ' student(s) for AY ' + data.academicYear + '.');
+        await load(strandFilter.value, sectionFilter.value.trim());
+      }
+    } catch (err) {
+      alert('Unable to reach the server. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+      this.value = '';
+    }
+  });
+
+  await load('', '');
 })();
 </script>
 
