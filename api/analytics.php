@@ -162,9 +162,13 @@ jsonResponse([
     'strand' => $strand,
     'section' => $section,
     'totalStudents' => $totalStudents,
+    // All three rates below are expressed against the same denominator —
+    // every registered student — rather than each other's narrower
+    // subpopulation (e.g. worksheet completion against only assessed
+    // students), so the cards read consistently at a glance.
     'completion' => ['rate' => pct($assessedCount, $totalStudents), 'count' => $assessedCount, 'total' => $totalStudents],
-    'worksheet' => ['rate' => pct($worksheetCount, $assessedCount), 'count' => $worksheetCount, 'total' => $assessedCount],
-    'confidence' => ['rate' => pct($confidentCount, $recCount), 'count' => $confidentCount, 'total' => $recCount],
+    'worksheet' => ['rate' => pct($worksheetCount, $totalStudents), 'count' => $worksheetCount, 'total' => $totalStudents],
+    'confidence' => ['rate' => pct($confidentCount, $totalStudents), 'count' => $confidentCount, 'total' => $totalStudents],
     'topStrand' => $topStrand ? [
         'strand' => $topStrand['strand'],
         'count' => (int) $topStrand['cnt'],

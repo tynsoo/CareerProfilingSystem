@@ -83,9 +83,9 @@
       </a>
     </div>
 
-    <div class="border-t border-white/5 px-6 py-4 flex items-center justify-center gap-3">
-      <img src="images/MMCL-logo.webp" alt="Mapúa Malayan Colleges Laguna" class="h-7 w-auto opacity-80">
-      <img src="images/login/cgc-logo-title.png" alt="Center for Guidance and Counseling" class="h-6 w-auto opacity-80">
+    <div class="bg-white px-6 py-3 flex items-center justify-center gap-3">
+      <img src="images/MMCL-logo.webp" alt="Mapúa Malayan Colleges Laguna" class="h-8 w-auto">
+      <img src="images/login/cgc-logo-title.png" alt="Center for Guidance and Counseling" class="h-7 w-auto">
     </div>
   </aside>
 
@@ -154,10 +154,6 @@
           <p class="text-sm text-slate-500 mt-1">Insights and trends based on student assessments and career profiling data.</p>
         </div>
         <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-md pl-4 pr-4 py-2.5 text-sm font-medium text-slate-700">
-            <img src="images/analytics/icon-calendar.svg" alt="" class="w-[18px] h-[18px]">
-            Live data
-          </div>
           <div class="relative">
             <button type="button" id="filtersBtn" class="flex items-center gap-2 bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
               <img src="images/analytics/icon-filter.svg" alt="" class="w-3.5 h-3">
@@ -195,7 +191,12 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
 
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative flex flex-col justify-between">
-          <img src="images/analytics/icon-info.svg" alt="" class="absolute top-4 right-4 w-4 h-4">
+          <div class="absolute top-4 right-4 group">
+            <img src="images/analytics/icon-info.svg" alt="What is Assessment Completion Rate?" class="w-4 h-4 cursor-help">
+            <div class="pointer-events-none absolute right-0 top-6 z-20 w-56 rounded-lg bg-[#001c43] text-white text-xs leading-relaxed p-3 shadow-lg opacity-0 invisible scale-95 origin-top-right transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:scale-100">
+              Share of all registered students who have completed the RIASEC career assessment at least once.
+            </div>
+          </div>
           <div>
             <div class="flex gap-4 items-start mb-4">
               <span class="w-12 h-12 rounded-lg bg-[#eef3fc] flex items-center justify-center shrink-0">
@@ -206,7 +207,7 @@
                 <p id="metricCompletionRate" class="text-[30px] font-bold text-[#19427b] leading-tight mt-1">—</p>
               </div>
             </div>
-            <p class="text-sm mb-4"><span id="metricCompletionCount" class="font-semibold text-[#19427b]">—</span> <span class="text-slate-500" id="metricCompletionOf">of students</span></p>
+            <p class="text-sm mb-4"><span id="metricCompletionCount" class="font-semibold text-[#19427b]">—</span> <span class="text-slate-500" id="metricCompletionOf">of total students</span></p>
             <div class="w-full h-1.5 rounded-full bg-slate-100">
               <div id="metricCompletionBar" class="h-1.5 rounded-full bg-[#19427b]" style="width:0%"></div>
             </div>
@@ -214,7 +215,12 @@
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative flex flex-col justify-between">
-          <img src="images/analytics/icon-info.svg" alt="" class="absolute top-4 right-4 w-4 h-4">
+          <div class="absolute top-4 right-4 group">
+            <img src="images/analytics/icon-info.svg" alt="What is Career Worksheet Completion Rate?" class="w-4 h-4 cursor-help">
+            <div class="pointer-events-none absolute right-0 top-6 z-20 w-56 rounded-lg bg-[#001c43] text-white text-xs leading-relaxed p-3 shadow-lg opacity-0 invisible scale-95 origin-top-right transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:scale-100">
+              Share of all registered students who have filled out their Career Worksheet (their chosen program and electives).
+            </div>
+          </div>
           <div>
             <div class="flex gap-4 items-start mb-4">
               <span class="w-12 h-12 rounded-lg bg-[#e6f3eb] flex items-center justify-center shrink-0">
@@ -225,7 +231,7 @@
                 <p id="metricCounselingRate" class="text-[30px] font-bold text-[#1b8a47] leading-tight mt-1">—</p>
               </div>
             </div>
-            <p class="text-sm mb-4"><span id="metricCounselingCount" class="font-semibold text-[#1b8a47]">—</span> <span class="text-slate-500" id="metricCounselingOf">of assessed students</span></p>
+            <p class="text-sm mb-4"><span id="metricCounselingCount" class="font-semibold text-[#1b8a47]">—</span> <span class="text-slate-500" id="metricCounselingOf">of total students</span></p>
             <div class="w-full h-1.5 rounded-full bg-slate-100">
               <div id="metricCounselingBar" class="h-1.5 rounded-full bg-[#1b8a47]" style="width:0%"></div>
             </div>
@@ -233,7 +239,12 @@
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative flex flex-col justify-between">
-          <img src="images/analytics/icon-info.svg" alt="" class="absolute top-4 right-4 w-4 h-4">
+          <div class="absolute top-4 right-4 group">
+            <img src="images/analytics/icon-info.svg" alt="What is Recommendation Confidence Rate?" class="w-4 h-4 cursor-help">
+            <div class="pointer-events-none absolute right-0 top-6 z-20 w-56 rounded-lg bg-[#001c43] text-white text-xs leading-relaxed p-3 shadow-lg opacity-0 invisible scale-95 origin-top-right transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:scale-100">
+              Share of all registered students whose top career recommendation score meets the confidence threshold set in Security Configuration.
+            </div>
+          </div>
           <div>
             <div class="flex gap-4 items-start mb-4">
               <span class="w-12 h-12 rounded-lg bg-[#fbece1] flex items-center justify-center shrink-0">
@@ -244,7 +255,7 @@
                 <p id="metricMmclRate" class="text-[30px] font-bold text-[#db7020] leading-tight mt-1">—</p>
               </div>
             </div>
-            <p class="text-sm mb-4"><span id="metricMmclCount" class="font-semibold text-[#db7020]">—</span> <span class="text-slate-500" id="metricMmclOf">of computed recommendations</span></p>
+            <p class="text-sm mb-4"><span id="metricMmclCount" class="font-semibold text-[#db7020]">—</span> <span class="text-slate-500" id="metricMmclOf">of total students</span></p>
             <div class="w-full h-1.5 rounded-full bg-slate-100">
               <div id="metricMmclBar" class="h-1.5 rounded-full bg-[#db7020]" style="width:0%"></div>
             </div>
@@ -252,7 +263,12 @@
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative">
-          <img src="images/analytics/icon-info.svg" alt="" class="absolute top-4 right-4 w-4 h-4">
+          <div class="absolute top-4 right-4 group">
+            <img src="images/analytics/icon-info.svg" alt="What is Top Strand?" class="w-4 h-4 cursor-help">
+            <div class="pointer-events-none absolute right-0 top-6 z-20 w-56 rounded-lg bg-[#001c43] text-white text-xs leading-relaxed p-3 shadow-lg opacity-0 invisible scale-95 origin-top-right transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:scale-100">
+              The academic strand with the highest number of registered students, out of all students in the system.
+            </div>
+          </div>
           <div class="flex gap-4 items-start mb-2">
             <span class="w-12 h-12 rounded-lg bg-[#eee8f7] flex items-center justify-center shrink-0">
               <img src="images/analytics/card-icon-strand.svg" alt="" class="w-6 h-4">
@@ -450,17 +466,17 @@
 
     document.getElementById('metricCompletionRate').textContent = data.completion.rate + '%';
     document.getElementById('metricCompletionCount').textContent = data.completion.count;
-    document.getElementById('metricCompletionOf').textContent = 'of ' + data.completion.total + ' students';
+    document.getElementById('metricCompletionOf').textContent = 'of ' + data.completion.total + ' total students';
     document.getElementById('metricCompletionBar').style.width = data.completion.rate + '%';
 
     document.getElementById('metricCounselingRate').textContent = data.worksheet.rate + '%';
     document.getElementById('metricCounselingCount').textContent = data.worksheet.count;
-    document.getElementById('metricCounselingOf').textContent = 'of ' + data.worksheet.total + ' assessed students';
+    document.getElementById('metricCounselingOf').textContent = 'of ' + data.worksheet.total + ' total students';
     document.getElementById('metricCounselingBar').style.width = data.worksheet.rate + '%';
 
     document.getElementById('metricMmclRate').textContent = data.confidence.rate + '%';
     document.getElementById('metricMmclCount').textContent = data.confidence.count;
-    document.getElementById('metricMmclOf').textContent = 'of ' + data.confidence.total + ' computed recommendations';
+    document.getElementById('metricMmclOf').textContent = 'of ' + data.confidence.total + ' total students';
     document.getElementById('metricMmclBar').style.width = data.confidence.rate + '%';
 
     if (data.topStrand) {
