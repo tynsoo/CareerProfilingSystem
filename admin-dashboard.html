@@ -232,6 +232,10 @@
                     </select>
                   </div>
                   <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Section</label>
+                    <input type="text" id="filterSection" placeholder="e.g. STEM-11A" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                  </div>
+                  <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Assessment Status</label>
                     <select id="filterStatus" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
                       <option value="">All Status</option>
@@ -265,6 +269,7 @@
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">#</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Student Name</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Strand</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Section</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Status</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Top 3 RIASEC</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase text-center">Counseling Status</th>
@@ -272,7 +277,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100" id="studentTbody">
-              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>
+              <tr><td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -372,7 +377,7 @@
   const searchInput = document.getElementById('studentSearch');
   const noResults = document.getElementById('noResults');
   const tbody = document.getElementById('studentTbody');
-  const state = { page: 1, search: '', strand: '', status: '', counseling: '' };
+  const state = { page: 1, search: '', strand: '', section: '', status: '', counseling: '' };
   let debounceHandle = null;
 
   const STATUS_STYLE = {
@@ -394,13 +399,12 @@
     const counselingCell = s.counseling
       ? badge(s.counseling, COUNSELING_STYLE[s.counseling])
       : '<span class="text-gray-500">—</span>';
-    const params = new URLSearchParams({
-      name: s.name, strand: s.strand, status: s.status, riasec: s.riasec, counseling: s.counseling,
-    });
+    const params = new URLSearchParams({ schoolId: s.schoolId });
     return '<tr>' +
       '<td class="px-6 py-4 text-sm text-gray-500">' + index + '</td>' +
       '<td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + escapeHtml(s.name) + '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-500">' + escapeHtml(s.strand) + '</td>' +
+      '<td class="px-6 py-4 text-sm text-gray-500">' + escapeHtml(s.section) + '</td>' +
       '<td class="px-6 py-4">' + statusCell + '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">' + (s.riasec ? escapeHtml(s.riasec) : '<span class="text-gray-500">—</span>') + '</td>' +
       '<td class="px-6 py-4 text-center">' + counselingCell + '</td>' +
@@ -450,9 +454,9 @@
   }
 
   async function load() {
-    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>';
     const params = new URLSearchParams({
-      page: state.page, search: state.search, strand: state.strand, status: state.status, counseling: state.counseling,
+      page: state.page, search: state.search, strand: state.strand, section: state.section, status: state.status, counseling: state.counseling,
     });
     const data = await (await fetch('api/students.php?' + params.toString())).json();
     state.page = data.page;
@@ -490,6 +494,7 @@
   });
   document.getElementById('applyFilters').addEventListener('click', () => {
     state.strand = document.getElementById('filterStrand').value;
+    state.section = document.getElementById('filterSection').value.trim();
     state.status = document.getElementById('filterStatus').value;
     state.counseling = document.getElementById('filterCounseling').value;
     state.page = 1;
@@ -498,11 +503,13 @@
   });
   document.getElementById('clearFilters').addEventListener('click', () => {
     document.getElementById('filterStrand').value = '';
+    document.getElementById('filterSection').value = '';
     document.getElementById('filterStatus').value = '';
     document.getElementById('filterCounseling').value = '';
     searchInput.value = '';
     state.search = '';
     state.strand = '';
+    state.section = '';
     state.status = '';
     state.counseling = '';
     state.page = 1;

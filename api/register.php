@@ -21,10 +21,14 @@ $lastName = trim((string) ($body['lastName'] ?? ''));
 $email = trim((string) ($body['email'] ?? ''));
 $strand = (string) ($body['strand'] ?? '');
 $gradeLevel = (string) ($body['gradeLevel'] ?? '');
+$section = trim((string) ($body['section'] ?? ''));
 $password = (string) ($body['password'] ?? '');
 
-if ($schoolId === '' || $firstName === '' || $lastName === '' || $email === '' || $password === '') {
+if ($schoolId === '' || $firstName === '' || $lastName === '' || $email === '' || $section === '' || $password === '') {
     jsonResponse(['success' => false, 'error' => 'All fields are required.'], 400);
+}
+if (mb_strlen($section) > 20) {
+    jsonResponse(['success' => false, 'error' => 'Section must be 20 characters or fewer.'], 400);
 }
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     jsonResponse(['success' => false, 'error' => 'Enter a valid email address.'], 400);
@@ -89,9 +93,9 @@ try {
 
     $currentAy = $pdo->query("SELECT value FROM security_policies WHERE key = 'academicYear.current'")->fetchColumn();
     $studentStmt = $pdo->prepare(
-        'INSERT INTO students (user_id, school_id, first_name_enc, last_name_enc, strand, grade_level, academic_year) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO students (user_id, school_id, first_name_enc, last_name_enc, strand, grade_level, section, academic_year) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     );
-    $studentStmt->execute([$userId, $schoolId, Crypto::enc($firstName), Crypto::enc($lastName), $strand, $gradeLevel, $currentAy ?: null]);
+    $studentStmt->execute([$userId, $schoolId, Crypto::enc($firstName), Crypto::enc($lastName), $strand, $gradeLevel, $section, $currentAy ?: null]);
 
     $rawToken = bin2hex(random_bytes(32));
     $tokenHash = hash('sha256', $rawToken);

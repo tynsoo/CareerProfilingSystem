@@ -56,6 +56,7 @@ CREATE TABLE students (
     last_name_enc   TEXT NOT NULL,
     strand          VARCHAR(10) NOT NULL CHECK (strand IN ('STEM', 'ABM', 'HUMSS', 'GAS', 'TVL')),
     grade_level     VARCHAR(2) NOT NULL CHECK (grade_level IN ('11', '12')),
+    section         VARCHAR(20) NOT NULL DEFAULT 'N/A',
     academic_year   VARCHAR(20),
     registered_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

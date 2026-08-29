@@ -134,6 +134,18 @@
           </div>
 
           <div class="relative">
+            <input
+              id="sectionInput"
+              type="text"
+              name="section"
+              maxlength="20"
+              placeholder="Section (e.g. STEM-11A)"
+              aria-label="Section"
+              required
+              class="w-full px-3.5 py-3.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+          </div>
+
+          <div class="relative">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-4">
               <img src="images/login/icon-lock.svg" alt="" class="w-full h-full">
             </span>
@@ -215,9 +227,10 @@
       const email = form.email.value.trim();
       const strand = form.strand.value;
       const gradeLevel = form.querySelector('input[name="grade_level"]:checked');
+      const section = form.section.value.trim();
       const password = form.password.value;
 
-      if (!firstName || !lastName || !schoolId || !email || !strand || !gradeLevel || !password) {
+      if (!firstName || !lastName || !schoolId || !email || !strand || !gradeLevel || !section || !password) {
         showMessage('Please fill out all fields.', true);
         return;
       }
@@ -232,6 +245,7 @@
           body: JSON.stringify({
             firstName, lastName, schoolId, email, strand,
             gradeLevel: gradeLevel.value,
+            section,
             password
           })
         });

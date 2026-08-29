@@ -137,7 +137,7 @@
         <p class="text-sm text-gray-500 mt-1" id="studentId">Student ID: —</p>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start max-w-4xl">
+      <div id="detailsGrid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start max-w-4xl">
 
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col items-center text-center">
           <span class="w-24 h-24 rounded-full bg-[#001c43] flex items-center justify-center mb-4">
@@ -152,8 +152,24 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Student Number</label>
+              <input type="text" id="schoolIdField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Grade Level</label>
+              <input type="text" id="gradeLevelField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
+            </div>
+            <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Strand</label>
               <input type="text" id="strandField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Section</label>
+              <input type="text" id="sectionField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Academic Year</label>
+              <input type="text" id="academicYearField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Assessment Status</label>
@@ -163,10 +179,18 @@
               <label class="block text-xs font-medium text-gray-600 mb-1">Top 3 RIASEC</label>
               <input type="text" id="riasecField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
             </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-gray-600 mb-1">RIASEC Dimension Scores</label>
+              <div id="scoresGrid" class="grid grid-cols-3 sm:grid-cols-6 gap-2"></div>
+            </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Counseling Status</label>
               <input type="text" id="counselingField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
               <p class="text-xs text-gray-500 mt-1">Reflects whether this student has submitted a Schedule Advising request. Use Monitoring to take a counselor action on a flagged student.</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Registered</label>
+              <input type="text" id="registeredField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
             </div>
           </div>
 
@@ -175,6 +199,8 @@
           </div>
         </div>
       </div>
+
+      <p id="notFoundState" class="hidden text-sm text-gray-500 max-w-4xl bg-white border border-gray-200 rounded-xl shadow-sm p-8 text-center">Student not found.</p>
 
     </main>
   </div>
@@ -220,20 +246,49 @@
   })();
 
   const params = new URLSearchParams(window.location.search);
-  const name = params.get('name') || 'Unknown Student';
-  const strand = params.get('strand') || '—';
-  const riasec = params.get('riasec') || '—';
-  const status = params.get('status') || 'Pending';
-  const counseling = params.get('counseling') || 'Not applicable';
+  const schoolId = params.get('schoolId') || '';
 
-  document.getElementById('studentName').textContent = name;
-  document.getElementById('avatarName').textContent = name;
-  document.getElementById('avatarStrand').textContent = strand;
-  document.getElementById('strandField').value = strand;
-  document.getElementById('riasecField').value = riasec;
-  document.getElementById('studentId').textContent = 'Strand: ' + strand;
-  document.getElementById('statusField').value = status;
-  document.getElementById('counselingField').value = counseling;
+  if (!schoolId) {
+    document.getElementById('detailsGrid').classList.add('hidden');
+    document.getElementById('notFoundState').classList.remove('hidden');
+  } else {
+    const res = await fetch('api/students.php?schoolId=' + encodeURIComponent(schoolId));
+    const data = await res.json();
+    if (!res.ok || !data.student) {
+      document.getElementById('detailsGrid').classList.add('hidden');
+      document.getElementById('notFoundState').classList.remove('hidden');
+    } else {
+      const s = data.student;
+      document.getElementById('studentName').textContent = s.name;
+      document.getElementById('avatarName').textContent = s.name;
+      document.getElementById('avatarStrand').textContent = s.strand;
+      document.getElementById('studentId').textContent = 'Student Number: ' + s.schoolId;
+      document.getElementById('schoolIdField').value = s.schoolId;
+      document.getElementById('gradeLevelField').value = 'Grade ' + s.gradeLevel;
+      document.getElementById('strandField').value = s.strand;
+      document.getElementById('sectionField').value = s.section;
+      document.getElementById('academicYearField').value = s.academicYear || '—';
+      document.getElementById('riasecField').value = s.riasec || '—';
+      document.getElementById('statusField').value = s.status;
+      document.getElementById('counselingField').value = s.counseling || 'Not applicable';
+      document.getElementById('registeredField').value = s.registeredAt
+        ? new Date(s.registeredAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : '—';
+
+      const scoresGrid = document.getElementById('scoresGrid');
+      if (s.scores) {
+        const dimLabels = { R: 'Realistic', I: 'Investigative', A: 'Artistic', S: 'Social', E: 'Enterprising', C: 'Conventional' };
+        scoresGrid.innerHTML = Object.keys(dimLabels).map(function(code) {
+          return '<div class="border border-gray-200 rounded-md px-2 py-2 text-center">' +
+            '<p class="text-[10px] font-semibold tracking-wide text-gray-500 uppercase">' + code + '</p>' +
+            '<p class="text-sm font-semibold text-gray-900">' + s.scores[code] + '</p>' +
+          '</div>';
+        }).join('');
+      } else {
+        scoresGrid.innerHTML = '<p class="col-span-6 text-sm text-gray-500">Not available — assessment not yet completed.</p>';
+      }
+    }
+  }
 
   const notifBtn = document.getElementById('notifBtn');
   const notifPanel = document.getElementById('notifPanel');
