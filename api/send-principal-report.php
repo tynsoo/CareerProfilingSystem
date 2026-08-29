@@ -5,17 +5,21 @@ require_once __DIR__ . '/../lib/AnalyticsReport.php';
 require_once __DIR__ . '/../lib/Mailer.php';
 require_once __DIR__ . '/../lib/EmailTemplate.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+// GET builds and returns the same fixed sections the report will contain,
+// for an admin to preview before sending — it never touches Mailer.
+// POST builds the identical sections and actually emails them. Both
+// branches share buildSections() below so the preview can never drift
+// from what actually gets sent.
+if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
 }
 
-// Sending an email to an outside recipient (the Principal) is a one-way,
-// outward-facing action — restricted to admins only, the same bar as
-// every other Security Configuration write, rather than tied to the
-// 'monitoring' RBAC module (which counselors also hold 'full' on).
+// Viewing or sending the Principal report is restricted to admins only —
+// the same bar as every other Security Configuration write, rather than
+// tied to the 'monitoring' RBAC module (which counselors also hold 'full' on).
 $user = Auth::requireLogin();
 if ($user['role'] !== 'admin') {
-    jsonResponse(['success' => false, 'error' => 'Only administrators can send the Principal report.'], 403);
+    jsonResponse(['success' => false, 'error' => 'Only administrators can view or send the Principal report.'], 403);
 }
 $pdo = Database::get();
 
@@ -31,66 +35,85 @@ if ($currentAy === '') {
     jsonResponse(['success' => false, 'error' => 'Set the current Academic Year in Security Configuration first.'], 400);
 }
 
+/** @return array<int,array{title:string,rows:array<int,array{0:string,1:string}>}> */
+function buildReportSections(array $data, string $currentAy): array
+{
+    $enrollmentRows = [
+        ['Total Registered Students', (string) $data['totalStudents']],
+        ['RIASEC Assessment Completion', $data['completion']['rate'] . '% (' . $data['completion']['count'] . ' of ' . $data['completion']['total'] . ')'],
+        ['Career Worksheet Completion', $data['worksheet']['rate'] . '% (' . $data['worksheet']['count'] . ' of ' . $data['worksheet']['total'] . ')'],
+        ['Recommendation Confidence Rate', $data['confidence']['rate'] . '% (' . $data['confidence']['count'] . ' of ' . $data['confidence']['total'] . ')'],
+    ];
+
+    $rosterRows = [
+        ['Expected Students (Uploaded Roster)', (string) $data['assessmentStats']['expectedCount']],
+        ['Completed Assessment', (string) $data['assessmentStats']['completedCount']],
+        ['Sections in Roster', $data['assessmentStats']['expectedSections'] ? implode(', ', $data['assessmentStats']['expectedSections']) : '—'],
+    ];
+
+    $strandRows = [];
+    foreach ($data['strandDistribution'] as $row) {
+        $strandRows[] = [$row['strand'], (string) $row['count'] . ' student(s)'];
+    }
+    if (!$strandRows) {
+        $strandRows[] = ['No students registered yet', '—'];
+    }
+    if ($data['topStrand']) {
+        $strandRows[] = ['Top Strand', $data['topStrand']['strand'] . ' (' . $data['topStrand']['percent'] . '% of students)'];
+    }
+
+    $careerRows = [];
+    $rank = 1;
+    foreach ($data['topCareers'] as $c) {
+        $careerRows[] = ['#' . $rank . ' ' . $c['title'], $c['count'] . ' student(s) (' . $c['percent'] . '%)'];
+        $rank++;
+    }
+    if (!$careerRows) {
+        $careerRows[] = ['No recommendations computed yet', '—'];
+    }
+
+    return [
+        ['title' => 'Enrollment & Completion', 'rows' => $enrollmentRows],
+        ['title' => 'Assessment Roster — AY ' . $currentAy, 'rows' => $rosterRows],
+        ['title' => 'Students by Strand', 'rows' => $strandRows],
+        ['title' => 'Top Recommended Careers (Institution-wide)', 'rows' => $careerRows],
+    ];
+}
+
 // Whole-school figures, unfiltered — the Principal's report is always the
 // institution-wide picture, not whatever strand/section an admin happened
 // to have selected on the Analytics Dashboard.
 $data = AnalyticsReport::compute($pdo, '', '');
-
 $generatedAt = date('F j, Y \a\t g:i A');
+$sections = buildReportSections($data, $currentAy);
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    jsonResponse([
+        'success' => true,
+        'academicYear' => $currentAy,
+        'generatedAt' => $generatedAt,
+        'principalName' => $principalName,
+        'principalEmail' => $principalEmail,
+        'sections' => $sections,
+    ]);
+}
+
+// POST from here — actually send.
 $safeName = htmlspecialchars($principalName, ENT_QUOTES, 'UTF-8');
-
-$enrollmentRows = [
-    ['Total Registered Students', (string) $data['totalStudents']],
-    ['RIASEC Assessment Completion', $data['completion']['rate'] . '% (' . $data['completion']['count'] . ' of ' . $data['completion']['total'] . ')'],
-    ['Career Worksheet Completion', $data['worksheet']['rate'] . '% (' . $data['worksheet']['count'] . ' of ' . $data['worksheet']['total'] . ')'],
-    ['Recommendation Confidence Rate', $data['confidence']['rate'] . '% (' . $data['confidence']['count'] . ' of ' . $data['confidence']['total'] . ')'],
-];
-
-$rosterRows = [
-    ['Expected Students (Uploaded Roster)', (string) $data['assessmentStats']['expectedCount']],
-    ['Completed Assessment', (string) $data['assessmentStats']['completedCount']],
-    ['Sections in Roster', $data['assessmentStats']['expectedSections'] ? implode(', ', $data['assessmentStats']['expectedSections']) : '—'],
-];
-
-$strandRows = [];
-foreach ($data['strandDistribution'] as $row) {
-    $strandRows[] = [$row['strand'], (string) $row['count'] . ' student(s)'];
-}
-if (!$strandRows) {
-    $strandRows[] = ['No students registered yet', '—'];
-}
-if ($data['topStrand']) {
-    $strandRows[] = ['Top Strand', $data['topStrand']['strand'] . ' (' . $data['topStrand']['percent'] . '% of students)'];
-}
-
-$careerRows = [];
-$rank = 1;
-foreach ($data['topCareers'] as $c) {
-    $careerRows[] = ['#' . $rank . ' ' . $c['title'], $c['count'] . ' student(s) (' . $c['percent'] . '%)'];
-    $rank++;
-}
-if (!$careerRows) {
-    $careerRows[] = ['No recommendations computed yet', '—'];
-}
 
 $bodyHtml = EmailTemplate::renderReport(
     'SHS Career Profiling Summary Report',
     'Academic Year ' . htmlspecialchars($currentAy, ENT_QUOTES, 'UTF-8') . ' &middot; Generated ' . $generatedAt,
     "<p style=\"margin:0;\">Dear $safeName,</p><p style=\"margin:12px 0 0 0;\">Below is a summary of student career-profiling activity generated automatically by ProfilePath, so figures are always drawn from the same live data shown on the Analytics Dashboard — no manual re-entry.</p>",
-    [
-        ['title' => 'Enrollment & Completion', 'rows' => $enrollmentRows],
-        ['title' => 'Assessment Roster — AY ' . $currentAy, 'rows' => $rosterRows],
-        ['title' => 'Students by Strand', 'rows' => $strandRows],
-        ['title' => 'Top Recommended Careers (Institution-wide)', 'rows' => $careerRows],
-    ]
+    $sections
 );
 
 $bodyText = "SHS Career Profiling Summary Report\nAcademic Year $currentAy — Generated $generatedAt\n\n"
     . "Dear $principalName,\n\nBelow is a summary of student career-profiling activity, generated automatically by ProfilePath.\n\n"
-    . "ENROLLMENT & COMPLETION\n" . implode("\n", array_map(fn($r) => "- {$r[0]}: {$r[1]}", $enrollmentRows)) . "\n\n"
-    . "ASSESSMENT ROSTER — AY $currentAy\n" . implode("\n", array_map(fn($r) => "- {$r[0]}: {$r[1]}", $rosterRows)) . "\n\n"
-    . "STUDENTS BY STRAND\n" . implode("\n", array_map(fn($r) => "- {$r[0]}: {$r[1]}", $strandRows)) . "\n\n"
-    . "TOP RECOMMENDED CAREERS\n" . implode("\n", array_map(fn($r) => "- {$r[0]}: {$r[1]}", $careerRows));
+    . implode("\n\n", array_map(
+        fn($s) => strtoupper($s['title']) . "\n" . implode("\n", array_map(fn($r) => "- {$r[0]}: {$r[1]}", $s['rows'])),
+        $sections
+    ));
 
 $sent = Mailer::send($principalEmail, $principalName, 'ProfilePath Summary Report — AY ' . $currentAy, $bodyHtml, $bodyText);
 
