@@ -114,6 +114,11 @@
         <p class="text-base text-slate-500 mt-2">Overview of your career profiling tasks.</p>
       </div>
 
+      <div id="announcementsPanel" class="hidden bg-white border border-slate-200 rounded-lg shadow-[0px_2px_15px_0px_rgba(0,26,64,0.04)] p-[25px] mb-6">
+        <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-3">Announcements</p>
+        <div id="announcementsPanelList" class="flex flex-col gap-3"></div>
+      </div>
+
       <div class="flex flex-col gap-6">
 
         <!-- RIASEC Card -->
@@ -223,6 +228,29 @@
 
     const assessmentStatusData = await (await fetch('api/assessment-status.php')).json();
     const assessment = assessmentStatusData.completed ? assessmentStatusData : null;
+
+    (async function renderAnnouncements() {
+      let data;
+      try {
+        data = await (await fetch('api/announcements.php')).json();
+      } catch (e) {
+        return;
+      }
+      const items = (data.announcements || []).slice(0, 3);
+      if (!items.length) return;
+      function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      document.getElementById('announcementsPanelList').innerHTML = items.map(function(a) {
+        const date = new Date(a.publishAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return '<div class="border-l-[3px] border-[#ed1c24] pl-4 py-1">' +
+          '<p class="text-sm font-semibold text-[#001a40]">' + escapeHtml(a.title) + '</p>' +
+          '<p class="text-xs text-slate-500 mt-0.5">' + date + '</p>' +
+          '<p class="text-sm text-slate-600 mt-1 leading-relaxed">' + escapeHtml(a.body) + '</p>' +
+        '</div>';
+      }).join('');
+      document.getElementById('announcementsPanel').classList.remove('hidden');
+    })();
 
     (function renderNotifications() {
       const notes = [];

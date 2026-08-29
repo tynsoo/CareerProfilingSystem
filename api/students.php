@@ -58,7 +58,9 @@ if ($schoolIdLookup !== '') {
 }
 
 $page = max(1, (int) ($_GET['page'] ?? 1));
-$pageSize = 8;
+// ?all=1 (used by the Announcements student-picker) returns everyone
+// matching the filters in one response instead of paginating.
+$pageSize = isset($_GET['all']) ? PHP_INT_MAX : 8;
 $search = trim((string) ($_GET['search'] ?? ''));
 $strandFilter = (string) ($_GET['strand'] ?? '');
 $sectionFilter = trim((string) ($_GET['section'] ?? ''));

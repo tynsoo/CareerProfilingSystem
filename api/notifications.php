@@ -89,6 +89,26 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
             'ts' => $row['resolved_at'],
         ];
     }
+
+    // Recently published announcements sent to everyone or to this student.
+    $stmt = $pdo->prepare(
+        "SELECT a.id, a.title, a.publish_at FROM announcements a
+         WHERE a.publish_at <= NOW() AND a.publish_at > NOW() - INTERVAL '14 days'
+           AND (a.target_type = 'all' OR EXISTS (
+                 SELECT 1 FROM announcement_recipients ar
+                 WHERE ar.announcement_id = a.id AND ar.student_id = ?
+               ))
+         ORDER BY a.publish_at DESC LIMIT 5"
+    );
+    $stmt->execute([$user['id']]);
+    foreach ($stmt->fetchAll() as $row) {
+        $items[] = [
+            'type' => 'announcement',
+            'text' => 'Announcement — ' . $row['title'],
+            'link' => 'assessment.html',
+            'ts' => $row['publish_at'],
+        ];
+    }
 }
 
 usort($items, fn($a, $b) => strcmp($b['ts'], $a['ts']));
