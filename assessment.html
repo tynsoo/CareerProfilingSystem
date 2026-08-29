@@ -114,6 +114,11 @@
         <p class="text-base text-slate-500 mt-2">Overview of your career profiling tasks.</p>
       </div>
 
+      <div id="examSchedulePanel" class="hidden bg-white border border-slate-200 rounded-lg shadow-[0px_2px_15px_0px_rgba(0,26,64,0.04)] p-[25px] mb-6">
+        <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-3">My Exam Schedule</p>
+        <div id="examSchedulePanelList" class="flex flex-col gap-3"></div>
+      </div>
+
       <div id="announcementsPanel" class="hidden bg-white border border-slate-200 rounded-lg shadow-[0px_2px_15px_0px_rgba(0,26,64,0.04)] p-[25px] mb-6">
         <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-3">Announcements</p>
         <div id="announcementsPanelList" class="flex flex-col gap-3"></div>
@@ -228,6 +233,29 @@
 
     const assessmentStatusData = await (await fetch('api/assessment-status.php')).json();
     const assessment = assessmentStatusData.completed ? assessmentStatusData : null;
+
+    (async function renderExamSchedule() {
+      let data;
+      try {
+        data = await (await fetch('api/exam-schedules.php?mine=1')).json();
+      } catch (e) {
+        return;
+      }
+      const items = (data.schedules || []).slice(0, 3);
+      if (!items.length) return;
+      function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      document.getElementById('examSchedulePanelList').innerHTML = items.map(function(s) {
+        const date = new Date(s.examDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+        const label = s.scheduleType === 'retake' ? '<span class="text-amber-600 font-medium">Retake Exam</span>' : 'Career Interest Assessment';
+        return '<div class="border-l-[3px] border-[#19427b] pl-4 py-1">' +
+          '<p class="text-sm font-semibold text-[#001a40]">' + date + ' &middot; ' + escapeHtml(s.startTime) + '&ndash;' + escapeHtml(s.endTime) + '</p>' +
+          '<p class="text-sm text-slate-600 mt-1">Room ' + escapeHtml(s.room) + ' &mdash; ' + label + '</p>' +
+        '</div>';
+      }).join('');
+      document.getElementById('examSchedulePanel').classList.remove('hidden');
+    })();
 
     (async function renderAnnouncements() {
       let data;

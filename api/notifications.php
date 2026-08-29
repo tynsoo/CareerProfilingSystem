@@ -109,6 +109,30 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
             'ts' => $row['publish_at'],
         ];
     }
+
+    // Newly created exam schedules matching this student's own
+    // strand/section/grade level/AY (same matching rule as
+    // api/exam-schedules.php?mine=1). NULL on any of those three columns
+    // means the schedule applies to everyone in that dimension.
+    $stmt = $pdo->prepare(
+        "SELECT es.id, es.exam_date, es.room, es.created_at FROM exam_schedules es
+         JOIN students s ON s.user_id = ?
+         WHERE es.created_at > NOW() - INTERVAL '14 days'
+           AND es.academic_year = s.academic_year
+           AND (es.grade_level IS NULL OR es.grade_level = s.grade_level)
+           AND (es.strand IS NULL OR es.strand = s.strand)
+           AND (es.section IS NULL OR es.section = s.section)
+         ORDER BY es.created_at DESC LIMIT 5"
+    );
+    $stmt->execute([$user['id']]);
+    foreach ($stmt->fetchAll() as $row) {
+        $items[] = [
+            'type' => 'schedule_published',
+            'text' => 'Exam scheduled — ' . $row['exam_date'] . ' in ' . $row['room'] . '.',
+            'link' => 'assessment.html',
+            'ts' => $row['created_at'],
+        ];
+    }
 }
 
 usort($items, fn($a, $b) => strcmp($b['ts'], $a['ts']));

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Announcements — Career Profiling System</title>
+<title>Exam Scheduling — Career Profiling System</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,11 +48,11 @@
         <img src="images/admin/nav-monitoring.svg" alt="" class="h-4 w-auto">
         Monitoring
       </a>
-      <a href="announcements.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
+      <a href="announcements.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
         Announcements
       </a>
-      <a href="exam-schedules.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+      <a href="exam-schedules.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 2v4M16 2v4M3.5 9h17M5 4h14a1.5 1.5 0 011.5 1.5v14A1.5 1.5 0 0119 21H5a1.5 1.5 0 01-1.5-1.5v-14A1.5 1.5 0 015 4z"/></svg>
         Exam Scheduling
       </a>
@@ -132,56 +132,82 @@
     <main id="main-content" class="flex-1 p-4 sm:p-8 overflow-auto">
 
       <div class="mb-6">
-        <h1 class="text-2xl font-bold text-slate-900">Announcements</h1>
-        <p class="text-sm text-slate-500 mt-1">Send updates to students — everyone, or a specific list.</p>
+        <h1 class="text-2xl font-bold text-slate-900">Exam Scheduling</h1>
+        <p class="text-sm text-slate-500 mt-1">Set exam sessions (date, time, room) for a grade level, strand, or section — students see their matching session automatically.</p>
       </div>
 
       <div id="readOnlyNotice" class="hidden bg-amber-50 border border-amber-100 rounded-md px-4 py-3 text-sm text-amber-800 mb-6">
-        You have view-only access to Announcements. Contact an Administrator to send one.
+        You have view-only access to Exam Scheduling.
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
         <!-- Create form -->
         <div id="createCard" class="lg:col-span-1 bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-base font-semibold text-slate-900 mb-4">New Announcement</h2>
+          <h2 class="text-base font-semibold text-slate-900 mb-1">Create Exam Schedule</h2>
+          <p class="text-xs text-slate-500 mb-4">Leave Grade Level / Strand / Section on "All" to cover every student in that dimension.</p>
           <form id="createForm" class="flex flex-col gap-4">
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Title</label>
-              <input type="text" id="annTitle" required maxlength="255" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+              <label class="block text-xs font-medium text-slate-600 mb-1">Exam Date</label>
+              <input type="date" id="fExamDate" required class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
             </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Message</label>
-              <textarea id="annBody" required rows="4" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Publish Date &amp; Time</label>
-              <input type="datetime-local" id="annPublishAt" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-              <p class="text-xs text-slate-500 mt-1">Leave blank to publish immediately.</p>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-2">Audience</label>
-              <div class="flex gap-2 mb-3">
-                <label class="flex-1"><input type="radio" name="target" value="all" checked class="peer hidden"><span class="block text-center border border-slate-300 rounded-md py-2 text-sm cursor-pointer peer-checked:bg-[#ed1c24] peer-checked:text-white peer-checked:border-[#ed1c24]" id="targetAllLabel">@everyone</span></label>
-                <label class="flex-1"><input type="radio" name="target" value="specific" class="peer hidden"><span class="block text-center border border-slate-300 rounded-md py-2 text-sm cursor-pointer peer-checked:bg-[#ed1c24] peer-checked:text-white peer-checked:border-[#ed1c24]" id="targetSpecificLabel">Specific Students</span></label>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Start Time</label>
+                <input type="time" id="fStartTime" required class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
               </div>
-              <div id="studentPicker" class="hidden">
-                <input type="text" id="studentSearchInput" placeholder="Search students…" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm mb-2">
-                <div id="studentCheckList" class="border border-slate-200 rounded-md max-h-48 overflow-auto divide-y divide-slate-100">
-                  <p class="text-xs text-slate-400 text-center py-4">Loading students…</p>
-                </div>
-                <p class="text-xs text-slate-500 mt-1"><span id="selectedCount">0</span> selected</p>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">End Time</label>
+                <input type="time" id="fEndTime" required class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
               </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Room</label>
+              <input type="text" id="fRoom" required maxlength="50" placeholder="e.g. Room 301" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Grade Level</label>
+                <select id="fGradeLevel" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+                  <option value="">All</option>
+                  <option value="11">Grade 11</option>
+                  <option value="12">Grade 12</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Strand</label>
+                <select id="fStrand" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+                  <option value="">All</option>
+                  <option value="STEM">STEM</option>
+                  <option value="ABM">ABM</option>
+                  <option value="HUMSS">HUMSS</option>
+                  <option value="GAS">GAS</option>
+                  <option value="TVL">TVL</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Section (optional)</label>
+              <input type="text" id="fSection" maxlength="20" placeholder="e.g. STEM-11A" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Notes (optional)</label>
+              <textarea id="fNotes" rows="2" maxlength="500" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
             </div>
             <p id="createError" class="hidden text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5"></p>
             <p id="createSuccess" class="hidden text-sm text-green-700 bg-green-50 border border-green-100 rounded-md px-3.5 py-2.5"></p>
-            <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Send Announcement</button>
+            <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Create Schedule</button>
           </form>
         </div>
 
-        <!-- Announcements list -->
-        <div class="lg:col-span-2 flex flex-col gap-4" id="announcementsList">
-          <p class="text-sm text-slate-400 text-center py-8 bg-white border border-slate-200 rounded-xl shadow-sm">Loading…</p>
+        <!-- Schedule list -->
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="border-b border-slate-200 px-6 py-4">
+            <h2 class="text-base font-semibold text-slate-900">Scheduled Sessions <span id="listAyLabel" class="text-slate-400 font-normal"></span></h2>
+          </div>
+          <div id="schedulesList" class="divide-y divide-slate-100">
+            <p class="px-6 py-8 text-center text-sm text-slate-400">Loading…</p>
+          </div>
         </div>
 
       </div>
@@ -206,12 +232,6 @@
   const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
   document.getElementById('headerUserName').textContent = currentUser.username;
   document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
-
-  const isAdmin = currentUser.role === 'admin';
-  if (!isAdmin) {
-    document.getElementById('createCard').classList.add('hidden');
-    document.getElementById('readOnlyNotice').classList.remove('hidden');
-  }
 
   function doLogout(e) {
     e.preventDefault();
@@ -246,147 +266,136 @@
   function escapeHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
-  function formatDateTime(iso) {
-    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' +
-      new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  function formatDate(iso) {
+    return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function scopeLabel(s) {
+    const parts = [];
+    parts.push(s.gradeLevel ? 'Grade ' + s.gradeLevel : 'All Grades');
+    parts.push(s.strand || 'All Strands');
+    parts.push(s.section || 'All Sections');
+    return parts.join(' · ');
   }
 
-  // ---- Announcements list ----
-  async function loadAnnouncements() {
-    const list = document.getElementById('announcementsList');
-    const data = await (await fetch('api/announcements.php')).json();
-    if (!data.announcements || !data.announcements.length) {
-      list.innerHTML = '<p class="text-sm text-slate-400 text-center py-8 bg-white border border-slate-200 rounded-xl shadow-sm">No announcements yet.</p>';
-      return;
-    }
-    list.innerHTML = data.announcements.map(function(a) {
-      const statusBadge = a.isPublished
-        ? '<span class="bg-green-50 border border-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Published</span>'
-        : '<span class="bg-amber-50 border border-amber-100 text-amber-700 text-xs font-medium px-2.5 py-1 rounded-full">Scheduled</span>';
-      const audience = a.targetType === 'all' ? '@everyone' : (a.recipientCount || 0) + ' student(s)';
-      const deleteBtn = isAdmin
-        ? '<button type="button" class="delete-btn text-xs font-medium text-[#ed1c24] hover:underline" data-id="' + a.id + '">Delete</button>'
-        : '';
-      return '<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 flex flex-col gap-2">' +
-        '<div class="flex items-start justify-between gap-4 flex-wrap">' +
-          '<div><h3 class="text-base font-semibold text-slate-900">' + escapeHtml(a.title) + '</h3>' +
-          '<p class="text-xs text-slate-500 mt-0.5">' + formatDateTime(a.publishAt) + ' &middot; ' + escapeHtml(audience) +
-          (a.createdByUsername ? ' &middot; by ' + escapeHtml(a.createdByUsername) : '') + '</p></div>' +
-          statusBadge +
-        '</div>' +
-        '<p class="text-sm text-slate-700 leading-relaxed">' + escapeHtml(a.body) + '</p>' +
-        (deleteBtn ? '<div class="flex justify-end">' + deleteBtn + '</div>' : '') +
-      '</div>';
-    }).join('');
+  // 'examinations' defaults to 'full' for both admin and counselor (unlike
+  // most modules, which give counselors 'limited') — so read/write access
+  // is driven by the actual configured RBAC level, not a role check, in
+  // case an admin narrows it later via Security Configuration.
+  let canWrite = false;
+  try {
+    const cfg = await (await fetch('api/security-config.php')).json();
+    canWrite = !!(cfg.rbac && cfg.rbac.examinations && cfg.rbac.examinations[currentUser.role] === 'full');
+  } catch (err) { /* default to read-only if this check fails */ }
+  if (!canWrite) {
+    document.getElementById('createCard').classList.add('hidden');
+    document.getElementById('readOnlyNotice').classList.remove('hidden');
+  }
 
-    list.querySelectorAll('.delete-btn').forEach(function(btn) {
-      btn.addEventListener('click', async function() {
-        if (!confirm('Delete this announcement? This cannot be undone.')) return;
+  const listEl = document.getElementById('schedulesList');
+  const listAyLabel = document.getElementById('listAyLabel');
+
+  function renderCard(s) {
+    const pct = s.expectedCount > 0 ? Math.min(100, Math.round(s.completedCount / s.expectedCount * 100)) : 0;
+    return `
+      <div class="px-6 py-4 flex flex-col gap-2">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold text-slate-900">${formatDate(s.examDate)} · ${escapeHtml(s.startTime)}–${escapeHtml(s.endTime)}</p>
+            <p class="text-xs text-slate-500 mt-0.5">${escapeHtml(s.room)} — ${escapeHtml(scopeLabel(s))}${s.scheduleType === 'retake' ? ' · <span class=\"text-amber-600 font-medium\">Retake</span>' : ''}</p>
+            ${s.notes ? '<p class="text-xs text-slate-400 mt-1">' + escapeHtml(s.notes) + '</p>' : ''}
+          </div>
+          ${canWrite ? `<button type="button" class="delete-schedule-btn text-xs font-medium text-[#ed1c24] hover:underline shrink-0" data-id="${s.id}">Delete</button>` : ''}
+        </div>
+        <div class="w-full h-1.5 rounded-full bg-slate-100">
+          <div class="h-1.5 rounded-full bg-[#19427b]" style="width:${pct}%"></div>
+        </div>
+        <p class="text-xs text-slate-500">${s.completedCount} of ${s.expectedCount} expected students completed</p>
+        <div class="flex items-center gap-2 mt-1">
+          <span class="text-xs text-slate-500">Access code:</span>
+          <span class="font-mono text-xs tracking-[2px] bg-slate-50 border border-slate-200 rounded px-2 py-1">${escapeHtml(s.accessCode)}</span>
+          ${canWrite ? `<button type="button" class="regen-code-btn text-xs font-medium text-[#19427b] hover:underline" data-id="${s.id}">Regenerate</button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadSchedules() {
+    const data = await (await fetch('api/exam-schedules.php')).json();
+    listAyLabel.textContent = data.academicYear ? '— AY ' + data.academicYear : '';
+    listEl.innerHTML = data.schedules && data.schedules.length
+      ? data.schedules.map(renderCard).join('')
+      : '<p class="px-6 py-8 text-center text-sm text-slate-400">No exam schedules yet.</p>';
+
+    listEl.querySelectorAll('.delete-schedule-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this exam schedule?')) return;
         btn.disabled = true;
-        await fetch('api/announcements.php', {
+        const res = await fetch('api/exam-schedules.php', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'delete', id: Number(btn.dataset.id) })
         });
-        await loadAnnouncements();
+        const data = await res.json();
+        if (!data.success) { alert(data.error || 'Failed to delete.'); btn.disabled = false; return; }
+        await loadSchedules();
+      });
+    });
+    listEl.querySelectorAll('.regen-code-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const res = await fetch('api/exam-schedules.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'regenerateCode', id: Number(btn.dataset.id) })
+        });
+        const data = await res.json();
+        btn.disabled = false;
+        if (!data.success) { alert(data.error || 'Failed to regenerate.'); return; }
+        await loadSchedules();
       });
     });
   }
 
-  if (!isAdmin) {
-    await loadAnnouncements();
-    return;
-  }
-
-  // ---- Create form (admin only) ----
-  const selectedStudentIds = new Set();
-  let allStudents = [];
-
-  document.querySelectorAll('input[name="target"]').forEach(function(radio) {
-    radio.addEventListener('change', function() {
-      document.getElementById('studentPicker').classList.toggle('hidden', radio.value !== 'specific' || !radio.checked);
-    });
-  });
-
-  function renderStudentList(filterText) {
-    const needle = (filterText || '').toLowerCase();
-    const matches = allStudents.filter(function(s) {
-      return !needle || s.name.toLowerCase().includes(needle) || s.schoolId.toLowerCase().includes(needle);
-    });
-    const container = document.getElementById('studentCheckList');
-    container.innerHTML = matches.length
-      ? matches.map(function(s) {
-          const checked = selectedStudentIds.has(s.userId) ? 'checked' : '';
-          return '<label class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 cursor-pointer">' +
-            '<input type="checkbox" class="student-check" value="' + s.userId + '" ' + checked + '> ' +
-            escapeHtml(s.name) + ' <span class="text-xs text-slate-400">(' + escapeHtml(s.schoolId) + ')</span>' +
-          '</label>';
-        }).join('')
-      : '<p class="text-xs text-slate-400 text-center py-4">No matching students.</p>';
-
-    container.querySelectorAll('.student-check').forEach(function(cb) {
-      cb.addEventListener('change', function() {
-        const id = Number(cb.value);
-        if (cb.checked) selectedStudentIds.add(id); else selectedStudentIds.delete(id);
-        document.getElementById('selectedCount').textContent = selectedStudentIds.size;
-      });
-    });
-  }
-
-  async function loadStudentsForPicker() {
-    const data = await (await fetch('api/students.php?all=1')).json();
-    allStudents = data.students || [];
-    renderStudentList('');
-  }
-  document.getElementById('studentSearchInput').addEventListener('input', function() {
-    renderStudentList(this.value);
-  });
-
-  document.getElementById('createForm').addEventListener('submit', async function(e) {
+  document.getElementById('createForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const errorEl = document.getElementById('createError');
     const successEl = document.getElementById('createSuccess');
     errorEl.classList.add('hidden');
     successEl.classList.add('hidden');
 
-    const targetType = document.querySelector('input[name="target"]:checked').value;
     const body = {
       type: 'create',
-      title: document.getElementById('annTitle').value.trim(),
-      body: document.getElementById('annBody').value.trim(),
-      targetType: targetType,
-      publishAt: document.getElementById('annPublishAt').value,
-      studentIds: targetType === 'specific' ? Array.from(selectedStudentIds) : [],
+      examDate: document.getElementById('fExamDate').value,
+      startTime: document.getElementById('fStartTime').value,
+      endTime: document.getElementById('fEndTime').value,
+      room: document.getElementById('fRoom').value.trim(),
+      gradeLevel: document.getElementById('fGradeLevel').value,
+      strand: document.getElementById('fStrand').value,
+      section: document.getElementById('fSection').value.trim(),
+      notes: document.getElementById('fNotes').value.trim(),
     };
-
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    const res = await fetch('api/announcements.php', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+
+    const res = await fetch('api/exam-schedules.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     submitBtn.disabled = false;
 
     if (!data.success) {
-      errorEl.textContent = data.error || 'Failed to send announcement.';
+      errorEl.textContent = data.error || 'Failed to create schedule.';
       errorEl.classList.remove('hidden');
       return;
     }
-
-    successEl.textContent = 'Announcement sent.';
+    successEl.textContent = 'Schedule created. Access code: ' + data.accessCode;
     successEl.classList.remove('hidden');
     e.target.reset();
-    selectedStudentIds.clear();
-    document.getElementById('selectedCount').textContent = '0';
-    document.getElementById('studentPicker').classList.add('hidden');
-    renderStudentList('');
-    await loadAnnouncements();
+    await loadSchedules();
   });
 
-  await loadStudentsForPicker();
-  await loadAnnouncements();
+  await loadSchedules();
 })();
 </script>
-
 <script src="js/motion.js" defer></script>
 <script>
 (function() {
