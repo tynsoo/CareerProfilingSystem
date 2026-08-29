@@ -226,3 +226,78 @@ CREATE TABLE help_requests (
     resolved_by         INT REFERENCES users(id),
     resolved_at         TIMESTAMPTZ
 );
+
+-- A schedule = one exam session (date/time/room) targeting whichever
+-- grade level/strand/section it names (NULL on any of those three = "all"
+-- for that dimension), rather than a per-student assignment — matches how
+-- assessment_roster/analytics already group students by strand/section.
+-- access_code follows the same plaintext + hash_equals pattern as
+-- security_policies['assessment.accessCode']; it does not replace that
+-- global code as the actual assessment-start gate (see the migration
+-- comment below) — it's the code faculty use via api/faculty-verify.php.
+CREATE TABLE exam_schedules (
+    id              SERIAL PRIMARY KEY,
+    academic_year   VARCHAR(20) NOT NULL,
+    exam_date       DATE NOT NULL,
+    start_time      TIME NOT NULL,
+    end_time        TIME NOT NULL,
+    room            VARCHAR(50) NOT NULL,
+    grade_level     VARCHAR(2) CHECK (grade_level IN ('11', '12')),
+    strand          VARCHAR(10) CHECK (strand IN ('STEM', 'ABM', 'HUMSS', 'GAS', 'TVL')),
+    section         VARCHAR(20),
+    access_code     VARCHAR(20) NOT NULL,
+    notes_enc       TEXT,
+    schedule_type   VARCHAR(10) NOT NULL DEFAULT 'initial' CHECK (schedule_type IN ('initial', 'retake')),
+    created_by      INT REFERENCES users(id),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Faculty are not system users — no login, no role in users.role. They're
+-- a directory admins encode and assign to exam_schedules, then identify
+-- themselves via faculty_code + a per-assignment access code
+-- (exam_schedule_faculty.access_code_enc) through api/faculty-verify.php.
+CREATE TABLE faculty (
+    id              SERIAL PRIMARY KEY,
+    faculty_code    VARCHAR(50) NOT NULL UNIQUE,
+    first_name_enc  TEXT NOT NULL,
+    last_name_enc   TEXT NOT NULL,
+    email           VARCHAR(255) NOT NULL UNIQUE,
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by      INT REFERENCES users(id),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX idx_faculty_code_lower ON faculty (LOWER(faculty_code));
+CREATE UNIQUE INDEX idx_faculty_email_lower ON faculty (LOWER(email));
+
+-- access_code_enc is Crypto::enc()'d (unlike exam_schedules.access_code,
+-- which is plaintext) per the spec's explicit requirement that the
+-- faculty access code specifically be protected by the system's
+-- encryption mechanism. Never compared in SQL — api/faculty-verify.php
+-- decrypts candidate rows and hash_equals()'s in PHP.
+CREATE TABLE exam_schedule_faculty (
+    schedule_id     INT NOT NULL REFERENCES exam_schedules(id) ON DELETE CASCADE,
+    faculty_id      INT NOT NULL REFERENCES faculty(id) ON DELETE CASCADE,
+    access_code_enc TEXT NOT NULL,
+    assigned_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    assigned_by     INT REFERENCES users(id),
+    PRIMARY KEY (schedule_id, faculty_id)
+);
+
+-- Staff-initiated retake authorization (RIASEC has no pass/fail score, so
+-- there's no automatic trigger here — see db/migrate_add_examinations.php
+-- comment). A 'granted' row with completed_attempt_number IS NULL is what
+-- api/assessment-submit.php checks before allowing attempt_number > 1.
+CREATE TABLE retake_grants (
+    id                          SERIAL PRIMARY KEY,
+    student_id                  INT NOT NULL REFERENCES students(user_id) ON DELETE CASCADE,
+    original_attempt_number     INT NOT NULL,
+    reason_enc                  TEXT NOT NULL,
+    schedule_id                 INT REFERENCES exam_schedules(id),
+    status                      VARCHAR(15) NOT NULL DEFAULT 'granted' CHECK (status IN ('granted', 'completed', 'revoked')),
+    granted_by                  INT REFERENCES users(id),
+    granted_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_attempt_number    INT,
+    completed_at                TIMESTAMPTZ
+);

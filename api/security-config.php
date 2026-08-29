@@ -8,7 +8,12 @@ if ($user['role'] !== 'admin' && $user['role'] !== 'counselor') {
 }
 $pdo = Database::get();
 
-const RBAC_MODULES = ['career', 'rac', 'recommendations', 'counselor', 'monitoring'];
+// 'announcements' was added to lib/Rbac.php's MODULES and to
+// security-configuration.html's UI but this const was never updated to
+// match — meaning loadRbac() silently omitted that row and any RBAC change
+// posted for it was silently dropped by the in_array() guard below. Fixed
+// here alongside adding 'examinations' the same way.
+const RBAC_MODULES = ['career', 'rac', 'recommendations', 'counselor', 'monitoring', 'announcements', 'examinations'];
 const RBAC_ROLES = ['admin', 'counselor', 'student'];
 const RBAC_LEVELS = ['full', 'limited', 'none'];
 

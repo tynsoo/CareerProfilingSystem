@@ -11,7 +11,7 @@ require_once __DIR__ . '/Auth.php';
  */
 class Rbac
 {
-    private const MODULES = ['career', 'rac', 'recommendations', 'counselor', 'monitoring', 'announcements'];
+    private const MODULES = ['career', 'rac', 'recommendations', 'counselor', 'monitoring', 'announcements', 'examinations'];
 
     public static function accessLevel(string $module, string $role): string
     {
