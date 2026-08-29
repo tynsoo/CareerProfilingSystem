@@ -87,10 +87,11 @@ try {
     $userStmt->execute(['student', $schoolId, $hash, $email]);
     $userId = (int) $userStmt->fetchColumn();
 
+    $currentAy = $pdo->query("SELECT value FROM security_policies WHERE key = 'academicYear.current'")->fetchColumn();
     $studentStmt = $pdo->prepare(
-        'INSERT INTO students (user_id, school_id, first_name_enc, last_name_enc, strand, grade_level) VALUES (?, ?, ?, ?, ?, ?)'
+        'INSERT INTO students (user_id, school_id, first_name_enc, last_name_enc, strand, grade_level, academic_year) VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
-    $studentStmt->execute([$userId, $schoolId, Crypto::enc($firstName), Crypto::enc($lastName), $strand, $gradeLevel]);
+    $studentStmt->execute([$userId, $schoolId, Crypto::enc($firstName), Crypto::enc($lastName), $strand, $gradeLevel, $currentAy ?: null]);
 
     $rawToken = bin2hex(random_bytes(32));
     $tokenHash = hash('sha256', $rawToken);

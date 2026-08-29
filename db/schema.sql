@@ -56,6 +56,7 @@ CREATE TABLE students (
     last_name_enc   TEXT NOT NULL,
     strand          VARCHAR(10) NOT NULL CHECK (strand IN ('STEM', 'ABM', 'HUMSS', 'GAS', 'TVL')),
     grade_level     VARCHAR(2) NOT NULL CHECK (grade_level IN ('11', '12')),
+    academic_year   VARCHAR(20),
     registered_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE UNIQUE INDEX idx_students_school_id_lower ON students (LOWER(school_id));

@@ -10,6 +10,11 @@ $user = Auth::requireLogin();
 if ($user['role'] !== 'student') {
     jsonResponse(['success' => false, 'error' => 'Only students can submit the RIASEC assessment.'], 403);
 }
+// Never trust the client to have honestly gone through the access-code gate
+// in assessment-instructions.html — re-check the session flag api/verify-access-code.php sets.
+if (empty($_SESSION['assessmentUnlocked'])) {
+    jsonResponse(['success' => false, 'error' => 'Enter the assessment access code before submitting.'], 403);
+}
 
 $body = readJsonBody();
 $answers = $body['answers'] ?? null;

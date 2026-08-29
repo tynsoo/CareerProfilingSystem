@@ -87,6 +87,12 @@
         <img src="images/admin/icon-menu.svg" alt="Menu" class="w-5 h-4">
       </button>
       <div class="flex items-center gap-6">
+
+        <!-- Academic Year badge -->
+        <div id="ayBadge" class="hidden sm:flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
+          <span class="text-[10px] font-semibold tracking-wide text-slate-500 uppercase">AY</span>
+          <span id="ayBadgeValue" class="text-xs font-semibold text-slate-700">—</span>
+        </div>
         <div class="relative">
           <button type="button" id="notifBtn" class="relative w-5 h-5">
             <img src="images/admin/icon-bell.svg" alt="Notifications" class="w-full h-full">
@@ -256,5 +262,18 @@
 
 <script src="js/motion.js" defer></script>
 <script src="js/notifications.js" defer></script>
+<script>
+(function() {
+  var el = document.getElementById('ayBadgeValue');
+  if (!el) return;
+  fetch('api/security-config.php').then(function(r) { return r.json(); }).then(function(data) {
+    if (data && data.academicYear && data.academicYear.current) {
+      el.textContent = data.academicYear.current;
+    } else {
+      document.getElementById('ayBadge').classList.add('hidden');
+    }
+  }).catch(function() {});
+})();
+</script>
 </body>
 </html>

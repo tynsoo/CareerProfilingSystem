@@ -89,6 +89,12 @@
       </button>
       <div class="flex items-center gap-6">
 
+        <!-- Academic Year badge -->
+        <div id="ayBadge" class="hidden sm:flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
+          <span class="text-[10px] font-semibold tracking-wide text-slate-500 uppercase">AY</span>
+          <span id="ayBadgeValue" class="text-xs font-semibold text-slate-700">—</span>
+        </div>
+
         <!-- Notifications -->
         <div class="relative">
           <button type="button" id="notifBtn" class="relative w-5 h-5">
@@ -201,6 +207,40 @@
               <p class="text-xs text-slate-500">Enforce strong access policies to protect user accounts.</p>
             </div>
             <div class="p-2" id="policyListContainer"></div>
+          </div>
+
+          <!-- Assessment Period -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="border-b border-slate-200 flex items-center gap-3 px-5 py-5">
+              <img src="images/security/icon-clock.svg" alt="" class="w-4 h-4">
+              <div>
+                <h2 class="text-base font-semibold text-slate-900">Assessment Period</h2>
+                <p class="text-xs text-slate-500">Current Academic Year and the access code students must enter before taking the RIASEC assessment.</p>
+              </div>
+            </div>
+            <div class="p-5 flex flex-col gap-6">
+
+              <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
+                <p class="text-sm font-semibold text-slate-800">Current Academic Year</p>
+                <p class="text-xs text-slate-500">Shown across the admin dashboard and stamped on new student registrations.</p>
+                <div class="flex items-center gap-2">
+                  <input type="text" id="academicYearInput" maxlength="20" class="flex-1 border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24]" placeholder="e.g. 2026-2027">
+                  <button type="button" id="academicYearSave" class="px-4 py-2 text-xs font-semibold text-white bg-[#0f2a6b] rounded-md hover:opacity-90 shrink-0">Save</button>
+                </div>
+                <p id="academicYearStatus" class="hidden text-xs" aria-live="polite"></p>
+              </div>
+
+              <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
+                <p class="text-sm font-semibold text-slate-800">Assessment Access Code</p>
+                <p class="text-xs text-slate-500">Students enter this code once before starting the RIASEC assessment. Regenerating it immediately invalidates the old code.</p>
+                <div class="flex items-center gap-3">
+                  <span id="accessCodeDisplay" class="flex-1 bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm font-mono tracking-[2px] text-slate-800 text-center">—</span>
+                  <button type="button" id="accessCodeRegenerate" class="px-4 py-2 text-xs font-semibold text-[#ed1c24] border border-[#ed1c24] rounded-md hover:bg-red-50 shrink-0">Regenerate</button>
+                </div>
+                <p id="accessCodeStatus" class="hidden text-xs" aria-live="polite"></p>
+              </div>
+
+            </div>
           </div>
         </div>
 
@@ -448,8 +488,20 @@
       renderRbacTable();
       renderPolicyList();
       renderSecuritySettings();
+      renderAssessmentPeriod();
       renderOverview();
       renderLastUpdated();
+    }
+
+    function renderAssessmentPeriod() {
+      document.getElementById('academicYearInput').value = state.academicYear.current;
+      document.getElementById('accessCodeDisplay').textContent = state.assessment.accessCode || '—';
+      if (!isAdmin) {
+        [document.getElementById('academicYearInput'), document.getElementById('academicYearSave'), document.getElementById('accessCodeRegenerate')].forEach(el => {
+          el.disabled = true;
+          el.classList.add('opacity-60', 'cursor-not-allowed');
+        });
+      }
     }
 
     function renderOverview() {
@@ -710,6 +762,43 @@
         updateTimeoutDesc();
         saveSettings();
       });
+
+      document.getElementById('academicYearSave').addEventListener('click', async function() {
+        const statusEl = document.getElementById('academicYearStatus');
+        const value = document.getElementById('academicYearInput').value.trim();
+        const res = await fetch('api/security-config.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'academicYear', current: value })
+        });
+        const data = await res.json();
+        statusEl.classList.remove('hidden');
+        if (data.success) {
+          statusEl.textContent = 'Saved.';
+          statusEl.className = 'text-xs text-green-600';
+          await loadState();
+        } else {
+          statusEl.textContent = data.error || 'Failed to save.';
+          statusEl.className = 'text-xs text-[#ed1c24]';
+        }
+      });
+
+      document.getElementById('accessCodeRegenerate').addEventListener('click', async function() {
+        const statusEl = document.getElementById('accessCodeStatus');
+        const res = await fetch('api/security-config.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'regenerateAccessCode' })
+        });
+        const data = await res.json();
+        statusEl.classList.remove('hidden');
+        if (data.success) {
+          statusEl.textContent = 'New code generated.';
+          statusEl.className = 'text-xs text-green-600';
+          await loadState();
+        } else {
+          statusEl.textContent = data.error || 'Failed to regenerate.';
+          statusEl.className = 'text-xs text-[#ed1c24]';
+        }
+      });
     }
 
     await loadState();
@@ -719,5 +808,18 @@
 
 <script src="js/motion.js" defer></script>
 <script src="js/notifications.js" defer></script>
+<script>
+(function() {
+  var el = document.getElementById('ayBadgeValue');
+  if (!el) return;
+  fetch('api/security-config.php').then(function(r) { return r.json(); }).then(function(data) {
+    if (data && data.academicYear && data.academicYear.current) {
+      el.textContent = data.academicYear.current;
+    } else {
+      document.getElementById('ayBadge').classList.add('hidden');
+    }
+  }).catch(function() {});
+})();
+</script>
 </body>
 </html>

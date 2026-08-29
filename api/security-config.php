@@ -32,6 +32,7 @@ function loadPolicies(PDO $pdo): array
     $rows = $pdo->query('SELECT key, value FROM security_policies')->fetchAll(PDO::FETCH_KEY_PAIR);
     $b = fn($k, $d) => isset($rows[$k]) ? $rows[$k] === 'true' : $d;
     $i = fn($k, $d) => isset($rows[$k]) ? (int) $rows[$k] : $d;
+    $s = fn($k, $d) => $rows[$k] ?? $d;
     return [
         'policies' => [
             'password' => [
@@ -51,6 +52,12 @@ function loadPolicies(PDO $pdo): array
             'twoFactor' => $b('twoFactor', true),
             'sessionTimeoutEnabled' => $b('sessionTimeoutEnabled', true),
             'timeoutMinutes' => $i('timeoutMinutes', 30),
+        ],
+        'academicYear' => [
+            'current' => $s('academicYear.current', ''),
+        ],
+        'assessment' => [
+            'accessCode' => $s('assessment.accessCode', ''),
         ],
     ];
 }
@@ -155,6 +162,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         AuditLogger::log($user['id'], $user['role'], 'update_policy', 'security_policies', $key, json_encode($body));
+        jsonResponse(['success' => true] + loadPolicies($pdo));
+    }
+
+    if ($type === 'academicYear') {
+        $current = trim((string) ($body['current'] ?? ''));
+        if ($current === '' || mb_strlen($current) > 20) {
+            jsonResponse(['success' => false, 'error' => 'Academic Year must be 1-20 characters.'], 400);
+        }
+        $stmt = $pdo->prepare(
+            'INSERT INTO security_policies (key, value, updated_by) VALUES (?, ?, ?)
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW(), updated_by = EXCLUDED.updated_by'
+        );
+        $stmt->execute(['academicYear.current', $current, $user['id']]);
+
+        AuditLogger::log($user['id'], $user['role'], 'update_academic_year', 'security_policies', 'academicYear.current', "Set to: $current");
+        jsonResponse(['success' => true] + loadPolicies($pdo));
+    }
+
+    if ($type === 'regenerateAccessCode') {
+        // Server generates the code — a client never gets to choose it.
+        $code = strtoupper(bin2hex(random_bytes(3)));
+        $stmt = $pdo->prepare(
+            'INSERT INTO security_policies (key, value, updated_by) VALUES (?, ?, ?)
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW(), updated_by = EXCLUDED.updated_by'
+        );
+        $stmt->execute(['assessment.accessCode', $code, $user['id']]);
+
+        AuditLogger::log($user['id'], $user['role'], 'regenerate_access_code', 'security_policies', 'assessment.accessCode', 'Access code regenerated');
         jsonResponse(['success' => true] + loadPolicies($pdo));
     }
 

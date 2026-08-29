@@ -89,12 +89,28 @@
 
     <div class="flex items-center justify-between flex-wrap gap-4">
       <a href="assessment.html" class="text-sm font-medium text-[#5c5a5a] hover:text-black">Not now, go back</a>
-      <a href="riasec-assessment.html" class="bg-[#0f2a6b] text-white text-sm font-semibold rounded-md px-8 py-3.5 hover:opacity-90">Begin Assessment</a>
+      <button type="button" id="beginBtn" class="bg-[#0f2a6b] text-white text-sm font-semibold rounded-md px-8 py-3.5 hover:opacity-90">Begin Assessment</button>
     </div>
 
   </div>
 
 </main>
+
+<!-- Access code gate -->
+<div id="accessCodeModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Enter Assessment Access Code</h3>
+    <p class="text-sm text-[#5c5a5a]">Your Guidance Office provides this code for the current assessment period.</p>
+    <div>
+      <input type="text" id="accessCodeInput" maxlength="12" autocomplete="off" class="w-full border border-black/[0.15] rounded-md px-4 py-3 text-sm tracking-[3px] text-center uppercase focus:outline-none focus:ring-2 focus:ring-[#0f2a6b]" placeholder="ACCESS CODE">
+      <p id="accessCodeError" class="hidden text-sm text-[#ed1c24] mt-2" aria-live="polite"></p>
+    </div>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="accessCodeCancel" class="px-4 py-2 text-sm font-medium text-[#5c5a5a] border border-black/[0.15] rounded-md hover:bg-slate-50">Cancel</button>
+      <button type="button" id="accessCodeSubmit" class="px-4 py-2 text-sm font-medium text-white bg-[#0f2a6b] rounded-md hover:opacity-90">Continue</button>
+    </div>
+  </div>
+</div>
 
 <script>
   (async function() {
@@ -106,6 +122,61 @@
     }
     document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
     document.getElementById('headerGrade').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
+
+    const modal = document.getElementById('accessCodeModal');
+    const input = document.getElementById('accessCodeInput');
+    const errorEl = document.getElementById('accessCodeError');
+    const submitBtn = document.getElementById('accessCodeSubmit');
+
+    function openModal() {
+      errorEl.classList.add('hidden');
+      input.value = '';
+      modal.classList.remove('hidden');
+      setTimeout(function() {
+        modal.classList.add('is-open');
+        input.focus();
+      }, 16);
+    }
+    function closeModal() {
+      modal.classList.remove('is-open');
+      setTimeout(function() { modal.classList.add('hidden'); }, 260);
+    }
+
+    document.getElementById('beginBtn').addEventListener('click', openModal);
+    document.getElementById('accessCodeCancel').addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e) { if (e.target.id === 'accessCodeModal') closeModal(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
+
+    async function submitCode() {
+      const code = input.value.trim();
+      if (!code) {
+        errorEl.textContent = 'Enter the access code.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch('api/verify-access-code.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          errorEl.textContent = data.error || 'Incorrect access code.';
+          errorEl.classList.remove('hidden');
+          submitBtn.disabled = false;
+          return;
+        }
+        window.location.href = 'riasec-assessment.html';
+      } catch (err) {
+        errorEl.textContent = 'Unable to reach the server. Please try again.';
+        errorEl.classList.remove('hidden');
+        submitBtn.disabled = false;
+      }
+    }
+    document.getElementById('accessCodeSubmit').addEventListener('click', submitCode);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') submitCode(); });
   })();
 </script>
 
