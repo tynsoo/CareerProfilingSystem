@@ -271,6 +271,18 @@
                 </div>
                 <p id="officeHoursStatus" class="hidden text-xs" aria-live="polite"></p>
               </div>
+
+              <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
+                <p class="text-sm font-semibold text-slate-800">SHS Principal Contact</p>
+                <p class="text-xs text-slate-500">Where the fixed-template summary report is sent from the Analytics Dashboard's "Send Report to Principal" button.</p>
+                <div class="flex flex-col gap-2">
+                  <input type="text" id="principalNameInput" maxlength="100" class="border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24]" placeholder="Principal's full name">
+                  <input type="email" id="principalEmailInput" maxlength="150" class="border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24]" placeholder="principal@example.edu.ph">
+                  <button type="button" id="principalContactSave" class="self-start px-4 py-2 text-xs font-semibold text-white bg-[#0f2a6b] rounded-md hover:opacity-90">Save</button>
+                </div>
+                <p id="principalLastSent" class="text-xs text-slate-400"></p>
+                <p id="principalContactStatus" class="hidden text-xs" aria-live="polite"></p>
+              </div>
             </div>
           </div>
         </div>
@@ -522,6 +534,7 @@
       renderSecuritySettings();
       renderAssessmentPeriod();
       renderSystemCustomization();
+      renderPrincipalContact();
       renderOverview();
       renderLastUpdated();
     }
@@ -541,6 +554,24 @@
       document.getElementById('officeHoursInput').value = state.officeHours.text;
       if (!isAdmin) {
         [document.getElementById('officeHoursInput'), document.getElementById('officeHoursSave')].forEach(el => {
+          el.disabled = true;
+          el.classList.add('opacity-60', 'cursor-not-allowed');
+        });
+      }
+    }
+
+    function renderPrincipalContact() {
+      document.getElementById('principalNameInput').value = state.principal.name;
+      document.getElementById('principalEmailInput').value = state.principal.email;
+      const lastSentEl = document.getElementById('principalLastSent');
+      if (state.principal.lastSentAt) {
+        const d = new Date(state.principal.lastSentAt);
+        lastSentEl.textContent = 'Report last sent: ' + (isNaN(d) ? state.principal.lastSentAt : d.toLocaleString());
+      } else {
+        lastSentEl.textContent = 'No report has been sent yet.';
+      }
+      if (!isAdmin) {
+        [document.getElementById('principalNameInput'), document.getElementById('principalEmailInput'), document.getElementById('principalContactSave')].forEach(el => {
           el.disabled = true;
           el.classList.add('opacity-60', 'cursor-not-allowed');
         });
@@ -849,6 +880,26 @@
         const res = await fetch('api/security-config.php', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'officeHours', text: value })
+        });
+        const data = await res.json();
+        statusEl.classList.remove('hidden');
+        if (data.success) {
+          statusEl.textContent = 'Saved.';
+          statusEl.className = 'text-xs text-green-600';
+          await loadState();
+        } else {
+          statusEl.textContent = data.error || 'Failed to save.';
+          statusEl.className = 'text-xs text-[#ed1c24]';
+        }
+      });
+
+      document.getElementById('principalContactSave').addEventListener('click', async function() {
+        const statusEl = document.getElementById('principalContactStatus');
+        const name = document.getElementById('principalNameInput').value.trim();
+        const email = document.getElementById('principalEmailInput').value.trim();
+        const res = await fetch('api/security-config.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'principalContact', name, email })
         });
         const data = await res.json();
         statusEl.classList.remove('hidden');

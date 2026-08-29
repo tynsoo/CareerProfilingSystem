@@ -184,8 +184,12 @@
             Upload Roster (CSV)
           </button>
           <input type="file" id="rosterFileInput" accept=".csv" class="hidden">
+          <button type="button" id="sendPrincipalReportBtn" class="hidden items-center gap-2 bg-[#19427b] text-white rounded-md px-4 py-2.5 text-sm font-medium shadow-sm hover:opacity-90">
+            Send Report to Principal
+          </button>
         </div>
       </div>
+      <p id="sendPrincipalReportStatus" class="hidden text-xs text-right -mt-3 mb-3" aria-live="polite"></p>
 
       <!-- Metric Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -377,6 +381,14 @@
   const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
   document.getElementById('headerUserName').textContent = currentUser.username;
   document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
+
+  // Sending the Principal's report is an outward-facing action restricted
+  // to admins server-side (api/send-principal-report.php) — the button is
+  // hidden for counselors rather than shown-then-403'd.
+  if (currentUser.role === 'admin') {
+    document.getElementById('sendPrincipalReportBtn').classList.remove('hidden');
+    document.getElementById('sendPrincipalReportBtn').classList.add('flex');
+  }
 
   function doLogout(e) {
     e.preventDefault();
@@ -585,6 +597,34 @@
       btn.disabled = false;
       btn.textContent = originalLabel;
       this.value = '';
+    }
+  });
+
+  const sendPrincipalReportBtn = document.getElementById('sendPrincipalReportBtn');
+  sendPrincipalReportBtn.addEventListener('click', async function() {
+    const statusEl = document.getElementById('sendPrincipalReportStatus');
+    const originalLabel = sendPrincipalReportBtn.textContent;
+    sendPrincipalReportBtn.disabled = true;
+    sendPrincipalReportBtn.textContent = 'Sending…';
+    statusEl.classList.add('hidden');
+    try {
+      const res = await fetch('api/send-principal-report.php', { method: 'POST' });
+      const data = await res.json();
+      statusEl.classList.remove('hidden');
+      if (data.success) {
+        statusEl.textContent = 'Report sent to the Principal.';
+        statusEl.className = 'text-xs text-right -mt-3 mb-3 text-green-600';
+      } else {
+        statusEl.textContent = data.error || 'Failed to send the report.';
+        statusEl.className = 'text-xs text-right -mt-3 mb-3 text-[#ed1c24]';
+      }
+    } catch (err) {
+      statusEl.classList.remove('hidden');
+      statusEl.textContent = 'Unable to reach the server. Please try again.';
+      statusEl.className = 'text-xs text-right -mt-3 mb-3 text-[#ed1c24]';
+    } finally {
+      sendPrincipalReportBtn.disabled = false;
+      sendPrincipalReportBtn.textContent = originalLabel;
     }
   });
 

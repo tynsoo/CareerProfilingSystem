@@ -62,6 +62,11 @@ function loadPolicies(PDO $pdo): array
         'officeHours' => [
             'text' => $s('officeHours.text', 'Mon–Fri, 8:00 AM–5:00 PM'),
         ],
+        'principal' => [
+            'name' => $s('principal.name', ''),
+            'email' => $s('principal.email', ''),
+            'lastSentAt' => $s('principal.lastSentAt', ''),
+        ],
     ];
 }
 
@@ -195,6 +200,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute(['officeHours.text', $text, $user['id']]);
 
         AuditLogger::log($user['id'], $user['role'], 'update_office_hours', 'security_policies', 'officeHours.text', "Set to: $text");
+        jsonResponse(['success' => true] + loadPolicies($pdo));
+    }
+
+    if ($type === 'principalContact') {
+        $name = trim((string) ($body['name'] ?? ''));
+        $email = trim((string) ($body['email'] ?? ''));
+        if ($name === '' || mb_strlen($name) > 100) {
+            jsonResponse(['success' => false, 'error' => 'Principal name must be 1-100 characters.'], 400);
+        }
+        if ($email === '' || mb_strlen($email) > 150 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            jsonResponse(['success' => false, 'error' => 'Enter a valid email address.'], 400);
+        }
+        $set = function (string $k, string $v) use ($pdo, $user) {
+            $stmt = $pdo->prepare(
+                'INSERT INTO security_policies (key, value, updated_by) VALUES (?, ?, ?)
+                 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW(), updated_by = EXCLUDED.updated_by'
+            );
+            $stmt->execute([$k, $v, $user['id']]);
+        };
+        $set('principal.name', $name);
+        $set('principal.email', $email);
+
+        AuditLogger::log($user['id'], $user['role'], 'update_principal_contact', 'security_policies', 'principal', "Set to: $name <$email>");
         jsonResponse(['success' => true] + loadPolicies($pdo));
     }
 
