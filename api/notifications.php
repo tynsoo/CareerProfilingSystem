@@ -44,7 +44,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         ];
     }
 
-    // Open help requests awaiting a response
+    // Open counseling requests awaiting a response
     $stmt = $pdo->query(
         "SELECT id, name, subject, sent_at FROM help_requests
          WHERE status = 'open' ORDER BY sent_at DESC LIMIT 5"
@@ -53,7 +53,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         $who = $row['name'] ?: 'A student';
         $items[] = [
             'type' => 'help_request',
-            'text' => "Help request — $who: " . ($row['subject'] ?: 'No subject'),
+            'text' => "Counseling request — $who: " . ($row['subject'] ?: 'No subject'),
             'link' => 'help-requests.html',
             'ts' => $row['sent_at'],
         ];
@@ -69,7 +69,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
     foreach ($stmt->fetchAll() as $row) {
         $items[] = [
             'type' => 'help_resolved',
-            'text' => 'Your help request "' . ($row['subject'] ?: 'General inquiry') . '" has been resolved.',
+            'text' => 'Your counseling request "' . ($row['subject'] ?: 'General inquiry') . '" has been resolved.',
             'link' => 'help-center.html',
             'ts' => $row['resolved_at'],
         ];

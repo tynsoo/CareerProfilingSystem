@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Student: submit a new request.
     if ($user['role'] !== 'student') {
-        jsonResponse(['success' => false, 'error' => 'Only students can submit help requests.'], 403);
+        jsonResponse(['success' => false, 'error' => 'Only students can submit counseling requests.'], 403);
     }
     $subject = trim((string) ($body['subject'] ?? ''));
     $message = trim((string) ($body['message'] ?? ''));
