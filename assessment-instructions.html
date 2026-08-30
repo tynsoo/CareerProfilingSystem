@@ -82,14 +82,19 @@
       </div>
     </div>
 
-    <div class="bg-[#fff7ed] border border-[#ffedd5] rounded-[13px] p-4 flex gap-3 items-start mb-8">
+    <div class="bg-[#fff7ed] border border-[#ffedd5] rounded-[13px] p-4 flex gap-3 items-start mb-6">
       <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" class="w-5 h-5 shrink-0 mt-0.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
       <p class="text-sm text-orange-700">Once you begin, you'll need to answer every question in order — you can't skip ahead or submit until all 60 are complete.</p>
     </div>
 
+    <label class="flex items-start gap-2.5 text-sm text-[#5c5a5a] leading-relaxed mb-8 cursor-pointer">
+      <input type="checkbox" id="privacyConsent" required class="mt-0.5 w-4 h-4 shrink-0 rounded border-gray-300 text-[#0f2a6b] focus:ring-[#0f2a6b] focus:ring-offset-0">
+      <span>I understand that my responses to this assessment will be encrypted and used only for career profiling and guidance purposes at MMCL, consistent with the <a href="privacy.html" target="_blank" class="text-[#ed1c24] hover:underline">Data Privacy Policy</a>.</span>
+    </label>
+
     <div class="flex items-center justify-between flex-wrap gap-4">
       <a href="assessment.html" class="text-sm font-medium text-[#5c5a5a] hover:text-black">Not now, go back</a>
-      <button type="button" id="beginBtn" class="bg-[#0f2a6b] text-white text-sm font-semibold rounded-md px-8 py-3.5 hover:opacity-90">Begin Assessment</button>
+      <button type="button" id="beginBtn" disabled class="bg-[#0f2a6b] text-white text-sm font-semibold rounded-md px-8 py-3.5 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed">Begin Assessment</button>
     </div>
 
   </div>
@@ -122,6 +127,11 @@
     }
     document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
     document.getElementById('headerGrade').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
+
+    const beginBtn = document.getElementById('beginBtn');
+    document.getElementById('privacyConsent').addEventListener('change', function() {
+      beginBtn.disabled = !this.checked;
+    });
 
     const modal = document.getElementById('accessCodeModal');
     const input = document.getElementById('accessCodeInput');

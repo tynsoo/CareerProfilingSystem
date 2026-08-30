@@ -55,6 +55,11 @@
         Logout
       </a>
     </div>
+
+    <div class="bg-white px-6 py-3 flex items-center justify-center gap-3">
+      <img src="images/MMCL-logo.webp" alt="Mapúa Malayan Colleges Laguna" class="h-8 w-auto">
+      <img src="images/login/cgc-logo-title.png" alt="Center for Guidance and Counseling" class="h-7 w-auto">
+    </div>
   </aside>
 
   <!-- Main Content -->
@@ -101,6 +106,11 @@
     </header>
 
     <main id="main-content" class="flex-1 px-9 py-10 max-w-[1152px]">
+
+      <div id="announcementsPanel" class="hidden bg-white border border-slate-200 rounded-lg shadow-[0px_2px_15px_0px_rgba(0,26,64,0.04)] p-[25px] mb-6">
+        <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-3">Announcements</p>
+        <div id="announcementsPanelList" class="flex flex-col gap-3"></div>
+      </div>
 
       <!-- Empty state: no assessment yet -->
       <div id="emptyState" class="hidden bg-white border border-slate-200 rounded-xl shadow-sm p-12 max-w-md flex flex-col items-center text-center gap-4">
@@ -192,6 +202,11 @@
           </div>
         </div>
 
+        <div class="bg-white border border-[#e8bcb7] rounded-lg p-5 mb-6">
+          <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-3">Your Top 3 Interest Areas</p>
+          <div id="cr-topTypes" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div class="lg:col-span-8">
             <h2 class="text-xl font-semibold text-[#191c1e] border-b border-[#e8bcb7] pb-2 mb-4">Top Matches</h2>
@@ -205,7 +220,7 @@
             </div>
             <div class="bg-[#f2f4f6] border border-[#e8bcb7] rounded p-[17px]">
               <h3 class="text-xl font-semibold text-[#191c1e] mb-2">Need Guidance?</h3>
-              <p class="text-xs text-[#5e3f3c] mb-4">Discuss these results with an academic advisor to map out your curriculum and ensure you're on the right track.</p>
+              <p class="text-xs text-[#5e3f3c] mb-4">Discuss these results with our guidance staff to map out your curriculum and ensure you're on the right track.</p>
               <a href="help-center.html?subject=Request%20for%20Academic%20Advising" class="block text-center bg-[#495e88] text-white text-xs font-semibold uppercase tracking-wide rounded px-4 py-2 hover:opacity-90">Schedule Advising</a>
             </div>
           </div>
@@ -260,6 +275,29 @@
     });
     backdrop.addEventListener('click', closeSidebar);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
+  })();
+
+  (async function renderAnnouncements() {
+    let data;
+    try {
+      data = await (await fetch('api/announcements.php')).json();
+    } catch (e) {
+      return;
+    }
+    const items = (data.announcements || []).slice(0, 3);
+    if (!items.length) return;
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    document.getElementById('announcementsPanelList').innerHTML = items.map(function(a) {
+      const date = new Date(a.publishAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return '<div class="border-l-[3px] border-[#ed1c24] pl-4 py-1">' +
+        '<p class="text-sm font-semibold text-[#001a40]">' + escapeHtml(a.title) + '</p>' +
+        '<p class="text-xs text-slate-500 mt-0.5">' + date + '</p>' +
+        '<p class="text-sm text-slate-600 mt-1 leading-relaxed">' + escapeHtml(a.body) + '</p>' +
+      '</div>';
+    }).join('');
+    document.getElementById('announcementsPanel').classList.remove('hidden');
   })();
 
   function doLogout(e) {
@@ -417,6 +455,11 @@
     const barColor = i === 0 ? '#bb0013' : (i < 3 ? '#001c43' : '#b7c8e1');
     const pctColor = i === 0 ? 'text-[#bb0013]' : (i < 3 ? 'text-[#495e88]' : 'text-slate-500');
     const displayName = r.name === 'Investigate' ? 'Investigative' : r.name;
+    // Ranks #2 and #3 get a short description here (rank #1's is already
+    // shown in the Primary Interest Area card above, so it's not repeated).
+    const desc = (i === 1 || i === 2)
+      ? '<p class="text-xs text-slate-500 mt-0.5 leading-relaxed">' + TYPE_INFO[r.name].description + '</p>'
+      : '';
     return '<div class="flex flex-col gap-2 ' + dim + '">' +
       '<div class="flex items-baseline justify-between">' +
         '<span class="text-xs font-semibold tracking-[0.6px] text-[#001c43]">' + displayName + ' (' + info_letter(r.name) + ')</span>' +
@@ -425,6 +468,7 @@
       '<div class="bg-slate-100 h-2 rounded-full overflow-hidden">' +
         '<div class="intensity-bar h-full rounded-full transition-all duration-700 ease-out" style="width:0%;background:' + barColor + '" data-fill="' + pct + '"></div>' +
       '</div>' +
+      desc +
     '</div>';
   }).join('');
   document.getElementById('intensityList').innerHTML = intensityHtml;
@@ -471,6 +515,15 @@
 
   async function renderCareerResults(recommendation) {
     document.getElementById('cr-code').textContent = ranked.slice(0, 3).map(function(r) { return r.name === 'Investigate' ? 'I' : r.name[0]; }).join(' - ');
+
+    document.getElementById('cr-topTypes').innerHTML = ranked.slice(0, 3).map(function(r) {
+      const info = TYPE_INFO[r.name];
+      const displayName = r.name === 'Investigate' ? 'Investigative' : r.name;
+      return '<div>' +
+        '<p class="text-sm font-semibold text-[#001c43]">' + displayName + ' (' + info.letter + ')</p>' +
+        '<p class="text-xs text-[#5e3f3c] mt-1 leading-relaxed">' + info.description + '</p>' +
+      '</div>';
+    }).join('');
 
     const savedData = await (await fetch('api/saved-programs.php')).json();
     let savedIds = savedData.programIds || [];
