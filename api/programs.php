@@ -12,7 +12,7 @@ if ($method === 'GET') {
         Rbac::requireAccess('career', 'limited');
     }
 
-    $sql = 'SELECT p.id, p.title_enc, p.holland_code_enc, p.status, p.college_id, c.code AS college_code, c.name AS college_name
+    $sql = 'SELECT p.id, p.title_enc, p.holland_code_enc, p.description_enc, p.status, p.college_id, c.code AS college_code, c.name AS college_name
             FROM programs p JOIN colleges c ON c.id = p.college_id';
     if (!$includeInactive) {
         $sql .= " WHERE p.status = 'Active'";
@@ -24,6 +24,7 @@ if ($method === 'GET') {
         'id' => (int) $r['id'],
         'title' => Crypto::dec($r['title_enc']),
         'hollandCode' => Crypto::dec($r['holland_code_enc']),
+        'description' => $r['description_enc'] !== null ? Crypto::dec($r['description_enc']) : '',
         'status' => $r['status'],
         'collegeId' => (int) $r['college_id'],
         'collegeCode' => $r['college_code'],
@@ -63,6 +64,7 @@ function readProgramInput(array $body): array
 {
     $title = trim((string) ($body['title'] ?? ''));
     $hollandCode = strtoupper(trim((string) ($body['hollandCode'] ?? '')));
+    $description = trim((string) ($body['description'] ?? ''));
     $collegeId = (int) ($body['collegeId'] ?? 0);
     $status = ($body['status'] ?? 'Active') === 'Inactive' ? 'Inactive' : 'Active';
 
@@ -75,17 +77,20 @@ function readProgramInput(array $body): array
     if (count(array_unique(str_split($hollandCode))) !== 3) {
         jsonResponse(['success' => false, 'error' => 'Holland code letters must be distinct.'], 400);
     }
+    if (mb_strlen($description) > 1000) {
+        jsonResponse(['success' => false, 'error' => 'Description must be 1000 characters or fewer.'], 400);
+    }
     if ($collegeId <= 0) {
         jsonResponse(['success' => false, 'error' => 'A college is required.'], 400);
     }
 
-    return [$title, $hollandCode, $collegeId, $status];
+    return [$title, $hollandCode, $description, $collegeId, $status];
 }
 
 if ($method === 'POST') {
     $user = Rbac::requireAccess('career', 'full');
     $body = readJsonBody();
-    [$title, $hollandCode, $collegeId, $status] = readProgramInput($body);
+    [$title, $hollandCode, $description, $collegeId, $status] = readProgramInput($body);
 
     $exists = $pdo->prepare('SELECT id FROM colleges WHERE id = ?');
     $exists->execute([$collegeId]);
@@ -94,9 +99,9 @@ if ($method === 'POST') {
     }
 
     $insert = $pdo->prepare(
-        'INSERT INTO programs (college_id, title_enc, holland_code_enc, status) VALUES (?, ?, ?, ?) RETURNING id'
+        'INSERT INTO programs (college_id, title_enc, holland_code_enc, description_enc, status) VALUES (?, ?, ?, ?, ?) RETURNING id'
     );
-    $insert->execute([$collegeId, Crypto::enc($title), Crypto::enc($hollandCode), $status]);
+    $insert->execute([$collegeId, Crypto::enc($title), Crypto::enc($hollandCode), $description !== '' ? Crypto::enc($description) : null, $status]);
     $id = (int) $insert->fetchColumn();
 
     AuditLogger::log($user['id'], $user['role'], 'create_program', 'program', (string) $id, $title);
@@ -118,7 +123,7 @@ if ($method === 'PUT') {
         jsonResponse(['success' => false, 'error' => 'Program not found.'], 404);
     }
 
-    [$title, $hollandCode, $collegeId, $status] = readProgramInput($body);
+    [$title, $hollandCode, $description, $collegeId, $status] = readProgramInput($body);
 
     $collegeCheck = $pdo->prepare('SELECT id FROM colleges WHERE id = ?');
     $collegeCheck->execute([$collegeId]);
@@ -127,9 +132,9 @@ if ($method === 'PUT') {
     }
 
     $update = $pdo->prepare(
-        'UPDATE programs SET college_id = ?, title_enc = ?, holland_code_enc = ?, status = ?, updated_at = NOW() WHERE id = ?'
+        'UPDATE programs SET college_id = ?, title_enc = ?, holland_code_enc = ?, description_enc = ?, status = ?, updated_at = NOW() WHERE id = ?'
     );
-    $update->execute([$collegeId, Crypto::enc($title), Crypto::enc($hollandCode), $status, $id]);
+    $update->execute([$collegeId, Crypto::enc($title), Crypto::enc($hollandCode), $description !== '' ? Crypto::enc($description) : null, $status, $id]);
 
     AuditLogger::log($user['id'], $user['role'], 'update_program', 'program', (string) $id, $title);
 

@@ -202,6 +202,11 @@
           <p class="text-xs text-slate-500">Letter order matters — the 1st letter (R, I, A, S, E, or C) is weighted highest in career matching.</p>
         </div>
 
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-slate-600">Description <span class="text-slate-400">(optional, shown to students on their Career Results page)</span></label>
+          <textarea id="descriptionInput" rows="3" maxlength="1000" placeholder="A short description of what this program covers and where it leads." class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
+        </div>
+
         <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
           <a href="career-dataset.html" class="px-4 py-2.5 text-sm font-medium text-slate-600 rounded-md border border-slate-300 hover:bg-slate-50">Cancel</a>
           <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Save Program</button>
@@ -278,6 +283,7 @@
   const departmentInput = document.getElementById('departmentInput');
   const statusInput = document.getElementById('statusInput');
   const hollandCodeInput = document.getElementById('hollandCodeInput');
+  const descriptionInput = document.getElementById('descriptionInput');
   const successBanner = document.getElementById('successBanner');
   const errorBanner = document.getElementById('errorBanner');
 
@@ -302,7 +308,8 @@
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: titleInput.value.trim(), collegeId: Number(departmentInput.value),
-        hollandCode: hollandCode, status: statusInput.value
+        hollandCode: hollandCode, status: statusInput.value,
+        description: descriptionInput.value.trim()
       })
     });
     const data = await res.json();

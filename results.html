@@ -537,6 +537,11 @@
     }
 
     function describeProgram(p) {
+      // Prefer the real program description staff wrote in Career Data Set;
+      // fall back to the generic match-quality sentence for programs that
+      // don't have one yet. The full match-score breakdown is still just a
+      // click away via "View Program Details".
+      if (p.description) return p.description;
       return 'This program is a ' + p.matchPercent + '% match to your RIASEC profile, based on its Holland Code (' + p.hollandCode + ') and your assessment results.';
     }
 

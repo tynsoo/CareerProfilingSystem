@@ -67,6 +67,7 @@ CREATE TABLE programs (
     college_id          INT NOT NULL REFERENCES colleges(id),
     title_enc           TEXT NOT NULL,
     holland_code_enc    TEXT NOT NULL,
+    description_enc     TEXT,
     status              VARCHAR(10) NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive')),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
