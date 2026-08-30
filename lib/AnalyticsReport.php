@@ -181,6 +181,40 @@ class AnalyticsReport
                 'completedCount' => $assessedCount,
                 'expectedSections' => $expectedSections,
             ],
+            'completionByYear' => self::completionByYear($pdo),
         ];
+    }
+
+    /**
+     * Assessment completion rate per Academic Year, oldest first — always
+     * whole-population, like strandDistribution/sectionDistribution above,
+     * regardless of the strand/section filter passed to compute().
+     *
+     * @return array<int,array{academicYear:string,total:int,completed:int,rate:float}>
+     */
+    public static function completionByYear(PDO $pdo): array
+    {
+        $years = $pdo->query(
+            'SELECT DISTINCT academic_year FROM students WHERE academic_year IS NOT NULL ORDER BY academic_year'
+        )->fetchAll(PDO::FETCH_COLUMN);
+
+        $totalStmt = $pdo->prepare('SELECT COUNT(*) FROM students WHERE academic_year = ?');
+        $completedStmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM assessments a JOIN students s ON s.user_id = a.student_id
+             WHERE a.is_latest = TRUE AND s.academic_year = ?'
+        );
+
+        return array_map(function ($ay) use ($totalStmt, $completedStmt) {
+            $totalStmt->execute([$ay]);
+            $total = (int) $totalStmt->fetchColumn();
+            $completedStmt->execute([$ay]);
+            $completed = (int) $completedStmt->fetchColumn();
+            return [
+                'academicYear' => $ay,
+                'total' => $total,
+                'completed' => $completed,
+                'rate' => $total > 0 ? round($completed / $total * 100, 1) : 0.0,
+            ];
+        }, $years);
     }
 }

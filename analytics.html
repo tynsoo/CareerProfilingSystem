@@ -192,6 +192,9 @@
           <a id="exportCsvBtn" href="#" class="flex items-center gap-2 bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
             Export CSV
           </a>
+          <a id="downloadTemplateBtn" href="api/roster-template.php" class="flex items-center gap-2 bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            Download Template
+          </a>
           <button type="button" id="uploadRosterBtn" class="flex items-center gap-2 bg-[#001c43] text-white rounded-md px-4 py-2.5 text-sm font-medium shadow-sm hover:opacity-90">
             Upload Roster (CSV)
           </button>
@@ -344,6 +347,14 @@
         </div>
       </div>
 
+      <!-- Assessment Completion by Academic Year -->
+      <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 mb-6">
+        <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-1">Assessment Completion by Academic Year</p>
+        <p class="text-xs text-slate-500 mb-4">Completion rate across every Academic Year on record, not just the current one.</p>
+        <canvas id="yearChart" height="180"></canvas>
+        <p id="yearChartEmpty" class="hidden text-sm text-slate-400 text-center py-6">No Academic Year data yet.</p>
+      </div>
+
       <!-- Recommended Careers Table -->
       <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <div class="border-b border-slate-200 px-5 py-5">
@@ -493,6 +504,7 @@
   let strandChartInstance = null;
   let riasecChartInstance = null;
   let sectionChartInstance = null;
+  let yearChartInstance = null;
 
   async function load(strand, section) {
     section = section || '';
@@ -590,6 +602,35 @@
     document.getElementById('statsBar').style.width = (stats.expectedCount > 0 ? Math.min(100, Math.round(stats.completedCount / stats.expectedCount * 100)) : 0) + '%';
     document.getElementById('statsSections').textContent = stats.expectedSections.length ? stats.expectedSections.join(', ') : '—';
     document.getElementById('statsNoRoster').classList.toggle('hidden', stats.expectedCount > 0);
+
+    const byYear = data.completionByYear || [];
+    document.getElementById('yearChartEmpty').classList.toggle('hidden', byYear.length > 0);
+    document.getElementById('yearChart').classList.toggle('hidden', byYear.length === 0);
+    if (yearChartInstance) yearChartInstance.destroy();
+    if (byYear.length) {
+      yearChartInstance = new Chart(document.getElementById('yearChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: byYear.map(y => y.academicYear),
+          datasets: [{
+            label: 'Completion Rate',
+            data: byYear.map(y => y.rate),
+            backgroundColor: '#1b8a47',
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => {
+              const y = byYear[ctx.dataIndex];
+              return y.completed + ' of ' + y.total + ' students (' + y.rate + '%)';
+            } } }
+          },
+          scales: { y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } } }
+        }
+      });
+    }
   }
 
   function updateExportLink(data) {

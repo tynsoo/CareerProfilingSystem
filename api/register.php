@@ -23,9 +23,15 @@ $strand = (string) ($body['strand'] ?? '');
 $gradeLevel = (string) ($body['gradeLevel'] ?? '');
 $section = trim((string) ($body['section'] ?? ''));
 $password = (string) ($body['password'] ?? '');
+$privacyConsent = $body['privacyConsent'] ?? false;
 
 if ($schoolId === '' || $firstName === '' || $lastName === '' || $email === '' || $section === '' || $password === '') {
     jsonResponse(['success' => false, 'error' => 'All fields are required.'], 400);
+}
+// Never trust the client-side checkbox's "required" attribute alone —
+// a request built by hand (or a modified page) could omit it entirely.
+if ($privacyConsent !== true) {
+    jsonResponse(['success' => false, 'error' => 'You must agree to the Data Privacy Policy to create an account.'], 400);
 }
 if (mb_strlen($section) > 20) {
     jsonResponse(['success' => false, 'error' => 'Section must be 20 characters or fewer.'], 400);

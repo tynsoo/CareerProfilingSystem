@@ -162,9 +162,12 @@
             </button>
           </div>
 
-          <p class="text-xs text-gray-500 leading-relaxed">
-            By creating an account, you agree to our <a href="terms.html" class="text-[#ed1c24] hover:underline">Terms of Use</a> and confirm that your personal information (name, School ID, and assessment results) will be encrypted and used only for career profiling and guidance purposes at MMCL, consistent with our <a href="privacy.html" class="text-[#ed1c24] hover:underline">Data Privacy Policy</a>.
-          </p>
+          <label class="flex items-start gap-2.5 text-xs text-gray-500 leading-relaxed cursor-pointer">
+            <input type="checkbox" id="privacyConsent" name="privacy_consent" required class="mt-0.5 w-4 h-4 shrink-0 rounded border-gray-300 text-[#ed1c24] focus:ring-[#ed1c24] focus:ring-offset-0">
+            <span>
+              I agree to the <a href="terms.html" class="text-[#ed1c24] hover:underline">Terms of Use</a> and confirm that my personal information (name, School ID, and assessment results) will be encrypted and used only for career profiling and guidance purposes at MMCL, consistent with the <a href="privacy.html" class="text-[#ed1c24] hover:underline">Data Privacy Policy</a>.
+            </span>
+          </label>
 
           <button type="submit" class="w-full py-3.5 rounded-md bg-[#ed1c24] text-white text-sm font-medium shadow hover:opacity-90 transition">
             Create Account
@@ -240,9 +243,14 @@
       const gradeLevel = form.querySelector('input[name="grade_level"]:checked');
       const section = form.section.value.trim();
       const password = form.password.value;
+      const privacyConsent = document.getElementById('privacyConsent').checked;
 
       if (!firstName || !lastName || !schoolId || !email || !strand || !gradeLevel || !section || !password) {
         showMessage('Please fill out all fields.', true);
+        return;
+      }
+      if (!privacyConsent) {
+        showMessage('You must agree to the Data Privacy Policy to create an account.', true);
         return;
       }
 
@@ -257,7 +265,8 @@
             firstName, lastName, schoolId, email, strand,
             gradeLevel: gradeLevel.value,
             section,
-            password
+            password,
+            privacyConsent
           })
         });
         const data = await res.json();
