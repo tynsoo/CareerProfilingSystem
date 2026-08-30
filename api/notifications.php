@@ -133,6 +133,23 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
             'ts' => $row['created_at'],
         ];
     }
+
+    // Staff-granted retakes (see retake_grants / api/retake-grants.php).
+    $stmt = $pdo->prepare(
+        "SELECT id, granted_at FROM retake_grants
+         WHERE student_id = ? AND status = 'granted' AND completed_attempt_number IS NULL
+           AND granted_at > NOW() - INTERVAL '14 days'
+         ORDER BY granted_at DESC LIMIT 5"
+    );
+    $stmt->execute([$user['id']]);
+    foreach ($stmt->fetchAll() as $row) {
+        $items[] = [
+            'type' => 'retake_granted',
+            'text' => 'You have been granted a retake of the RIASEC assessment.',
+            'link' => 'assessment.html',
+            'ts' => $row['granted_at'],
+        ];
+    }
 }
 
 usort($items, fn($a, $b) => strcmp($b['ts'], $a['ts']));

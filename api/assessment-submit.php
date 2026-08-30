@@ -52,6 +52,30 @@ $topTypes = array_map(fn($code) => $labels[$code], array_slice(array_keys($ranke
 
 $studentId = (int) $user['id'];
 
+// The DB layer already supports repeat attempts (attempt_number/is_latest),
+// but nothing previously stopped a student from submitting a 2nd or 3rd
+// attempt on their own — this is the missing gate: any attempt beyond the
+// first requires an active, staff-granted retake (see retake_grants /
+// api/retake-grants.php). Checked before the transaction so a student
+// without a grant never gets past their first attempt.
+$attemptCountStmt = $pdo->prepare('SELECT COUNT(*) FROM assessments WHERE student_id = ?');
+$attemptCountStmt->execute([$studentId]);
+$hasPriorAttempt = ((int) $attemptCountStmt->fetchColumn()) > 0;
+
+$activeGrantId = null;
+if ($hasPriorAttempt) {
+    $grantStmt = $pdo->prepare(
+        "SELECT id FROM retake_grants WHERE student_id = ? AND status = 'granted' AND completed_attempt_number IS NULL ORDER BY granted_at DESC LIMIT 1"
+    );
+    $grantStmt->execute([$studentId]);
+    $activeGrantId = $grantStmt->fetchColumn();
+    if ($activeGrantId === false) {
+        AuditLogger::log($studentId, 'student', 'assessment_retake_denied', 'assessment', null, 'No active retake grant');
+        jsonResponse(['success' => false, 'error' => 'You have already completed the assessment. Contact your Guidance Counselor if you need a retake.'], 403);
+    }
+    $activeGrantId = (int) $activeGrantId;
+}
+
 $pdo->beginTransaction();
 try {
     $pdo->prepare('UPDATE assessments SET is_latest = FALSE WHERE student_id = ? AND is_latest = TRUE')->execute([$studentId]);
@@ -70,6 +94,11 @@ try {
         json_encode($topTypes),
     ]);
     $assessmentId = (int) $insert->fetchColumn();
+
+    if ($activeGrantId !== null) {
+        $pdo->prepare("UPDATE retake_grants SET status = 'completed', completed_attempt_number = ?, completed_at = NOW() WHERE id = ?")
+            ->execute([$attemptNumber, $activeGrantId]);
+    }
 
     $pdo->commit();
 } catch (Throwable $e) {

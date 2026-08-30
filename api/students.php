@@ -36,6 +36,31 @@ if ($schoolIdLookup !== '') {
     $counseledStmt->execute([(int) $row['user_id']]);
     $counseled = (bool) $counseledStmt->fetchColumn();
 
+    // Full attempt history (not just is_latest), for the "Assessment
+    // Attempts" section — cross-referenced with retake_grants so a retake
+    // attempt is labeled as such, matching Phase 4's retake workflow.
+    $attemptsStmt = $pdo->prepare(
+        'SELECT id, attempt_number, top_types, completed_at, score_r, score_i, score_a, score_s, score_e, score_c
+         FROM assessments WHERE student_id = ? ORDER BY attempt_number DESC'
+    );
+    $attemptsStmt->execute([(int) $row['user_id']]);
+    $retakeAttemptNumbers = $pdo->prepare(
+        'SELECT completed_attempt_number FROM retake_grants WHERE student_id = ? AND completed_attempt_number IS NOT NULL'
+    );
+    $retakeAttemptNumbers->execute([(int) $row['user_id']]);
+    $retakeSet = array_flip(array_map('intval', $retakeAttemptNumbers->fetchAll(PDO::FETCH_COLUMN)));
+
+    $attempts = array_map(fn($a) => [
+        'attemptNumber' => (int) $a['attempt_number'],
+        'completedAt' => $a['completed_at'],
+        'riasec' => implode(', ', json_decode($a['top_types'], true)),
+        'scores' => [
+            'R' => (int) $a['score_r'], 'I' => (int) $a['score_i'], 'A' => (int) $a['score_a'],
+            'S' => (int) $a['score_s'], 'E' => (int) $a['score_e'], 'C' => (int) $a['score_c'],
+        ],
+        'isRetake' => isset($retakeSet[(int) $a['attempt_number']]),
+    ], $attemptsStmt->fetchAll());
+
     jsonResponse(['student' => [
         'userId' => (int) $row['user_id'],
         'schoolId' => $row['school_id'],
@@ -54,6 +79,7 @@ if ($schoolIdLookup !== '') {
         ] : null,
         'counseling' => $hasAssessment ? ($counseled ? 'Availed' : 'Did Not Avail') : '',
         'registeredAt' => $row['registered_at'],
+        'attempts' => $attempts,
     ]]);
 }
 

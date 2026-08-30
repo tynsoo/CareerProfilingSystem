@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Announcements — Career Profiling System</title>
+<title>Retake Requests — Career Profiling System</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,7 +48,7 @@
         <img src="images/admin/nav-monitoring.svg" alt="" class="h-4 w-auto">
         Monitoring
       </a>
-      <a href="announcements.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
+      <a href="announcements.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
         Announcements
       </a>
@@ -60,7 +60,7 @@
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg>
         Faculty
       </a>
-      <a href="retake-requests.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+      <a href="retake-requests.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M1 4v6h6M23 20v-6h-6"/><path stroke-linecap="round" stroke-linejoin="round" d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
         Retake Requests
       </a>
@@ -139,62 +139,64 @@
     <!-- Page Content -->
     <main id="main-content" class="flex-1 p-4 sm:p-8 overflow-auto">
 
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-slate-900">Announcements</h1>
-        <p class="text-sm text-slate-500 mt-1">Send updates to students — everyone, or a specific list.</p>
+      <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Retake Requests</h1>
+          <p class="text-sm text-slate-500 mt-1">Grant a student one more RIASEC assessment attempt. RIASEC has no pass/fail score, so retakes are staff-initiated only.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2" id="statusTabs">
+            <button type="button" data-status="granted" class="status-tab px-4 py-2 rounded-md text-sm font-medium border">Pending <span class="tab-count"></span></button>
+            <button type="button" data-status="completed" class="status-tab px-4 py-2 rounded-md text-sm font-medium border">Completed</button>
+            <button type="button" data-status="All" class="status-tab px-4 py-2 rounded-md text-sm font-medium border">All</button>
+          </div>
+          <button type="button" id="grantBtn" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90 shrink-0">Grant Retake</button>
+        </div>
       </div>
 
       <div id="readOnlyNotice" class="hidden bg-amber-50 border border-amber-100 rounded-md px-4 py-3 text-sm text-amber-800 mb-6">
-        You have view-only access to Announcements. Contact an Administrator to send one.
+        You have view-only access to Retake Requests.
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-
-        <!-- Create form -->
-        <div id="createCard" class="lg:col-span-1 bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-          <h2 class="text-base font-semibold text-slate-900 mb-4">New Announcement</h2>
-          <form id="createForm" class="flex flex-col gap-4">
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Title</label>
-              <input type="text" id="annTitle" required maxlength="255" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Message</label>
-              <textarea id="annBody" required rows="4" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Publish Date &amp; Time</label>
-              <input type="datetime-local" id="annPublishAt" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-              <p class="text-xs text-slate-500 mt-1">Leave blank to publish immediately.</p>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-2">Audience</label>
-              <div class="flex gap-2 mb-3">
-                <label class="flex-1"><input type="radio" name="target" value="all" checked class="peer hidden"><span class="block text-center border border-slate-300 rounded-md py-2 text-sm cursor-pointer peer-checked:bg-[#ed1c24] peer-checked:text-white peer-checked:border-[#ed1c24]" id="targetAllLabel">@everyone</span></label>
-                <label class="flex-1"><input type="radio" name="target" value="specific" class="peer hidden"><span class="block text-center border border-slate-300 rounded-md py-2 text-sm cursor-pointer peer-checked:bg-[#ed1c24] peer-checked:text-white peer-checked:border-[#ed1c24]" id="targetSpecificLabel">Specific Students</span></label>
-              </div>
-              <div id="studentPicker" class="hidden">
-                <input type="text" id="studentSearchInput" placeholder="Search students…" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm mb-2">
-                <div id="studentCheckList" class="border border-slate-200 rounded-md max-h-48 overflow-auto divide-y divide-slate-100">
-                  <p class="text-xs text-slate-400 text-center py-4">Loading students…</p>
-                </div>
-                <p class="text-xs text-slate-500 mt-1"><span id="selectedCount">0</span> selected</p>
-              </div>
-            </div>
-            <p id="createError" class="hidden text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5"></p>
-            <p id="createSuccess" class="hidden text-sm text-green-700 bg-green-50 border border-green-100 rounded-md px-3.5 py-2.5"></p>
-            <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Send Announcement</button>
-          </form>
-        </div>
-
-        <!-- Announcements list -->
-        <div class="lg:col-span-2 flex flex-col gap-4" id="announcementsList">
-          <p class="text-sm text-slate-400 text-center py-8 bg-white border border-slate-200 rounded-xl shadow-sm">Loading…</p>
-        </div>
-
+      <div class="flex flex-col gap-4" id="grantsList">
+        <p class="text-sm text-slate-400 text-center py-8">Loading…</p>
       </div>
 
     </main>
+  </div>
+</div>
+
+<!-- Grant Retake Modal -->
+<div id="grantModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+      <h3 class="text-base font-semibold text-slate-900">Grant Retake</h3>
+      <button type="button" class="grant-modal-close-btn text-slate-400 hover:text-slate-600" aria-label="Close">&times;</button>
+    </div>
+    <form id="grantForm" class="px-6 py-5 flex flex-col gap-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Student</label>
+        <select id="gStudentId" required class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+          <option value="">Loading…</option>
+        </select>
+        <p class="text-xs text-slate-400 mt-1">Only students who have completed the assessment can be granted a retake.</p>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Exam Session (optional)</label>
+        <select id="gScheduleId" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+          <option value="">None</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Reason</label>
+        <textarea id="gReason" required rows="3" maxlength="500" placeholder="e.g. Technical issue interrupted the first attempt" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
+      </div>
+      <p id="grantError" class="hidden text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5"></p>
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" class="grant-modal-close-btn px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:bg-red-600">Grant Retake</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -214,12 +216,6 @@
   const roleLabels = { admin: 'Administrator', counselor: 'Guidance Counselor' };
   document.getElementById('headerUserName').textContent = currentUser.username;
   document.getElementById('headerUserRole').textContent = roleLabels[currentUser.role] || currentUser.role;
-
-  const isAdmin = currentUser.role === 'admin';
-  if (!isAdmin) {
-    document.getElementById('createCard').classList.add('hidden');
-    document.getElementById('readOnlyNotice').classList.remove('hidden');
-  }
 
   function doLogout(e) {
     e.preventDefault();
@@ -254,147 +250,150 @@
   function escapeHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
-  function formatDateTime(iso) {
-    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' +
-      new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  // ---- Announcements list ----
-  async function loadAnnouncements() {
-    const list = document.getElementById('announcementsList');
-    const data = await (await fetch('api/announcements.php')).json();
-    if (!data.announcements || !data.announcements.length) {
-      list.innerHTML = '<p class="text-sm text-slate-400 text-center py-8 bg-white border border-slate-200 rounded-xl shadow-sm">No announcements yet.</p>';
-      return;
-    }
-    list.innerHTML = data.announcements.map(function(a) {
-      const statusBadge = a.isPublished
-        ? '<span class="bg-green-50 border border-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">Published</span>'
-        : '<span class="bg-amber-50 border border-amber-100 text-amber-700 text-xs font-medium px-2.5 py-1 rounded-full">Scheduled</span>';
-      const audience = a.targetType === 'all' ? '@everyone' : (a.recipientCount || 0) + ' student(s)';
-      const deleteBtn = isAdmin
-        ? '<button type="button" class="delete-btn text-xs font-medium text-[#ed1c24] hover:underline" data-id="' + a.id + '">Delete</button>'
-        : '';
-      return '<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 flex flex-col gap-2">' +
-        '<div class="flex items-start justify-between gap-4 flex-wrap">' +
-          '<div><h3 class="text-base font-semibold text-slate-900">' + escapeHtml(a.title) + '</h3>' +
-          '<p class="text-xs text-slate-500 mt-0.5">' + formatDateTime(a.publishAt) + ' &middot; ' + escapeHtml(audience) +
-          (a.createdByUsername ? ' &middot; by ' + escapeHtml(a.createdByUsername) : '') + '</p></div>' +
-          statusBadge +
-        '</div>' +
-        '<p class="text-sm text-slate-700 leading-relaxed">' + escapeHtml(a.body) + '</p>' +
-        (deleteBtn ? '<div class="flex justify-end">' + deleteBtn + '</div>' : '') +
-      '</div>';
-    }).join('');
+  let canWrite = false;
+  try {
+    const cfg = await (await fetch('api/security-config.php')).json();
+    canWrite = !!(cfg.rbac && cfg.rbac.examinations && cfg.rbac.examinations[currentUser.role] === 'full');
+  } catch (err) { /* default to read-only if this check fails */ }
+  if (!canWrite) {
+    document.getElementById('grantBtn').classList.add('hidden');
+    document.getElementById('readOnlyNotice').classList.remove('hidden');
+  }
 
-    list.querySelectorAll('.delete-btn').forEach(function(btn) {
+  let activeStatus = 'granted';
+
+  function renderCard(g) {
+    const statusBadge = {
+      granted: '<span class="bg-amber-50 border border-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full">Pending</span>',
+      completed: '<span class="bg-green-50 border border-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">Completed</span>',
+      revoked: '<span class="bg-slate-100 border border-slate-200 text-slate-500 text-xs font-semibold px-2.5 py-1 rounded-full">Revoked</span>',
+    }[g.status] || '';
+    const revokeBtn = (canWrite && g.status === 'granted')
+      ? '<button type="button" class="revoke-btn shrink-0 border border-slate-300 text-slate-600 text-xs font-semibold uppercase tracking-wide rounded-md px-4 py-2 hover:bg-slate-50" data-id="' + g.id + '">Revoke</button>'
+      : '';
+    return '<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 flex flex-col gap-3">' +
+      '<div class="flex items-start justify-between gap-4 flex-wrap">' +
+        '<div><h3 class="text-base font-semibold text-slate-900">' + escapeHtml(g.studentName) + ' (' + escapeHtml(g.schoolId) + ')</h3>' +
+        '<p class="text-xs text-slate-500 mt-0.5">Original attempt #' + g.originalAttemptNumber + ' — ' + formatDate(g.originalCompletedAt) + ' &middot; Granted ' + formatDate(g.grantedAt) + '</p></div>' +
+        statusBadge +
+      '</div>' +
+      '<p class="text-sm text-slate-700 leading-relaxed"><span class="text-slate-500">Reason:</span> ' + escapeHtml(g.reason) + '</p>' +
+      (g.status === 'completed' ? '<p class="text-xs text-slate-500">Completed as attempt #' + g.completedAttemptNumber + ' on ' + formatDate(g.completedAt) + '.</p>' : '') +
+      (revokeBtn ? '<div class="flex justify-end">' + revokeBtn + '</div>' : '') +
+    '</div>';
+  }
+
+  async function loadGrants() {
+    const list = document.getElementById('grantsList');
+    list.innerHTML = '<p class="text-sm text-slate-400 text-center py-8">Loading…</p>';
+
+    const data = await (await fetch('api/retake-grants.php?status=' + encodeURIComponent(activeStatus))).json();
+
+    document.querySelectorAll('.status-tab').forEach(btn => {
+      const isActive = btn.dataset.status === activeStatus;
+      btn.className = 'status-tab px-4 py-2 rounded-md text-sm font-medium border ' +
+        (isActive ? 'bg-[#ed1c24] border-[#ed1c24] text-white' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50');
+    });
+    document.querySelector('.status-tab[data-status="granted"] .tab-count').textContent = '(' + data.pendingCount + ')';
+
+    list.innerHTML = data.grants.length
+      ? data.grants.map(renderCard).join('')
+      : '<p class="text-sm text-slate-400 text-center py-8">No retake requests in this view.</p>';
+
+    list.querySelectorAll('.revoke-btn').forEach(btn => {
       btn.addEventListener('click', async function() {
-        if (!confirm('Delete this announcement? This cannot be undone.')) return;
+        if (!confirm('Revoke this retake grant?')) return;
         btn.disabled = true;
-        await fetch('api/announcements.php', {
+        const res = await fetch('api/retake-grants.php', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'delete', id: Number(btn.dataset.id) })
+          body: JSON.stringify({ type: 'revoke', id: Number(btn.dataset.id) })
         });
-        await loadAnnouncements();
+        const data = await res.json();
+        if (!data.success) { alert(data.error || 'Failed to revoke.'); btn.disabled = false; return; }
+        await loadGrants();
       });
     });
   }
 
-  if (!isAdmin) {
-    await loadAnnouncements();
-    return;
-  }
-
-  // ---- Create form (admin only) ----
-  const selectedStudentIds = new Set();
-  let allStudents = [];
-
-  document.querySelectorAll('input[name="target"]').forEach(function(radio) {
-    radio.addEventListener('change', function() {
-      document.getElementById('studentPicker').classList.toggle('hidden', radio.value !== 'specific' || !radio.checked);
-    });
+  document.querySelectorAll('.status-tab').forEach(btn => {
+    btn.addEventListener('click', () => { activeStatus = btn.dataset.status; loadGrants(); });
   });
 
-  function renderStudentList(filterText) {
-    const needle = (filterText || '').toLowerCase();
-    const matches = allStudents.filter(function(s) {
-      return !needle || s.name.toLowerCase().includes(needle) || s.schoolId.toLowerCase().includes(needle);
-    });
-    const container = document.getElementById('studentCheckList');
-    container.innerHTML = matches.length
-      ? matches.map(function(s) {
-          const checked = selectedStudentIds.has(s.userId) ? 'checked' : '';
-          return '<label class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 cursor-pointer">' +
-            '<input type="checkbox" class="student-check" value="' + s.userId + '" ' + checked + '> ' +
-            escapeHtml(s.name) + ' <span class="text-xs text-slate-400">(' + escapeHtml(s.schoolId) + ')</span>' +
-          '</label>';
-        }).join('')
-      : '<p class="text-xs text-slate-400 text-center py-4">No matching students.</p>';
+  // Grant modal
+  const grantModal = document.getElementById('grantModal');
+  const grantForm = document.getElementById('grantForm');
+  const grantError = document.getElementById('grantError');
 
-    container.querySelectorAll('.student-check').forEach(function(cb) {
-      cb.addEventListener('change', function() {
-        const id = Number(cb.value);
-        if (cb.checked) selectedStudentIds.add(id); else selectedStudentIds.delete(id);
-        document.getElementById('selectedCount').textContent = selectedStudentIds.size;
+  async function openGrantModal() {
+    grantError.classList.add('hidden');
+    grantForm.reset();
+    grantModal.classList.remove('hidden');
+
+    const studentSelect = document.getElementById('gStudentId');
+    studentSelect.innerHTML = '<option>Loading…</option>';
+    try {
+      const data = await (await fetch('api/students.php?all=1')).json();
+      const completed = (data.students || []).filter(s => s.status === 'Completed');
+      studentSelect.innerHTML = completed.length
+        ? completed.map(s => `<option value="${s.userId}">${escapeHtml(s.schoolId + ' — ' + s.name)}</option>`).join('')
+        : '<option value="">No students have completed the assessment yet</option>';
+    } catch (err) {
+      studentSelect.innerHTML = '<option value="">Failed to load students</option>';
+    }
+
+    const scheduleSelect = document.getElementById('gScheduleId');
+    scheduleSelect.innerHTML = '<option value="">None</option>';
+    try {
+      const data = await (await fetch('api/exam-schedules.php')).json();
+      (data.schedules || []).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = formatDate(s.examDate) + ' ' + s.startTime + '–' + s.endTime + ' — ' + s.room;
+        scheduleSelect.appendChild(opt);
       });
-    });
+    } catch (err) { /* leave as "None" only */ }
   }
+  function closeGrantModal() { grantModal.classList.add('hidden'); }
+  document.getElementById('grantBtn').addEventListener('click', openGrantModal);
+  document.querySelectorAll('.grant-modal-close-btn').forEach(btn => btn.addEventListener('click', closeGrantModal));
+  grantModal.addEventListener('click', (e) => { if (e.target === grantModal) closeGrantModal(); });
 
-  async function loadStudentsForPicker() {
-    const data = await (await fetch('api/students.php?all=1')).json();
-    allStudents = data.students || [];
-    renderStudentList('');
-  }
-  document.getElementById('studentSearchInput').addEventListener('input', function() {
-    renderStudentList(this.value);
-  });
-
-  document.getElementById('createForm').addEventListener('submit', async function(e) {
+  grantForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const errorEl = document.getElementById('createError');
-    const successEl = document.getElementById('createSuccess');
-    errorEl.classList.add('hidden');
-    successEl.classList.add('hidden');
-
-    const targetType = document.querySelector('input[name="target"]:checked').value;
+    grantError.classList.add('hidden');
+    const studentId = Number(document.getElementById('gStudentId').value);
+    if (!studentId) { grantError.textContent = 'Select a student.'; grantError.classList.remove('hidden'); return; }
     const body = {
-      type: 'create',
-      title: document.getElementById('annTitle').value.trim(),
-      body: document.getElementById('annBody').value.trim(),
-      targetType: targetType,
-      publishAt: document.getElementById('annPublishAt').value,
-      studentIds: targetType === 'specific' ? Array.from(selectedStudentIds) : [],
+      type: 'grant',
+      studentId,
+      scheduleId: document.getElementById('gScheduleId').value || undefined,
+      reason: document.getElementById('gReason').value.trim(),
     };
-
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    const res = await fetch('api/announcements.php', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    const res = await fetch('api/retake-grants.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     submitBtn.disabled = false;
-
     if (!data.success) {
-      errorEl.textContent = data.error || 'Failed to send announcement.';
-      errorEl.classList.remove('hidden');
+      grantError.textContent = data.error || 'Failed to grant retake.';
+      grantError.classList.remove('hidden');
       return;
     }
-
-    successEl.textContent = 'Announcement sent.';
-    successEl.classList.remove('hidden');
-    e.target.reset();
-    selectedStudentIds.clear();
-    document.getElementById('selectedCount').textContent = '0';
-    document.getElementById('studentPicker').classList.add('hidden');
-    renderStudentList('');
-    await loadAnnouncements();
+    closeGrantModal();
+    await loadGrants();
   });
 
-  await loadStudentsForPicker();
-  await loadAnnouncements();
+  await loadGrants();
 })();
 </script>
-
 <script src="js/motion.js" defer></script>
 <script>
 (function() {
