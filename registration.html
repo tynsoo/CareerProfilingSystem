@@ -59,9 +59,6 @@
         <form id="registerForm" class="flex flex-col gap-5">
 
           <p id="formMessage" class="hidden text-sm rounded-md px-3.5 py-2.5"></p>
-          <div id="verifyLinkBanner" class="hidden bg-amber-50 border border-amber-100 rounded-md px-3.5 py-2.5 text-left break-all">
-            <p class="text-xs text-amber-800">The verification email couldn't be delivered. Use this link directly: <a id="verifyLinkAnchor" href="#" class="font-semibold underline"></a></p>
-          </div>
 
           <div class="grid grid-cols-2 gap-4">
             <input
@@ -193,6 +190,32 @@
   </div>
 </div>
 
+<!-- Success modal — shown instead of the inline message bar after a
+     successful registration, since the inline bar was easy to miss and
+     led people to click "Create Account" again, which then failed as a
+     duplicate. Same modal-backdrop/modal-card convention used across the
+     app (see assessment-instructions.html's access-code modal). -->
+<div id="successModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4 text-center items-center">
+    <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
+      <svg viewBox="0 0 24 24" fill="none" class="w-7 h-7 text-green-600">
+        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h3 class="text-lg font-semibold text-[#001c43]">Account Created!</h3>
+    <p id="successMessage" class="text-sm text-gray-500 leading-relaxed"></p>
+    <div id="successVerifyLinkBox" class="hidden w-full bg-amber-50 border border-amber-100 rounded-md px-3.5 py-2.5 text-left break-all">
+      <p class="text-xs text-amber-800">The verification email couldn't be delivered. Use this link directly: <a id="successVerifyLinkAnchor" href="#" class="font-semibold underline"></a></p>
+    </div>
+    <a href="login.html" class="w-full py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium shadow hover:opacity-90 transition text-center">
+      Go to Sign In
+    </a>
+    <button type="button" id="successModalClose" class="text-xs text-gray-400 hover:text-gray-600 hover:underline">
+      Register another account
+    </button>
+  </div>
+</div>
+
 <script>
   document.getElementById('togglePassword').addEventListener('click', function () {
     const input = document.getElementById('password');
@@ -260,6 +283,34 @@
       msg.classList.add('alert-anim');
     }
 
+    // Success confirmation moved to a modal (rather than the same inline
+    // bar used for errors) — the inline bar was easy to miss, which led
+    // people to click "Create Account" again and hit a "already exists"
+    // error, confused about whether the first attempt had worked.
+    const successModal = document.getElementById('successModal');
+    function openSuccessModal(email, verifyLink) {
+      document.getElementById('successMessage').textContent =
+        'We\'ve sent a verification link to ' + email + '. Click it before you can sign in.';
+      const linkBox = document.getElementById('successVerifyLinkBox');
+      if (verifyLink) {
+        const anchor = document.getElementById('successVerifyLinkAnchor');
+        anchor.href = verifyLink;
+        anchor.textContent = verifyLink;
+        linkBox.classList.remove('hidden');
+      } else {
+        linkBox.classList.add('hidden');
+      }
+      successModal.classList.remove('hidden');
+      setTimeout(function() { successModal.classList.add('is-open'); }, 16);
+    }
+    function closeSuccessModal() {
+      successModal.classList.remove('is-open');
+      setTimeout(function() { successModal.classList.add('hidden'); }, 260);
+    }
+    document.getElementById('successModalClose').addEventListener('click', closeSuccessModal);
+    successModal.addEventListener('click', function(e) { if (e.target.id === 'successModal') closeSuccessModal(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && !successModal.classList.contains('hidden')) closeSuccessModal(); });
+
     document.getElementById('registerForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const form = e.target;
@@ -304,13 +355,7 @@
           return;
         }
 
-        showMessage('Account created! Check ' + email + ' for a verification link — you\'ll need to click it before you can sign in.', false);
-        if (data.verifyLink) {
-          const anchor = document.getElementById('verifyLinkAnchor');
-          anchor.href = data.verifyLink;
-          anchor.textContent = data.verifyLink;
-          document.getElementById('verifyLinkBanner').classList.remove('hidden');
-        }
+        openSuccessModal(email, data.verifyLink || null);
         form.reset();
       } catch (err) {
         showMessage('Unable to reach the server. Please try again.', true);
