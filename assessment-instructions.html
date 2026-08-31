@@ -88,7 +88,7 @@
     </div>
 
     <label class="flex items-start gap-2.5 text-sm text-[#5c5a5a] leading-relaxed mb-8 cursor-pointer">
-      <input type="checkbox" id="privacyConsent" required class="mt-0.5 w-4 h-4 shrink-0 rounded border-gray-300 text-[#0f2a6b] focus:ring-[#0f2a6b] focus:ring-offset-0">
+      <input type="checkbox" id="policyAgreeCheckbox" required class="mt-0.5 w-4 h-4 shrink-0 rounded border-gray-300 text-[#0f2a6b] focus:ring-[#0f2a6b] focus:ring-offset-0">
       <span>I understand that my responses to this assessment will be encrypted and used only for career profiling and guidance purposes at MMCL, consistent with the <a href="privacy.html" target="_blank" class="text-[#ed1c24] hover:underline">Data Privacy Policy</a>.</span>
     </label>
 
@@ -129,7 +129,7 @@
     document.getElementById('headerGrade').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
 
     const beginBtn = document.getElementById('beginBtn');
-    document.getElementById('privacyConsent').addEventListener('change', function() {
+    document.getElementById('policyAgreeCheckbox').addEventListener('change', function() {
       beginBtn.disabled = !this.checked;
     });
 
