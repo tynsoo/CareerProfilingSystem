@@ -14,7 +14,7 @@ class AnalyticsReport
     /** @return array<string,mixed> */
     public static function compute(PDO $pdo, string $strand = '', string $section = ''): array
     {
-        $validStrands = ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'];
+        $validStrands = ['STEM', 'ABM', 'ICT', 'HUMSS'];
         if (!in_array($strand, $validStrands, true)) {
             $strand = '';
         }

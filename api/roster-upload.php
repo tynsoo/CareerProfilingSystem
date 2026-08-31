@@ -50,7 +50,7 @@ if ($idxSchoolId === null || $idxFirstName === null || $idxLastName === null || 
     jsonResponse(['success' => false, 'error' => 'CSV must have columns: School ID, First Name, Last Name, Strand, Section.'], 400);
 }
 
-$validStrands = ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'];
+$validStrands = ['STEM', 'ABM', 'ICT', 'HUMSS'];
 $rows = [];
 $errors = [];
 $lineNum = 1;

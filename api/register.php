@@ -10,6 +10,18 @@ require_once __DIR__ . '/../lib/EmailTemplate.php';
 // by the verification email sent below (see api/verify-email.php).
 const STUDENT_EMAIL_DOMAIN = 'live.mcl.edu.ph';
 
+// Fixed section codes per strand — the school offers exactly these 7
+// sections, each belonging to exactly one strand. The registration page's
+// Section dropdown is populated from this same list, cascading on the
+// chosen Strand. Kept here as the server-side source of truth since the
+// client-side dropdown can't be trusted alone.
+const SECTIONS_BY_STRAND = [
+    'STEM' => ['S1114', 'S1109'],
+    'ABM' => ['A1101', 'A1102'],
+    'ICT' => ['I1101', 'I1102'],
+    'HUMSS' => ['H1102'],
+];
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
 }
@@ -33,20 +45,20 @@ if ($schoolId === '' || $firstName === '' || $lastName === '' || $email === '' |
 if ($privacyConsent !== true) {
     jsonResponse(['success' => false, 'error' => 'You must agree to the Data Privacy Policy to create an account.'], 400);
 }
-if (mb_strlen($section) > 20) {
-    jsonResponse(['success' => false, 'error' => 'Section must be 20 characters or fewer.'], 400);
-}
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     jsonResponse(['success' => false, 'error' => 'Enter a valid email address.'], 400);
 }
 if (!str_ends_with(strtolower($email), '@' . STUDENT_EMAIL_DOMAIN)) {
     jsonResponse(['success' => false, 'error' => 'Please register using your official @' . STUDENT_EMAIL_DOMAIN . ' student email address.'], 400);
 }
-if (!in_array($strand, ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'], true)) {
+if (!in_array($strand, ['STEM', 'ABM', 'ICT', 'HUMSS'], true)) {
     jsonResponse(['success' => false, 'error' => 'Invalid strand.'], 400);
 }
 if (!in_array($gradeLevel, ['11', '12'], true)) {
     jsonResponse(['success' => false, 'error' => 'Invalid grade level.'], 400);
+}
+if (!in_array($section, SECTIONS_BY_STRAND[$strand], true)) {
+    jsonResponse(['success' => false, 'error' => 'Invalid section for the selected strand.'], 400);
 }
 
 $pdo = Database::get();

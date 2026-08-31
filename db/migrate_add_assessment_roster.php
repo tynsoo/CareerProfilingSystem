@@ -14,7 +14,7 @@ $pdo->exec(
         academic_year   VARCHAR(20) NOT NULL,
         school_id       VARCHAR(50) NOT NULL,
         name_enc        TEXT NOT NULL,
-        strand          VARCHAR(10) NOT NULL CHECK (strand IN ('STEM', 'ABM', 'HUMSS', 'GAS', 'TVL')),
+        strand          VARCHAR(10) NOT NULL CHECK (strand IN ('STEM', 'ABM', 'ICT', 'HUMSS')),
         section         VARCHAR(20) NOT NULL,
         uploaded_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         uploaded_by     INT REFERENCES users(id),

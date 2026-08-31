@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $user = Rbac::requireAccess('monitoring', 'full');
 $pdo = Database::get();
 
-$validStrands = ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'];
+$validStrands = ['STEM', 'ABM', 'ICT', 'HUMSS'];
 $academicYear = trim((string) ($_GET['academicYear'] ?? ''));
 $strand = trim((string) ($_GET['strand'] ?? ''));
 if (!in_array($strand, $validStrands, true)) {

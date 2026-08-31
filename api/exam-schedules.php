@@ -3,7 +3,7 @@
 require_once __DIR__ . '/_bootstrap.php';
 
 $pdo = Database::get();
-$validStrands = ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'];
+$validStrands = ['STEM', 'ABM', 'ICT', 'HUMSS'];
 $validGrades = ['11', '12'];
 
 /**

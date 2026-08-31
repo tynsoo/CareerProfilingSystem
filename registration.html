@@ -111,6 +111,7 @@
           <div class="grid grid-cols-2 gap-4 items-start">
             <div class="relative">
               <select
+                id="strandSelect"
                 name="strand"
                 aria-label="Strand"
                 required
@@ -118,9 +119,8 @@
                 <option value="">Select Strand</option>
                 <option value="STEM">STEM</option>
                 <option value="ABM">ABM</option>
+                <option value="ICT">ICT</option>
                 <option value="HUMSS">HUMSS</option>
-                <option value="GAS">GAS</option>
-                <option value="TVL">TVL</option>
               </select>
               <img src="images/login/icon-arrow-right.svg" alt="" class="absolute right-4 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-90 pointer-events-none opacity-50">
             </div>
@@ -134,15 +134,16 @@
           </div>
 
           <div class="relative">
-            <input
-              id="sectionInput"
-              type="text"
+            <select
+              id="sectionSelect"
               name="section"
-              maxlength="20"
-              placeholder="Section (e.g. STEM-11A)"
               aria-label="Section"
               required
-              class="w-full px-3.5 py-3.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+              disabled
+              class="w-full px-3.5 py-3.5 border border-gray-300 rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent bg-white disabled:bg-gray-50 disabled:text-gray-400">
+              <option value="">Select Strand first</option>
+            </select>
+            <img src="images/login/icon-arrow-right.svg" alt="" class="absolute right-4 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-90 pointer-events-none opacity-50">
           </div>
 
           <div class="relative">
@@ -201,6 +202,33 @@
     icon.src = willShow ? 'images/login/icon-eye-open.svg' : 'images/login/icon-eye.svg';
     icon.alt = willShow ? 'Hide password' : 'Show password';
   });
+
+  // Section is a fixed list of real section codes, one strand each — the
+  // dropdown is cascading (disabled/empty until a Strand is picked) rather
+  // than free text, matching the server-side SECTIONS_BY_STRAND allow-list
+  // in api/register.php.
+  (function() {
+    const SECTIONS_BY_STRAND = {
+      STEM: ['S1114', 'S1109'],
+      ABM: ['A1101', 'A1102'],
+      ICT: ['I1101', 'I1102'],
+      HUMSS: ['H1102'],
+    };
+    const strandSelect = document.getElementById('strandSelect');
+    const sectionSelect = document.getElementById('sectionSelect');
+    strandSelect.addEventListener('change', function() {
+      const sections = SECTIONS_BY_STRAND[strandSelect.value] || [];
+      sectionSelect.innerHTML = '';
+      if (!sections.length) {
+        sectionSelect.disabled = true;
+        sectionSelect.appendChild(new Option('Select Strand first', ''));
+        return;
+      }
+      sectionSelect.disabled = false;
+      sectionSelect.appendChild(new Option('Select Section', ''));
+      sections.forEach(code => sectionSelect.appendChild(new Option(code, code)));
+    });
+  })();
 
   // Live feedback on blur, rather than only after a full form submit attempt.
   (function() {

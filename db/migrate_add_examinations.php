@@ -29,7 +29,7 @@ $pdo->exec(
         end_time        TIME NOT NULL,
         room            VARCHAR(50) NOT NULL,
         grade_level     VARCHAR(2) CHECK (grade_level IN ('11', '12')),
-        strand          VARCHAR(10) CHECK (strand IN ('STEM', 'ABM', 'HUMSS', 'GAS', 'TVL')),
+        strand          VARCHAR(10) CHECK (strand IN ('STEM', 'ABM', 'ICT', 'HUMSS')),
         section         VARCHAR(20),
         access_code     VARCHAR(20) NOT NULL,
         notes_enc       TEXT,
