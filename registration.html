@@ -333,8 +333,17 @@
         return;
       }
 
+      // Sending the verification email happens inline in this same
+      // request, so it can take a few real seconds — without a visible
+      // "in progress" state, a disabled-but-otherwise-unchanged button
+      // looks the same as nothing happening at all, which is exactly what
+      // led to repeated submit clicks before.
       const submitBtn = form.querySelector('button[type="submit"]');
+      const submitBtnDefaultHtml = submitBtn.innerHTML;
       submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="inline-flex items-center justify-center gap-2">'
+        + '<svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>'
+        + 'Creating Account…</span>';
 
       try {
         const res = await fetch('api/register.php', {
@@ -361,6 +370,7 @@
         showMessage('Unable to reach the server. Please try again.', true);
       } finally {
         submitBtn.disabled = false;
+        submitBtn.innerHTML = submitBtnDefaultHtml;
       }
     });
   })();
