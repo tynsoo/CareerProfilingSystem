@@ -81,7 +81,7 @@ $sessionData = [
 
 $redirect = 'admin-dashboard.html';
 if ($user['role'] === 'student') {
-    $studentStmt = $pdo->prepare('SELECT school_id, first_name_enc, last_name_enc, strand, grade_level, registered_at FROM students WHERE user_id = ?');
+    $studentStmt = $pdo->prepare('SELECT school_id, first_name_enc, last_name_enc, strand, grade_level, section, registered_at FROM students WHERE user_id = ?');
     $studentStmt->execute([$user['id']]);
     $student = $studentStmt->fetch();
     if ($student) {
@@ -90,6 +90,7 @@ if ($user['role'] === 'student') {
         $sessionData['lastName'] = Crypto::dec($student['last_name_enc']);
         $sessionData['strand'] = $student['strand'];
         $sessionData['gradeLevel'] = $student['grade_level'];
+        $sessionData['section'] = $student['section'];
         $sessionData['registeredAt'] = $student['registered_at'];
     }
     $redirect = 'assessment.html';

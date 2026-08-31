@@ -140,12 +140,16 @@
               <p class="text-sm text-gray-800" id="profileGrade">—</p>
             </div>
             <div>
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Section</p>
+              <p class="text-sm text-gray-800" id="profileSection">—</p>
+            </div>
+            <div>
               <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Member Since</p>
               <p class="text-sm text-gray-800" id="profileSince">—</p>
             </div>
           </div>
           <div class="bg-blue-50 border-t border-blue-100 px-6 py-4">
-            <p class="text-xs text-blue-800">Contact your guidance counselor if your name, strand, or grade level needs to be corrected.</p>
+            <p class="text-xs text-blue-800">Contact your guidance counselor if your name, strand, grade level, or section needs to be corrected.</p>
           </div>
         </div>
 
@@ -231,10 +235,11 @@
 
     document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
     document.getElementById('profileName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
-    document.getElementById('profileMeta').textContent = currentUser.strand + ' • Grade ' + currentUser.gradeLevel;
+    document.getElementById('profileMeta').textContent = currentUser.strand + ' • Grade ' + currentUser.gradeLevel + (currentUser.section ? ' • ' + currentUser.section : '');
     document.getElementById('profileSchoolId').textContent = currentUser.schoolId;
     document.getElementById('profileStrand').textContent = currentUser.strand;
     document.getElementById('profileGrade').textContent = 'Grade ' + currentUser.gradeLevel;
+    document.getElementById('profileSection').textContent = currentUser.section || '—';
     document.getElementById('profileSince').textContent = currentUser.registeredAt
       ? new Date(currentUser.registeredAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
       : '—';
