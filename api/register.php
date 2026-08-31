@@ -96,10 +96,16 @@ if ($errors) {
     jsonResponse(['success' => false, 'error' => implode(' ', $errors)], 400);
 }
 
-$existing = $pdo->prepare('SELECT 1 FROM students WHERE LOWER(school_id) = LOWER(?)');
-$existing->execute([$schoolId]);
+// Checked against `users` (the table the UNIQUE constraint actually lives
+// on), not just `students` — a users row can exist without a matching
+// students row (e.g. a profile deleted separately from its account), and
+// checking students alone let that case fall through to the INSERT below,
+// where it failed on the UNIQUE(username) constraint and surfaced only as
+// a generic "Registration failed" 500.
+$existing = $pdo->prepare('SELECT 1 FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)');
+$existing->execute([$schoolId, $email]);
 if ($existing->fetch()) {
-    jsonResponse(['success' => false, 'error' => 'An account with this School ID already exists.'], 409);
+    jsonResponse(['success' => false, 'error' => 'An account with this School ID or email already exists.'], 409);
 }
 
 $pdo->beginTransaction();
