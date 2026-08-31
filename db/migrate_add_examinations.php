@@ -1,8 +1,14 @@
 <?php
-// Creates the 4 tables backing Examination Scheduling & Rooms, Faculty
-// Assignment, and the Retake Examination workflow, and registers the new
-// 'examinations' RBAC module. Idempotent (IF NOT EXISTS / DO NOTHING), safe
-// to re-run.
+// Creates the tables backing Examination Scheduling & Rooms and the Retake
+// Examination workflow, and registers the new 'examinations' RBAC module.
+// Idempotent (IF NOT EXISTS / DO NOTHING), safe to re-run.
+//
+// Originally also created a Faculty Assignment feature (faculty +
+// exam_schedule_faculty tables, a no-login Faculty Portal) — removed:
+// in this school's actual process, Guidance Counselors are the ones
+// assigned per room, not a separate faculty/proctor entity. See
+// db/migrate_drop_faculty.php for the corresponding drop on databases
+// that already ran the old version of this script.
 //
 // Note on retake_grants: RIASEC is an interest inventory, not a pass/fail
 // exam, so there is no automatic "failed -> eligible for retake" trigger.
@@ -35,33 +41,6 @@ $pdo->exec(
 );
 
 $pdo->exec(
-    "CREATE TABLE IF NOT EXISTS faculty (
-        id              SERIAL PRIMARY KEY,
-        faculty_code    VARCHAR(50) NOT NULL UNIQUE,
-        first_name_enc  TEXT NOT NULL,
-        last_name_enc   TEXT NOT NULL,
-        email           VARCHAR(255) NOT NULL UNIQUE,
-        is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-        created_by      INT REFERENCES users(id),
-        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )"
-);
-$pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_faculty_code_lower ON faculty (LOWER(faculty_code))");
-$pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_faculty_email_lower ON faculty (LOWER(email))");
-
-$pdo->exec(
-    "CREATE TABLE IF NOT EXISTS exam_schedule_faculty (
-        schedule_id     INT NOT NULL REFERENCES exam_schedules(id) ON DELETE CASCADE,
-        faculty_id      INT NOT NULL REFERENCES faculty(id) ON DELETE CASCADE,
-        access_code_enc TEXT NOT NULL,
-        assigned_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        assigned_by     INT REFERENCES users(id),
-        PRIMARY KEY (schedule_id, faculty_id)
-    )"
-);
-
-$pdo->exec(
     "CREATE TABLE IF NOT EXISTS retake_grants (
         id                          SERIAL PRIMARY KEY,
         student_id                  INT NOT NULL REFERENCES students(user_id) ON DELETE CASCADE,
@@ -77,9 +56,9 @@ $pdo->exec(
 );
 
 // Register the 'examinations' RBAC module. CGC staff (counselor) get 'full'
-// here, unlike most modules which give counselors 'limited' -- the spec
-// explicitly calls for CGC staff to see and assign schedules/rooms/faculty,
-// the same standing admin has.
+// here, unlike most modules which give counselors 'limited' -- Guidance
+// Counselors are the ones actually assigned per room, so they need the
+// same standing admin has to schedule/manage sessions and rooms.
 $rbacStmt = $pdo->prepare(
     'INSERT INTO security_rbac (module, role, access_level) VALUES (?, ?, ?)
      ON CONFLICT (module, role) DO NOTHING'
@@ -88,4 +67,4 @@ foreach (['admin' => 'full', 'counselor' => 'full', 'student' => 'none'] as $rol
     $rbacStmt->execute(['examinations', $role, $level]);
 }
 
-echo "exam_schedules + faculty + exam_schedule_faculty + retake_grants tables created (or already present); RBAC rows seeded.\n";
+echo "exam_schedules + retake_grants tables created (or already present); RBAC rows seeded.\n";

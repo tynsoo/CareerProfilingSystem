@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['mine'])) {
     );
     $stmt->execute([$student['academic_year'], $student['grade_level'], $student['strand'], $student['section']]);
     // Students only need date/time/room — never expose the access code
-    // (that's for faculty/staff) or internal notes through this endpoint.
+    // (that's for staff) or internal notes through this endpoint.
     $schedules = array_map(fn($s) => [
         'examDate' => $s['exam_date'],
         'startTime' => substr($s['start_time'], 0, 5),
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('DELETE FROM exam_schedules WHERE id = ?');
             $stmt->execute([$id]);
         } catch (Throwable $e) {
-            jsonResponse(['success' => false, 'error' => 'Cannot delete this schedule — it still has faculty assignments or retake grants referencing it.'], 409);
+            jsonResponse(['success' => false, 'error' => 'Cannot delete this schedule — it still has retake grants referencing it.'], 409);
         }
         if ($stmt->rowCount() === 0) {
             jsonResponse(['success' => false, 'error' => 'Schedule not found.'], 404);

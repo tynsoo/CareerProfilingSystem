@@ -234,8 +234,7 @@ CREATE TABLE help_requests (
 -- assessment_roster/analytics already group students by strand/section.
 -- access_code follows the same plaintext + hash_equals pattern as
 -- security_policies['assessment.accessCode']; it does not replace that
--- global code as the actual assessment-start gate (see the migration
--- comment below) — it's the code faculty use via api/faculty-verify.php.
+-- global code as the actual assessment-start gate.
 CREATE TABLE exam_schedules (
     id              SERIAL PRIMARY KEY,
     academic_year   VARCHAR(20) NOT NULL,
@@ -252,38 +251,6 @@ CREATE TABLE exam_schedules (
     created_by      INT REFERENCES users(id),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Faculty are not system users — no login, no role in users.role. They're
--- a directory admins encode and assign to exam_schedules, then identify
--- themselves via faculty_code + a per-assignment access code
--- (exam_schedule_faculty.access_code_enc) through api/faculty-verify.php.
-CREATE TABLE faculty (
-    id              SERIAL PRIMARY KEY,
-    faculty_code    VARCHAR(50) NOT NULL UNIQUE,
-    first_name_enc  TEXT NOT NULL,
-    last_name_enc   TEXT NOT NULL,
-    email           VARCHAR(255) NOT NULL UNIQUE,
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-    created_by      INT REFERENCES users(id),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE UNIQUE INDEX idx_faculty_code_lower ON faculty (LOWER(faculty_code));
-CREATE UNIQUE INDEX idx_faculty_email_lower ON faculty (LOWER(email));
-
--- access_code_enc is Crypto::enc()'d (unlike exam_schedules.access_code,
--- which is plaintext) per the spec's explicit requirement that the
--- faculty access code specifically be protected by the system's
--- encryption mechanism. Never compared in SQL — api/faculty-verify.php
--- decrypts candidate rows and hash_equals()'s in PHP.
-CREATE TABLE exam_schedule_faculty (
-    schedule_id     INT NOT NULL REFERENCES exam_schedules(id) ON DELETE CASCADE,
-    faculty_id      INT NOT NULL REFERENCES faculty(id) ON DELETE CASCADE,
-    access_code_enc TEXT NOT NULL,
-    assigned_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    assigned_by     INT REFERENCES users(id),
-    PRIMARY KEY (schedule_id, faculty_id)
 );
 
 -- Staff-initiated retake authorization (RIASEC has no pass/fail score, so
