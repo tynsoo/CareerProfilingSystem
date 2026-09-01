@@ -80,7 +80,7 @@
   const sessionData = await sessionRes.json();
   const currentUser = sessionData.user;
   if (!currentUser || currentUser.role !== 'student') {
-    window.location.replace('login.html');
+    window.location.replace('login');
     return;
   }
 
@@ -204,7 +204,7 @@
           return;
         }
         localStorage.removeItem(PROGRESS_KEY);
-        window.location.href = 'results.html';
+        window.location.href = 'results';
       } catch (err) {
         alert('Unable to reach the server. Please try again.');
         nextBtn.disabled = false;
@@ -237,7 +237,7 @@
   document.getElementById('backBtn').addEventListener('click', openExitModal);
   document.getElementById('exitCancel').addEventListener('click', closeExitModal);
   document.getElementById('exitConfirm').addEventListener('click', function() {
-    window.location.href = 'assessment.html';
+    window.location.href = 'assessment';
   });
   exitModal.addEventListener('click', function(e) {
     if (e.target.id === 'exitModal') closeExitModal();

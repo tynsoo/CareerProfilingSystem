@@ -73,7 +73,7 @@
             </span>
             <h1 class="text-xl font-semibold text-[#191c1e]">Verification Failed</h1>
             <p id="errorMessage" class="text-sm text-[#5c5a5a] max-w-[320px]">This verification link is invalid or has expired.</p>
-            <a href="login.html" class="mt-2 inline-block bg-[#0f2a6b] text-white text-sm font-semibold rounded-md px-6 py-3 hover:opacity-90">Go to Login</a>
+            <a href="login" class="mt-2 inline-block bg-[#0f2a6b] text-white text-sm font-semibold rounded-md px-6 py-3 hover:opacity-90">Go to Login</a>
             <p class="text-xs text-gray-500 mt-1">You can request a new verification link from the login page.</p>
           </div>
 
@@ -117,7 +117,7 @@
           stateSuccess.classList.remove('hidden');
           stateSuccess.classList.add('flex');
           setTimeout(function() {
-            window.location.href = 'login.html?verified=1';
+            window.location.href = 'login?verified=1';
           }, 1600);
         } else {
           showError(data.error || 'This verification link is invalid or has expired.');

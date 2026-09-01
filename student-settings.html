@@ -31,21 +31,21 @@
       </div>
     </div>
     <nav class="flex-1 flex flex-col gap-0.5 py-4 overflow-auto">
-      <a href="assessment.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+      <a href="assessment" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <img src="images/student/nav-assessments.svg" alt="" class="w-[15px] h-[16.7px]">
         Assessments
       </a>
-      <a href="results.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+      <a href="results" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <img src="images/student/nav-career-results.svg" alt="" class="w-[15px] h-[15px]">
         Career Results
       </a>
-      <a href="student-settings.html" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
+      <a href="student-settings" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
         <svg class="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
         Settings
       </a>
     </nav>
     <div class="border-t border-white/5 pt-[25px] pb-6 flex flex-col gap-0.5">
-      <a href="help-center.html" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+      <a href="help-center" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
         <img src="images/student/nav-help-center.svg" alt="" class="w-[16.7px] h-[16.7px]">
         Help Center
       </a>
@@ -93,8 +93,8 @@
             <p class="text-sm font-semibold text-gray-900" id="profilePanelName">Student</p>
             <p class="text-xs text-gray-500" id="profilePanelMeta">—</p>
           </div>
-          <a href="student-settings.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
-          <a href="help-center.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Help Center</a>
+          <a href="student-settings" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+          <a href="help-center" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t border-gray-100">Help Center</a>
           <a href="#" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
         </div>
       </div>
@@ -163,7 +163,7 @@
               <p class="text-sm font-medium text-gray-800">Password</p>
               <p class="text-xs text-gray-500">Change your password. You'll need to enter your current password to confirm it's really you.</p>
             </div>
-            <a href="change-password.html" class="shrink-0 border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-5 py-2.5 hover:bg-gray-50">Change Password</a>
+            <a href="change-password" class="shrink-0 border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-5 py-2.5 hover:bg-gray-50">Change Password</a>
           </div>
         </div>
       </div>
@@ -171,11 +171,11 @@
     </main>
 
       <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
-        <a href="terms.html" class="hover:text-gray-600 hover:underline">Terms of Use</a>
+        <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
-        <a href="privacy.html" class="hover:text-gray-600 hover:underline">Data Privacy</a>
+        <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
         <span>&middot;</span>
-        <a href="accessibility.html" class="hover:text-gray-600 hover:underline">Accessibility</a>
+        <a href="accessibility" class="hover:text-gray-600 hover:underline">Accessibility</a>
       </footer>
   </div>
 </div>
@@ -185,7 +185,7 @@
     const sessionData = await (await fetch('api/session.php')).json();
     const currentUser = sessionData.user;
     if (!currentUser || currentUser.role !== 'student') {
-      window.location.replace('login.html');
+      window.location.replace('login');
       return;
     }
 
@@ -270,7 +270,7 @@
     function doLogout(e) {
       e.preventDefault();
       fetch('api/logout.php', { method: 'POST' }).finally(function() {
-        window.location.href = 'login.html';
+        window.location.href = 'login';
       });
     }
     document.getElementById('sidebarLogout').addEventListener('click', doLogout);

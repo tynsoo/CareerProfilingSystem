@@ -62,7 +62,7 @@ $insert = $pdo->prepare(
 );
 $insert->execute([$user['id'], $tokenHash]);
 
-$resetLink = rtrim((string) getenv('APP_URL'), '/') . '/forgot-password.html?token=' . $rawToken;
+$resetLink = rtrim((string) getenv('APP_URL'), '/') . '/forgot-password?token=' . $rawToken;
 $safeFirstName = htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8');
 
 $bodyHtml = EmailTemplate::render(

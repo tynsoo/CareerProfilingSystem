@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         jsonResponse(['success' => false, 'error' => 'Failed to create account. Please try again.'], 500);
     }
 
-    $activationLink = rtrim((string) getenv('APP_URL'), '/') . '/activate-account.html?token=' . $rawToken;
+    $activationLink = rtrim((string) getenv('APP_URL'), '/') . '/activate-account?token=' . $rawToken;
     $safeUsername = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
 
     $bodyHtml = EmailTemplate::render(

@@ -79,7 +79,7 @@ $sessionData = [
     'avatarUrl' => $user['avatar_data_url'],
 ];
 
-$redirect = 'admin-dashboard.html';
+$redirect = 'admin-dashboard';
 if ($user['role'] === 'student') {
     $studentStmt = $pdo->prepare('SELECT school_id, first_name_enc, last_name_enc, strand, grade_level, section, registered_at FROM students WHERE user_id = ?');
     $studentStmt->execute([$user['id']]);
@@ -93,7 +93,7 @@ if ($user['role'] === 'student') {
         $sessionData['section'] = $student['section'];
         $sessionData['registeredAt'] = $student['registered_at'];
     }
-    $redirect = 'assessment.html';
+    $redirect = 'assessment';
 }
 
 Auth::login($sessionData);

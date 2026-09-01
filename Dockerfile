@@ -14,6 +14,7 @@ COPY . .
 ENV PORT=8000
 EXPOSE 8000
 
-# Same PHP built-in server used for local dev all along — no router script
-# needed since every page/endpoint is requested by its literal file path.
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT} -t /var/www/html"]
+# Same PHP built-in server used for local dev all along. router.php lets
+# pages be reached without their ".html" extension (e.g. /announcements)
+# while api/*.php, images, css, and js are all served exactly as before.
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT} -t /var/www/html /var/www/html/router.php"]

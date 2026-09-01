@@ -10,7 +10,7 @@ $items = [];
 if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
     // Recently registered students
     $stmt = $pdo->query(
-        "SELECT s.user_id, s.first_name_enc, s.last_name_enc, s.registered_at
+        "SELECT s.user_id, s.school_id, s.first_name_enc, s.last_name_enc, s.registered_at
          FROM students s
          WHERE s.registered_at > NOW() - INTERVAL '7 days'
          ORDER BY s.registered_at DESC LIMIT 5"
@@ -20,7 +20,11 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         $items[] = [
             'type' => 'registration',
             'text' => "New student registered — $name just signed up.",
-            'link' => 'student-profile.html?id=' . $row['user_id'],
+            // student-profile.html (and api/students.php's single-student
+            // lookup) reads ?schoolId=, never ?id= — this previously
+            // linked with the wrong param name, so clicking it always
+            // landed on "Student not found."
+            'link' => 'student-profile?schoolId=' . urlencode($row['school_id']),
             'ts' => $row['registered_at'],
         ];
     }
@@ -39,7 +43,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         $items[] = [
             'type' => 'flag',
             'text' => "Assessment flagged — $name ($reasonLabel).",
-            'link' => 'monitoring.html',
+            'link' => 'monitoring',
             'ts' => $row['created_at'],
         ];
     }
@@ -54,7 +58,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         $items[] = [
             'type' => 'help_request',
             'text' => "Counseling request — $who: " . ($row['subject'] ?: 'No subject'),
-            'link' => 'help-requests.html',
+            'link' => 'help-requests',
             'ts' => $row['sent_at'],
         ];
     }
@@ -70,7 +74,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         $items[] = [
             'type' => 'help_resolved',
             'text' => 'Your counseling request "' . ($row['subject'] ?: 'General inquiry') . '" has been resolved.',
-            'link' => 'help-center.html',
+            'link' => 'help-center',
             'ts' => $row['resolved_at'],
         ];
     }
@@ -85,7 +89,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         $items[] = [
             'type' => 'flag_resolved',
             'text' => 'A counselor reviewed your assessment.',
-            'link' => 'results.html',
+            'link' => 'results',
             'ts' => $row['resolved_at'],
         ];
     }
@@ -105,7 +109,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         $items[] = [
             'type' => 'announcement',
             'text' => 'Announcement — ' . $row['title'],
-            'link' => 'assessment.html',
+            'link' => 'assessment',
             'ts' => $row['publish_at'],
         ];
     }
@@ -129,7 +133,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         $items[] = [
             'type' => 'schedule_published',
             'text' => 'Exam scheduled — ' . $row['exam_date'] . ' in ' . $row['room'] . '.',
-            'link' => 'assessment.html',
+            'link' => 'assessment',
             'ts' => $row['created_at'],
         ];
     }
@@ -146,7 +150,7 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
         $items[] = [
             'type' => 'retake_granted',
             'text' => 'You have been granted a retake of the RIASEC assessment.',
-            'link' => 'assessment.html',
+            'link' => 'assessment',
             'ts' => $row['granted_at'],
         ];
     }
