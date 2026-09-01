@@ -13,7 +13,7 @@ $pdo = Database::get();
 // match — meaning loadRbac() silently omitted that row and any RBAC change
 // posted for it was silently dropped by the in_array() guard below. Fixed
 // here alongside adding 'examinations' the same way.
-const RBAC_MODULES = ['career', 'rac', 'recommendations', 'counselor', 'monitoring', 'announcements', 'examinations'];
+const RBAC_MODULES = ['career', 'rac', 'recommendations', 'counselor', 'monitoring', 'announcements', 'examinations', 'counselingNotes'];
 const RBAC_ROLES = ['admin', 'counselor', 'student'];
 const RBAC_LEVELS = ['full', 'limited', 'none'];
 

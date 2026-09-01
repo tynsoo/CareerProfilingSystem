@@ -12,6 +12,7 @@ $rbac = [
     'monitoring'      => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
     'announcements'   => ['admin' => 'full', 'counselor' => 'limited', 'student' => 'limited'],
     'examinations'    => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
+    'counselingNotes' => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
 ];
 
 $rbacStmt = $pdo->prepare(

@@ -221,6 +221,19 @@
         </div>
       </div>
 
+      <div id="counselingNotesCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col gap-4 max-w-4xl mt-6">
+        <h2 class="text-base font-semibold text-gray-900">Counseling Notes</h2>
+        <div id="counselingNoteComposer" class="hidden flex-col gap-2">
+          <textarea id="counselingNoteInput" rows="3" maxlength="2000" placeholder="Add a note about this student — session summary, follow-up item, etc." class="w-full border border-gray-300 rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
+          <div class="flex items-center justify-between gap-3">
+            <p id="counselingNoteError" class="hidden text-xs text-[#ed1c24]"></p>
+            <button type="button" id="addCounselingNoteBtn" class="ml-auto shrink-0 bg-[#ed1c24] text-white text-sm font-medium rounded-md px-4 py-2 hover:opacity-90">Add Note</button>
+          </div>
+        </div>
+        <div id="counselingNotesList" class="flex flex-col gap-3 border-t border-gray-100 pt-4"></div>
+        <p id="counselingNotesEmpty" class="hidden text-sm text-gray-500">No counseling notes yet.</p>
+      </div>
+
       <p id="notFoundState" class="hidden text-sm text-gray-500 max-w-4xl bg-white border border-gray-200 rounded-xl shadow-sm p-8 text-center">Student not found.</p>
 
     </main>
@@ -273,6 +286,76 @@
     backdrop.addEventListener('click', closeSidebar);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
   })();
+
+  // Counseling Notes — gated by the 'counselingNotes' RBAC module
+  // (Security Configuration). Loading the list only needs 'limited';
+  // adding a note needs 'full' — rather than pre-checking which level the
+  // current user has, the composer is always shown to anyone who can see
+  // this page at all (admin/counselor), and a 'limited' counselor simply
+  // gets the server's 403 back as an inline error if they try to add one,
+  // matching how the rest of the app surfaces RBAC restrictions. Declared
+  // here, before the schoolId lookup below calls loadCounselingNotes(),
+  // since that call happens well before this script reaches its bottom.
+  let counselingNotesStudentId = null;
+  function renderCounselingNotes(notes) {
+    const list = document.getElementById('counselingNotesList');
+    const empty = document.getElementById('counselingNotesEmpty');
+    if (!notes.length) {
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    list.innerHTML = notes.map(function(n) {
+      const date = new Date(n.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const safeNote = n.note.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return '<div class="border border-gray-200 rounded-md px-3.5 py-2.5">' +
+        '<p class="text-xs text-gray-500 mb-1">' + date + ' &middot; ' + n.author + '</p>' +
+        '<p class="text-sm text-gray-800 whitespace-pre-wrap">' + safeNote + '</p>' +
+      '</div>';
+    }).join('');
+  }
+  async function loadCounselingNotes(studentId) {
+    counselingNotesStudentId = studentId;
+    const res = await fetch('api/counseling-notes.php?studentId=' + studentId);
+    if (!res.ok) {
+      // No access to this module at all — don't show a broken empty card.
+      document.getElementById('counselingNotesCard').classList.add('hidden');
+      return;
+    }
+    const data = await res.json();
+    document.getElementById('counselingNotesCard').classList.remove('hidden');
+    document.getElementById('counselingNoteComposer').classList.remove('hidden');
+    document.getElementById('counselingNoteComposer').classList.add('flex');
+    renderCounselingNotes(data.notes || []);
+  }
+  document.getElementById('addCounselingNoteBtn').addEventListener('click', async () => {
+    const input = document.getElementById('counselingNoteInput');
+    const errorEl = document.getElementById('counselingNoteError');
+    const btn = document.getElementById('addCounselingNoteBtn');
+    const note = input.value.trim();
+    errorEl.classList.add('hidden');
+    if (!note) {
+      errorEl.textContent = 'Enter a note first.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    btn.disabled = true;
+    const res = await fetch('api/counseling-notes.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId: counselingNotesStudentId, note })
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    if (!data.success) {
+      errorEl.textContent = data.error || 'Failed to add note.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    input.value = '';
+    await loadCounselingNotes(counselingNotesStudentId);
+  });
 
   const params = new URLSearchParams(window.location.search);
   const schoolId = params.get('schoolId') || '';
@@ -331,6 +414,8 @@
             '</div>';
           }).join('')
         : '<p class="text-sm text-gray-500">No attempts yet.</p>';
+
+      loadCounselingNotes(s.userId);
     }
   }
 

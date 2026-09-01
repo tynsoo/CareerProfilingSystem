@@ -269,3 +269,18 @@ CREATE TABLE retake_grants (
     completed_attempt_number    INT,
     completed_at                TIMESTAMPTZ
 );
+
+-- A running, timestamped log of free-text notes a counselor/admin writes
+-- about a student (session summaries, follow-up items) -- distinct from
+-- the auto-derived Availed/Did Not Avail counseling status already shown
+-- on student-profile.html, which only reflects whether an advising
+-- request was ever submitted. Encrypted like help_requests.message_enc,
+-- since counseling notes are exactly the kind of sensitive personal
+-- disclosure the schema's encryption convention exists to protect.
+CREATE TABLE counseling_notes (
+    id              SERIAL PRIMARY KEY,
+    student_id      INT NOT NULL REFERENCES students(user_id) ON DELETE CASCADE,
+    note_enc        TEXT NOT NULL,
+    author_id       INT REFERENCES users(id),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
