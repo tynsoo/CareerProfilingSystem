@@ -53,6 +53,7 @@
     <div id="optionsList" class="flex flex-col gap-4 max-w-[1175px] mx-auto w-full"></div>
 
     <div class="flex-1"></div>
+    <p id="submitError" class="hidden text-sm text-[#ed1c24] text-right mb-2" aria-live="polite"></p>
     <div class="flex justify-end pt-8">
       <button type="button" id="nextBtn" disabled class="flex items-center gap-2 rounded-[15px] px-7 py-2.5 text-base font-medium border border-black/[0.15] bg-white text-[#5c5a5a] cursor-not-allowed transition-colors">
         <span id="nextBtnLabel">Next</span>
@@ -186,6 +187,12 @@
     updateNextButton();
   }
 
+  function showSubmitError(text) {
+    const el = document.getElementById('submitError');
+    el.textContent = text;
+    el.classList.remove('hidden');
+  }
+
   document.getElementById('nextBtn').addEventListener('click', async function() {
     if (state.answers[currentIndex] === null) return;
 
@@ -200,14 +207,14 @@
         });
         const data = await res.json();
         if (!data.success) {
-          alert(data.error || 'Failed to submit assessment. Please try again.');
+          showSubmitError(data.error || 'Failed to submit assessment. Please try again.');
           nextBtn.disabled = false;
           return;
         }
         localStorage.removeItem(PROGRESS_KEY);
         window.location.href = 'results';
       } catch (err) {
-        alert('Unable to reach the server. Please try again.');
+        showSubmitError('Unable to reach the server. Please try again.');
         nextBtn.disabled = false;
       }
       return;

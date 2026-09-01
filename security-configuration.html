@@ -849,14 +849,34 @@
       select.classList.toggle('opacity-50', !state.settings.sessionTimeoutEnabled);
     }
 
+    // Both toggles (and the timeout duration select) share this one save
+    // function, which sends a full snapshot of all three settings together
+    // -- so clicking a second control before the first save's request
+    // finishes fires a second overlapping request with its own snapshot.
+    // Whichever response the server processes last silently overwrites the
+    // other, which can revert the toggle that was "clicked fast" even
+    // though the UI already shows it flipped. Guarding with a single
+    // in-flight flag (disabling the controls for the duration) closes that
+    // race instead of just narrowing it.
+    let savingSettings = false;
     async function saveSettings() {
-      const res = await fetch('api/security-config.php', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'settings', twoFactor: state.settings.twoFactor, sessionTimeoutEnabled: state.settings.sessionTimeoutEnabled, timeoutMinutes: state.settings.timeoutMinutes })
-      });
-      const data = await res.json();
-      if (data.success) {
-        await loadState();
+      if (savingSettings) return;
+      savingSettings = true;
+      const controls = [document.getElementById('toggle2fa'), document.getElementById('toggleSessionTimeout'), document.getElementById('timeoutDuration')];
+      controls.forEach(el => { el.disabled = true; });
+      try {
+        const res = await fetch('api/security-config.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'settings', twoFactor: state.settings.twoFactor, sessionTimeoutEnabled: state.settings.sessionTimeoutEnabled, timeoutMinutes: state.settings.timeoutMinutes })
+        });
+        const data = await res.json();
+        if (data.success) {
+          await loadState();
+        }
+      } finally {
+        savingSettings = false;
+        controls.forEach(el => { el.disabled = false; });
+        updateTimeoutDisabledState();
       }
     }
 
