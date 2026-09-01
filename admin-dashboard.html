@@ -450,7 +450,9 @@
     const params = new URLSearchParams({ schoolId: s.schoolId });
     return '<tr>' +
       '<td class="px-6 py-4 text-sm text-gray-500">' + index + '</td>' +
-      '<td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + escapeHtml(s.name) + '</td>' +
+      '<td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + escapeHtml(s.name) +
+        (s.isActive === false ? ' <span class="inline-flex items-center bg-gray-100 text-gray-500 text-[10px] font-semibold px-2 py-0.5 rounded-full align-middle ml-1">Inactive</span>' : '') +
+      '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-500">' + escapeHtml(s.strand) + '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-500">' + escapeHtml(s.section) + '</td>' +
       '<td class="px-6 py-4">' + statusCell + '</td>' +

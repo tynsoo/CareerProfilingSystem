@@ -2,15 +2,36 @@
 
 require_once __DIR__ . '/_bootstrap.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    jsonResponse(['error' => 'Method not allowed'], 405);
-}
-
 $user = Auth::requireLogin();
 if ($user['role'] !== 'admin' && $user['role'] !== 'counselor') {
     jsonResponse(['error' => 'Forbidden'], 403);
 }
 $pdo = Database::get();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $body = readJsonBody();
+    if (($body['type'] ?? '') === 'toggleActive') {
+        $targetId = (int) ($body['userId'] ?? 0);
+        $stmt = $pdo->prepare("SELECT id, is_active FROM users WHERE id = ? AND role = 'student'");
+        $stmt->execute([$targetId]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            jsonResponse(['success' => false, 'error' => 'Student account not found.'], 404);
+        }
+        $newState = !$row['is_active'];
+        $pdo->prepare('UPDATE users SET is_active = ?, updated_at = NOW() WHERE id = ?')->execute([$newState, $targetId]);
+        // login.php already rejects any user (any role) with is_active =
+        // false, so deactivating here immediately blocks sign-in -- no
+        // separate enforcement needed.
+        AuditLogger::log($user['id'], $user['role'], $newState ? 'activate_student_account' : 'deactivate_student_account', 'user', (string) $targetId);
+        jsonResponse(['success' => true, 'isActive' => $newState]);
+    }
+    jsonResponse(['success' => false, 'error' => 'Unknown type.'], 400);
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    jsonResponse(['error' => 'Method not allowed'], 405);
+}
 
 // Single-student lookup mode: student-profile.html loads a real record by
 // schoolId instead of everything being smuggled through URL query params.
@@ -18,9 +39,10 @@ $schoolIdLookup = trim((string) ($_GET['schoolId'] ?? ''));
 if ($schoolIdLookup !== '') {
     $stmt = $pdo->prepare(
         'SELECT s.user_id, s.school_id, s.first_name_enc, s.last_name_enc, s.strand, s.grade_level, s.section,
-                s.academic_year, s.registered_at, a.top_types, a.completed_at, a.score_r, a.score_i, a.score_a,
+                s.academic_year, s.registered_at, u.is_active, a.top_types, a.completed_at, a.score_r, a.score_i, a.score_a,
                 a.score_s, a.score_e, a.score_c
          FROM students s
+         JOIN users u ON u.id = s.user_id
          LEFT JOIN assessments a ON a.student_id = s.user_id AND a.is_latest = TRUE
          WHERE LOWER(s.school_id) = LOWER(?)'
     );
@@ -71,6 +93,7 @@ if ($schoolIdLookup !== '') {
         'gradeLevel' => $row['grade_level'],
         'section' => $row['section'],
         'academicYear' => $row['academic_year'],
+        'isActive' => (bool) $row['is_active'],
         'status' => $hasAssessment ? 'Completed' : 'Pending',
         'riasec' => $hasAssessment ? implode(', ', json_decode($row['top_types'], true)) : '',
         'scores' => $hasAssessment ? [
@@ -95,8 +118,9 @@ $counselingFilter = (string) ($_GET['counseling'] ?? '');
 
 $rows = $pdo->query(
     'SELECT s.user_id, s.school_id, s.first_name_enc, s.last_name_enc, s.strand, s.grade_level, s.section, s.registered_at,
-            a.top_types, a.completed_at
+            u.is_active, a.top_types, a.completed_at
      FROM students s
+     JOIN users u ON u.id = s.user_id
      LEFT JOIN assessments a ON a.student_id = s.user_id AND a.is_latest = TRUE
      ORDER BY s.registered_at DESC'
 )->fetchAll();
@@ -125,6 +149,7 @@ $students = array_map(function ($r) use ($counseledIds) {
         'strand' => $r['strand'],
         'gradeLevel' => $r['grade_level'],
         'section' => $r['section'],
+        'isActive' => (bool) $r['is_active'],
         'status' => $status,
         'riasec' => implode(', ', $topTypes),
         'counseling' => $counseling,

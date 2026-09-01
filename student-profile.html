@@ -149,10 +149,13 @@
     <!-- Page Content -->
     <main id="main-content" class="flex-1 p-4 sm:p-8 overflow-auto">
 
-      <div class="mb-8">
-        <a href="admin-dashboard" class="text-sm text-gray-500 hover:text-[#ed1c24]">&larr; Back to Dashboard</a>
-        <h1 class="text-2xl font-bold text-gray-900 mt-2" id="studentName">Student Profile</h1>
-        <p class="text-sm text-gray-500 mt-1" id="studentId">Student ID: —</p>
+      <div class="mb-8 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <a href="admin-dashboard" class="text-sm text-gray-500 hover:text-[#ed1c24]">&larr; Back to Dashboard</a>
+          <h1 class="text-2xl font-bold text-gray-900 mt-2" id="studentName">Student Profile</h1>
+          <p class="text-sm text-gray-500 mt-1" id="studentId">Student ID: —</p>
+        </div>
+        <button type="button" id="toggleActiveBtn" class="hidden shrink-0 border rounded-md px-4 py-2 text-sm font-medium"></button>
       </div>
 
       <div id="detailsGrid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start max-w-4xl">
@@ -237,6 +240,18 @@
 
       <p id="notFoundState" class="hidden text-sm text-gray-500 max-w-4xl bg-white border border-gray-200 rounded-xl shadow-sm p-8 text-center">Student not found.</p>
 
+      <div id="toggleActiveModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+        <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+          <h3 class="text-lg font-semibold text-black" id="toggleActiveModalTitle">Deactivate Account?</h3>
+          <p class="text-sm text-gray-500" id="toggleActiveModalBody">This student will no longer be able to sign in. You can reactivate the account at any time.</p>
+          <p id="toggleActiveModalError" class="hidden text-sm text-[#ed1c24]"></p>
+          <div class="flex justify-end gap-2 pt-1">
+            <button type="button" id="toggleActiveCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+            <button type="button" id="toggleActiveConfirmBtn" class="px-4 py-2 text-sm font-medium text-white rounded-md hover:opacity-90"></button>
+          </div>
+        </div>
+      </div>
+
     </main>
 
       <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
@@ -310,6 +325,64 @@
     backdrop.addEventListener('click', closeSidebar);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
   })();
+
+  // Deactivate/Activate account — declared before the schoolId lookup
+  // below (which sets the button's initial label/state), for the same
+  // reason the Counseling Notes block right after this one is.
+  let toggleActiveUserId = null;
+  let toggleActiveCurrent = true;
+  function renderToggleActiveButton(isActive) {
+    toggleActiveCurrent = isActive;
+    const btn = document.getElementById('toggleActiveBtn');
+    btn.classList.remove('hidden');
+    if (isActive) {
+      btn.textContent = 'Deactivate Account';
+      btn.className = 'shrink-0 border border-[#ed1c24] text-[#ed1c24] rounded-md px-4 py-2 text-sm font-medium hover:bg-red-50';
+    } else {
+      btn.textContent = 'Activate Account';
+      btn.className = 'shrink-0 border border-green-600 text-green-700 rounded-md px-4 py-2 text-sm font-medium hover:bg-green-50';
+    }
+  }
+  const toggleActiveModal = document.getElementById('toggleActiveModal');
+  function openToggleActiveModal() {
+    const willDeactivate = toggleActiveCurrent;
+    document.getElementById('toggleActiveModalError').classList.add('hidden');
+    document.getElementById('toggleActiveModalTitle').textContent = willDeactivate ? 'Deactivate Account?' : 'Activate Account?';
+    document.getElementById('toggleActiveModalBody').textContent = willDeactivate
+      ? 'This student will no longer be able to sign in. You can reactivate the account at any time.'
+      : 'This restores the student\'s ability to sign in.';
+    const confirmBtn = document.getElementById('toggleActiveConfirmBtn');
+    confirmBtn.textContent = willDeactivate ? 'Deactivate' : 'Activate';
+    confirmBtn.className = 'px-4 py-2 text-sm font-medium text-white rounded-md hover:opacity-90 ' + (willDeactivate ? 'bg-[#ed1c24]' : 'bg-green-600');
+    toggleActiveModal.classList.remove('hidden');
+    setTimeout(function() { toggleActiveModal.classList.add('is-open'); }, 16);
+  }
+  function closeToggleActiveModal() {
+    toggleActiveModal.classList.remove('is-open');
+    setTimeout(function() { toggleActiveModal.classList.add('hidden'); }, 260);
+  }
+  document.getElementById('toggleActiveBtn').addEventListener('click', openToggleActiveModal);
+  document.getElementById('toggleActiveCancelBtn').addEventListener('click', closeToggleActiveModal);
+  toggleActiveModal.addEventListener('click', function(e) { if (e.target.id === 'toggleActiveModal') closeToggleActiveModal(); });
+  document.getElementById('toggleActiveConfirmBtn').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    const res = await fetch('api/students.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'toggleActive', userId: toggleActiveUserId })
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    if (!data.success) {
+      const errEl = document.getElementById('toggleActiveModalError');
+      errEl.textContent = data.error || 'Failed to update account status.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    renderToggleActiveButton(data.isActive);
+    closeToggleActiveModal();
+  });
 
   // Counseling Notes — gated by the 'counselingNotes' RBAC module
   // (Security Configuration). Loading the list only needs 'limited';
@@ -395,6 +468,8 @@
       document.getElementById('notFoundState').classList.remove('hidden');
     } else {
       const s = data.student;
+      toggleActiveUserId = s.userId;
+      renderToggleActiveButton(s.isActive);
       document.getElementById('studentName').textContent = s.name;
       document.getElementById('avatarName').textContent = s.name;
       document.getElementById('avatarStrand').textContent = s.strand;
