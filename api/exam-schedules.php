@@ -5,6 +5,16 @@ require_once __DIR__ . '/_bootstrap.php';
 $pdo = Database::get();
 $validStrands = ['STEM', 'ABM', 'ICT', 'HUMSS'];
 $validGrades = ['11', '12'];
+// Same fixed section-per-strand list as api/register.php's
+// SECTIONS_BY_STRAND — kept here too so a schedule's section can never be
+// a typo that silently never matches a real student (the access-code
+// gate in api/verify-access-code.php compares this value exactly).
+const SECTIONS_BY_STRAND = [
+    'STEM' => ['S1114', 'S1109'],
+    'ABM' => ['A1101', 'A1102'],
+    'ICT' => ['I1101', 'I1102'],
+    'HUMSS' => ['H1102'],
+];
 
 /**
  * Expected/completed counts for one schedule row. assessment_roster has no
@@ -152,8 +162,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $gradeLevel = in_array($gradeLevel, $validGrades, true) ? $gradeLevel : null;
         $strand = strtoupper(trim((string) ($body['strand'] ?? '')));
         $strand = in_array($strand, $validStrands, true) ? $strand : null;
+        // Never trust the client-side cascading dropdown alone: a section
+        // must belong to the chosen strand's fixed list, and "All strands"
+        // can't be paired with one specific section (every section belongs
+        // to exactly one strand).
         $section = trim((string) ($body['section'] ?? ''));
-        $section = ($section !== '' && mb_strlen($section) <= 20) ? $section : null;
+        if ($section !== '') {
+            if ($strand === null || !in_array($section, SECTIONS_BY_STRAND[$strand] ?? [], true)) {
+                jsonResponse(['success' => false, 'error' => 'Invalid section for the selected strand.'], 400);
+            }
+        } else {
+            $section = null;
+        }
         $notes = trim((string) ($body['notes'] ?? ''));
         $scheduleType = ($body['scheduleType'] ?? 'initial') === 'retake' ? 'retake' : 'initial';
 

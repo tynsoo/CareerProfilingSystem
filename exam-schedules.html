@@ -191,7 +191,9 @@
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1">Section (optional)</label>
-              <input type="text" id="fSection" maxlength="20" placeholder="e.g. S1114" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+              <select id="fSection" disabled class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent bg-white disabled:bg-slate-50 disabled:text-slate-400">
+                <option value="">All Sections</option>
+              </select>
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1">Notes (optional)</label>
@@ -365,6 +367,33 @@
     });
   }
 
+  // Section is a fixed list of real section codes, one strand each --
+  // cascading off the Strand select rather than free text, so a schedule
+  // can never target a section that doesn't actually exist (a typo here
+  // used to mean the schedule silently matched zero students, since the
+  // access-code gate compares against the exact stored value). "All" (no
+  // strand picked) forces Section back to "All" too, since every section
+  // belongs to exactly one strand.
+  const SECTIONS_BY_STRAND = {
+    STEM: ['S1114', 'S1109'],
+    ABM: ['A1101', 'A1102'],
+    ICT: ['I1101', 'I1102'],
+    HUMSS: ['H1102'],
+  };
+  const fStrandEl = document.getElementById('fStrand');
+  const fSectionEl = document.getElementById('fSection');
+  function updateSectionOptions() {
+    const sections = SECTIONS_BY_STRAND[fStrandEl.value] || [];
+    fSectionEl.innerHTML = '<option value="">All Sections</option>';
+    if (!sections.length) {
+      fSectionEl.disabled = true;
+      return;
+    }
+    fSectionEl.disabled = false;
+    sections.forEach(code => fSectionEl.appendChild(new Option(code, code)));
+  }
+  fStrandEl.addEventListener('change', updateSectionOptions);
+
   document.getElementById('createForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const errorEl = document.getElementById('createError');
@@ -380,7 +409,7 @@
       room: document.getElementById('fRoom').value.trim(),
       gradeLevel: document.getElementById('fGradeLevel').value,
       strand: document.getElementById('fStrand').value,
-      section: document.getElementById('fSection').value.trim(),
+      section: document.getElementById('fSection').value,
       notes: document.getElementById('fNotes').value.trim(),
     };
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -401,6 +430,7 @@
     successEl.textContent = 'Schedule created. Access code: ' + data.accessCode;
     successEl.classList.remove('hidden');
     e.target.reset();
+    updateSectionOptions(); // form.reset() doesn't restore the disabled attribute JS set
     await loadSchedules();
   });
 
