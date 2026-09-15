@@ -45,7 +45,7 @@ foreach ($questions as $i => $dimension) {
     $totals[$dimension] += $answers[$i];
 }
 
-$labels = ['R' => 'Realistic', 'I' => 'Investigate', 'A' => 'Artistic', 'S' => 'Social', 'E' => 'Enterprising', 'C' => 'Conventional'];
+$labels = ['R' => 'Realistic', 'I' => 'Investigative', 'A' => 'Artistic', 'S' => 'Social', 'E' => 'Enterprising', 'C' => 'Conventional'];
 $ranked = $totals;
 arsort($ranked);
 $topTypes = array_map(fn($code) => $labels[$code], array_slice(array_keys($ranked), 0, 3));

@@ -134,8 +134,6 @@ $counseledIds = array_flip($pdo->query(
      WHERE subject = 'Request for Academic Advising' AND student_id IS NOT NULL"
 )->fetchAll(PDO::FETCH_COLUMN));
 
-$labels = ['R' => 'Realistic', 'I' => 'Investigate', 'A' => 'Artistic', 'S' => 'Social', 'E' => 'Enterprising', 'C' => 'Conventional'];
-
 $students = array_map(function ($r) use ($counseledIds) {
     $hasAssessment = $r['completed_at'] !== null;
     $status = $hasAssessment ? 'Completed' : 'Pending';

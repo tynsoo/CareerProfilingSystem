@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Career Results — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/admin/logo-profilepath-shield.png">
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="css/tailwind.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -390,7 +390,7 @@
       traits: ['Practical', 'Mechanical', 'Hands-on'],
       color: '#b7c8e1'
     },
-    Investigate: {
+    Investigative: {
       letter: 'I', nickname: 'The Thinkers',
       description: '"The Thinkers" — You prefer working with ideas and require an extensive amount of thinking. You enjoy searching for facts and figuring out problems mentally.',
       fit: 'Strong fit for roles requiring research, mathematics, or scientific analysis. Often avoids highly structured or persuasive leadership roles.',
@@ -426,7 +426,7 @@
       color: '#495e88'
     }
   };
-  const AXIS_ORDER = ['Realistic', 'Investigate', 'Artistic', 'Social', 'Enterprising', 'Conventional'];
+  const AXIS_ORDER = ['Realistic', 'Investigative', 'Artistic', 'Social', 'Enterprising', 'Conventional'];
   const MAX_SCORE = 50;
 
   function revealPanel(id) {
@@ -442,7 +442,7 @@
 
   const scores = status.scores;
   const ranked = AXIS_ORDER
-    .map(function(name) { return { name: name, score: scores[name === 'Investigate' ? 'I' : name[0]] }; })
+    .map(function(name) { return { name: name, score: scores[name[0]] }; })
     .sort(function(a, b) { return b.score - a.score; });
 
   // A student can land here either from the RIASEC assessment card (which
@@ -470,7 +470,7 @@
 
   const primary = ranked[0];
   const info = TYPE_INFO[primary.name];
-  document.getElementById('primaryTypeName').textContent = primary.name === 'Investigate' ? 'Investigative' : primary.name;
+  document.getElementById('primaryTypeName').textContent = primary.name;
   document.getElementById('primaryTypeLetter').textContent = info.letter;
   document.getElementById('primaryDescription').textContent = info.description;
   document.getElementById('primaryFit').textContent = info.fit;
@@ -478,14 +478,13 @@
     return '<span class="bg-slate-100 border border-[#e8bcb7] text-[#5e3f3c] text-xs font-semibold px-3 py-1 rounded-full">' + t + '</span>';
   }).join('');
 
-  document.getElementById('hollandCode').textContent = ranked.slice(0, 3).map(function(r) { return r.name === 'Investigate' ? 'I' : r.name[0]; }).join(' ');
+  document.getElementById('hollandCode').textContent = ranked.slice(0, 3).map(function(r) { return r.name[0]; }).join(' ');
 
   const intensityHtml = ranked.map(function(r, i) {
     const pct = Math.round((r.score / MAX_SCORE) * 100);
     const dim = i < 3 ? '' : 'opacity-60';
     const barColor = i === 0 ? '#bb0013' : (i < 3 ? '#001c43' : '#b7c8e1');
     const pctColor = i === 0 ? 'text-[#bb0013]' : (i < 3 ? 'text-[#495e88]' : 'text-slate-500');
-    const displayName = r.name === 'Investigate' ? 'Investigative' : r.name;
     // Ranks #2 and #3 get a short description here (rank #1's is already
     // shown in the Primary Interest Area card above, so it's not repeated).
     const desc = (i === 1 || i === 2)
@@ -493,7 +492,7 @@
       : '';
     return '<div class="flex flex-col gap-2 ' + dim + '">' +
       '<div class="flex items-baseline justify-between">' +
-        '<span class="text-xs font-semibold tracking-[0.6px] text-[#001c43]">' + displayName + ' (' + info_letter(r.name) + ')</span>' +
+        '<span class="text-xs font-semibold tracking-[0.6px] text-[#001c43]">' + r.name + ' (' + info_letter(r.name) + ')</span>' +
         '<span class="text-[13px] font-medium ' + pctColor + '">' + pct + '%</span>' +
       '</div>' +
       '<div class="bg-slate-100 h-2 rounded-full overflow-hidden">' +
@@ -517,9 +516,9 @@
     new Chart(ctx, {
       type: 'radar',
       data: {
-        labels: AXIS_ORDER.map(function(name) { return name === 'Investigate' ? 'I' : name[0]; }),
+        labels: AXIS_ORDER.map(function(name) { return name[0]; }),
         datasets: [{
-          data: AXIS_ORDER.map(function(name) { return scores[name === 'Investigate' ? 'I' : name[0]]; }),
+          data: AXIS_ORDER.map(function(name) { return scores[name[0]]; }),
           backgroundColor: 'rgba(187,0,19,0.15)',
           borderColor: '#bb0013',
           borderWidth: 2,
@@ -545,13 +544,12 @@
   })();
 
   async function renderCareerResults(recommendation) {
-    document.getElementById('cr-code').textContent = ranked.slice(0, 3).map(function(r) { return r.name === 'Investigate' ? 'I' : r.name[0]; }).join(' - ');
+    document.getElementById('cr-code').textContent = ranked.slice(0, 3).map(function(r) { return r.name[0]; }).join(' - ');
 
     document.getElementById('cr-topTypes').innerHTML = ranked.slice(0, 3).map(function(r) {
       const info = TYPE_INFO[r.name];
-      const displayName = r.name === 'Investigate' ? 'Investigative' : r.name;
       return '<div>' +
-        '<p class="text-sm font-semibold text-[#001c43]">' + displayName + ' (' + info.letter + ')</p>' +
+        '<p class="text-sm font-semibold text-[#001c43]">' + r.name + ' (' + info.letter + ')</p>' +
         '<p class="text-xs text-[#5e3f3c] mt-1 leading-relaxed">' + info.description + '</p>' +
       '</div>';
     }).join('');
