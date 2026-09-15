@@ -247,7 +247,7 @@
       <button type="button" id="detailsModalClose" class="text-gray-500 hover:text-gray-600 text-xl leading-none">&times;</button>
     </div>
     <div class="px-6 py-5">
-      <p class="text-sm text-gray-600 leading-relaxed" id="detailsModalBody">—</p>
+      <div class="text-sm text-gray-600 leading-relaxed" id="detailsModalBody">—</div>
     </div>
     <div class="px-6 py-4 border-t border-gray-100 flex justify-end">
       <button type="button" id="detailsModalOk" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Close</button>
@@ -642,10 +642,14 @@
       if (detailsBtn) {
         const program = allPrograms[Number(detailsBtn.dataset.id)];
         document.getElementById('detailsModalTitle').textContent = program.title;
-        document.getElementById('detailsModalBody').textContent =
-          program.collegeCode + ' — ' + program.collegeName + '. Holland Code: ' + program.hollandCode + '. ' +
-          'Final Match Score = 0.70 × RIASEC similarity (' + Math.round(program.cosine * 100) + '%) + 0.30 × stated-interest indicator (' +
-          (recommendation.statedProgramId === program.id ? '1, since you stated this program on your worksheet' : '0') + ') = ' + program.matchPercent + '%.';
+        const overview = program.description
+          ? program.description
+          : 'This program is a ' + program.matchPercent + '% match to your RIASEC profile, based on its Holland Code (' + program.hollandCode + ') and your assessment results.';
+        document.getElementById('detailsModalBody').innerHTML =
+          '<p>' + overview + '</p>' +
+          '<p class="text-xs text-[#5e3f3c] mt-3">' + program.collegeCode + ' — ' + program.collegeName + ' &middot; Holland Code: ' + program.hollandCode + '</p>' +
+          '<p class="text-xs text-slate-400 mt-3 pt-3 border-t border-gray-100">Final Match Score = 0.70 × RIASEC similarity (' + Math.round(program.cosine * 100) + '%) + 0.30 × stated-interest indicator (' +
+          (recommendation.statedProgramId === program.id ? '1, since you stated this program on your worksheet' : '0') + ') = ' + program.matchPercent + '%.</p>';
         openDetailsModal();
         return;
       }
