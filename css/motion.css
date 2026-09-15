@@ -117,6 +117,12 @@ button[class*="-translate-y-1/2"]:active {
   filter: none;
 }
 
+/* Password show/hide toggle: a plain glyph swap, not a lift/press target —
+   opt it out of the button transition entirely so the icon change is instant. */
+#togglePassword {
+  transition: none;
+}
+
 /* Arrow/chevron icons inside buttons or links nudge on hover */
 button img[src*="arrow"],
 button img[src*="chevron"],
