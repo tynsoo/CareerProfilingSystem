@@ -13,6 +13,44 @@
  * script fully handled the response itself.
  */
 
+require_once __DIR__ . '/lib/Auth.php';
+
+// Pages that require an authenticated session with a specific role. Each of
+// these pages also redirects client-side once its own JS runs (checking
+// currentUser.role), but that left the page's HTML shell itself reachable
+// with a 200 to anyone, logged in or not — the API endpoints behind these
+// pages were always properly session/role-gated, only the static shell
+// wasn't. Enforced here, before the file is ever read off disk, using the
+// same role requirement each page's own client-side guard already checks.
+const PROTECTED_PAGES = [
+    'admin-dashboard' => ['admin', 'counselor'],
+    'add-career' => ['admin', 'counselor'],
+    'all-recommended-careers' => ['admin', 'counselor'],
+    'analytics' => ['admin', 'counselor'],
+    'announcements' => ['admin', 'counselor'],
+    'audit-log' => ['admin', 'counselor'],
+    'career-dataset' => ['admin', 'counselor'],
+    'exam-schedules' => ['admin', 'counselor'],
+    'help-requests' => ['admin', 'counselor'],
+    'monitoring' => ['admin', 'counselor'],
+    'monitoring-details' => ['admin', 'counselor'],
+    'profile' => ['admin', 'counselor'],
+    'question-bank' => ['admin', 'counselor'],
+    'retake-requests' => ['admin', 'counselor'],
+    'security-configuration' => ['admin', 'counselor'],
+    'student-profile' => ['admin', 'counselor'],
+    'staff-accounts' => ['admin'],
+    'assessment' => ['student'],
+    'assessment-instructions' => ['student'],
+    'change-password' => ['student'],
+    'career-worksheet' => ['student'],
+    'help-center' => ['student'],
+    'results' => ['student'],
+    'riasec-assessment' => ['student'],
+    'student-settings' => ['student'],
+    'worksheet-results' => ['student'],
+];
+
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = urldecode($path ?? '/');
 
@@ -23,6 +61,19 @@ $path = urldecode($path ?? '/');
 // business reimplementing or bypassing.
 if ($path === '/' || $path === '') {
     return false;
+}
+
+// Checked against the basename with any ".html" stripped, so this catches
+// both the clean URL (/admin-dashboard) and a direct request for the file
+// itself (/admin-dashboard.html) before either ever reaches the "serve the
+// file as-is" branch below.
+$slug = basename($path, '.html');
+if (isset(PROTECTED_PAGES[$slug])) {
+    $user = Auth::currentUser();
+    if ($user === null || !in_array($user['role'], PROTECTED_PAGES[$slug], true)) {
+        header('Location: /login');
+        return true;
+    }
 }
 
 // A request for a real file on disk — api/*.php, images/*, css/*, js/*,
