@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "php-dev-server",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "localhost:8000", "-t", ".", "router.php"],
+      "port": 8000
+    }
+  ]
+}
