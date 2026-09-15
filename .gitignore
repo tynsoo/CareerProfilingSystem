@@ -18,3 +18,9 @@ desktop.ini
 
 # Logs
 *.log
+
+# Standalone Tailwind CLI binary used to (re)generate css/tailwind.css locally —
+# not needed at runtime or in the Docker image, and too large to commit.
+# Re-download from https://github.com/tailwindlabs/tailwindcss/releases if needed:
+#   tailwindcss -i css/tailwind-src.css -o css/tailwind.css --minify
+build-tools/
