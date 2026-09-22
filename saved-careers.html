@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Help Center — Career Profiling System</title>
+<title>Saved Careers — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/admin/logo-profilepath-shield.png">
 <link rel="stylesheet" href="css/tailwind.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,7 +40,7 @@
         <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M120-160q-33 0-56.5-23.5T40-240q0-33 23.5-56.5T120-320h10.5q4.5 0 9.5 2l182-182q-2-5-2-9.5V-520q0-33 23.5-56.5T400-600q33 0 56.5 23.5T480-520q0 2-2 20l102 102q5-2 9.5-2h21q4.5 0 9.5 2l142-142q-2-5-2-9.5V-560q0-33 23.5-56.5T840-640q33 0 56.5 23.5T920-560q0 33-23.5 56.5T840-480h-10.5q-4.5 0-9.5-2L678-340q2 5 2 9.5v10.5q0 33-23.5 56.5T600-240q-33 0-56.5-23.5T520-320v-10.5q0-4.5 2-9.5L420-442q-5 2-9.5 2H400q-2 0-20-2L198-260q2 5 2 9.5v10.5q0 33-23.5 56.5T120-160Zm40-401-25-54-54-25 54-25 25-54 25 54 54 25-54 25-25 54Zm440-39-38-82-82-38 82-38 38-82 38 82 82 38-82 38-38 82Z"/></svg>
         Career Results
       </a>
-      <a href="saved-careers" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+      <a href="saved-careers" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
         <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>
         Saved Careers
       </a>
@@ -50,7 +50,7 @@
       </a>
     </nav>
     <div class="border-t border-white/5 pt-[25px] pb-6 flex flex-col gap-0.5">
-      <a href="help-center" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-[#ed1c24] bg-[#495e88] text-white text-sm">
+      <a href="help-center" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
         <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M513.5-254.5Q528-269 528-290t-14.5-35.5Q499-340 478-340t-35.5 14.5Q428-311 428-290t14.5 35.5Q457-240 478-240t35.5-14.5ZM442-394h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
         Help Center
       </a>
@@ -88,10 +88,7 @@
       </div>
       <div class="relative border-l border-slate-200 pl-[25px]">
         <button type="button" id="profileBtn" class="flex items-center gap-4">
-          <div class="text-right">
-            <p class="text-[15px] font-semibold text-[#001a40]" id="headerName">Student</p>
-            <p class="text-base text-slate-500" id="headerSub">—</p>
-          </div>
+          <p class="text-[15px] font-semibold text-[#001a40]" id="headerName">Student</p>
           <span id="headerAvatarWrap" class="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center overflow-hidden">
             <svg class="w-[21.7px] h-[21.7px]" viewBox="0 -960 960 960" fill="#64748B"><path d="M367-527q-47-47-47-113t47-113q47-47 113-47t113 47q47 47 47 113t-47 113q-47 47-113 47t-113-47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm296.5-343.5Q560-607 560-640t-23.5-56.5Q513-720 480-720t-56.5 23.5Q400-673 400-640t23.5 56.5Q447-560 480-560t56.5-23.5ZM480-640Zm0 400Z"/></svg>
           </span>
@@ -108,79 +105,35 @@
       </div>
     </header>
 
-    <main id="main-content" class="flex-1 px-9 py-10 max-w-[1000px]">
+    <!-- Page Content -->
+    <main id="main-content" class="flex-1 p-4 sm:p-8 overflow-auto">
 
-      <div id="announcementsPanel" class="hidden bg-white border border-slate-200 rounded-lg shadow-[0px_2px_15px_0px_rgba(0,26,64,0.04)] p-[25px] mb-6">
-        <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-3">Announcements</p>
-        <div id="announcementsPanelList" class="flex flex-col gap-3"></div>
-      </div>
-
-      <div class="mb-8">
-        <h1 class="text-[32px] font-bold text-[#001a40] tracking-tight">Help Center</h1>
-        <p class="text-base text-slate-500 mt-2">Answers to common questions, and a direct line to the Guidance Office.</p>
-      </div>
-
-      <!-- FAQ -->
-      <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-6">
-        <div class="border-b border-slate-200 px-6 py-5">
-          <h2 class="text-lg font-bold text-gray-900">Frequently Asked Questions</h2>
+      <div class="max-w-3xl mx-auto">
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold text-gray-900">Saved Careers</h1>
+          <p class="text-sm text-gray-500 mt-1">Programs you bookmarked from your Career Results.</p>
         </div>
-        <div id="faqList" class="divide-y divide-slate-100"></div>
-      </div>
 
-      <!-- Contact the Guidance Office -->
-      <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-6">
-        <div class="border-b border-slate-200 px-6 py-5">
-          <h2 class="text-lg font-bold text-gray-900">Contact the Guidance Office</h2>
-          <p class="text-xs text-gray-500 mt-1">Center for Guidance and Counseling — Mapúa Malayan Colleges Laguna</p>
+        <div id="undoBar" class="hidden bg-gray-900 text-white text-sm rounded-lg px-4 py-3 mb-4 items-center justify-between gap-4" role="status">
+          <span id="undoText"></span>
+          <button type="button" id="undoBtn" class="shrink-0 font-semibold text-[#ffb3b6] hover:underline">Undo</button>
         </div>
-        <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <div>
-            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Email</p>
-            <p class="text-sm text-gray-800">cgc@mmcl.mcl.edu.ph</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Office Hours</p>
-            <p class="text-sm text-gray-800" id="officeHoursText">Mon–Fri, 8:00 AM–5:00 PM</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">Location</p>
-            <p class="text-sm text-gray-800">CGC Office Senior Highschool, Einstein Building 3rd Floor</p>
+
+        <p id="loadingState" class="text-sm text-gray-500">Loading your saved careers…</p>
+        <p id="listError" class="hidden text-sm text-[#ed1c24]"></p>
+
+        <div id="emptyState" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm p-10">
+          <div class="flex flex-col items-center text-center gap-3">
+            <span class="w-14 h-14 rounded-xl bg-[#dbeafe] flex items-center justify-center">
+              <svg class="w-6 h-6 text-[#495e88]" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>
+            </span>
+            <h2 class="text-base font-semibold text-gray-900">No saved careers yet</h2>
+            <p class="text-sm text-gray-500 max-w-sm">Use "Save Career" on a program in your Career Results and it will show up here.</p>
+            <a href="results" class="mt-1 bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Go to Career Results</a>
           </div>
         </div>
-      </div>
 
-      <!-- Send a message -->
-      <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div class="border-b border-slate-200 px-6 py-5">
-          <h2 class="text-lg font-bold text-gray-900">Send a Message</h2>
-          <p class="text-xs text-gray-500 mt-1">Can't find what you're looking for? Send a message and a counselor will follow up.</p>
-        </div>
-        <div id="messageIdle" class="px-6 py-5">
-          <form id="helpForm" class="flex flex-col gap-4">
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Subject</label>
-              <input type="text" id="helpSubject" required class="w-full border border-gray-300 rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Message</label>
-              <textarea id="helpMessage" required rows="4" class="w-full border border-gray-300 rounded-md px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
-            </div>
-            <p class="text-xs text-gray-500 leading-relaxed">
-              Your message is encrypted and shared only with the Guidance Office, consistent with our <a href="privacy" class="text-[#ed1c24] hover:underline">Data Privacy Policy</a>.
-            </p>
-            <div>
-              <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Send Message</button>
-            </div>
-          </form>
-        </div>
-        <div id="messageSent" class="hidden px-6 py-8 flex flex-col items-center text-center gap-2">
-          <span class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-          </span>
-          <p class="text-sm font-medium text-gray-800">Message sent</p>
-          <p class="text-sm text-gray-500">A counselor will get back to you soon.</p>
-        </div>
+        <div id="savedList" class="flex flex-col gap-4"></div>
       </div>
 
     </main>
@@ -219,9 +172,96 @@
       document.getElementById('headerAvatarWrap').innerHTML = '<img src="' + currentUser.avatarUrl + '" alt="" class="w-full h-full object-cover">';
     }
     document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
-    document.getElementById('headerSub').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
     document.getElementById('profilePanelName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
     document.getElementById('profilePanelMeta').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    const listEl = document.getElementById('savedList');
+    const emptyEl = document.getElementById('emptyState');
+    const loadingEl = document.getElementById('loadingState');
+    const errorEl = document.getElementById('listError');
+    const undoBar = document.getElementById('undoBar');
+    let lastRemoved = null;
+
+    function renderList(programs) {
+      loadingEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      emptyEl.classList.toggle('hidden', programs.length > 0);
+      listEl.innerHTML = programs.map(function(p) {
+        const saved = p.savedAt ? new Date(p.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+        return '<div class="bg-white border border-[#e8bcb7] rounded-lg p-5 flex flex-col gap-3">' +
+          '<div class="flex items-start justify-between gap-4 flex-wrap">' +
+            '<div>' +
+              '<h2 class="text-base font-semibold text-[#001c43]">' + escapeHtml(p.title) + '</h2>' +
+              '<p class="text-xs text-[#5e3f3c] mt-0.5">' + escapeHtml(p.collegeCode) + ' — ' + escapeHtml(p.collegeName) + '</p>' +
+            '</div>' +
+            '<div class="flex items-center gap-2 shrink-0">' +
+              (p.isActive ? '' : '<span class="text-xs font-medium text-gray-500 bg-gray-100 rounded-full px-3 py-1">No longer available</span>') +
+              '<span class="text-xs font-semibold text-[#bb0013] bg-[rgba(187,0,19,0.1)] border border-[rgba(187,0,19,0.2)] rounded-full px-3 py-1">Holland Code: ' + escapeHtml(p.hollandCode) + '</span>' +
+            '</div>' +
+          '</div>' +
+          (p.description ? '<p class="text-sm text-[#191c1e] leading-relaxed">' + escapeHtml(p.description) + '</p>' : '') +
+          '<div class="flex items-center justify-between gap-3 pt-1">' +
+            '<p class="text-xs text-gray-500">' + (saved ? 'Saved on ' + escapeHtml(saved) : '') + '</p>' +
+            '<button type="button" class="remove-btn text-xs font-semibold text-[#ed1c24] border border-[#ed1c24] rounded px-3 py-1.5 hover:bg-red-50" data-id="' + p.id + '" data-title="' + escapeHtml(p.title) + '">Remove</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function loadSaved() {
+      try {
+        const res = await fetch('api/saved-programs.php?details=1');
+        if (!res.ok) throw new Error('bad status');
+        const data = await res.json();
+        renderList(data.programs || []);
+      } catch (e) {
+        loadingEl.classList.add('hidden');
+        errorEl.textContent = 'Could not load your saved careers. Please refresh the page.';
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    // The save endpoint is a toggle, so after any change the list is re-read from the
+    // server rather than trusting local state (e.g. removed in another tab already).
+    async function toggleSaved(programId) {
+      const res = await fetch('api/saved-programs.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ programId: programId })
+      });
+      return res.json();
+    }
+
+    function showUndo(title, programId) {
+      lastRemoved = programId;
+      document.getElementById('undoText').textContent = 'Removed "' + title + '" from your saved careers.';
+      undoBar.classList.remove('hidden');
+      undoBar.classList.add('flex');
+    }
+
+    listEl.addEventListener('click', async function(e) {
+      const btn = e.target.closest('.remove-btn');
+      if (!btn) return;
+      btn.disabled = true;
+      const data = await toggleSaved(Number(btn.dataset.id));
+      if (data.success && data.saved === false) showUndo(btn.dataset.title, Number(btn.dataset.id));
+      await loadSaved();
+    });
+
+    document.getElementById('undoBtn').addEventListener('click', async function() {
+      if (lastRemoved === null) return;
+      const data = await toggleSaved(lastRemoved);
+      // If it was already saved again elsewhere, the toggle just removed it — put it back.
+      if (data.success && data.saved === false) await toggleSaved(lastRemoved);
+      lastRemoved = null;
+      undoBar.classList.add('hidden');
+      undoBar.classList.remove('flex');
+      await loadSaved();
+    });
+
+    loadSaved();
 
     (function() {
       const sidebar = document.getElementById('sidebar');
@@ -234,29 +274,6 @@
       });
       backdrop.addEventListener('click', closeSidebar);
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
-    })();
-
-    (async function renderAnnouncements() {
-      let data;
-      try {
-        data = await (await fetch('api/announcements.php')).json();
-      } catch (e) {
-        return;
-      }
-      const items = (data.announcements || []).slice(0, 3);
-      if (!items.length) return;
-      function escapeHtml(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      }
-      document.getElementById('announcementsPanelList').innerHTML = items.map(function(a) {
-        const date = new Date(a.publishAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        return '<div class="border-l-[3px] border-[#ed1c24] pl-4 py-1">' +
-          '<p class="text-sm font-semibold text-[#001a40]">' + escapeHtml(a.title) + '</p>' +
-          '<p class="text-xs text-slate-500 mt-0.5">' + date + '</p>' +
-          '<p class="text-sm text-slate-600 mt-1 leading-relaxed">' + escapeHtml(a.body) + '</p>' +
-        '</div>';
-      }).join('');
-      document.getElementById('announcementsPanel').classList.remove('hidden');
     })();
 
     const logoutModal = document.getElementById('logoutConfirmModal');
@@ -291,28 +308,12 @@
     notifBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
     profileBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
     document.addEventListener('click', function() { notifPanel.classList.add('hidden'); profilePanel.classList.add('hidden'); });
-
-  // Close open dropdown panels on scroll — they were anchored under their
-  // trigger button, and letting them sit still while the page scrolls away
-  // from that anchor looks broken, so just dismiss them instead.
-  window.addEventListener('scroll', () => {
-    document.getElementById('notifPanel')?.classList.add('hidden');
-    document.getElementById('profilePanel')?.classList.add('hidden');
-  }, { passive: true });
+    window.addEventListener('scroll', () => {
+      notifPanel.classList.add('hidden');
+      profilePanel.classList.add('hidden');
+    }, { passive: true });
     notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
     profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
-
-    const prefillSubject = new URLSearchParams(window.location.search).get('subject');
-    if (prefillSubject) {
-      document.getElementById('helpSubject').value = prefillSubject;
-      document.getElementById('helpMessage').focus();
-    }
-
-    fetch('api/public-settings.php').then(function(r) { return r.json(); }).then(function(data) {
-      if (data && data.officeHours && data.officeHours.text) {
-        document.getElementById('officeHoursText').textContent = data.officeHours.text;
-      }
-    }).catch(function() {});
 
     (async function renderNotifications() {
       const statusNow = await (await fetch('api/assessment-status.php')).json();
@@ -325,61 +326,8 @@
       const list = document.getElementById('notifList');
       const dot = document.getElementById('notifDot');
       list.innerHTML = notes.map(function(n) { return '<li class="px-4 py-3 text-sm text-gray-700">' + n + '</li>'; }).join('');
-      dot.classList.toggle('hidden', !notes.length);
+      dot.classList.remove('hidden');
     })();
-
-    // FAQ accordion
-    const FAQS = [
-      { q: 'What is the RIASEC Career Interest Assessment?', a: 'It\'s a 60-question inventory based on Holland\'s RIASEC theory. Your answers show how strongly you lean toward each of six interest areas — Realistic, Investigative, Artistic, Social, Enterprising, and Conventional — which are then used to suggest careers that fit you.' },
-      { q: 'Can I pause and come back later?', a: 'Yes. Your answers are saved automatically as you go, so you can close the page and continue from where you left off.' },
-      { q: 'Can I retake the assessment?', a: 'Right now each account keeps a single result. If you believe your results don\'t reflect you accurately, message the Guidance Office below and a counselor can help.' },
-      { q: 'What is the Career Worksheet?', a: 'It unlocks after you finish the RIASEC assessment. You\'ll write down a career you\'re considering and pick electives aligned to your strand and results.' },
-      { q: 'How do I change my password?', a: 'Go to Settings, then Change Password. You\'ll set a new password and confirm it with a one-time verification code.' }
-    ];
-    document.getElementById('faqList').innerHTML = FAQS.map(function(f, i) {
-      return '<div class="faq-item">' +
-        '<button type="button" class="faq-toggle w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-gray-50" data-index="' + i + '" aria-expanded="false">' +
-          '<span class="text-sm font-medium text-gray-800">' + f.q + '</span>' +
-          '<svg class="faq-chevron accordion-chevron w-4 h-4 text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>' +
-        '</button>' +
-        '<div class="faq-answer accordion-body">' +
-          '<div><p class="text-sm text-gray-500 leading-relaxed px-6 pb-4">' + f.a + '</p></div>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-
-    document.querySelectorAll('.faq-toggle').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        const answer = btn.nextElementSibling;
-        const chevron = btn.querySelector('.faq-chevron');
-        const isOpen = answer.classList.contains('is-open');
-        answer.classList.toggle('is-open', !isOpen);
-        chevron.classList.toggle('is-open', !isOpen);
-        btn.setAttribute('aria-expanded', String(!isOpen));
-      });
-    });
-
-    // Help message form
-    document.getElementById('helpForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const subject = document.getElementById('helpSubject').value.trim();
-      const message = document.getElementById('helpMessage').value.trim();
-      if (!subject || !message) return;
-
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
-      const res = await fetch('api/help-requests.php', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: subject, message: message })
-      });
-      submitBtn.disabled = false;
-      if (!res.ok) return;
-
-      document.getElementById('messageIdle').classList.add('hidden');
-      const sent = document.getElementById('messageSent');
-      sent.classList.remove('hidden');
-      sent.classList.add('step-anim');
-    });
 })();
 </script>
 
