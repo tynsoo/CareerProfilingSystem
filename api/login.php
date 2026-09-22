@@ -76,7 +76,6 @@ $sessionData = [
     'id' => (int) $user['id'],
     'role' => $user['role'],
     'username' => $user['username'],
-    'email' => $user['email'],
     'avatarUrl' => $user['avatar_data_url'],
 ];
 
