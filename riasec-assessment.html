@@ -8,70 +8,178 @@
 <link rel="stylesheet" href="css/tailwind.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   body{ font-family:'Inter', sans-serif; }
-  .font-heading{ font-family:'Poppins', sans-serif; }
 </style>
 <link rel="stylesheet" href="css/motion.css">
 </head>
-<body class="bg-white min-h-screen">
+<body class="bg-[#f8f9fb]">
 <a href="#main-content" class="skip-link">Skip to main content</a>
 
-<header class="max-w-[1330px] mx-auto px-6 md:px-10 pt-8 pb-4 flex items-start justify-between gap-6 sticky top-0 bg-white z-10">
-  <div class="flex items-center gap-3">
-    <button type="button" id="backBtn" class="w-6 h-6 shrink-0 flex items-center justify-center text-[#082672] hover:opacity-70">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-    </button>
-    <h1 class="font-heading text-[#082672] text-2xl md:text-[32px] font-semibold tracking-wide">RIASEC Assessment</h1>
-  </div>
-  <div class="text-right shrink-0">
-    <p class="font-heading text-black text-base md:text-lg font-medium" id="headerName">Student</p>
-    <p class="font-heading text-black text-sm md:text-base" id="headerGrade">—</p>
-  </div>
-</header>
+<div class="flex min-h-screen">
 
-<main id="main-content" class="max-w-[1330px] mx-auto px-6 md:px-10 pb-10">
+  <!-- Mobile sidebar backdrop -->
+  <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/40 z-30 md:hidden"></div>
 
-  <!-- Dimension Tabs -->
-  <div id="dimensionTabs" class="flex flex-wrap gap-3 mb-6"></div>
-
-  <!-- Overall Progress -->
-  <div class="bg-white border border-black/[0.08] rounded-[20px] px-6 py-4 mb-6 flex items-center gap-4">
-    <span class="text-base md:text-lg font-medium text-black shrink-0">Overall Progress</span>
-    <div class="flex-1 h-2.5 rounded-full bg-slate-200 overflow-hidden">
-      <div id="overallProgressBar" class="h-full rounded-full bg-[#0f2a6b] transition-all duration-300" style="width:0%"></div>
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-[260px] shrink-0 bg-[#001c43] flex flex-col fixed inset-y-0 left-0 z-40 -translate-x-full transition-transform duration-200 md:sticky md:top-0 md:translate-x-0 h-screen">
+    <div class="flex items-center gap-3 px-6 py-8">
+      <img src="images/admin/logo-profilepath.svg" alt="ProfilePath logo" class="w-[64px]">
+      <div>
+        <p class="text-lg font-bold leading-none"><span class="text-white">Profile</span><span class="text-[#ed1c24]">Path</span></p>
+        <p class="text-sm text-white/60 mt-1">Student Portal</p>
+      </div>
     </div>
-    <span class="text-base md:text-lg font-medium text-black shrink-0" id="overallProgressText">1/60</span>
-  </div>
+    <nav class="flex-1 flex flex-col gap-0.5 py-4 overflow-auto">
+      <a href="assessment" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q13-36 43.5-58t68.5-22q38 0 68.5 22t43.5 58h168q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm80-80h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm221.5-198.5Q510-807 510-820t-8.5-21.5Q493-850 480-850t-21.5 8.5Q450-833 450-820t8.5 21.5Q467-790 480-790t21.5-8.5ZM200-200v-560 560Z"/></svg>
+        Assessments
+      </a>
+      <a href="results" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M120-160q-33 0-56.5-23.5T40-240q0-33 23.5-56.5T120-320h10.5q4.5 0 9.5 2l182-182q-2-5-2-9.5V-520q0-33 23.5-56.5T400-600q33 0 56.5 23.5T480-520q0 2-2 20l102 102q5-2 9.5-2h21q4.5 0 9.5 2l142-142q-2-5-2-9.5V-560q0-33 23.5-56.5T840-640q33 0 56.5 23.5T920-560q0 33-23.5 56.5T840-480h-10.5q-4.5 0-9.5-2L678-340q2 5 2 9.5v10.5q0 33-23.5 56.5T600-240q-33 0-56.5-23.5T520-320v-10.5q0-4.5 2-9.5L420-442q-5 2-9.5 2H400q-2 0-20-2L198-260q2 5 2 9.5v10.5q0 33-23.5 56.5T120-160Zm40-401-25-54-54-25 54-25 25-54 25 54 54 25-54 25-25 54Zm440-39-38-82-82-38 82-38 38-82 38 82 82 38-82 38-38 82Z"/></svg>
+        Career Results
+      </a>
+      <a href="saved-careers" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>
+        Saved Careers
+      </a>
+      <a href="student-settings" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="border-t border-white/5 pt-[25px] pb-6 flex flex-col gap-0.5">
+      <a href="help-center" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M513.5-254.5Q528-269 528-290t-14.5-35.5Q499-340 478-340t-35.5 14.5Q428-311 428-290t14.5 35.5Q457-240 478-240t35.5-14.5ZM442-394h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+        Help Center
+      </a>
+      <a href="#" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
+        Logout
+      </a>
+    </div>
 
-  <!-- Question Card -->
-  <div id="questionCard" class="content-swap bg-white border border-black/[0.08] rounded-[20px] p-8 md:p-10 min-h-[440px] flex flex-col">
-    <p class="text-[#5c5a5a] text-sm md:text-base font-medium mb-3" id="questionMeta">Realistic - Question 1 out of 10</p>
-    <h2 class="text-black text-lg md:text-xl font-medium mb-8" id="questionText">—</h2>
+    <div class="bg-white px-6 py-3 flex items-center justify-center gap-3">
+      <img src="images/MMCL-logo.webp" alt="Mapúa Malayan Colleges Laguna" class="h-8 w-auto">
+      <img src="images/login/cgc-logo-title.png" alt="Center for Guidance and Counseling" class="h-7 w-auto">
+    </div>
+  </aside>
 
-    <div id="optionsList" class="flex flex-col gap-4 max-w-[1175px] mx-auto w-full"></div>
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
 
-    <div class="flex-1"></div>
-    <p id="submitError" class="hidden text-sm text-[#ed1c24] text-right mb-2" aria-live="polite"></p>
-    <div class="flex justify-end pt-8">
-      <button type="button" id="nextBtn" disabled class="flex items-center gap-2 rounded-[15px] px-7 py-2.5 text-base font-medium border border-black/[0.15] bg-white text-[#5c5a5a] cursor-not-allowed transition-colors">
-        <span id="nextBtnLabel">Next</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 icon-nudge-right"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    <header class="h-16 shrink-0 flex items-center justify-between gap-6 px-6 bg-white sticky top-0 z-10">
+      <button type="button" id="menuToggle" class="relative z-50 w-10 h-10 -m-2 flex items-center justify-center text-[#001a40] md:invisible">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
-    </div>
-  </div>
+      <div class="flex items-center gap-6">
+      <div class="relative">
+        <button type="button" id="notifBtn" class="relative w-[14.7px] h-[18.3px]">
+          <svg class="w-full h-full" viewBox="0 -960 960 960" fill="#64748B"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>
+          <span id="notifDot" class="hidden absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-[#ed1c24] border border-white"></span>
+        </button>
+        <div id="notifPanel" class="hidden fixed left-4 right-4 top-20 z-50 sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+16px)] sm:w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+          <div class="px-4 py-3 border-b border-gray-100">
+            <p class="text-sm font-semibold text-gray-900">Notifications</p>
+          </div>
+          <ul id="notifList" class="max-h-80 overflow-auto divide-y divide-gray-100"></ul>
+        </div>
+      </div>
+      <div class="relative border-l border-slate-200 pl-[25px]">
+        <button type="button" id="profileBtn" class="flex items-center gap-4">
+          <div class="text-right">
+            <p class="text-[15px] font-semibold text-[#001a40]" id="headerName">Student</p>
+            <p class="text-base text-slate-500" id="headerSub">—</p>
+          </div>
+          <span id="headerAvatarWrap" class="w-10 h-10 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center overflow-hidden">
+            <svg class="w-[21.7px] h-[21.7px]" viewBox="0 -960 960 960" fill="#64748B"><path d="M367-527q-47-47-47-113t47-113q47-47 113-47t113 47q47 47 47 113t-47 113q-47 47-113 47t-113-47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm296.5-343.5Q560-607 560-640t-23.5-56.5Q513-720 480-720t-56.5 23.5Q400-673 400-640t23.5 56.5Q447-560 480-560t56.5-23.5ZM480-640Zm0 400Z"/></svg>
+          </span>
+        </button>
+        <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+16px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
+          <div class="px-4 py-3 border-b border-gray-100">
+            <p class="text-sm font-semibold text-gray-900" id="profilePanelName">Student</p>
+            <p class="text-xs text-gray-500" id="profilePanelMeta">—</p>
+          </div>
+          <a href="student-settings" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+          <a href="#" id="profileLogout" class="block px-4 py-3 text-sm text-[#ed1c24] font-medium hover:bg-gray-50 border-t border-gray-100">Logout</a>
+        </div>
+      </div>
+      </div>
+    </header>
 
-</main>
+    <main id="main-content" class="flex-1 px-9 py-10 max-w-[1152px]">
+
+      <div class="flex items-start gap-5 mb-8">
+        <button type="button" id="backBtn" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#5e3f3c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div>
+          <h1 class="text-[32px] font-bold text-[#191c1e] tracking-tight">RIASEC Assessment</h1>
+          <p class="text-sm text-[#5e3f3c] mt-1">Answer honestly — there are no right or wrong answers.</p>
+        </div>
+      </div>
+
+      <!-- Dimension Tabs -->
+      <div id="dimensionTabs" class="flex flex-wrap gap-2 mb-4"></div>
+
+      <!-- Overall Progress -->
+      <div class="bg-white border border-[#e0e3e5] rounded-lg px-6 py-4 mb-4 flex items-center gap-4">
+        <span class="text-sm font-semibold text-[#191c1e] shrink-0">Overall Progress</span>
+        <div class="flex-1 h-2.5 rounded-full bg-slate-200 overflow-hidden">
+          <div id="overallProgressBar" class="h-full rounded-full bg-[#ed1c24] transition-all duration-300" style="width:0%"></div>
+        </div>
+        <span class="text-sm font-semibold text-[#5e3f3c] shrink-0" id="overallProgressText">1/60</span>
+      </div>
+
+      <!-- Question Card -->
+      <div id="questionCard" class="content-swap bg-white border border-[#e0e3e5] rounded-lg p-6 md:p-8 min-h-[420px] flex flex-col">
+        <p class="text-xs font-semibold tracking-[0.6px] text-[#495e88] uppercase mb-3" id="questionMeta">Realistic - Question 1 out of 10</p>
+        <h2 class="text-[#191c1e] text-lg md:text-xl font-medium mb-8" id="questionText">—</h2>
+
+        <div id="optionsList" class="flex flex-col gap-3 max-w-[900px] mx-auto w-full"></div>
+
+        <div class="flex-1"></div>
+        <p id="submitError" class="hidden text-sm text-[#ed1c24] text-right mb-2" aria-live="polite"></p>
+        <div class="flex justify-end pt-6">
+          <button type="button" id="nextBtn" disabled class="flex items-center gap-2 rounded-md px-7 py-2.5 text-sm font-semibold border border-gray-200 bg-gray-200 text-gray-400 cursor-not-allowed transition-colors">
+            <span id="nextBtnLabel">Next</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 icon-nudge-right"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
+        <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
+        <span>&middot;</span>
+        <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
+        <span>&middot;</span>
+        <a href="accessibility" class="hover:text-gray-600 hover:underline">Accessibility</a>
+      </footer>
+  </div>
+</div>
 
 <!-- Exit confirmation modal -->
 <div id="exitModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
   <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
     <h3 class="text-lg font-semibold text-black">Leave the assessment?</h3>
-    <p class="text-sm text-[#5c5a5a]">Your progress is saved, so you can pick up right where you left off next time.</p>
+    <p class="text-sm text-gray-500">Your progress is saved, so you can pick up right where you left off next time.</p>
     <div class="flex justify-end gap-2 pt-2">
-      <button type="button" id="exitCancel" class="px-4 py-2 text-sm font-medium text-[#5c5a5a] border border-black/[0.15] rounded-md hover:bg-slate-50">Stay</button>
-      <button type="button" id="exitConfirm" class="px-4 py-2 text-sm font-medium text-white bg-[#082672] rounded-md hover:opacity-90">Leave</button>
+      <button type="button" id="exitCancel" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Stay</button>
+      <button type="button" id="exitConfirm" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Leave</button>
+    </div>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
     </div>
   </div>
 </div>
@@ -86,8 +194,62 @@
     return;
   }
 
+  if (currentUser.avatarUrl) {
+    document.getElementById('headerAvatarWrap').innerHTML = '<img src="' + currentUser.avatarUrl + '" alt="" class="w-full h-full object-cover">';
+  }
   document.getElementById('headerName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
-  document.getElementById('headerGrade').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
+  document.getElementById('headerSub').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
+  document.getElementById('profilePanelName').textContent = currentUser.firstName + ' ' + currentUser.lastName;
+  document.getElementById('profilePanelMeta').textContent = 'Grade ' + currentUser.gradeLevel + ' - ' + currentUser.strand;
+
+  (function() {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    function openSidebar() { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); menuToggle.classList.add('invisible'); }
+    function closeSidebar() { sidebar.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); menuToggle.classList.remove('invisible'); }
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.contains('-translate-x-full') ? openSidebar() : closeSidebar();
+    });
+    backdrop.addEventListener('click', closeSidebar);
+  })();
+
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('profileLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
+
+  const notifBtn = document.getElementById('notifBtn');
+  const notifPanel = document.getElementById('notifPanel');
+  const profileBtn = document.getElementById('profileBtn');
+  const profilePanel = document.getElementById('profilePanel');
+  function toggleDropdown(panel, other) {
+    other.classList.add('hidden');
+    panel.classList.toggle('hidden');
+  }
+  notifBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(notifPanel, profilePanel); });
+  profileBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDropdown(profilePanel, notifPanel); });
+  document.addEventListener('click', function() { notifPanel.classList.add('hidden'); profilePanel.classList.add('hidden'); });
+  notifPanel.addEventListener('click', function(e) { e.stopPropagation(); });
+  profilePanel.addEventListener('click', function(e) { e.stopPropagation(); });
+  document.getElementById('notifList').innerHTML = '<li class="px-4 py-3 text-sm text-gray-700">Answer every question to finish your RIASEC assessment.</li>';
+  document.getElementById('notifDot').classList.remove('hidden');
 
   const DIMENSIONS = [
     { code: 'R', label: 'Realistic' },
@@ -130,9 +292,9 @@
     wrap.innerHTML = DIMENSIONS.map(function(dim) {
       const active = dim.code === QUESTIONS[currentIndex].dimension;
       const cls = active
-        ? 'bg-[#94aae0] text-white font-bold'
-        : 'bg-white text-black border border-[#d9d9d9] font-medium';
-      return '<span class="' + cls + ' rounded-full px-6 py-3 text-sm md:text-base whitespace-nowrap">' + dim.label + '</span>';
+        ? 'bg-[#001c43] text-white font-semibold'
+        : 'bg-white text-[#5e3f3c] border border-[#e0e3e5] font-medium';
+      return '<span class="' + cls + ' rounded-full px-5 py-2 text-xs md:text-sm whitespace-nowrap">' + dim.label + '</span>';
     }).join('');
   }
 
@@ -143,12 +305,12 @@
       const value = i + 1;
       const isSelected = selected === value;
       const rowCls = isSelected
-        ? 'bg-[#e7ecfa] border-[#0f2a6b]'
-        : 'bg-[#f1f4fc] border-black/[0.08] hover:border-black/[0.2]';
-      const dotCls = isSelected ? 'border-[#0f2a6b]' : 'border-black/40';
-      const dotInner = isSelected ? '<span class="w-2.5 h-2.5 rounded-full bg-[#0f2a6b]"></span>' : '';
+        ? 'bg-red-50 border-[#ed1c24]'
+        : 'bg-white border-gray-300 hover:border-[#e8bcb7]';
+      const dotCls = isSelected ? 'border-[#ed1c24]' : 'border-gray-300';
+      const dotInner = isSelected ? '<span class="w-2.5 h-2.5 rounded-full bg-[#ed1c24]"></span>' : '';
       const popCls = isSelected ? ' option-selected-pop' : '';
-      return '<button type="button" data-value="' + value + '" class="option-row flex items-center gap-4 border rounded-[13px] h-14 px-5 text-left text-base text-black transition-colors ' + rowCls + popCls + '">' +
+      return '<button type="button" data-value="' + value + '" class="option-row flex items-center gap-4 border rounded-lg h-14 px-5 text-left text-sm text-[#191c1e] transition-colors ' + rowCls + popCls + '">' +
         '<span class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ' + dotCls + '">' + dotInner + '</span>' +
         label +
         '</button>';
@@ -169,9 +331,9 @@
     const answered = state.answers[currentIndex] !== null;
     btn.disabled = !answered;
     if (answered) {
-      btn.className = 'flex items-center gap-2 rounded-[15px] px-7 py-2.5 text-base font-medium border border-[#0f2a6b] bg-[#0f2a6b] text-white transition-colors hover:opacity-90';
+      btn.className = 'flex items-center gap-2 rounded-md px-7 py-2.5 text-sm font-semibold border border-[#ed1c24] bg-[#ed1c24] text-white transition-colors hover:opacity-90';
     } else {
-      btn.className = 'flex items-center gap-2 rounded-[15px] px-7 py-2.5 text-base font-medium border border-black/[0.15] bg-white text-[#5c5a5a] cursor-not-allowed transition-colors';
+      btn.className = 'flex items-center gap-2 rounded-md px-7 py-2.5 text-sm font-semibold border border-gray-200 bg-gray-200 text-gray-400 cursor-not-allowed transition-colors';
     }
     document.getElementById('nextBtnLabel').textContent = currentIndex === TOTAL - 1 ? 'Finish' : 'Next';
   }
@@ -251,7 +413,9 @@
     if (e.target.id === 'exitModal') closeExitModal();
   });
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !exitModal.classList.contains('hidden')) closeExitModal();
+    if (e.key === 'Escape') {
+      if (!exitModal.classList.contains('hidden')) closeExitModal();
+    }
   });
 
   renderQuestion();
