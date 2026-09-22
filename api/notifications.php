@@ -5,6 +5,14 @@ require_once __DIR__ . '/_bootstrap.php';
 $user = Auth::requireLogin();
 $pdo = Database::get();
 
+// ?full=1 (used by notifications.html's "view all" list) widens the lookback
+// window and per-category/overall caps that the header dropdown otherwise
+// keeps small.
+$full = isset($_GET['full']);
+$days = $full ? 90 : 14;
+$each = $full ? 50 : 5;
+$total = $full ? 50 : 8;
+
 $items = [];
 
 if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
@@ -66,8 +74,8 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
     // Student: recent resolutions of things they submitted
     $stmt = $pdo->prepare(
         "SELECT id, subject, resolved_at FROM help_requests
-         WHERE student_id = ? AND status = 'resolved' AND resolved_at > NOW() - INTERVAL '14 days'
-         ORDER BY resolved_at DESC LIMIT 5"
+         WHERE student_id = ? AND status = 'resolved' AND resolved_at > NOW() - INTERVAL '$days days'
+         ORDER BY resolved_at DESC LIMIT $each"
     );
     $stmt->execute([$user['id']]);
     foreach ($stmt->fetchAll() as $row) {
@@ -81,8 +89,8 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
 
     $stmt = $pdo->prepare(
         "SELECT id, status, resolved_at FROM monitoring_flags
-         WHERE student_id = ? AND status IN ('approved', 'escalated') AND resolved_at > NOW() - INTERVAL '14 days'
-         ORDER BY resolved_at DESC LIMIT 5"
+         WHERE student_id = ? AND status IN ('approved', 'escalated') AND resolved_at > NOW() - INTERVAL '$days days'
+         ORDER BY resolved_at DESC LIMIT $each"
     );
     $stmt->execute([$user['id']]);
     foreach ($stmt->fetchAll() as $row) {
@@ -97,12 +105,12 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
     // Recently published announcements sent to everyone or to this student.
     $stmt = $pdo->prepare(
         "SELECT a.id, a.title, a.publish_at FROM announcements a
-         WHERE a.publish_at <= NOW() AND a.publish_at > NOW() - INTERVAL '14 days'
+         WHERE a.publish_at <= NOW() AND a.publish_at > NOW() - INTERVAL '$days days'
            AND (a.target_type = 'all' OR EXISTS (
                  SELECT 1 FROM announcement_recipients ar
                  WHERE ar.announcement_id = a.id AND ar.student_id = ?
                ))
-         ORDER BY a.publish_at DESC LIMIT 5"
+         ORDER BY a.publish_at DESC LIMIT $each"
     );
     $stmt->execute([$user['id']]);
     foreach ($stmt->fetchAll() as $row) {
@@ -121,12 +129,12 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
     $stmt = $pdo->prepare(
         "SELECT es.id, es.exam_date, es.room, es.created_at FROM exam_schedules es
          JOIN students s ON s.user_id = ?
-         WHERE es.created_at > NOW() - INTERVAL '14 days'
+         WHERE es.created_at > NOW() - INTERVAL '$days days'
            AND es.academic_year = s.academic_year
            AND (es.grade_level IS NULL OR es.grade_level = s.grade_level)
            AND (es.strand IS NULL OR es.strand = s.strand)
            AND (es.section IS NULL OR es.section = s.section)
-         ORDER BY es.created_at DESC LIMIT 5"
+         ORDER BY es.created_at DESC LIMIT $each"
     );
     $stmt->execute([$user['id']]);
     foreach ($stmt->fetchAll() as $row) {
@@ -142,8 +150,8 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
     $stmt = $pdo->prepare(
         "SELECT id, granted_at FROM retake_grants
          WHERE student_id = ? AND status = 'granted' AND completed_attempt_number IS NULL
-           AND granted_at > NOW() - INTERVAL '14 days'
-         ORDER BY granted_at DESC LIMIT 5"
+           AND granted_at > NOW() - INTERVAL '$days days'
+         ORDER BY granted_at DESC LIMIT $each"
     );
     $stmt->execute([$user['id']]);
     foreach ($stmt->fetchAll() as $row) {
@@ -157,6 +165,6 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
 }
 
 usort($items, fn($a, $b) => strcmp($b['ts'], $a['ts']));
-$items = array_slice($items, 0, 8);
+$items = array_slice($items, 0, $total);
 
 jsonResponse(['items' => $items, 'count' => count($items)]);
