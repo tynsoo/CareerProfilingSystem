@@ -108,34 +108,37 @@
       </div>
     </header>
 
-    <main id="main-content" class="flex-1 px-9 py-10 max-w-[1200px]">
+    <main id="main-content" class="flex-1 px-9 py-10 max-w-[1152px]">
 
-      <div class="flex items-center gap-3 mb-8">
+      <div class="flex items-start gap-5 mb-8">
         <a href="assessment" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
           <svg viewBox="0 0 24 24" fill="none" stroke="#5e3f3c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         </a>
-        <h1 class="text-[28px] font-semibold text-[#191c1e]">Worksheet Results</h1>
+        <div>
+          <h1 class="text-[32px] font-bold text-[#191c1e] tracking-tight">Worksheet Results</h1>
+          <p class="text-sm text-[#5e3f3c] mt-1">How your chosen career goal and electives line up with your RIASEC profile.</p>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
         <!-- Your Worksheet -->
         <div class="lg:col-span-5">
-          <div class="bg-white border border-[#e0e3e5] rounded-[4px] px-[17px] pt-[17px] pb-[39px]">
+          <div class="bg-white border border-[#e0e3e5] rounded-lg px-[17px] pt-[17px] pb-[39px]">
             <h2 class="text-xl font-semibold text-[#191c1e] border-b border-[#e0e3e5] pb-2 mb-4">Your Worksheet</h2>
             <p class="text-xs text-[#5e3f3c] mb-4">The career goal you set out at the start of your worksheet.</p>
 
             <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-1">Chosen Career Goal</p>
             <p class="text-base font-semibold text-[#191c1e] mb-4" id="careerGoalText">—</p>
 
-            <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">Key Skills Identified</p>
+            <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">Electives</p>
             <div class="flex flex-wrap gap-2" id="keySkillsList"></div>
           </div>
         </div>
 
         <!-- Alignment -->
         <div class="lg:col-span-7">
-          <div class="bg-white border border-[#e0e3e5] rounded-[4px] p-[17px] flex flex-col gap-4">
+          <div class="bg-white border border-[#e0e3e5] rounded-lg p-[17px] flex flex-col gap-4">
             <div class="flex items-start justify-between border-b border-[#e0e3e5] pb-2 gap-4 flex-wrap">
               <div>
                 <h2 class="text-xl font-semibold text-[#191c1e]">Alignment with RIASEC Results</h2>
@@ -148,7 +151,7 @@
                 <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-1">Your RIASEC Profile</p>
                 <div class="flex gap-3 items-center">
                   <p class="text-xl font-bold text-[#bb0013]" id="profileCode">—</p>
-                  <p class="text-xs text-[#5e3f3c] border-l border-[#e8bcb7] pl-3" id="profileLabels">—</p>
+                  <p class="text-xs text-[#5e3f3c] border-l border-[#e0e3e5] pl-3" id="profileLabels">—</p>
                 </div>
               </div>
               <div class="flex-1 min-w-[180px]">

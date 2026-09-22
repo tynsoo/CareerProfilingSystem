@@ -131,7 +131,7 @@
 
         <div class="flex items-start gap-5 mb-8">
           <a href="assessment" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
-            <svg class="w-4 h-4" viewBox="0 -960 960 960" fill="#64748B"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#5e3f3c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
           </a>
           <div>
             <h1 class="text-[32px] font-bold text-[#001a40] tracking-tight">RIASEC Results</h1>
@@ -191,14 +191,15 @@
       <!-- Full Career Results (RIASEC + Worksheet complete) -->
       <div id="careerResultsView" class="hidden">
 
-        <div class="flex items-end justify-between flex-wrap gap-4 border-b border-[#e8bcb7] pb-4 mb-6">
-          <div>
-            <a href="assessment" class="inline-flex items-center gap-1.5 text-xs text-[#5e3f3c] hover:text-black mb-2">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-2.5 h-2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-              Back to Assessments
+        <div class="flex items-start justify-between flex-wrap gap-4 mb-8">
+          <div class="flex items-start gap-5">
+            <a href="assessment" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#5e3f3c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </a>
-            <h1 class="text-[32px] font-bold text-[#191c1e] tracking-tight">Career Results</h1>
-            <p class="text-sm text-[#5e3f3c] mt-1">Based on your RIASEC profile, these careers strongly align with your interests and skills.</p>
+            <div>
+              <h1 class="text-[32px] font-bold text-[#191c1e] tracking-tight">Career Results</h1>
+              <p class="text-sm text-[#5e3f3c] mt-1">Based on your RIASEC profile, these careers strongly align with your interests and skills.</p>
+            </div>
           </div>
           <div class="text-right shrink-0">
             <p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase">RIASEC Code</p>
@@ -206,23 +207,23 @@
           </div>
         </div>
 
-        <div class="bg-white border border-[#e8bcb7] rounded-lg p-5 mb-6">
+        <div class="bg-white border border-[#e0e3e5] rounded-lg p-5 mb-6">
           <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-3">Your Top 3 Interest Areas</p>
           <div id="cr-topTypes" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div class="lg:col-span-8">
-            <h2 class="text-xl font-semibold text-[#191c1e] border-b border-[#e8bcb7] pb-2 mb-4">Top Matches</h2>
+            <h2 class="text-xl font-semibold text-[#191c1e] border-b border-[#e0e3e5] pb-2 mb-4">Top Matches</h2>
             <div id="cr-topMatches" class="flex flex-col gap-4"></div>
           </div>
           <div class="lg:col-span-4 flex flex-col gap-4">
-            <div class="bg-white border border-[#e8bcb7] rounded shadow-sm p-[17px]">
+            <div class="bg-white border border-[#e0e3e5] rounded shadow-sm p-[17px]">
               <h3 class="text-xl font-semibold text-[#191c1e] mb-1">Suggested Paths</h3>
               <p class="text-xs text-[#5e3f3c] mb-3">Other career tracks that align with your secondary traits.</p>
               <div id="cr-suggested" class="flex flex-col gap-1"></div>
             </div>
-            <div class="bg-[#f2f4f6] border border-[#e8bcb7] rounded p-[17px]">
+            <div class="bg-[#f2f4f6] border border-[#e0e3e5] rounded p-[17px]">
               <h3 class="text-xl font-semibold text-[#191c1e] mb-2">Need Guidance?</h3>
               <p class="text-xs text-[#5e3f3c] mb-4">Discuss these results with our guidance staff to map out your curriculum and ensure you're on the right track.</p>
               <a href="help-center?subject=Request%20for%20Academic%20Advising" class="block text-center bg-[#495e88] text-white text-xs font-semibold uppercase tracking-wide rounded px-4 py-2 hover:opacity-90">Schedule Advising</a>
@@ -479,7 +480,7 @@
   document.getElementById('primaryDescription').textContent = info.description;
   document.getElementById('primaryFit').textContent = info.fit;
   document.getElementById('primaryTraits').innerHTML = info.traits.map(function(t) {
-    return '<span class="bg-slate-100 border border-[#e8bcb7] text-[#5e3f3c] text-xs font-semibold px-3 py-1 rounded-full">' + t + '</span>';
+    return '<span class="bg-slate-100 border border-[#e0e3e5] text-[#5e3f3c] text-xs font-semibold px-3 py-1 rounded-full">' + t + '</span>';
   }).join('');
 
   document.getElementById('hollandCode').textContent = ranked.slice(0, 3).map(function(r) { return r.name[0]; }).join(' ');
@@ -609,7 +610,7 @@
     if (recommendation.statedOutsideTop3) suggested.push(recommendation.statedOutsideTop3);
 
     document.getElementById('cr-topMatches').innerHTML = topMatches.map(function(p) {
-      return '<div class="bg-white border border-[#e8bcb7] rounded p-[17px] flex flex-col gap-4">' +
+      return '<div class="bg-white border border-[#e0e3e5] rounded p-[17px] flex flex-col gap-4">' +
         '<div class="flex items-start justify-between gap-4 flex-wrap">' +
           '<div class="flex items-start gap-3">' +
             '<span class="w-10 h-10 rounded-lg bg-[#eef1fb] text-[#0f2a6b] flex items-center justify-center shrink-0">' + collegeIconSvg(p.collegeCode, 'w-5 h-5') + '</span>' +
@@ -618,7 +619,7 @@
           '<span class="bg-[rgba(187,0,19,0.1)] border border-[rgba(187,0,19,0.2)] text-[#bb0013] text-xs font-semibold rounded-full px-3.5 py-1.5 shrink-0">' + p.matchPercent + '% Match</span>' +
         '</div>' +
         '<p class="text-sm text-[#191c1e] leading-relaxed max-w-[700px]">' + describeProgram(p) + '</p>' +
-        '<div class="bg-[#f2f4f6] border border-[#e8bcb7] rounded p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">' +
+        '<div class="bg-[#f2f4f6] border border-[#e0e3e5] rounded p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">' +
           '<div><p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">Holland Code</p><p class="text-xs text-[#191c1e]">' + p.hollandCode + '</p></div>' +
           '<div><p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase mb-2">College</p><p class="text-xs text-[#191c1e]">' + p.collegeCode + ' — ' + p.collegeName + '</p></div>' +
         '</div>' +
