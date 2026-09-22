@@ -18,7 +18,18 @@
   }
 
   function timeAgo(iso) {
-    var seconds = Math.max(0, Math.floor((Date.now() - new Date(iso.replace(' ', 'T') + 'Z').getTime()) / 1000));
+    // Postgres timestamptz values may come back as "YYYY-MM-DD HH:MM:SS[.ffffff][+HH]"
+    // — already carrying a UTC offset. Blindly appending 'Z' after swapping the
+    // space for 'T' would double up the timezone (e.g. "...+08Z") and fail to
+    // parse. Only assume UTC when no offset/Z is present, and pad a bare
+    // "+HH"/"-HH" offset to "+HH:00" since Date can't parse it otherwise.
+    var normalized = iso.replace(' ', 'T');
+    if (/(Z|[+-]\d{2}(:?\d{2})?)$/.test(normalized)) {
+      normalized = normalized.replace(/([+-]\d{2})$/, '$1:00');
+    } else {
+      normalized += 'Z';
+    }
+    var seconds = Math.max(0, Math.floor((Date.now() - new Date(normalized).getTime()) / 1000));
     if (seconds < 60) return 'Just now';
     var minutes = Math.floor(seconds / 60);
     if (minutes < 60) return minutes + ' minute' + (minutes === 1 ? '' : 's') + ' ago';
