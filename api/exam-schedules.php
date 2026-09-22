@@ -1,20 +1,11 @@
 <?php
 
 require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/../lib/Sections.php';
 
 $pdo = Database::get();
 $validStrands = ['STEM', 'ABM', 'ICT', 'HUMSS'];
 $validGrades = ['11', '12'];
-// Same fixed section-per-strand list as api/register.php's
-// SECTIONS_BY_STRAND — kept here too so a schedule's section can never be
-// a typo that silently never matches a real student (the access-code
-// gate in api/verify-access-code.php compares this value exactly).
-const SECTIONS_BY_STRAND = [
-    'STEM' => ['S1114', 'S1109'],
-    'ABM' => ['A1101', 'A1102'],
-    'ICT' => ['I1101', 'I1102'],
-    'HUMSS' => ['H1102'],
-];
 
 /**
  * Expected/completed counts for one schedule row. assessment_roster has no

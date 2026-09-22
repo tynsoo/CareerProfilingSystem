@@ -185,8 +185,19 @@
               <input type="text" id="strandField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Section</label>
+              <div class="flex items-center justify-between mb-1">
+                <label for="sectionField" class="block text-xs font-medium text-gray-600">Section</label>
+                <button type="button" id="editSectionBtn" class="hidden text-xs font-semibold text-[#ed1c24] hover:underline">Edit</button>
+              </div>
               <input type="text" id="sectionField" disabled class="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2.5 text-sm text-gray-500">
+              <div id="sectionEditor" class="hidden flex-col gap-2">
+                <select id="sectionSelect" aria-label="Section" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></select>
+                <p id="sectionError" class="hidden text-xs text-[#ed1c24]"></p>
+                <div class="flex gap-2">
+                  <button type="button" id="saveSectionBtn" class="bg-[#ed1c24] text-white text-xs font-semibold rounded-md px-3 py-1.5 hover:opacity-90">Save</button>
+                  <button type="button" id="cancelSectionBtn" class="border border-gray-300 text-gray-600 text-xs font-medium rounded-md px-3 py-1.5 hover:bg-gray-50">Cancel</button>
+                </div>
+              </div>
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Academic Year</label>
@@ -478,6 +489,59 @@
       document.getElementById('gradeLevelField').value = 'Grade ' + s.gradeLevel;
       document.getElementById('strandField').value = s.strand;
       document.getElementById('sectionField').value = s.section;
+
+      // Staff can correct the section after registration; only sections that
+      // belong to this student's strand are offered (server re-checks).
+      const sectionField = document.getElementById('sectionField');
+      const sectionEditor = document.getElementById('sectionEditor');
+      const sectionSelect = document.getElementById('sectionSelect');
+      const sectionError = document.getElementById('sectionError');
+      const editSectionBtn = document.getElementById('editSectionBtn');
+      const saveSectionBtn = document.getElementById('saveSectionBtn');
+      function closeSectionEditor() {
+        sectionEditor.classList.add('hidden');
+        sectionEditor.classList.remove('flex');
+        sectionField.classList.remove('hidden');
+        editSectionBtn.classList.remove('hidden');
+        sectionError.classList.add('hidden');
+      }
+      editSectionBtn.classList.remove('hidden');
+      editSectionBtn.addEventListener('click', function() {
+        sectionSelect.innerHTML = '<option value="">Select section</option>' +
+          (s.allowedSections || []).map(function(sec) {
+            return '<option value="' + sec + '"' + (sec === s.section ? ' selected' : '') + '>' + sec + '</option>';
+          }).join('');
+        sectionField.classList.add('hidden');
+        editSectionBtn.classList.add('hidden');
+        sectionEditor.classList.remove('hidden');
+        sectionEditor.classList.add('flex');
+        sectionSelect.focus();
+      });
+      document.getElementById('cancelSectionBtn').addEventListener('click', closeSectionEditor);
+      saveSectionBtn.addEventListener('click', async function() {
+        if (!sectionSelect.value) {
+          sectionError.textContent = 'Choose a section.';
+          sectionError.classList.remove('hidden');
+          return;
+        }
+        saveSectionBtn.disabled = true;
+        const saveRes = await fetch('api/students.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'updateSection', userId: s.userId, section: sectionSelect.value })
+        });
+        const saveData = await saveRes.json();
+        saveSectionBtn.disabled = false;
+        if (!saveData.success) {
+          sectionError.textContent = saveData.error || 'Failed to update section.';
+          sectionError.classList.remove('hidden');
+          return;
+        }
+        s.section = saveData.section;
+        sectionField.value = saveData.section;
+        closeSectionEditor();
+      });
+
       document.getElementById('academicYearField').value = s.academicYear || '—';
       document.getElementById('riasecField').value = s.riasec || '—';
       document.getElementById('statusField').value = s.status;

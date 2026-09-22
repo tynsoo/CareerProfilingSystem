@@ -3,24 +3,13 @@
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../lib/Mailer.php';
 require_once __DIR__ . '/../lib/EmailTemplate.php';
+require_once __DIR__ . '/../lib/Sections.php';
 
 // Only Mapúa MCL's own student email domain may self-register a student
 // account — this is a public page, and without this check anyone on the
 // internet could sign up. Real ownership of the address is then confirmed
 // by the verification email sent below (see api/verify-email.php).
 const STUDENT_EMAIL_DOMAIN = 'live.mcl.edu.ph';
-
-// Fixed section codes per strand — the school offers exactly these 7
-// sections, each belonging to exactly one strand. The registration page's
-// Section dropdown is populated from this same list, cascading on the
-// chosen Strand. Kept here as the server-side source of truth since the
-// client-side dropdown can't be trusted alone.
-const SECTIONS_BY_STRAND = [
-    'STEM' => ['S1114', 'S1109'],
-    'ABM' => ['A1101', 'A1102'],
-    'ICT' => ['I1101', 'I1102'],
-    'HUMSS' => ['H1102'],
-];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);

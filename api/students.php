@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/../lib/Sections.php';
 
 $user = Auth::requireLogin();
 if ($user['role'] !== 'admin' && $user['role'] !== 'counselor') {
@@ -25,6 +26,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // separate enforcement needed.
         AuditLogger::log($user['id'], $user['role'], $newState ? 'activate_student_account' : 'deactivate_student_account', 'user', (string) $targetId);
         jsonResponse(['success' => true, 'isActive' => $newState]);
+    }
+    // Correct a student's section after registration. Only sections that belong
+    // to the student's own strand are accepted (same allow-list as registration).
+    // Exam gating and notifications read students.section on every request, so
+    // the change applies immediately.
+    if (($body['type'] ?? '') === 'updateSection') {
+        $targetId = (int) ($body['userId'] ?? 0);
+        $section = trim((string) ($body['section'] ?? ''));
+        $stmt = $pdo->prepare('SELECT strand, section FROM students WHERE user_id = ?');
+        $stmt->execute([$targetId]);
+        $student = $stmt->fetch();
+        if (!$student) {
+            jsonResponse(['success' => false, 'error' => 'Student account not found.'], 404);
+        }
+        if (!in_array($section, SECTIONS_BY_STRAND[$student['strand']] ?? [], true)) {
+            jsonResponse(['success' => false, 'error' => 'Invalid section for this student\'s strand.'], 400);
+        }
+        if ($student['section'] !== $section) {
+            $pdo->prepare('UPDATE students SET section = ? WHERE user_id = ?')->execute([$section, $targetId]);
+            AuditLogger::log($user['id'], $user['role'], 'update_student_section', 'user', (string) $targetId, "Section: {$student['section']} -> $section");
+        }
+        jsonResponse(['success' => true, 'section' => $section]);
     }
     jsonResponse(['success' => false, 'error' => 'Unknown type.'], 400);
 }
@@ -92,6 +115,7 @@ if ($schoolIdLookup !== '') {
         'strand' => $row['strand'],
         'gradeLevel' => $row['grade_level'],
         'section' => $row['section'],
+        'allowedSections' => SECTIONS_BY_STRAND[$row['strand']] ?? [],
         'academicYear' => $row['academic_year'],
         'isActive' => (bool) $row['is_active'],
         'status' => $hasAssessment ? 'Completed' : 'Pending',
