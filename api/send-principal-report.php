@@ -42,7 +42,7 @@ function buildReportSections(array $data, string $currentAy): array
         ['Total Registered Students', (string) $data['totalStudents']],
         ['RIASEC Assessment Completion', $data['completion']['rate'] . '% (' . $data['completion']['count'] . ' of ' . $data['completion']['total'] . ')'],
         ['Career Worksheet Completion', $data['worksheet']['rate'] . '% (' . $data['worksheet']['count'] . ' of ' . $data['worksheet']['total'] . ')'],
-        ['Recommendation Confidence Rate', $data['confidence']['rate'] . '% (' . $data['confidence']['count'] . ' of ' . $data['confidence']['total'] . ')'],
+        ['High-Confidence Match Rate', $data['confidence']['rate'] . '% (' . $data['confidence']['count'] . ' of ' . $data['confidence']['total'] . ')'],
     ];
 
     $rosterRows = [

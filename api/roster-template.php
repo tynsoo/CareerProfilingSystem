@@ -15,6 +15,6 @@ $out = fopen('php://output', 'w');
 // Column names and order match api/roster-upload.php's expected header row
 // exactly (it does case-insensitive matching against these labels), plus
 // one example row so it's obvious what belongs in each column.
-fputcsv($out, ['School ID', 'First Name', 'Last Name', 'Strand', 'Section'], escape: '\\');
+fputcsv($out, ['LRN', 'First Name', 'Last Name', 'Strand', 'Section'], escape: '\\');
 fputcsv($out, ['2026-00001', 'Juan', 'Dela Cruz', 'STEM', 'S1114'], escape: '\\');
 fclose($out);

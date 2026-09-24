@@ -24,3 +24,9 @@ function loadEnv(string $path): void
 }
 
 loadEnv(__DIR__ . '/../.env');
+
+// The school operates in Philippine time. Without this PHP falls back to UTC
+// (the Docker image default), so a "today 3 PM" value from a datetime-local
+// input was read as 3 PM UTC = 11 PM Manila and could land on tomorrow.
+const APP_TIMEZONE = 'Asia/Manila';
+date_default_timezone_set(APP_TIMEZONE);

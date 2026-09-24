@@ -4,6 +4,7 @@ require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../lib/Mailer.php';
 require_once __DIR__ . '/../lib/EmailTemplate.php';
 require_once __DIR__ . '/../lib/Sections.php';
+require_once __DIR__ . '/../lib/Lrn.php';
 
 // Only Mapúa MCL's own student email domain may self-register a student
 // account — this is a public page, and without this check anyone on the
@@ -33,6 +34,9 @@ if ($schoolId === '' || $firstName === '' || $lastName === '' || $email === '' |
 // a request built by hand (or a modified page) could omit it entirely.
 if ($privacyConsent !== true) {
     jsonResponse(['success' => false, 'error' => 'You must agree to the Data Privacy Policy to create an account.'], 400);
+}
+if (!Lrn::isValid($schoolId)) {
+    jsonResponse(['success' => false, 'error' => Lrn::INVALID_MESSAGE], 400);
 }
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     jsonResponse(['success' => false, 'error' => 'Enter a valid email address.'], 400);
@@ -94,7 +98,7 @@ if ($errors) {
 $existing = $pdo->prepare('SELECT 1 FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)');
 $existing->execute([$schoolId, $email]);
 if ($existing->fetch()) {
-    jsonResponse(['success' => false, 'error' => 'An account with this School ID or email already exists.'], 409);
+    jsonResponse(['success' => false, 'error' => 'An account with this LRN or email already exists.'], 409);
 }
 
 $pdo->beginTransaction();

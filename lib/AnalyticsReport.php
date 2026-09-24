@@ -9,6 +9,8 @@
  * the two can never drift out of sync or ask staff to re-enter data that
  * the system already has.
  */
+require_once __DIR__ . '/Sections.php';
+
 class AnalyticsReport
 {
     /** @return array<string,mixed> */
@@ -134,6 +136,16 @@ class AnalyticsReport
         $expectedSectionsStmt->execute([$currentAy]);
         $expectedSections = $expectedSectionsStmt->fetchAll(PDO::FETCH_COLUMN);
 
+        // The "Y" in every "X of Y total students" figure: how many students
+        // are EXPECTED, not how many happened to register or finish. That is the
+        // roster uploaded for the current Academic Year (same strand/section
+        // filters as everything else). Only when no roster has been uploaded
+        // at all do we fall back to registered students.
+        $rosterTotalStmt = $pdo->prepare('SELECT COUNT(*) FROM assessment_roster WHERE academic_year = ?');
+        $rosterTotalStmt->execute([$currentAy]);
+        $hasRoster = (int) $rosterTotalStmt->fetchColumn() > 0;
+        $expectedTotal = $hasRoster ? $expectedCount : $totalStudents;
+
         $programIds = array_map(fn($r) => (int) $r['top_program_id'], $careerCounts);
         $titles = [];
         if ($programIds) {
@@ -150,19 +162,27 @@ class AnalyticsReport
             'percent' => $recCount > 0 ? round(((int) $r['cnt'] / $recCount) * 100, 1) : 0,
         ], $careerCounts);
 
-        $pct = fn(int $n, int $total): float => $total > 0 ? round(($n / $total) * 100, 1) : 0.0;
+        // Capped at 100 — a student who registered before roster gating existed
+        // may not be on the roster, and must not push a rate past 100%.
+        $pct = fn(int $n, int $total): float => $total > 0 ? min(100.0, round(($n / $total) * 100, 1)) : 0.0;
 
         return [
             'strand' => $strand,
             'section' => $section,
             'totalStudents' => $totalStudents,
+            'expectedTotal' => $expectedTotal,
+            'sectionsByStrand' => SECTIONS_BY_STRAND,
             // All three rates below are expressed against the same denominator —
-            // every registered student — rather than each other's narrower
-            // subpopulation (e.g. worksheet completion against only assessed
-            // students), so the cards read consistently at a glance.
-            'completion' => ['rate' => $pct($assessedCount, $totalStudents), 'count' => $assessedCount, 'total' => $totalStudents],
-            'worksheet' => ['rate' => $pct($worksheetCount, $totalStudents), 'count' => $worksheetCount, 'total' => $totalStudents],
-            'confidence' => ['rate' => $pct($confidentCount, $totalStudents), 'count' => $confidentCount, 'total' => $totalStudents],
+            // the expected student total (see above) — rather than each other's
+            // narrower subpopulation (e.g. worksheet completion against only
+            // assessed students), so the cards read consistently at a glance.
+            'completion' => ['rate' => $pct($assessedCount, $expectedTotal), 'count' => $assessedCount, 'total' => $expectedTotal],
+            'worksheet' => ['rate' => $pct($worksheetCount, $expectedTotal), 'count' => $worksheetCount, 'total' => $expectedTotal],
+            // Share of students whose top match score meets the confidence
+            // threshold (security_policies monitoring.lowConfidenceThreshold) —
+            // a rate, not an average. "threshold" is exposed so the UI can say
+            // exactly what the cut-off is.
+            'confidence' => ['rate' => $pct($confidentCount, $expectedTotal), 'count' => $confidentCount, 'total' => $expectedTotal, 'threshold' => $threshold],
             'topStrand' => $topStrand ? [
                 'strand' => $topStrand['strand'],
                 'count' => (int) $topStrand['cnt'],

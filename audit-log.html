@@ -78,6 +78,10 @@
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M440-120v-80h320v-284q0-117-81.5-198.5T480-764q-117 0-198.5 81.5T200-484v244h-40q-33 0-56.5-23.5T80-320v-80q0-21 10.5-39.5T120-469l3-53q8-68 39.5-126t79-101q47.5-43 109-67T480-840q68 0 129 24t109 66.5Q766-707 797-649t40 126l3 52q19 9 29.5 27t10.5 38v92q0 20-10.5 38T840-249v49q0 33-23.5 56.5T760-120H440ZM331.5-411.5Q320-423 320-440t11.5-28.5Q343-480 360-480t28.5 11.5Q400-457 400-440t-11.5 28.5Q377-400 360-400t-28.5-11.5Zm240 0Q560-423 560-440t11.5-28.5Q583-480 600-480t28.5 11.5Q640-457 640-440t-11.5 28.5Q617-400 600-400t-28.5-11.5ZM241-462q-7-106 64-182t177-76q89 0 156.5 56.5T720-519q-91-1-167.5-49T435-698q-16 80-67.5 142.5T241-462Z"/></svg>
         Counseling Requests
       </a>
+      <a href="admin-help-center" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M513.5-254.5Q528-269 528-290t-14.5-35.5Q499-340 478-340t-35.5 14.5Q428-311 428-290t14.5 35.5Q457-240 478-240t35.5-14.5ZM442-394h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+        Help Center
+      </a>
       <a href="staff-accounts" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M160-80q-33 0-56.5-23.5T80-160v-440q0-33 23.5-56.5T160-680h200v-120q0-33 23.5-56.5T440-880h80q33 0 56.5 23.5T600-800v120h200q33 0 56.5 23.5T880-600v440q0 33-23.5 56.5T800-80H160Zm0-80h640v-440H600q0 33-23.5 56.5T520-520h-80q-33 0-56.5-23.5T360-600H160v440Zm80-80h240v-18q0-17-9.5-31.5T444-312q-20-9-40.5-13.5T360-330q-23 0-43.5 4.5T276-312q-17 8-26.5 22.5T240-258v18Zm320-60h160v-60H560v60Zm-157.5-77.5Q420-395 420-420t-17.5-42.5Q385-480 360-480t-42.5 17.5Q300-445 300-420t17.5 42.5Q335-360 360-360t42.5-17.5ZM560-420h160v-60H560v60ZM440-600h80v-200h-80v200Zm40 220Z"/></svg>
         Staff Accounts
@@ -126,7 +130,7 @@
             <ul id="notifList" class="max-h-80 overflow-auto divide-y divide-gray-100">
               <li class="px-4 py-6 text-center text-sm text-gray-500">Loading…</li>
             </ul>
-            <a href="monitoring" class="block text-center text-sm font-medium text-[#ed1c24] px-4 py-3 border-t border-gray-100 hover:bg-gray-50">View all notifications</a>
+            <a href="admin-notifications" class="block text-center text-sm font-medium text-[#ed1c24] px-4 py-3 border-t border-gray-100 hover:bg-gray-50">View all notifications</a>
           </div>
         </div>
 
@@ -140,7 +144,7 @@
               <span class="block text-sm font-semibold text-gray-800" id="headerUserName">Admin User</span>
               <span class="block text-xs text-gray-500" id="headerUserRole">Administrator</span>
             </span>
-            <img src="images/admin/icon-chevron-down.svg" alt="" class="w-2.5 h-1.5">
+            <img src="images/admin/icon-chevron-down.svg" alt="" class="w-3.5 h-2">
           </button>
           <div id="profilePanel" class="hidden absolute right-0 top-[calc(100%+12px)] w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
             <a href="profile" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
@@ -163,7 +167,7 @@
         <div class="flex items-center gap-3">
           <button type="button" title="Showing activity from all time — date range filtering is not yet implemented" class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-500 shadow-sm cursor-not-allowed">
             All Time
-            <img src="images/audit/icon-calendar.svg" alt="" class="w-4 h-4 opacity-50">
+            <svg class="w-4 h-4 opacity-50" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Zm280 240q-17 0-28.5-11.5T440-440q0-17 11.5-28.5T480-480q17 0 28.5 11.5T520-440q0 17-11.5 28.5T480-400Zm-188.5-11.5Q280-423 280-440t11.5-28.5Q303-480 320-480t28.5 11.5Q360-457 360-440t-11.5 28.5Q337-400 320-400t-28.5-11.5ZM640-400q-17 0-28.5-11.5T600-440q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440q0 17-11.5 28.5T640-400ZM480-240q-17 0-28.5-11.5T440-280q0-17 11.5-28.5T480-320q17 0 28.5 11.5T520-280q0 17-11.5 28.5T480-240Zm-188.5-11.5Q280-263 280-280t11.5-28.5Q303-320 320-320t28.5 11.5Q360-297 360-280t-11.5 28.5Q337-240 320-240t-28.5-11.5ZM640-240q-17 0-28.5-11.5T600-280q0-17 11.5-28.5T640-320q17 0 28.5 11.5T680-280q0 17-11.5 28.5T640-240Z"/></svg>
           </button>
           <div class="relative">
             <button type="button" id="filtersBtn" class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm">
@@ -252,9 +256,9 @@
           </button>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-auto max-h-[65vh]" id="auditScroll">
           <table class="w-full text-left border-collapse min-w-[1200px]">
-            <thead class="bg-gray-50 border-b border-gray-200">
+            <thead class="bg-gray-50 border-b border-gray-200 sticky top-0 z-[1]">
               <tr>
                 <th class="px-6 py-3 text-xs font-semibold text-gray-500">
                   <button type="button" id="sortTimestampBtn" class="flex items-center gap-1.5">Timestamp <span id="sortIcon" class="text-gray-500">⇅</span></button>
@@ -275,7 +279,7 @@
 
         <div class="border-t border-gray-200 flex items-center justify-between px-6 py-4 flex-wrap gap-3">
           <p class="text-sm text-gray-700" id="paginationSummary">Loading…</p>
-          <div class="flex items-center gap-1" id="paginationBar"></div>
+          <button type="button" id="loadMoreBtn" class="hidden text-sm font-medium text-[#ed1c24] border border-[#ed1c24] rounded-md px-4 py-2 hover:bg-red-50">Load more</button>
         </div>
       </div>
 
@@ -394,7 +398,9 @@
     const sortTimestampBtn = document.getElementById('sortTimestampBtn');
     const sortIcon = document.getElementById('sortIcon');
     const exportBtn = document.getElementById('exportBtn');
-    const paginationBar = document.getElementById('paginationBar');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const PAGE_SIZE = 50;
+    let loadedRows = [];
     const paginationSummary = document.getElementById('paginationSummary');
 
     const state = { page: 1, sort: 'desc', search: '', status: 'All', module: 'All' };
@@ -415,6 +421,7 @@
     function currentQuery(extra) {
       const params = new URLSearchParams(Object.assign({
         page: state.page,
+        pageSize: PAGE_SIZE,
         sort: state.sort,
         status: state.status,
         module: state.module,
@@ -423,14 +430,21 @@
       return params.toString();
     }
 
-    async function load() {
-      tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">Loading audit log…</td></tr>';
+    // load(true) starts a fresh list (filters/sort/search changed);
+    // load(false) appends the next batch after the rows already shown.
+    async function load(reset = true) {
+      if (reset) {
+        state.page = 1;
+        loadedRows = [];
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">Loading audit log…</td></tr>';
+      }
+      loadMoreBtn.disabled = true;
       const res = await fetch('api/audit-log.php?' + currentQuery());
       if (res.status === 401) { window.location.replace('login'); return; }
       if (res.status === 403) {
         tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-red-500">You do not have access to the audit log.</td></tr>';
         paginationSummary.textContent = '';
-        paginationBar.innerHTML = '';
+        loadMoreBtn.classList.add('hidden');
         return;
       }
       const data = await res.json();
@@ -443,10 +457,14 @@
         modulesLoaded = true;
       }
 
+      loadedRows = loadedRows.concat(data.rows);
       renderSummary(data.summary);
-      renderRows(data.rows);
-      renderPagination(data.page, data.totalPages, data.total, data.rows.length);
+      renderRows(loadedRows);
+      paginationSummary.textContent = 'Showing ' + loadedRows.length.toLocaleString() + ' of ' + data.total.toLocaleString() + ' logs';
+      loadMoreBtn.classList.toggle('hidden', data.page >= data.totalPages);
+      loadMoreBtn.disabled = false;
     }
+    loadMoreBtn.addEventListener('click', () => { state.page += 1; load(false); });
 
     function renderSummary(summary) {
       document.getElementById('summaryTotal').textContent = summary.total.toLocaleString();
@@ -477,51 +495,6 @@
           '<td class="px-6 py-4">' + badge + '</td>' +
         '</tr>';
       }).join('');
-    }
-
-    function goToPage(p) {
-      state.page = p;
-      load();
-    }
-
-    function renderPagination(page, totalPages, total, rowCount) {
-      const startRow = total === 0 ? 0 : (page - 1) * 10 + 1;
-      const endRow = total === 0 ? 0 : startRow + rowCount - 1;
-      paginationSummary.textContent = `Showing ${startRow} to ${endRow} of ${total.toLocaleString()} logs`;
-
-      const btnBase = 'w-9 h-9 flex items-center justify-center rounded-md text-sm';
-      const active = 'bg-[#ed1c24] text-white';
-      const inactive = 'border border-gray-300 text-gray-700 hover:bg-gray-50';
-
-      // Windowed page numbers: first, last, and up to 2 pages on either side of current.
-      const pages = [];
-      for (let p = 1; p <= totalPages; p++) {
-        if (p === 1 || p === totalPages || Math.abs(p - page) <= 2) pages.push(p);
-      }
-      const withEllipses = [];
-      let prevPage = 0;
-      pages.forEach(p => {
-        if (prevPage && p - prevPage > 1) withEllipses.push('...');
-        withEllipses.push(p);
-        prevPage = p;
-      });
-
-      let html = `<button type="button" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''} class="page-nav-btn w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md ${page <= 1 ? 'opacity-40 cursor-not-allowed' : ''}">
-        <img src="images/audit/icon-page-prev.svg" alt="Previous" class="w-1.5 h-2.5"></button>`;
-      withEllipses.forEach(p => {
-        if (p === '...') {
-          html += '<span class="w-9 h-9 flex items-center justify-center text-gray-500 text-sm">...</span>';
-        } else {
-          html += `<button type="button" data-page="${p}" class="page-btn ${btnBase} ${p === page ? active : inactive}">${p}</button>`;
-        }
-      });
-      html += `<button type="button" data-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''} class="page-nav-btn w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md ${page >= totalPages ? 'opacity-40 cursor-not-allowed' : ''}">
-        <img src="images/audit/icon-page-next.svg" alt="Next" class="w-1.5 h-2.5"></button>`;
-
-      paginationBar.innerHTML = html;
-      paginationBar.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
-        btn.addEventListener('click', () => goToPage(Number(btn.dataset.page)));
-      });
     }
 
     searchInput.addEventListener('input', () => {

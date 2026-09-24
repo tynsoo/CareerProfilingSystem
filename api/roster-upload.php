@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/../lib/Lrn.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
@@ -39,7 +40,9 @@ $colIndex = function (array $candidates) use ($header): ?int {
     }
     return null;
 };
-$idxSchoolId = $colIndex(['school id', 'schoolid', 'student number']);
+// "LRN" is the current header; the older names are still accepted so
+// previously prepared CSV files keep working.
+$idxSchoolId = $colIndex(['lrn', 'school id', 'schoolid', 'student number']);
 $idxFirstName = $colIndex(['first name', 'firstname']);
 $idxLastName = $colIndex(['last name', 'lastname']);
 $idxStrand = $colIndex(['strand']);
@@ -47,7 +50,7 @@ $idxSection = $colIndex(['section']);
 
 if ($idxSchoolId === null || $idxFirstName === null || $idxLastName === null || $idxStrand === null || $idxSection === null) {
     fclose($handle);
-    jsonResponse(['success' => false, 'error' => 'CSV must have columns: School ID, First Name, Last Name, Strand, Section.'], 400);
+    jsonResponse(['success' => false, 'error' => 'CSV must have columns: LRN, First Name, Last Name, Strand, Section.'], 400);
 }
 
 $validStrands = ['STEM', 'ABM', 'ICT', 'HUMSS'];
@@ -67,6 +70,10 @@ while (($line = fgetcsv($handle)) !== false) {
 
     if ($schoolId === '' || $firstName === '' || $lastName === '' || $section === '') {
         $errors[] = "Row $lineNum: missing a required value.";
+        continue;
+    }
+    if (!Lrn::isValid($schoolId)) {
+        $errors[] = "Row $lineNum: invalid LRN \"$schoolId\" — " . Lrn::INVALID_MESSAGE;
         continue;
     }
     if (!in_array($strand, $validStrands, true)) {

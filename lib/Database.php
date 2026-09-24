@@ -19,6 +19,9 @@ class Database
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
+            // Keep NOW(), CURRENT_DATE and timestamptz output in the same
+            // zone PHP uses (see config/env.php).
+            self::$connection->exec("SET TIME ZONE '" . APP_TIMEZONE . "'");
         }
         return self::$connection;
     }

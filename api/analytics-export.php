@@ -48,7 +48,7 @@ header('Content-Type: text/csv');
 header('Content-Disposition: attachment; filename="student-roster-' . $safeAy . '.csv"');
 $out = fopen('php://output', 'w');
 fputcsv($out, [
-    'Student Number', 'Last Name', 'First Name', 'Strand', 'Grade Level', 'Section',
+    'LRN', 'Last Name', 'First Name', 'Strand', 'Grade Level', 'Section',
     'Assessment Status', 'Top RIASEC Types', 'R', 'I', 'A', 'S', 'E', 'C',
 ], escape: '\\');
 

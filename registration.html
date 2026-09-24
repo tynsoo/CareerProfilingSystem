@@ -85,8 +85,11 @@
             <input
               type="text"
               name="school_id"
-              placeholder="School ID"
-              aria-label="School ID"
+              inputmode="numeric"
+              maxlength="12"
+              autocomplete="off"
+              placeholder="LRN (10–12 digits)"
+              aria-label="LRN"
               required
               class="w-full pl-10 pr-3 py-3.5 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
           </div>
@@ -164,7 +167,7 @@
           <label class="flex items-start gap-2.5 text-xs text-gray-500 leading-relaxed cursor-pointer">
             <input type="checkbox" id="policyAgreeCheckbox" name="policy_agree" required class="mt-0.5 w-4 h-4 shrink-0 rounded border-gray-300 text-[#ed1c24] focus:ring-[#ed1c24] focus:ring-offset-0">
             <span>
-              I agree to the <a href="terms" class="text-[#ed1c24] hover:underline">Terms of Use</a> and confirm that my personal information (name, School ID, and assessment results) will be encrypted and used only for career profiling and guidance purposes at MMCL, consistent with the <a href="privacy" class="text-[#ed1c24] hover:underline">Data Privacy Policy</a>.
+              I agree to the <a href="terms" class="text-[#ed1c24] hover:underline">Terms of Use</a> and confirm that my personal information (name, LRN, and assessment results) will be encrypted and used only for career profiling and guidance purposes at MMCL, consistent with the <a href="privacy" class="text-[#ed1c24] hover:underline">Data Privacy Policy</a>.
             </span>
           </label>
 
@@ -327,6 +330,10 @@
 
       if (!firstName || !lastName || !schoolId || !email || !strand || !gradeLevel || !section || !password) {
         showMessage('Please fill out all fields.', true);
+        return;
+      }
+      if (!/^[0-9]{10,12}$/.test(schoolId)) {
+        showMessage('LRN must be 10 to 12 digits (numbers only, no spaces or symbols).', true);
         return;
       }
       if (!privacyConsent) {

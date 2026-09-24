@@ -176,6 +176,7 @@ $students = array_map(function ($r) use ($counseledIds) {
         'riasec' => implode(', ', $topTypes),
         'counseling' => $counseling,
         'registeredAt' => $r['registered_at'],
+        'assessmentDate' => $r['completed_at'],
     ];
 }, $rows);
 

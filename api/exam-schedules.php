@@ -27,6 +27,22 @@ function scheduleCounts(PDO $pdo, array $s): array
     $stmt->execute($rParams);
     $expected = (int) $stmt->fetchColumn();
 
+    // "Expected" is the roster for the exam's strand/section. Only when no
+    // roster has been uploaded for that Academic Year at all do we fall back
+    // to registered students in the same group, so it never reads "27 of 0".
+    $hasRoster = $pdo->prepare('SELECT 1 FROM assessment_roster WHERE academic_year = ? LIMIT 1');
+    $hasRoster->execute([$s['academic_year']]);
+    if (!$hasRoster->fetchColumn()) {
+        $fConds = ['academic_year = ?'];
+        $fParams = [$s['academic_year']];
+        if ($s['grade_level'] !== null) { $fConds[] = 'grade_level = ?'; $fParams[] = $s['grade_level']; }
+        if ($s['strand'] !== null) { $fConds[] = 'strand = ?'; $fParams[] = $s['strand']; }
+        if ($s['section'] !== null) { $fConds[] = 'section = ?'; $fParams[] = $s['section']; }
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM students WHERE ' . implode(' AND ', $fConds));
+        $stmt->execute($fParams);
+        $expected = (int) $stmt->fetchColumn();
+    }
+
     $cConds = ['a.is_latest = TRUE', 's.academic_year = ?'];
     $cParams = [$s['academic_year']];
     if ($s['grade_level'] !== null) { $cConds[] = 's.grade_level = ?'; $cParams[] = $s['grade_level']; }
@@ -54,6 +70,9 @@ function scheduleRow(array $s): array
         'accessCode' => $s['access_code'],
         'notes' => $s['notes_enc'] !== null ? Crypto::dec($s['notes_enc']) : '',
         'scheduleType' => $s['schedule_type'],
+        // Archived = the exam date has already passed (school time). Nothing is
+        // ever deleted for this; the row simply moves out of the active list.
+        'isArchived' => $s['exam_date'] < date('Y-m-d'),
     ];
 }
 
@@ -76,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['mine'])) {
         "SELECT id, academic_year, exam_date, start_time, end_time, room, grade_level, strand, section, access_code, notes_enc, schedule_type
          FROM exam_schedules
          WHERE academic_year = ?
+           AND exam_date >= CURRENT_DATE
            AND (grade_level IS NULL OR grade_level = ?)
            AND (strand IS NULL OR strand = ?)
            AND (section IS NULL OR section = ?)
@@ -100,12 +120,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($academicYear === '') {
         $academicYear = (string) $pdo->query("SELECT value FROM security_policies WHERE key = 'academicYear.current'")->fetchColumn();
     }
+    // Active list by default; ?archived=1 shows the past ones. Past exams
+    // stay in the table (audit logs and historical reports still need them).
+    $showArchived = isset($_GET['archived']);
+    $dateCondition = $showArchived ? 'exam_date < CURRENT_DATE' : 'exam_date >= CURRENT_DATE';
+    $orderBy = $showArchived ? 'exam_date DESC, start_time DESC' : 'exam_date, start_time';
     $stmt = $pdo->prepare(
-        'SELECT id, academic_year, exam_date, start_time, end_time, room, grade_level, strand, section, access_code, notes_enc, schedule_type
-         FROM exam_schedules WHERE academic_year = ? ORDER BY exam_date, start_time'
+        "SELECT id, academic_year, exam_date, start_time, end_time, room, grade_level, strand, section, access_code, notes_enc, schedule_type
+         FROM exam_schedules WHERE academic_year = ? AND $dateCondition ORDER BY $orderBy"
     );
     $stmt->execute([$academicYear]);
     $rows = $stmt->fetchAll();
+
+    $archivedStmt = $pdo->prepare('SELECT COUNT(*) FROM exam_schedules WHERE academic_year = ? AND exam_date < CURRENT_DATE');
+    $archivedStmt->execute([$academicYear]);
+    $archivedCount = (int) $archivedStmt->fetchColumn();
 
     $schedules = array_map(function ($s) use ($pdo) {
         $row = scheduleRow($s);
@@ -115,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         return $row;
     }, $rows);
 
-    jsonResponse(['academicYear' => $academicYear, 'schedules' => $schedules]);
+    jsonResponse(['academicYear' => $academicYear, 'schedules' => $schedules, 'archivedCount' => $archivedCount, 'showingArchived' => $showArchived]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

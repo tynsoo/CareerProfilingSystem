@@ -5,7 +5,7 @@ require_once __DIR__ . '/_bootstrap.php';
 $user = Auth::requireLogin();
 $pdo = Database::get();
 
-// ?full=1 (used by notifications.html's "view all" list) widens the lookback
+// ?full=1 (used by the "view all notifications" pages) widens the lookback
 // window and per-category/overall caps that the header dropdown otherwise
 // keeps small.
 $full = isset($_GET['full']);
@@ -14,20 +14,23 @@ $each = $full ? 50 : 5;
 $total = $full ? 50 : 8;
 
 $items = [];
+$isStaff = $user['role'] === 'admin' || $user['role'] === 'counselor';
 
-if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
+if ($isStaff) {
     // Recently registered students
+    $regDays = $full ? 90 : 7;
     $stmt = $pdo->query(
         "SELECT s.user_id, s.school_id, s.first_name_enc, s.last_name_enc, s.registered_at
          FROM students s
-         WHERE s.registered_at > NOW() - INTERVAL '7 days'
-         ORDER BY s.registered_at DESC LIMIT 5"
+         WHERE s.registered_at > NOW() - INTERVAL '$regDays days'
+         ORDER BY s.registered_at DESC LIMIT $each"
     );
     foreach ($stmt->fetchAll() as $row) {
         $name = Crypto::dec($row['first_name_enc']) . ' ' . Crypto::dec($row['last_name_enc']);
         $items[] = [
             'type' => 'registration',
-            'text' => "New student registered — $name just signed up.",
+            'title' => 'New student registered',
+            'text' => "$name just signed up.",
             // student-profile.html (and api/students.php's single-student
             // lookup) reads ?schoolId=, never ?id= — this previously
             // linked with the wrong param name, so clicking it always
@@ -43,14 +46,15 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
          FROM monitoring_flags mf
          JOIN students s ON s.user_id = mf.student_id
          WHERE mf.status = 'pending'
-         ORDER BY mf.created_at DESC LIMIT 5"
+         ORDER BY mf.created_at DESC LIMIT $each"
     );
     foreach ($stmt->fetchAll() as $row) {
         $name = Crypto::dec($row['first_name_enc']) . ' ' . Crypto::dec($row['last_name_enc']);
         $reasonLabel = $row['reason'] === 'low_confidence' ? 'low RIASEC confidence' : $row['reason'];
         $items[] = [
             'type' => 'flag',
-            'text' => "Assessment flagged — $name ($reasonLabel).",
+            'title' => 'Assessment flagged',
+            'text' => "$name ($reasonLabel).",
             'link' => 'monitoring',
             'ts' => $row['created_at'],
         ];
@@ -59,13 +63,14 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
     // Open counseling requests awaiting a response
     $stmt = $pdo->query(
         "SELECT id, name, subject, sent_at FROM help_requests
-         WHERE status = 'open' ORDER BY sent_at DESC LIMIT 5"
+         WHERE status = 'open' ORDER BY sent_at DESC LIMIT $each"
     );
     foreach ($stmt->fetchAll() as $row) {
         $who = $row['name'] ?: 'A student';
         $items[] = [
             'type' => 'help_request',
-            'text' => "Counseling request — $who: " . ($row['subject'] ?: 'No subject'),
+            'title' => 'New counseling request',
+            'text' => "$who: " . ($row['subject'] ?: 'No subject'),
             'link' => 'help-requests',
             'ts' => $row['sent_at'],
         ];
@@ -167,4 +172,25 @@ if ($user['role'] === 'admin' || $user['role'] === 'counselor') {
 usort($items, fn($a, $b) => strcmp($b['ts'], $a['ts']));
 $items = array_slice($items, 0, $total);
 
-jsonResponse(['items' => $items, 'count' => count($items)]);
+// Read state. Notifications here are computed live rather than stored, so
+// staff read state is a single per-user "read up to" timestamp
+// (users.notifications_read_at): anything at or before it counts as read,
+// anything newer as unread. Students keep the original behaviour (every
+// item shown counts toward the badge).
+$readAt = null;
+if ($isStaff) {
+    $stmt = $pdo->prepare('SELECT notifications_read_at FROM users WHERE id = ?');
+    $stmt->execute([$user['id']]);
+    $value = $stmt->fetchColumn();
+    $readAt = $value ? strtotime($value) : null;
+}
+$unreadCount = 0;
+foreach ($items as &$item) {
+    $item['unread'] = $readAt === null || strtotime($item['ts']) > $readAt;
+    if ($item['unread']) {
+        $unreadCount++;
+    }
+}
+unset($item);
+
+jsonResponse(['items' => $items, 'count' => count($items), 'unreadCount' => $unreadCount, 'tracksRead' => $isStaff]);

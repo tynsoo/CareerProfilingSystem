@@ -16,6 +16,7 @@ CREATE TABLE users (
     is_active               BOOLEAN NOT NULL DEFAULT TRUE,
     failed_login_attempts   INT NOT NULL DEFAULT 0,
     locked_until            TIMESTAMPTZ,
+    notifications_read_at   TIMESTAMPTZ,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

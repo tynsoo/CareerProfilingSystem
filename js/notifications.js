@@ -3,6 +3,10 @@
  * Populates #notifPanel's #notifList/#notifCountLabel/#notifBadge from
  * api/notifications.php on any page that has them. No-ops on pages without
  * that markup (e.g. pages that don't have a notification bell yet).
+ *
+ * Pages that carry their own open/close wiring leave #notifBtn alone; pages
+ * that mark the button with data-shared-toggle get the open/close behaviour
+ * from here so it doesn't have to be copied into every page.
  */
 (function () {
   'use strict';
@@ -41,24 +45,32 @@
 
   function render(data) {
     var items = data.items || [];
+    var unread = typeof data.unreadCount === 'number'
+      ? data.unreadCount
+      : items.filter(function (i) { return i.unread !== false; }).length;
 
     if (badge) {
-      if (items.length > 0) {
-        badge.textContent = items.length > 9 ? '9+' : String(items.length);
+      if (unread > 0) {
+        badge.textContent = unread > 9 ? '9+' : String(unread);
         badge.classList.remove('hidden');
       } else {
         badge.classList.add('hidden');
       }
     }
     if (countLabel) {
-      countLabel.textContent = items.length > 0 ? (items.length + ' new') : 'All caught up';
+      countLabel.textContent = unread > 0 ? (unread + ' new') : 'All caught up';
     }
 
     list.innerHTML = items.length
       ? items.map(function (item) {
-          return '<li class="px-4 py-3 hover:bg-gray-50">' +
-            '<a href="' + escapeHtml(item.link) + '" class="block">' +
-            '<p class="text-sm text-gray-800">' + escapeHtml(item.text) + '</p>' +
+          var isUnread = data.tracksRead ? item.unread !== false : false;
+          var heading = item.title
+            ? '<p class="text-sm ' + (isUnread ? 'font-semibold text-gray-900' : 'font-medium text-gray-600') + '">' + escapeHtml(item.title) + '</p>' +
+              '<p class="text-sm text-gray-600 mt-0.5">' + escapeHtml(item.text) + '</p>'
+            : '<p class="text-sm text-gray-800">' + escapeHtml(item.text) + '</p>';
+          return '<li class="' + (isUnread ? 'bg-red-50/40 ' : '') + 'hover:bg-gray-50">' +
+            '<a href="' + escapeHtml(item.link) + '" class="block px-4 py-3">' +
+            heading +
             '<p class="text-xs text-gray-400 mt-1">' + timeAgo(item.ts) + '</p>' +
             '</a></li>';
         }).join('')
@@ -72,4 +84,22 @@
       list.innerHTML = '<li class="px-4 py-6 text-center text-sm text-gray-400">Unable to load notifications.</li>';
       if (countLabel) countLabel.textContent = '';
     });
+
+  var btn = document.getElementById('notifBtn');
+  var panel = document.getElementById('notifPanel');
+  if (btn && panel && btn.hasAttribute('data-shared-toggle')) {
+    var profilePanel = document.getElementById('profilePanel');
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (profilePanel) profilePanel.classList.add('hidden');
+      panel.classList.toggle('hidden');
+    });
+    panel.addEventListener('click', function (e) { e.stopPropagation(); });
+    document.addEventListener('click', function () { panel.classList.add('hidden'); });
+    window.addEventListener('scroll', function () { panel.classList.add('hidden'); }, { passive: true });
+    // Opening the profile menu should close the bell (the profile handler on
+    // these pages only toggles its own panel).
+    var profileBtn = document.getElementById('profileBtn');
+    if (profileBtn) profileBtn.addEventListener('click', function () { panel.classList.add('hidden'); });
+  }
 })();

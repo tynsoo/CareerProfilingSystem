@@ -83,7 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['export'])) {
 }
 
 $page = max(1, (int) ($_GET['page'] ?? 1));
-$pageSize = 10;
+// The page loads more rows on demand ("Load more"), so the size is caller-chosen (capped).
+$pageSize = min(100, max(1, (int) ($_GET['pageSize'] ?? 10)));
 $sort = ($_GET['sort'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 
 [$where, $params] = buildFilters($_GET);

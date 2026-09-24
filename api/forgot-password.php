@@ -9,12 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $body = readJsonBody();
-// Students log in with their School ID, which IS their username (see
+// Students log in with their LRN, which IS their username (see
 // api/register.php) — so a single username lookup covers every role,
 // students and admin/counselor staff accounts alike.
 $identifier = trim((string) ($body['schoolId'] ?? $body['identifier'] ?? ''));
 if ($identifier === '') {
-    jsonResponse(['success' => false, 'error' => 'Username or School ID is required.'], 400);
+    jsonResponse(['success' => false, 'error' => 'Username or LRN is required.'], 400);
 }
 
 $pdo = Database::get();
