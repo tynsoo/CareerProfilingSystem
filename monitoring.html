@@ -165,19 +165,7 @@
           <p class="text-sm text-slate-500 mt-1">Real-time monitoring of assessments, recommendations, and counseling activities.</p>
           <p class="text-xs text-slate-500 mt-2 max-w-2xl">Students are flagged when their top career match score falls below the confidence threshold set in Security Configuration. These cases may be reviewed during counseling.</p>
         </div>
-        <div class="bg-white border border-slate-100 rounded-lg shadow-sm flex items-center px-4 py-2.5 gap-4">
-          <div>
-            <p class="text-xs text-slate-500 text-right">Last Updated: <span id="lastUpdatedTime">10:42 AM</span></p>
-            <div class="flex items-center justify-end gap-1.5">
-              <span class="text-xs text-slate-800">Auto Refresh</span>
-              <span class="relative flex w-2 h-2">
-                <span class="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <span class="text-xs font-bold text-green-600">ON</span>
-            </div>
-          </div>
-          <div class="w-px h-8 bg-slate-200"></div>
+        <div class="bg-white border border-slate-100 rounded-lg shadow-sm flex items-center px-4 py-2.5">
           <button type="button" id="refreshBtn" class="w-3.5 h-3.5">
             <img src="images/monitoring/icon-refresh.svg" alt="Refresh" class="w-full h-full">
           </button>
@@ -475,7 +463,6 @@
       'Showing ' + data.rows.length + ' of ' + data.summary.needsReview + ' flagged recommendations';
 
     bindReviewLinks();
-    document.getElementById('lastUpdatedTime').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   }
 
   function bindReviewLinks() {
