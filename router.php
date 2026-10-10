@@ -76,6 +76,14 @@ const RENAMED_PAGES = [
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = urldecode($path ?? '/');
 
+// dev/ holds the local student-preview tool (php -S localhost:8080 dev/preview.php). The real site never serves it.
+if ($path === '/dev' || strpos($path, '/dev/') === 0) {
+    http_response_code(404);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo "404 Not Found";
+    return true;
+}
+
 if (preg_match('~^/([a-z-]+?)(?:\.html)?/?$~', $path, $renamed) && isset(RENAMED_PAGES[$renamed[1]])) {
     $query = (string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
     header('Location: /' . RENAMED_PAGES[$renamed[1]] . ($query !== '' ? '?' . $query : ''), true, 301);

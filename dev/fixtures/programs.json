@@ -1,0 +1,762 @@
+{
+    "programs": [
+        {
+            "id": 35,
+            "title": "BS Computer Science",
+            "hollandCode": "IRC",
+            "description": "Prepares students to design, develop, and analyze computer systems and software applications as computing professionals.",
+            "careers": [
+                "Software Engineer",
+                "Programmer",
+                "Game Developer",
+                "Data Scientist",
+                "Machine Learning Engineer",
+                "Systems Analyst",
+                "Mobile App Developer",
+                "AI Engineer"
+            ],
+            "careerOptions": [
+                "Software Engineer",
+                "Programmer",
+                "Game Developer",
+                "Data Scientist",
+                "Machine Learning Engineer",
+                "Systems Analyst",
+                "Mobile App Developer",
+                "AI Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 2,
+            "collegeCode": "CCIS",
+            "collegeName": "College of Computer and Information Sciences"
+        },
+        {
+            "id": 36,
+            "title": "BS Information Technology",
+            "hollandCode": "IRC",
+            "description": "Prepares students to become IT professionals who can plan, develop, and maintain software applications for Windows, web, and mobile platforms.",
+            "careers": [
+                "Web Developer",
+                "Network Administrator",
+                "IT Support Specialist",
+                "Cybersecurity Analyst",
+                "Database Administrator",
+                "Systems Administrator",
+                "Cloud Engineer"
+            ],
+            "careerOptions": [
+                "Web Developer",
+                "Network Administrator",
+                "IT Support Specialist",
+                "Cybersecurity Analyst",
+                "Database Administrator",
+                "Systems Administrator",
+                "Cloud Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 2,
+            "collegeCode": "CCIS",
+            "collegeName": "College of Computer and Information Sciences"
+        },
+        {
+            "id": 37,
+            "title": "BS Biology",
+            "hollandCode": "IRS",
+            "description": "A generalized framework of study that grounds students in the biological, natural, and physical sciences.",
+            "careers": [
+                "Research Scientist",
+                "Biotechnologist",
+                "Biologist",
+                "Microbiologist",
+                "Environmental Scientist",
+                "Wildlife Biologist",
+                "Laboratory Analyst"
+            ],
+            "careerOptions": [
+                "Research Scientist",
+                "Biotechnologist",
+                "Biologist",
+                "Microbiologist",
+                "Environmental Scientist",
+                "Wildlife Biologist",
+                "Laboratory Analyst"
+            ],
+            "status": "Active",
+            "collegeId": 3,
+            "collegeCode": "CHS",
+            "collegeName": "College of Health Sciences"
+        },
+        {
+            "id": 38,
+            "title": "BS Medical Technology",
+            "hollandCode": "IRC",
+            "description": "A 4-year program training students in laboratory sciences for medical diagnosis, covering microbiology, hematology, and clinical chemistry.",
+            "careers": [
+                "Medical Technologist",
+                "Medical Laboratory Scientist",
+                "Clinical Laboratory Scientist",
+                "Pathology Laboratory Analyst",
+                "Blood Bank Technologist"
+            ],
+            "careerOptions": [
+                "Medical Technologist",
+                "Medical Laboratory Scientist",
+                "Clinical Laboratory Scientist",
+                "Pathology Laboratory Analyst",
+                "Blood Bank Technologist"
+            ],
+            "status": "Active",
+            "collegeId": 3,
+            "collegeCode": "CHS",
+            "collegeName": "College of Health Sciences"
+        },
+        {
+            "id": 39,
+            "title": "BS Pharmacy",
+            "hollandCode": "ISC",
+            "description": "Combines science-based coursework with hands-on training in pharmacies, hospitals, and labs, building a foundation in pharmacology and pharmaceutics for future pharmacists.",
+            "careers": [
+                "Pharmacist",
+                "Clinical Pharmacist",
+                "Hospital Pharmacist",
+                "Pharmaceutical Researcher",
+                "Regulatory Affairs Officer",
+                "Drug Safety Specialist"
+            ],
+            "careerOptions": [
+                "Pharmacist",
+                "Clinical Pharmacist",
+                "Hospital Pharmacist",
+                "Pharmaceutical Researcher",
+                "Regulatory Affairs Officer",
+                "Drug Safety Specialist"
+            ],
+            "status": "Active",
+            "collegeId": 3,
+            "collegeCode": "CHS",
+            "collegeName": "College of Health Sciences"
+        },
+        {
+            "id": 40,
+            "title": "BS Physical Therapy",
+            "hollandCode": "SIR",
+            "description": "Combines general education with professional courses in the physical, social, and health sciences, including a 1,500-hour internship for hands-on clinical experience.",
+            "careers": [
+                "Physical Therapist",
+                "Physiotherapist",
+                "Rehabilitation Specialist",
+                "Sports Therapist",
+                "Wellness Coach"
+            ],
+            "careerOptions": [
+                "Physical Therapist",
+                "Physiotherapist",
+                "Rehabilitation Specialist",
+                "Sports Therapist",
+                "Wellness Coach"
+            ],
+            "status": "Active",
+            "collegeId": 3,
+            "collegeCode": "CHS",
+            "collegeName": "College of Health Sciences"
+        },
+        {
+            "id": 41,
+            "title": "BS Psychology",
+            "hollandCode": "SIA",
+            "description": "Provides a solid, broad foundation in the concepts, theories, and principles of psychology.",
+            "careers": [
+                "Psychologist",
+                "Psychometrician",
+                "Guidance Counselor",
+                "Human Resources Specialist",
+                "Behavioral Analyst",
+                "Research Assistant"
+            ],
+            "careerOptions": [
+                "Psychologist",
+                "Psychometrician",
+                "Guidance Counselor",
+                "Human Resources Specialist",
+                "Behavioral Analyst",
+                "Research Assistant"
+            ],
+            "status": "Active",
+            "collegeId": 3,
+            "collegeCode": "CHS",
+            "collegeName": "College of Health Sciences"
+        },
+        {
+            "id": 63,
+            "title": "BS Marine Engineering",
+            "hollandCode": "RIC",
+            "description": "Covers the mandatory education and training for Officers in Charge of an Engineering Watch under Regulation III/1 of the STCW Convention, 1978, as amended.",
+            "careers": [
+                "Marine Engineer",
+                "Ship Engineer Officer",
+                "Offshore Systems Engineer",
+                "Port Engineer"
+            ],
+            "careerOptions": [
+                "Marine Engineer",
+                "Ship Engineer Officer",
+                "Offshore Systems Engineer",
+                "Port Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 8,
+            "collegeCode": "CMET",
+            "collegeName": "College of Maritime Education and Training"
+        },
+        {
+            "id": 64,
+            "title": "BS Marine Transportation",
+            "hollandCode": "REC",
+            "description": "Covers the mandatory education and training for Officers in Charge of a Navigation Watch under Regulation II/1 of the STCW Convention, 1978, as amended.",
+            "careers": [
+                "Deck Officer",
+                "Navigation Officer",
+                "Ship Captain",
+                "Merchant Marine Officer",
+                "Port Operations Officer",
+                "Maritime Safety Inspector"
+            ],
+            "careerOptions": [
+                "Deck Officer",
+                "Navigation Officer",
+                "Ship Captain",
+                "Merchant Marine Officer",
+                "Port Operations Officer",
+                "Maritime Safety Inspector"
+            ],
+            "status": "Active",
+            "collegeId": 8,
+            "collegeCode": "CMET",
+            "collegeName": "College of Maritime Education and Training"
+        },
+        {
+            "id": 42,
+            "title": "BS Nursing",
+            "hollandCode": "SIR",
+            "description": "Provides a strong educational foundation combining theoretical knowledge with practical application, preparing graduates for healthcare careers locally and internationally.",
+            "careers": [
+                "Registered Nurse",
+                "Community Health Nurse",
+                "Critical Care Nurse",
+                "Nurse Educator",
+                "Clinical Nurse Specialist"
+            ],
+            "careerOptions": [
+                "Registered Nurse",
+                "Community Health Nurse",
+                "Critical Care Nurse",
+                "Nurse Educator",
+                "Clinical Nurse Specialist"
+            ],
+            "status": "Active",
+            "collegeId": 4,
+            "collegeCode": "CN",
+            "collegeName": "College of Nursing"
+        },
+        {
+            "id": 43,
+            "title": "BS Accountancy",
+            "hollandCode": "CEI",
+            "description": "A rigorous program producing top certified public accountants, preparing graduates for careers such as budget analyst, bank specialist, auditor, tax agent, and real estate appraiser.",
+            "careers": [
+                "Certified Public Accountant",
+                "Accountant",
+                "Auditor",
+                "Tax Specialist",
+                "Forensic Accountant",
+                "Financial Controller"
+            ],
+            "careerOptions": [
+                "Certified Public Accountant",
+                "Accountant",
+                "Auditor",
+                "Tax Specialist",
+                "Forensic Accountant",
+                "Financial Controller"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 44,
+            "title": "BS Accounting Information System",
+            "hollandCode": "CIE",
+            "description": "Combines business, accounting, and computer systems knowledge, training graduates to work across accountancy and IT and to coordinate technology-driven business decisions.",
+            "careers": [
+                "Systems Auditor",
+                "IT Auditor",
+                "Accounting Systems Analyst",
+                "ERP Consultant",
+                "Financial Analyst"
+            ],
+            "careerOptions": [
+                "Systems Auditor",
+                "IT Auditor",
+                "Accounting Systems Analyst",
+                "ERP Consultant",
+                "Financial Analyst"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 45,
+            "title": "BS Business Administration Major in Financial Management",
+            "hollandCode": "ECI",
+            "description": "Builds core business skills and practical tools for a career in financial management, one of the college's three BSBA majors alongside Operations and Marketing Management.",
+            "careers": [
+                "Financial Analyst",
+                "Investment Banker",
+                "Bank Manager",
+                "Credit Analyst",
+                "Financial Planner",
+                "Treasury Officer"
+            ],
+            "careerOptions": [
+                "Financial Analyst",
+                "Investment Banker",
+                "Bank Manager",
+                "Credit Analyst",
+                "Financial Planner",
+                "Treasury Officer"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 46,
+            "title": "BS Business Administration Major in Operations Management",
+            "hollandCode": "EIC",
+            "description": "A three-year-and-one-term program covering the functional areas of business, with a focus on product development and supply chain management for managerial or entrepreneurial careers.",
+            "careers": [
+                "Operations Manager",
+                "Supply Chain Analyst",
+                "Logistics Coordinator",
+                "Production Planner",
+                "Procurement Officer"
+            ],
+            "careerOptions": [
+                "Operations Manager",
+                "Supply Chain Analyst",
+                "Logistics Coordinator",
+                "Production Planner",
+                "Procurement Officer"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 47,
+            "title": "BS Business Administration Major in Sustainability Management",
+            "hollandCode": "EIS",
+            "description": "For students passionate about business and environmental responsibility, building the knowledge and skills to lead in sustainable business practices.",
+            "careers": [
+                "Sustainability Manager",
+                "ESG Analyst",
+                "Environmental Consultant",
+                "Corporate Social Responsibility Officer"
+            ],
+            "careerOptions": [
+                "Sustainability Manager",
+                "ESG Analyst",
+                "Environmental Consultant",
+                "Corporate Social Responsibility Officer"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 48,
+            "title": "BS Hospitality Management",
+            "hollandCode": "ESC",
+            "description": "Covers managing daily operations for hotels, restaurants, catering, events, and cruise ships, balancing business and management fundamentals with technical and soft skills.",
+            "careers": [
+                "Hotel Manager",
+                "Restaurant Manager",
+                "Front Office Manager",
+                "Chef",
+                "Event Planner",
+                "Restaurant Owner",
+                "Cruise Ship Hospitality Officer"
+            ],
+            "careerOptions": [
+                "Hotel Manager",
+                "Restaurant Manager",
+                "Front Office Manager",
+                "Chef",
+                "Event Planner",
+                "Restaurant Owner",
+                "Cruise Ship Hospitality Officer"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 49,
+            "title": "BS Tourism Management",
+            "hollandCode": "EAS",
+            "description": "Prepares dynamic leaders for the tourism, travel, and hospitality industry, with sustainability principles integrated throughout the curriculum.",
+            "careers": [
+                "Travel Consultant",
+                "Travel Agent",
+                "Tour Operator",
+                "Tour Guide",
+                "Destination Manager",
+                "Flight Attendant",
+                "Airline Customer Service Officer"
+            ],
+            "careerOptions": [
+                "Travel Consultant",
+                "Travel Agent",
+                "Tour Operator",
+                "Tour Guide",
+                "Destination Manager",
+                "Flight Attendant",
+                "Airline Customer Service Officer"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 50,
+            "title": "BS International Business",
+            "hollandCode": "ECS",
+            "description": "Prepares students for leadership roles in multinational corporations, government, and NGOs, building the skills to thrive in a globally interconnected economy.",
+            "careers": [
+                "International Trade Specialist",
+                "Export Manager",
+                "Business Development Manager",
+                "Foreign Market Analyst"
+            ],
+            "careerOptions": [
+                "International Trade Specialist",
+                "Export Manager",
+                "Business Development Manager",
+                "Foreign Market Analyst"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 51,
+            "title": "BS Business Analytics with Artificial Intelligence",
+            "hollandCode": "IEC",
+            "description": "Develops data-analysis skills for business, research, and government roles, grounded in linear algebra, statistical inference, data mining, and machine learning.",
+            "careers": [
+                "Business Analyst",
+                "Data Analyst",
+                "Data Engineer",
+                "AI Specialist",
+                "Business Intelligence Developer",
+                "Machine Learning Analyst"
+            ],
+            "careerOptions": [
+                "Business Analyst",
+                "Data Analyst",
+                "Data Engineer",
+                "AI Specialist",
+                "Business Intelligence Developer",
+                "Machine Learning Analyst"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 52,
+            "title": "BS Marketing",
+            "hollandCode": "EAS",
+            "description": "Develops strategic thinking so students can apply marketing concepts to real business challenges and understand what drives successful companies.",
+            "careers": [
+                "Marketing Manager",
+                "Brand Manager",
+                "Digital Marketing Specialist",
+                "Market Researcher",
+                "Advertising Executive",
+                "Sales Manager"
+            ],
+            "careerOptions": [
+                "Marketing Manager",
+                "Brand Manager",
+                "Digital Marketing Specialist",
+                "Market Researcher",
+                "Advertising Executive",
+                "Sales Manager"
+            ],
+            "status": "Active",
+            "collegeId": 5,
+            "collegeCode": "ETYCB",
+            "collegeName": "School of Entrepreneurship, Trade, Hospitality, and Business"
+        },
+        {
+            "id": 61,
+            "title": "BS Aeronautical Engineering",
+            "hollandCode": "RIC",
+            "description": "Offers a comprehensive education in aeronautics, equipping students with the knowledge and practical skills to excel in the aviation industry.",
+            "careers": [
+                "Aeronautical Engineer",
+                "Aerospace Engineer",
+                "Aircraft Maintenance Engineer",
+                "Aerospace Design Engineer",
+                "Flight Test Engineer"
+            ],
+            "careerOptions": [
+                "Aeronautical Engineer",
+                "Aerospace Engineer",
+                "Aircraft Maintenance Engineer",
+                "Aerospace Design Engineer",
+                "Flight Test Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 7,
+            "collegeCode": "MIA",
+            "collegeName": "Malayan Institute of Aeronautics"
+        },
+        {
+            "id": 62,
+            "title": "BS Aviation Management",
+            "hollandCode": "ERC",
+            "description": "Covers airport management, airline operations, and revenue management, spanning financial management, flight logistics, aircraft maintenance, and customer service.",
+            "careers": [
+                "Airport Operations Manager",
+                "Airline Operations Officer",
+                "Airline Manager",
+                "Air Traffic Coordinator",
+                "Aviation Safety Officer"
+            ],
+            "careerOptions": [
+                "Airport Operations Manager",
+                "Airline Operations Officer",
+                "Airline Manager",
+                "Air Traffic Coordinator",
+                "Aviation Safety Officer"
+            ],
+            "status": "Active",
+            "collegeId": 7,
+            "collegeCode": "MIA",
+            "collegeName": "Malayan Institute of Aeronautics"
+        },
+        {
+            "id": 53,
+            "title": "BS Architecture",
+            "hollandCode": "ARI",
+            "description": "A five-year professional undergraduate program providing the comprehensive education needed to practice architecture.",
+            "careers": [
+                "Architect",
+                "Licensed Architect",
+                "Architectural Designer",
+                "Interior Designer",
+                "Urban Planner",
+                "Landscape Architect"
+            ],
+            "careerOptions": [
+                "Architect",
+                "Licensed Architect",
+                "Architectural Designer",
+                "Interior Designer",
+                "Urban Planner",
+                "Landscape Architect"
+            ],
+            "status": "Active",
+            "collegeId": 6,
+            "collegeCode": "MITL",
+            "collegeName": "Malayan Institute of Technology"
+        },
+        {
+            "id": 54,
+            "title": "BS Chemical Engineering",
+            "hollandCode": "IRC",
+            "description": "Prepares students for careers in the chemical industry, building skills in basic engineering and chemical production.",
+            "careers": [
+                "Chemical Engineer",
+                "Process Engineer",
+                "Quality Control Engineer",
+                "Environmental Engineer",
+                "Petrochemical Engineer"
+            ],
+            "careerOptions": [
+                "Chemical Engineer",
+                "Process Engineer",
+                "Quality Control Engineer",
+                "Environmental Engineer",
+                "Petrochemical Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 6,
+            "collegeCode": "MITL",
+            "collegeName": "Malayan Institute of Technology"
+        },
+        {
+            "id": 55,
+            "title": "BS Civil Engineering",
+            "hollandCode": "RIC",
+            "description": "Provides a high-quality education preparing students for a wide range of careers in civil engineering.",
+            "careers": [
+                "Civil Engineer",
+                "Structural Engineer",
+                "Construction Manager",
+                "Site Engineer",
+                "Geotechnical Engineer",
+                "Transportation Engineer"
+            ],
+            "careerOptions": [
+                "Civil Engineer",
+                "Structural Engineer",
+                "Construction Manager",
+                "Site Engineer",
+                "Geotechnical Engineer",
+                "Transportation Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 6,
+            "collegeCode": "MITL",
+            "collegeName": "Malayan Institute of Technology"
+        },
+        {
+            "id": 56,
+            "title": "BS Mechanical Engineering",
+            "hollandCode": "RIC",
+            "description": "Teaches students to design, build, and improve machines, processes, and systems involving mechanical forces, work, and energy.",
+            "careers": [
+                "Mechanical Engineer",
+                "HVAC Engineer",
+                "Manufacturing Engineer",
+                "Mechatronics Engineer",
+                "Automotive Engineer",
+                "Maintenance Engineer"
+            ],
+            "careerOptions": [
+                "Mechanical Engineer",
+                "HVAC Engineer",
+                "Manufacturing Engineer",
+                "Mechatronics Engineer",
+                "Automotive Engineer",
+                "Maintenance Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 6,
+            "collegeCode": "MITL",
+            "collegeName": "Malayan Institute of Technology"
+        },
+        {
+            "id": 57,
+            "title": "BS Electrical Engineering",
+            "hollandCode": "RIC",
+            "description": "Covers the technology and applied science of electrical phenomena, built on a strong foundation in mathematics and physical science.",
+            "careers": [
+                "Electrical Engineer",
+                "Power Systems Engineer",
+                "Controls Engineer",
+                "Electrical Design Engineer",
+                "Electrical Maintenance Engineer"
+            ],
+            "careerOptions": [
+                "Electrical Engineer",
+                "Power Systems Engineer",
+                "Controls Engineer",
+                "Electrical Design Engineer",
+                "Electrical Maintenance Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 6,
+            "collegeCode": "MITL",
+            "collegeName": "Malayan Institute of Technology"
+        },
+        {
+            "id": 58,
+            "title": "BS Electronics Engineering",
+            "hollandCode": "RIC",
+            "description": "Provides a strong foundation in the principles and practices of electronics engineering.",
+            "careers": [
+                "Electronics Engineer",
+                "Telecommunications Engineer",
+                "Embedded Systems Engineer",
+                "Semiconductor Test Engineer",
+                "Robotics Engineer"
+            ],
+            "careerOptions": [
+                "Electronics Engineer",
+                "Telecommunications Engineer",
+                "Embedded Systems Engineer",
+                "Semiconductor Test Engineer",
+                "Robotics Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 6,
+            "collegeCode": "MITL",
+            "collegeName": "Malayan Institute of Technology"
+        },
+        {
+            "id": 59,
+            "title": "BS Industrial Engineering",
+            "hollandCode": "REC",
+            "description": "Trains students to improve and install products, processes, and integrated systems of people, materials, information, equipment, and energy.",
+            "careers": [
+                "Industrial Engineer",
+                "Production Manager",
+                "Quality Assurance Manager",
+                "Process Improvement Analyst",
+                "Supply Chain Engineer"
+            ],
+            "careerOptions": [
+                "Industrial Engineer",
+                "Production Manager",
+                "Quality Assurance Manager",
+                "Process Improvement Analyst",
+                "Supply Chain Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 6,
+            "collegeCode": "MITL",
+            "collegeName": "Malayan Institute of Technology"
+        },
+        {
+            "id": 60,
+            "title": "BS Computer Engineering",
+            "hollandCode": "RIC",
+            "description": "Provides the skills and competencies needed in computer, communication, and information technology.",
+            "careers": [
+                "Computer Engineer",
+                "Embedded Systems Developer",
+                "Firmware Engineer",
+                "Hardware Engineer",
+                "Network Engineer",
+                "Robotics Engineer"
+            ],
+            "careerOptions": [
+                "Computer Engineer",
+                "Embedded Systems Developer",
+                "Firmware Engineer",
+                "Hardware Engineer",
+                "Network Engineer",
+                "Robotics Engineer"
+            ],
+            "status": "Active",
+            "collegeId": 6,
+            "collegeCode": "MITL",
+            "collegeName": "Malayan Institute of Technology"
+        }
+    ]
+}
