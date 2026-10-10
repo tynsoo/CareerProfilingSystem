@@ -192,15 +192,16 @@
             <p class="text-xs text-gray-500 mt-1">Registered and assessed students in each section.</p>
             <div class="text-xs text-gray-600" style="display:flex;flex-wrap:wrap;align-items:center;margin-top:8px;row-gap:4px" aria-label="Chart colors">
               <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#93c5fd;display:inline-block"></span>Registered</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#059669;display:inline-block"></span>Assessed, on target</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#dc2626;display:inline-block"></span>Assessed, below target</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:16px;border-top:2px dashed #0f2a6b;display:inline-block"></span>Target</span>
+              <span id="legendAssessed" style="display:none;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#0f2a6b;display:inline-block"></span>Assessed</span>
+              <span id="legendOn" style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#059669;display:inline-block"></span>Assessed, on target</span>
+              <span id="legendBelow" style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#dc2626;display:inline-block"></span>Assessed, below target</span>
+              <span id="legendTarget" style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:16px;border-top:2px dashed #0f2a6b;display:inline-block"></span>Target</span>
             </div>
           </div>
           <div class="flex items-center gap-2 text-sm">
-            <span class="text-gray-600">Target: <span id="targetValue" class="font-semibold text-gray-900">80%</span></span>
+            <span class="text-gray-600">Target: <span id="targetValue" class="font-semibold text-gray-900">Not set</span></span>
             <span id="targetEdit" class="hidden items-center gap-2">
-              <input type="number" id="targetInput" min="1" max="100" step="1" aria-label="Completion target in percent" class="w-20 border border-gray-300 rounded-md px-2 py-1.5 text-sm">
+              <input type="number" id="targetInput" min="0" max="100" step="1" placeholder="0 = off" aria-label="Completion target in percent, 0 turns it off" class="w-20 border border-gray-300 rounded-md px-2 py-1.5 text-sm">
               <button type="button" id="targetSave" class="bg-[#0f2a6b] text-white text-xs font-semibold rounded-md px-3 py-2 hover:opacity-90">Save</button>
             </span>
           </div>
@@ -506,13 +507,18 @@
 
   // ---- Completion by section: red below the target, green at or above it.
   let completionChart = null;
-  let completionTarget = 80;
+  let completionTarget = 0;
   const isAdminUser = currentUser.role === 'admin';
   function renderCompletion(secRows, target) {
     completionTarget = target;
     const card = document.getElementById('sectionCompletionCard');
     card.classList.toggle('hidden', secRows.length === 0);
-    document.getElementById('targetValue').textContent = target + '%';
+    const targetOn = target > 0;
+    document.getElementById('targetValue').textContent = targetOn ? target + '%' : 'Not set';
+    document.getElementById('legendOn').style.display = targetOn ? 'inline-flex' : 'none';
+    document.getElementById('legendBelow').style.display = targetOn ? 'inline-flex' : 'none';
+    document.getElementById('legendTarget').style.display = targetOn ? 'inline-flex' : 'none';
+    document.getElementById('legendAssessed').style.display = targetOn ? 'none' : 'inline-flex';
     const editBox = document.getElementById('targetEdit');
     editBox.classList.toggle('hidden', !isAdminUser);
     editBox.classList.toggle('flex', isAdminUser);
@@ -521,10 +527,13 @@
     if (!secRows.length) return;
 
     const rateOf = function(s) { return s.total > 0 ? s.completed / s.total * 100 : 0; };
-    const colorFor = function(rate) { return rate >= target ? '#059669' : '#dc2626'; };
+    const colorFor = function(rate) { return !targetOn ? '#0f2a6b' : (rate >= target ? '#059669' : '#dc2626'); };
     const meeting = secRows.filter(function(s) { return rateOf(s) >= target; }).length;
-    document.getElementById('completionSummaryLine').textContent =
-      meeting + ' of ' + secRows.length + ' section' + (secRows.length === 1 ? '' : 's') + ' ' + (meeting === 1 ? 'is' : 'are') + ' at or above the ' + target + '% target.';
+    const assessedTotal = secRows.reduce(function(n, s) { return n + s.completed; }, 0);
+    const expectedTotal = secRows.reduce(function(n, s) { return n + s.total; }, 0);
+    document.getElementById('completionSummaryLine').textContent = targetOn
+      ? meeting + ' of ' + secRows.length + ' section' + (secRows.length === 1 ? '' : 's') + ' ' + (meeting === 1 ? 'is' : 'are') + ' at or above the ' + target + '% target.'
+      : assessedTotal + ' of ' + expectedTotal + ' student' + (expectedTotal === 1 ? '' : 's') + ' assessed across ' + secRows.length + ' section' + (secRows.length === 1 ? '' : 's') + '.';
 
     document.getElementById('completionChartBox').style.height = Math.max(240, secRows.length * 64 + 90) + 'px';
     if (completionChart) { completionChart.destroy(); completionChart = null; }
@@ -565,7 +574,7 @@
           } } }
         }
       },
-      plugins: [targetLine]
+      plugins: targetOn ? [targetLine] : []
     });
   }
 
@@ -578,13 +587,13 @@
   }
   document.getElementById('targetSave').addEventListener('click', async function() {
     const raw = document.getElementById('targetInput').value.trim();
-    if (!/^[0-9]+$/.test(raw) || Number(raw) < 1 || Number(raw) > 100) { showTargetMessage('Enter a whole number from 1 to 100.', true); return; }
+    if (!/^[0-9]+$/.test(raw) || Number(raw) > 100) { showTargetMessage('Enter a whole number from 1 to 100, or 0 to turn the target off.', true); return; }
     this.disabled = true;
     try {
       const res = await fetch('api/completion-target.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target: Number(raw) }) });
       const data = await res.json();
       if (!data.success) { showTargetMessage(data.error || 'Could not save the target.', true); return; }
-      showTargetMessage('Target saved: ' + data.target + '%.', false);
+      showTargetMessage(data.target > 0 ? 'Target saved: ' + data.target + '%.' : 'Target turned off.', false);
       renderCompletion(lastSectionRows, data.target);
     } catch (e) {
       showTargetMessage('Unable to reach the server. Please try again.', true);
@@ -694,7 +703,7 @@
     const secRows = data.sections || [];
     lastSectionRows = secRows;
     renderStatus(secRows);
-    renderCompletion(secRows, data.completionTarget || 80);
+    renderCompletion(secRows, Number.isInteger(data.completionTarget) ? data.completionTarget : 0);
     noResults.classList.toggle('hidden', data.students.length !== 0);
     tbody.innerHTML = data.students.length
       ? data.students.map((s, i) => renderRow(s, data.startIndex + i)).join('')

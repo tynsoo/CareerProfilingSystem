@@ -47,5 +47,13 @@ check('all 1s on 5 questions is 10', QuestionBank::scaleScore(5, 5) === 10);
 check('the same answers give the same score whatever the number of questions', QuestionBank::scaleScore(18, 5) === QuestionBank::scaleScore(36, 10));
 check('a type with no questions scores 0, not an error', QuestionBank::scaleScore(0, 0) === 0);
 
+echo "\n=== the ranked Holland code used in the downloads ===\n";
+check('the top three types become letters in rank order', QuestionBank::hollandCode(['Investigative', 'Conventional', 'Social']) === 'ICS');
+check('a different order gives a different code', QuestionBank::hollandCode(['Social', 'Investigative', 'Conventional']) === 'SIC');
+check('only the top three count', QuestionBank::hollandCode(['Realistic', 'Artistic', 'Enterprising', 'Social']) === 'RAE');
+check('nothing gives an empty code', QuestionBank::hollandCode([]) === '');
+check('results stored as letters work too', QuestionBank::hollandCode(['E', 'A', 'R']) === 'EAR');
+check('every type name is understood', QuestionBank::hollandCode(array_values(QuestionBank::NAMES)) === 'RIA');
+
 echo "\n=== Summary: $passed passed, $failures failed ===\n";
 exit($failures > 0 ? 1 : 0);

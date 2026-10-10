@@ -3,6 +3,7 @@
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../lib/AcademicYear.php';
 require_once __DIR__ . '/../lib/OfficeHours.php';
+require_once __DIR__ . '/../lib/BookingLink.php';
 
 $user = Rbac::requireRole('admin', 'counselor');
 $pdo = Database::get();
@@ -29,6 +30,9 @@ function loadRbac(PDO $pdo, bool $viewerIsFacilitator = false): array
             // A Guidance Facilitator is view-only for these (lib/Rbac.php): show them that, so the pages hide the write controls.
             if ($viewerIsFacilitator && $r['role'] === 'counselor' && $level === 'full' && in_array($r['module'], Rbac::FACILITATOR_VIEW_ONLY, true)) {
                 $level = 'limited';
+            }
+            if ($viewerIsFacilitator && $r['role'] === 'counselor' && in_array($r['module'], Rbac::FACILITATOR_NO_ACCESS, true)) {
+                $level = 'none';
             }
             $rbac[$r['module']][$r['role']] = $level;
         }
@@ -71,6 +75,7 @@ function loadPolicies(PDO $pdo): array
             'text' => $s('officeHours.text', 'Mon–Fri, 8:00 AM–5:00 PM'),
             'schedule' => OfficeHours::fromJson($s('officeHours.schedule', '')),
         ],
+        'booking' => ['url' => $s('booking.url', '')],
         'principal' => [
             'name' => $s('principal.name', ''),
             'email' => $s('principal.email', ''),
@@ -203,6 +208,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute(['officeHours.text', $text, $user['id']]); // what api/public-settings.php sends to students
 
         AuditLogger::log($user['id'], $user['role'], 'update_office_hours', 'security_policies', 'officeHours.text', "Set to: $text");
+        jsonResponse(['success' => true] + loadPolicies($pdo));
+    }
+
+    if ($type === 'bookingLink') {
+        $checked = BookingLink::validate((string) ($body['url'] ?? ''));
+        if ($checked['error'] !== null) {
+            jsonResponse(['success' => false, 'error' => $checked['error']], 400);
+        }
+        $stmt = $pdo->prepare(
+            'INSERT INTO security_policies (key, value, updated_by) VALUES (?, ?, ?)
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW(), updated_by = EXCLUDED.updated_by'
+        );
+        $stmt->execute([BookingLink::KEY, $checked['url'], $user['id']]);
+        AuditLogger::log($user['id'], $user['role'], 'update_booking_link', 'security_policies', BookingLink::KEY, $checked['url'] === '' ? 'Cleared' : 'Set to: ' . $checked['url']);
         jsonResponse(['success' => true] + loadPolicies($pdo));
     }
 

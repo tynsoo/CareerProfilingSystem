@@ -20,11 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $target = (int) $target;
     }
     if (!CompletionTarget::isValid($target)) {
-        jsonResponse(['success' => false, 'error' => 'Enter a whole number from 1 to 100.'], 400);
+        jsonResponse(['success' => false, 'error' => 'Enter a whole number from 1 to 100, or 0 to turn the target off.'], 400);
     }
     $old = CompletionTarget::get($pdo);
     CompletionTarget::set($pdo, $target, (int) $user['id']);
-    AuditLogger::log($user['id'], $user['role'], 'update_completion_target', 'security_policies', CompletionTarget::KEY, "$old% -> $target%");
+    AuditLogger::log($user['id'], $user['role'], 'update_completion_target', 'security_policies', CompletionTarget::KEY, (CompletionTarget::isOn($old) ? "$old%" : 'off') . ' -> ' . (CompletionTarget::isOn($target) ? "$target%" : 'off'));
     jsonResponse(['success' => true, 'target' => $target]);
 }
 

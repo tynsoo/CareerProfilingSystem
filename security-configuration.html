@@ -199,6 +199,16 @@
               </div>
 
               <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
+                <p class="text-sm font-semibold text-slate-800">Counseling Booking Link</p>
+                <p class="text-xs text-slate-500">The CGC's booking page. When saved, students who press "Schedule Advising Session" on their results go there. Leave it empty to send a counseling request instead.</p>
+                <div class="flex flex-col gap-2">
+                  <input type="url" id="bookingUrlInput" maxlength="300" class="border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24]" placeholder="https://" aria-label="Counseling booking link">
+                  <button type="button" id="bookingLinkSave" class="self-start px-4 py-2 text-xs font-semibold text-white bg-[#0f2a6b] rounded-md hover:opacity-90">Save</button>
+                </div>
+                <p id="bookingLinkStatus" class="hidden text-xs" aria-live="polite"></p>
+              </div>
+
+              <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
                 <p class="text-sm font-semibold text-slate-800">SHS Principal Contact</p>
                 <p class="text-xs text-slate-500">Where the fixed-template summary report is sent from the Analytics Dashboard's "Send Report to Principal" button.</p>
                 <div class="flex flex-col gap-2">
@@ -548,6 +558,7 @@
       renderSecuritySettings();
       renderSystemCustomization();
       renderPrincipalContact();
+      renderBookingLink();
       renderOverview();
       renderLastUpdated();
     }
@@ -637,6 +648,16 @@
         document.querySelectorAll('#officeHoursGrid input, #officeHoursGrid select').forEach(el => { el.disabled = true; });
       }
       ohValidate();
+    }
+
+    function renderBookingLink() {
+      document.getElementById('bookingUrlInput').value = (state.booking && state.booking.url) || '';
+      if (!isAdmin) {
+        [document.getElementById('bookingUrlInput'), document.getElementById('bookingLinkSave')].forEach(el => {
+          el.disabled = true;
+          el.classList.add('opacity-60', 'cursor-not-allowed');
+        });
+      }
     }
 
     function renderPrincipalContact() {
@@ -952,6 +973,25 @@
         statusEl.classList.remove('hidden');
         if (data.success) {
           statusEl.textContent = 'Saved.';
+          statusEl.className = 'text-xs text-green-600';
+          await loadState();
+        } else {
+          statusEl.textContent = data.error || 'Failed to save.';
+          statusEl.className = 'text-xs text-[#ed1c24]';
+        }
+      });
+
+      document.getElementById('bookingLinkSave').addEventListener('click', async function() {
+        const statusEl = document.getElementById('bookingLinkStatus');
+        const url = document.getElementById('bookingUrlInput').value.trim();
+        const res = await fetch('api/security-config.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'bookingLink', url })
+        });
+        const data = await res.json();
+        statusEl.classList.remove('hidden');
+        if (data.success) {
+          statusEl.textContent = url === '' ? 'Link removed.' : 'Saved.';
           statusEl.className = 'text-xs text-green-600';
           await loadState();
         } else {

@@ -9,6 +9,8 @@
 class QuestionBank
 {
     public const DIMENSIONS = ['R', 'I', 'A', 'S', 'E', 'C'];
+    /** The full name of each type, as stored with a student's result. */
+    public const NAMES = ['R' => 'Realistic', 'I' => 'Investigative', 'A' => 'Artistic', 'S' => 'Social', 'E' => 'Enterprising', 'C' => 'Conventional'];
     /** The fewest active questions each type may have. */
     public const MIN_PER_TYPE = 3;
     /** Longest question text accepted. */
@@ -91,6 +93,23 @@ class QuestionBank
             ? 'Each type needs at least ' . self::MIN_PER_TYPE . ' active questions.'
             : 'Every type needs the same number of active questions.';
         return ['ok' => false, 'perType' => $perType, 'total' => $total, 'size' => $size, 'message' => $message];
+    }
+
+    /**
+     * The ranked three-letter Holland code for a student's top types (best first), for example
+     * ['Investigative', 'Conventional', 'Social'] gives "ICS". Used in the downloads.
+     *
+     * @param array<int,string> $topTypes type names (or letters) in rank order
+     */
+    public static function hollandCode(array $topTypes): string
+    {
+        $code = '';
+        foreach (array_slice($topTypes, 0, 3) as $name) {
+            // A result stores the full name; some older or seeded rows store the letter itself.
+            $letter = in_array($name, self::DIMENSIONS, true) ? $name : array_search($name, self::NAMES, true);
+            $code .= $letter !== false ? $letter : '';
+        }
+        return $code;
     }
 
     /** A student's raw total for one type, put on the 10-50 scale every stored result uses. */

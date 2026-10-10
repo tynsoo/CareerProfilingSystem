@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/../lib/QuestionBank.php';
 require_once __DIR__ . '/../lib/Sections.php';
 require_once __DIR__ . '/../lib/AcademicYear.php';
 require_once __DIR__ . '/../lib/Mismatch.php';
@@ -405,13 +406,14 @@ if ($asCsv) {
     header('Content-Disposition: attachment; filename="' . $fileName . '"');
     $out = fopen('php://output', 'w');
     fwrite($out, "\xEF\xBB\xBF"); // so Excel reads names with Ñ and accents correctly
-    fputcsv($out, ['Name', 'Strand', 'Section', 'Registered', 'Assessed', 'Assessment Date', 'Email'], escape: '\\');
+    fputcsv($out, ['Name', 'Strand', 'Section', 'Registered', 'Assessed', 'Assessment Date', 'Holland Code (Top 3, ranked)', 'Email'], escape: '\\');
     foreach ($filtered as $s) {
         fputcsv($out, [
             $safe($s['name']), $s['strand'], $s['section'],
             $s['status'] === 'Not Registered' ? 'No' : 'Yes',
             $s['status'] === 'Completed' ? 'Yes' : 'No',
             $s['assessmentDate'] ? date('Y-m-d', strtotime((string) $s['assessmentDate'])) : '',
+            QuestionBank::hollandCode(array_values(array_filter(explode(', ', (string) ($s['riasec'] ?? ''))))),
             $safe((string) ($s['_email'] ?? '')),
         ], escape: '\\');
     }

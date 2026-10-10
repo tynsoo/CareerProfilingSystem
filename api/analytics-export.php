@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/../lib/QuestionBank.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(['error' => 'Method not allowed'], 405);
@@ -49,7 +50,7 @@ header('Content-Disposition: attachment; filename="student-roster-' . $safeAy . 
 $out = fopen('php://output', 'w');
 fputcsv($out, [
     'Last Name', 'First Name', 'Strand', 'Grade Level', 'Section',
-    'Assessment Status', 'Top RIASEC Types', 'R', 'I', 'A', 'S', 'E', 'C',
+    'Assessment Status', 'Holland Code (Top 3, ranked)', 'R', 'I', 'A', 'S', 'E', 'C',
 ], escape: '\\');
 
 foreach ($stmt as $row) {
@@ -61,7 +62,7 @@ foreach ($stmt as $row) {
         $row['grade_level'],
         $row['section'],
         $completed ? 'Completed' : 'Pending',
-        $completed ? implode(', ', json_decode($row['top_types'], true)) : '',
+        $completed ? QuestionBank::hollandCode(json_decode($row['top_types'], true) ?: []) : '',
         $completed ? $row['score_r'] : '',
         $completed ? $row['score_i'] : '',
         $completed ? $row['score_a'] : '',

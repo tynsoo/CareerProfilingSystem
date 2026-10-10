@@ -240,7 +240,7 @@
           <div class="lg:col-span-4 bg-[#f2f4f6] border border-[#e0e3e5] rounded-lg p-5 flex flex-col">
             <h3 class="text-xl font-semibold text-[#191c1e] mb-2">Need Guidance?</h3>
             <p class="text-xs text-[#5e3f3c] mb-4 flex-1">Discuss these results with our guidance staff to map out your curriculum and ensure you're on the right track.</p>
-            <a href="student-help-center?subject=Request%20for%20Academic%20Advising" class="block text-center bg-[#495e88] text-white text-xs font-semibold uppercase tracking-wide rounded px-4 py-2.5 hover:opacity-90">Schedule Advising Session</a>
+            <a id="advisingLink" href="student-help-center?subject=Request%20for%20Academic%20Advising" class="block text-center bg-[#495e88] text-white text-xs font-semibold uppercase tracking-wide rounded px-4 py-2.5 hover:opacity-90">Schedule Advising Session</a>
           </div>
         </div>
 
@@ -250,6 +250,17 @@
 
       <p class="text-xs text-gray-400 text-center mt-6 max-w-2xl mx-auto">This site incorporates information from <a href="https://services.onetcenter.org/" target="_blank" rel="noopener noreferrer" class="underline hover:text-gray-600">O*NET Web Services</a> by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA).</p>
     </main>
+<script>
+// If the CGC saved its booking page, "Schedule Advising Session" opens it; otherwise it sends a counseling request.
+fetch('api/public-settings.php').then(function (r) { return r.json(); }).then(function (s) {
+  var link = document.getElementById('advisingLink');
+  if (link && s && s.bookingUrl) {
+    link.href = s.bookingUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+  }
+}).catch(function () {});
+</script>
 
       <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>

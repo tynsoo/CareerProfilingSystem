@@ -102,12 +102,12 @@ $safeName = htmlspecialchars($principalName, ENT_QUOTES, 'UTF-8');
 $bodyHtml = EmailTemplate::renderReport(
     'SHS Career Profiling Summary Report',
     'Academic Year ' . htmlspecialchars($currentAy, ENT_QUOTES, 'UTF-8') . ' &middot; Generated ' . $generatedAt,
-    "<p style=\"margin:0;\">Dear $safeName,</p><p style=\"margin:12px 0 0 0;\">Below is a summary of student career-profiling activity generated automatically by ProfilePath, so figures are always drawn from the same live data shown on the Analytics Dashboard — no manual re-entry.</p>",
+    "<p style=\"margin:0;\">Dear $safeName,</p><p style=\"margin:12px 0 0 0;\">Below is a summary of student career-profiling activity generated automatically by ProfilePath, so figures are always drawn from the same live data shown on the Analytics Dashboard — no manual re-entry.</p><p style=\"margin:12px 0 0 0;font-weight:600;\">Please treat this report with strict confidentiality.</p>",
     $sections
 );
 
 $bodyText = "SHS Career Profiling Summary Report\nAcademic Year $currentAy — Generated $generatedAt\n\n"
-    . "Dear $principalName,\n\nBelow is a summary of student career-profiling activity, generated automatically by ProfilePath.\n\n"
+    . "Dear $principalName,\n\nBelow is a summary of student career-profiling activity, generated automatically by ProfilePath.\n\nPlease treat this report with strict confidentiality.\n\n"
     . implode("\n\n", array_map(
         fn($s) => strtoupper($s['title']) . "\n" . implode("\n", array_map(fn($r) => "- {$r[0]}: {$r[1]}", $s['rows'])),
         $sections

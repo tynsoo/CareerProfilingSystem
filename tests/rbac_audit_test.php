@@ -51,8 +51,10 @@ $pdoCap->rollBack();
 check('the real student row is No Access', Rbac::accessLevel('announcements', 'student') === 'none');
 check('a student is still not cut off from other modules (Recommendations stays Full)', Rbac::accessLevel('recommendations', 'student') === 'full');
 
-echo "\n=== Guidance Facilitator is view-only ===\n";
-check('the facilitator write list covers announcements, schedules and sections', Rbac::FACILITATOR_VIEW_ONLY === ['announcements', 'examinations', 'sections']);
+echo "\n=== Guidance Facilitator: view-only only for sections and rosters ===\n";
+check('the facilitator view-only list is just sections (class rosters follow it)', Rbac::FACILITATOR_VIEW_ONLY === ['sections']);
+check('counseling notes are closed to facilitators entirely', Rbac::FACILITATOR_NO_ACCESS === ['counselingNotes']);
+check('a facilitator can post announcements and manage assessment schedules', !in_array('announcements', Rbac::FACILITATOR_VIEW_ONLY, true) && !in_array('examinations', Rbac::FACILITATOR_VIEW_ONLY, true));
 check('guidance counselors and facilitators can both edit and remove Question Bank questions (rac is not view-only for facilitators)', !in_array('rac', Rbac::FACILITATOR_VIEW_ONLY, true));
 check('a student is never a facilitator', Rbac::isFacilitator(['id' => 0, 'role' => 'student']) === false);
 check('the administrator is never a facilitator', Rbac::isFacilitator(['id' => 1, 'role' => 'admin']) === false);

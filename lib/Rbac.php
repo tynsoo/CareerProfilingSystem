@@ -15,11 +15,15 @@ class Rbac
 
     /**
      * A Guidance Facilitator (users.staff_position = 'facilitator') can look at these but never
-     * change them, whatever the matrix says: announcements, assessment schedules, sections.
-     * Class rosters follow the same rule (see requireRosterEditor). Guidance Counselors and the
-     * administrator (Head of Guidance) get whatever the matrix grants.
+     * change them, whatever the matrix says: sections. Class rosters follow the same rule (see
+     * requireRosterEditor). The CGC confirmed that facilitators also post announcements and run the
+     * assessment schedule (only counseling itself is counselor-only), so those follow the matrix like
+     * everyone else. Guidance Counselors and the administrator get whatever the matrix grants.
      */
-    public const FACILITATOR_VIEW_ONLY = ['announcements', 'examinations', 'sections'];
+    public const FACILITATOR_VIEW_ONLY = ['sections'];
+
+    /** A Guidance Facilitator has no access at all to these: counseling notes are the Guidance Counselors' own. */
+    public const FACILITATOR_NO_ACCESS = ['counselingNotes'];
 
     /** True for a signed-in Guidance Facilitator. */
     public static function isFacilitator(array $user): bool
@@ -78,6 +82,13 @@ class Rbac
     {
         $user = Auth::requireLogin();
         $level = self::accessLevel($module, $user['role']);
+
+        if (in_array($module, self::FACILITATOR_NO_ACCESS, true) && self::isFacilitator($user)) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Counseling notes are kept by the Guidance Counselors.']);
+            exit;
+        }
 
         $rank = ['none' => 0, 'limited' => 1, 'full' => 2];
         if (($rank[$level] ?? 0) < ($rank[$minLevel] ?? 1)) {
