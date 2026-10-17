@@ -63,6 +63,22 @@
       border-color: #dc2626;
       box-shadow: 0 0 0 1px #dc2626;
     }
+    /* A status card the Status filter rules out: stays in place, greyed, and its value shows a dash. */
+    .summary-card-muted {
+      background: #f9fafb;
+      border-color: #f3f4f6;
+    }
+    .summary-card-muted > span:first-child {
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+    }
+    .summary-card-muted > span:first-child img {
+      filter: grayscale(1);
+      opacity: 0.5;
+    }
+    .summary-card-muted .text-3xl {
+      color: #9ca3af;
+    }
     /* Same funnel icon as the Clear Filters button on Career Dataset, drawn in the button's text color. */
     .clear-filters-icon {
       width: 16px;
@@ -235,11 +251,11 @@
             <div>
               <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Total Activities</p>
               <p class="text-3xl font-bold text-gray-900" id="summaryTotal">—</p>
-              <p class="text-xs mt-1 text-gray-500">All logged actions</p>
+              <p class="text-xs mt-1 text-gray-500" id="summaryTotalNote">All logged actions</p>
             </div>
           </div>
 
-          <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-[21px] flex items-start gap-4">
+          <div id="cardSuccess" class="bg-white border border-gray-100 rounded-xl shadow-sm p-[21px] flex items-start gap-4">
             <span
               class="w-[50px] h-[50px] rounded-lg bg-green-50 border border-green-100 flex items-center justify-center shrink-0">
               <img src="images/audit/card-icon-success.svg" alt="" class="w-6 h-6">
@@ -248,11 +264,11 @@
               <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Successful</p>
               <p class="text-3xl font-bold text-gray-900" id="summarySuccess">—</p>
               <p class="text-xs mt-1"><span class="text-green-600 font-medium" id="summarySuccessPct">—</span> <span
-                  class="text-gray-500">of total</span></p>
+                  class="text-gray-500" id="summarySuccessNote">of total</span></p>
             </div>
           </div>
 
-          <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-[21px] flex items-start gap-4">
+          <div id="cardFailed" class="bg-white border border-gray-100 rounded-xl shadow-sm p-[21px] flex items-start gap-4">
             <span
               class="w-[50px] h-[50px] rounded-lg bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
               <img src="images/audit/card-icon-failed.svg" alt="" class="w-6 h-6">
@@ -261,7 +277,7 @@
               <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Failed</p>
               <p class="text-3xl font-bold text-gray-900" id="summaryFailed">—</p>
               <p class="text-xs mt-1"><span class="text-red-600 font-medium" id="summaryFailedPct">—</span> <span
-                  class="text-gray-500">of total</span></p>
+                  class="text-gray-500" id="summaryFailedNote">of total</span></p>
             </div>
           </div>
 
@@ -272,7 +288,7 @@
             <div>
               <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Users Active</p>
               <p class="text-3xl font-bold text-gray-900" id="summaryActive">—</p>
-              <p class="text-xs mt-1 text-gray-500">last 7 days</p>
+              <p class="text-xs mt-1 text-gray-500" id="summaryActiveNote">last 7 days</p>
             </div>
           </div>
         </div>
@@ -573,14 +589,27 @@
         }
         loadMoreBtn.addEventListener('click', () => { state.page += 1; load(false); });
 
+        // A status card the Status filter rules out shows a dash and says why, instead of a
+        // misleading 0 (for example "Failed 0" while the failed events are only filtered out).
+        function renderStatusCard(key, count, total, excluded) {
+          const pct = total > 0 ? ((count / total) * 100).toFixed(1) + '%' : '—';
+          document.getElementById('card' + key).classList.toggle('summary-card-muted', excluded);
+          document.getElementById('summary' + key).textContent = excluded ? '—' : count.toLocaleString();
+          document.getElementById('summary' + key + 'Pct').textContent = excluded ? '' : pct;
+          document.getElementById('summary' + key + 'Note').textContent = excluded ? 'Excluded by Status filter' : 'of total';
+        }
+
         function renderSummary(summary) {
           document.getElementById('summaryTotal').textContent = summary.total.toLocaleString();
-          document.getElementById('summarySuccess').textContent = summary.successful.toLocaleString();
-          document.getElementById('summaryFailed').textContent = summary.failed.toLocaleString();
           document.getElementById('summaryActive').textContent = summary.usersActive.toLocaleString();
-          const pct = (n) => summary.total > 0 ? ((n / summary.total) * 100).toFixed(1) + '%' : '—';
-          document.getElementById('summarySuccessPct').textContent = pct(summary.successful);
-          document.getElementById('summaryFailedPct').textContent = pct(summary.failed);
+          renderStatusCard('Success', summary.successful, summary.total, state.status === 'Failed');
+          renderStatusCard('Failed', summary.failed, summary.total, state.status === 'Success');
+          // The cards follow the table's filters. The notes say so, so a filtered number is never
+          // mistaken for the whole log.
+          document.getElementById('summaryTotalNote').textContent = summary.filtered
+            ? 'of ' + summary.overallTotal.toLocaleString() + ' logs'
+            : 'All logged actions';
+          document.getElementById('summaryActiveNote').textContent = summary.filtered ? 'in these results' : 'last 7 days';
         }
 
         function renderRows(rows) {

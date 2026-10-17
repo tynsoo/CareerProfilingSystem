@@ -229,15 +229,28 @@ $modules = $pdo->query('SELECT DISTINCT target_type FROM audit_log WHERE target_
     ->fetchAll(PDO::FETCH_COLUMN);
     $firstDate = $pdo->query('SELECT MIN(created_at)::date FROM audit_log')->fetchColumn() ?: null;
 
-// Summary cards reflect the whole audit log, independent of the table's current
-// search/filter state below — otherwise a narrow filter makes "successful"/"failed"
-// exceed the visible "total" and the percentages stop making sense.
-$globalTotal = (int) $pdo->query('SELECT COUNT(*) FROM audit_log')->fetchColumn();
-$successCount = (int) $pdo->query("SELECT COUNT(*) FROM audit_log al WHERE NOT " . FAILED_SQL)->fetchColumn();
-$failedCount = (int) $pdo->query("SELECT COUNT(*) FROM audit_log al WHERE " . FAILED_SQL)->fetchColumn();
-$usersActive = (int) $pdo->query(
-    "SELECT COUNT(DISTINCT actor_user_id) FROM audit_log WHERE created_at >= NOW() - INTERVAL '7 days'"
-)->fetchColumn();
+// Summary cards follow the same search/filters as the table, so they always describe the rows
+// below it. Successful is Total minus Failed over that same set, so the two always add up to
+// Total and the percentages stay meaningful. With no filters, Users Active keeps its usual
+// "last 7 days" meaning; with filters, it counts the distinct users in the filtered rows.
+$filtered = $where !== '1=1';
+$summaryStmt = $pdo->prepare(
+    "SELECT COUNT(*) FILTER (WHERE " . FAILED_SQL . "), COUNT(DISTINCT al.actor_user_id)
+     FROM audit_log al LEFT JOIN users u ON u.id = al.actor_user_id
+     WHERE $where"
+);
+$summaryStmt->execute($params);
+[$failedCount, $usersInResults] = array_map('intval', $summaryStmt->fetch(PDO::FETCH_NUM));
+$successCount = $total - $failedCount;
+if ($filtered) {
+    $usersActive = $usersInResults;
+    $overallTotal = (int) $pdo->query('SELECT COUNT(*) FROM audit_log')->fetchColumn();
+} else {
+    $usersActive = (int) $pdo->query(
+        "SELECT COUNT(DISTINCT actor_user_id) FROM audit_log WHERE created_at >= NOW() - INTERVAL '7 days'"
+    )->fetchColumn();
+    $overallTotal = $total;
+}
 
 jsonResponse([
     'rows' => $rows,
@@ -248,9 +261,11 @@ jsonResponse([
     'modules' => $modules,
     'firstDate' => $firstDate,
     'summary' => [
-        'total' => $globalTotal,
+        'total' => $total,
         'successful' => $successCount,
         'failed' => $failedCount,
         'usersActive' => $usersActive,
+        'filtered' => $filtered,
+        'overallTotal' => $overallTotal,
     ],
 ]);
