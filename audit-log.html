@@ -344,7 +344,7 @@
               <button type="button" id="exportBtn" aria-describedby="exportNote"
                 class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm">
                 <img src="images/audit/icon-export.svg" alt="" class="w-4 h-4">
-                Export CSV
+                <span id="exportLabel">Export PDF</span>
               </button>
             </div>
           </div>
@@ -516,6 +516,7 @@
         const paginationBar = document.getElementById('paginationBar');
         const pageSizeSelect = document.getElementById('pageSizeSelect');
         let loadRequestId = 0;
+        let exportTotal = 0; // activities the Export button would put in the PDF (from the last load)
         const paginationSummary = document.getElementById('paginationSummary');
 
         const state = { page: 1, pageSize: 50, sort: 'desc', search: '', status: 'All', module: 'All', from: '', to: '' };
@@ -636,6 +637,8 @@
           renderRows(data.rows, data.summary.filtered);
           paginationSummary.innerHTML = countText(data.total, data.summary.filtered);
           exportNote.textContent = exportText(data.total, data.summary.filtered);
+          exportNote.classList.remove('text-red-600');
+          exportTotal = data.total;
           exportBtn.disabled = data.total === 0;
           renderPagination(data.page, data.totalPages);
           if (opts.focus) focusPager(opts.focus);
@@ -899,8 +902,41 @@
           load();
         });
 
-        exportBtn.addEventListener('click', () => {
-          window.location.href = 'api/audit-log.php?' + currentQuery({ export: 1 });
+        // The PDF is fetched (not opened as a link) so a refusal, like too many exports or too many
+        // rows, shows beside the button instead of raw JSON. Same download pattern as analytics.html.
+        const exportLabel = document.getElementById('exportLabel');
+        function showExportError(message) {
+          exportNote.textContent = message;
+          exportNote.classList.add('text-red-600');
+        }
+        exportBtn.addEventListener('click', async () => {
+          exportBtn.disabled = true;
+          exportLabel.textContent = 'Preparing…';
+          try {
+            const res = await fetch('api/audit-log.php?' + currentQuery({ export: 1 }));
+            if (res.status === 401) { window.location.replace('staff-login'); return; }
+            if (!res.ok) {
+              let message = 'Could not export the PDF. Please try again.';
+              try { message = (await res.json()).error || message; } catch (e) {}
+              showExportError(message);
+              return;
+            }
+            const match = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '');
+            const url = URL.createObjectURL(await res.blob());
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = match ? match[1] : 'audit-log.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          } catch (e) {
+            showExportError('Unable to reach the server. Please try again.');
+          } finally {
+            exportLabel.textContent = 'Export PDF';
+            // The filters may have changed while the PDF was being made.
+            exportBtn.disabled = exportTotal === 0 || filterFrom.getAttribute('aria-invalid') === 'true';
+          }
         });
 
         load();

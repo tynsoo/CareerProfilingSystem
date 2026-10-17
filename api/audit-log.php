@@ -1,8 +1,10 @@
 <?php
 
 require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/../lib/RateLimiter.php';
+require_once __DIR__ . '/../lib/AuditLogPdf.php';
 
-Rbac::requireAccess('rac', 'full'); // audit visibility lives alongside the other security/system admin tools
+$user = Rbac::requireAccess('rac', 'full'); // audit visibility lives alongside the other security/system admin tools
 
 $pdo = Database::get();
 
@@ -27,6 +29,8 @@ $actionLabels = [
     'create_faq' => 'Create FAQ',
     'update_faq' => 'Update FAQ',
     'delete_faq' => 'Delete FAQ',
+    'export_audit_log' => 'Exported audit log',
+    'export_audit_log_failed' => 'Audit log export failed',
 ];
 
 $roleLabels = [
@@ -34,6 +38,13 @@ $roleLabels = [
     'counselor' => 'Guidance Counselor',
     'student' => 'Student',
 ];
+
+// Category names as the page shows them (CATEGORY_LABEL in audit-log.html), for search and the PDF.
+$categoryLabels = ['user' => 'User Accounts', 'faq' => 'FAQ', 'security_policies' => 'Security Policies', 'security_rbac' => 'Access Permissions'];
+
+// The most activities one PDF may hold (about 175 pages). A bigger export has to be narrowed with the
+// filters first, which keeps the request quick and stops one click from copying the whole log.
+const MAX_EXPORT_ROWS = 5000;
 
 function actionLabel(string $action, array $labels): string
 {
@@ -64,7 +75,39 @@ function roleLabel(?string $role, array $labels): string
     return $labels[$role] ?? ucfirst($role);
 }
 
-function buildFilters(array $q, array $actionLabels, array $roleLabels): array
+function categoryLabel(?string $type, array $labels): string
+{
+    if ($type === null || $type === '') {
+        return '-';
+    }
+    return $labels[$type] ?? ucwords(str_replace('_', ' ', $type));
+}
+
+/**
+ * The filters of an export in words, for the PDF header and the audit entry. Reads each filter the
+ * same way buildFilters() applies it, so even a hand-made link prints what the rows really match.
+ */
+function exportFilterText(array $q, array $categoryLabels): string
+{
+    $date = fn(string $key): string => (is_string($q[$key] ?? null) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $q[$key])) ? $q[$key] : '';
+    $from = $date('from');
+    $to = $date('to');
+    $dates = ($from === '' && $to === '') ? 'Any time' : ($from !== '' ? $from : 'start') . ' to ' . ($to !== '' ? $to : 'today');
+    // As in buildFilters(): empty or "All" adds no condition, "Failed" keeps failures, anything else successes.
+    $s = $q['status'] ?? '';
+    $status = (empty($s) || $s === 'All') ? 'All' : ($s === 'Failed' ? 'Failed' : 'Success');
+    // Only a real category code is printed (target_type is VARCHAR(50)); anything else matches no rows.
+    $m = $q['module'] ?? '';
+    $category = (empty($m) || $m === 'All') ? 'All'
+        : ((is_string($m) && preg_match('/^[a-z_]{1,50}$/', $m)) ? categoryLabel($m, $categoryLabels) : 'Unknown (no matches)');
+    $search = is_string($q['search'] ?? null) ? trim($q['search']) : '';
+    if (mb_strlen($search) > 60) {
+        $search = mb_substr($search, 0, 60) . '...';
+    }
+    return "Dates: $dates | Status: $status | Category: $category | Search: " . ($search === '' ? 'none' : '"' . $search . '"');
+}
+
+function buildFilters(array $q, array $actionLabels, array $roleLabels, array $categoryLabels): array
 {
     $where = ['1=1'];
     $params = [];
@@ -93,8 +136,6 @@ function buildFilters(array $q, array $actionLabels, array $roleLabels): array
         $actions = $pdo->query('SELECT DISTINCT action FROM audit_log')->fetchAll(PDO::FETCH_COLUMN);
         $targets = $pdo->query('SELECT DISTINCT target_type FROM audit_log WHERE target_type IS NOT NULL')->fetchAll(PDO::FETCH_COLUMN);
         $students = $pdo->query('SELECT user_id, first_name_enc, last_name_enc FROM students')->fetchAll();
-        // Same names the page shows in the Category column.
-        $categoryLabels = ['user' => 'User Accounts', 'faq' => 'FAQ', 'security_policies' => 'Security Policies', 'security_rbac' => 'Access Permissions'];
 
         foreach ($terms as $t) {
             $has = fn(string $text): bool => mb_stripos($text, $t) !== false;
@@ -129,7 +170,7 @@ function buildFilters(array $q, array $actionLabels, array $roleLabels): array
             }
 
             // Category, as shown on screen.
-            $cats = array_values(array_filter($targets, fn($c) => $has($categoryLabels[$c] ?? ucwords(str_replace('_', ' ', $c)))));
+            $cats = array_values(array_filter($targets, fn($c) => $has(categoryLabel($c, $categoryLabels))));
             if ($cats) {
                 $or[] = 'al.target_type IN (' . implode(',', array_fill(0, count($cats), '?')) . ')';
                 array_push($params, ...$cats);
@@ -166,26 +207,73 @@ function buildFilters(array $q, array $actionLabels, array $roleLabels): array
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['export'])) {
-    // CSV export of everything matching the current filters (no pagination limit).
-    [$where, $params] = buildFilters($_GET, $actionLabels, $roleLabels);
+    // PDF of everything matching the current filters (up to MAX_EXPORT_ROWS). Every export is rate
+    // limited and written to the audit log with a reference code that is also printed on each page,
+    // so a printed or forwarded copy can be traced back to who exported it and when.
+
+    // The page downloads with fetch(), so its requests are same-origin. A link or redirect from another
+    // site (which still carries the session cookie under SameSite=Lax) is refused before it can use up
+    // an export or write a row in this person's name. Browsers that send no Sec-Fetch-Site pass.
+    if (($_SERVER['HTTP_SEC_FETCH_SITE'] ?? 'same-origin') !== 'same-origin') {
+        jsonResponse(['error' => 'Start the export from the Audit Log page.'], 403);
+    }
+    // Refusals by the rate limit are not logged: each refused click would add a row, and the
+    // exports before it are already in the log.
+    if (RateLimiter::tooMany('audit-export:' . (int) $user['id'], 10, 60)) {
+        jsonResponse(['error' => 'Too many exports in the last hour. Please try again later.'], 429);
+    }
+
+    $filters = exportFilterText($_GET, $categoryLabels);
+    [$where, $params] = buildFilters($_GET, $actionLabels, $roleLabels, $categoryLabels);
     $sql = "SELECT al.created_at, u.username, u.full_name, al.actor_role, al.action, al.target_type, al.ip_address, st.first_name_enc, st.last_name_enc
             FROM audit_log al LEFT JOIN users u ON u.id = al.actor_user_id LEFT JOIN students st ON st.user_id = al.actor_user_id
-            WHERE $where ORDER BY al.created_at DESC";
+            WHERE $where ORDER BY al.created_at DESC LIMIT " . (MAX_EXPORT_ROWS + 1);
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-
-    header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="audit-log-export.csv"');
-    $out = fopen('php://output', 'w');
-    fputcsv($out, ['Timestamp', 'User', 'Role', 'Action', 'Category', 'IP Address', 'Status'], escape: '\\');
-    foreach ($stmt as $row) {
-        $status = (str_ends_with($row['action'], FAILED_SUFFIX) || in_array($row['action'], ['login_lockout', 'login_shared_suspected'], true)) ? 'Failed' : 'Success';
-        fputcsv($out, [
-            (new DateTime($row['created_at']))->format('M j, Y g:i:s A'), actorLabel($row), roleLabel($row['actor_role'], $roleLabels),
-            actionLabel($row['action'], $actionLabels), $row['target_type'] ?? '-', $row['ip_address'], $status,
-        ], escape: '\\');
+    $found = $stmt->fetchAll();
+    if (count($found) > MAX_EXPORT_ROWS) {
+        // An attempt at a bulk copy of the log is worth a trace even though it was refused.
+        AuditLogger::log($user['id'], $user['role'], 'export_audit_log_failed', 'audit_log', null, 'Refused: more than ' . MAX_EXPORT_ROWS . ' activities. ' . $filters);
+        jsonResponse(['error' => 'Too many activities to export (more than ' . number_format(MAX_EXPORT_ROWS) . '). Narrow the filters and try again.'], 422);
     }
-    fclose($out);
+
+    // 8 random hex characters, so two exports on the same day practically never share a code.
+    $reference = 'EXP-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
+    $position = $user['role'] === 'counselor' ? ($user['positionLabel'] ?? $roleLabels['counselor']) : roleLabel($user['role'], $roleLabels);
+    try {
+        // Inside the try: actorLabel() decrypts student names, and Crypto::dec() throws on bad data.
+        $rows = [];
+        foreach ($found as $row) {
+            $rows[] = [
+                (new DateTime($row['created_at']))->format('M j, Y g:i:s A'),
+                actorLabel($row),
+                roleLabel($row['actor_role'], $roleLabels),
+                actionLabel($row['action'], $actionLabels),
+                categoryLabel($row['target_type'], $categoryLabels),
+                (string) ($row['ip_address'] ?? '-'),
+                (str_ends_with($row['action'], FAILED_SUFFIX) || in_array($row['action'], ['login_lockout', 'login_shared_suspected'], true)) ? 'Failed' : 'Success',
+            ];
+        }
+        $pdfBytes = AuditLogPdf::build($rows, [
+            'exportedBy' => ($user['displayName'] ?? $user['username']) . " ($position)",
+            'exportedAt' => (new DateTime())->format('M j, Y g:i A'),
+            'reference' => $reference,
+            'filters' => $filters,
+        ]);
+    } catch (Throwable $e) {
+        error_log('[audit-export] ' . $e->getMessage());
+        AuditLogger::log($user['id'], $user['role'], 'export_audit_log_failed', 'audit_log', $reference, 'PDF could not be built');
+        jsonResponse(['error' => 'The PDF could not be made. Please try again.'], 500);
+    }
+    // Filters stay in the encrypted detail (a search can contain a name); the reference goes in target_id.
+    AuditLogger::log($user['id'], $user['role'], 'export_audit_log', 'audit_log', $reference, 'PDF, ' . count($rows) . ' activities. ' . $filters);
+
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: attachment; filename="audit-log-' . date('Y-m-d') . '-' . $reference . '.pdf"');
+    header('Content-Length: ' . strlen($pdfBytes));
+    header('Cache-Control: no-store');
+    header('X-Export-Reference: ' . $reference);
+    echo $pdfBytes;
     exit;
 }
 
@@ -194,7 +282,7 @@ $page = max(1, (int) ($_GET['page'] ?? 1));
 $pageSize = min(100, max(1, (int) ($_GET['pageSize'] ?? 10)));
 $sort = ($_GET['sort'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 
-[$where, $params] = buildFilters($_GET, $actionLabels, $roleLabels);
+[$where, $params] = buildFilters($_GET, $actionLabels, $roleLabels, $categoryLabels);
 
 $countSql = "SELECT COUNT(*) FROM audit_log al LEFT JOIN users u ON u.id = al.actor_user_id WHERE $where";
 $countStmt = $pdo->prepare($countSql);
