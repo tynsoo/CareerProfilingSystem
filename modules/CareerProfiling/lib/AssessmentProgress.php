@@ -23,7 +23,7 @@ class AssessmentProgress
 
     /** Same order as api/assessment-questions.php, so answers[i] lines up with the i-th question. */
     private const ACTIVE_IDS_SQL = "SELECT id FROM assessment_questions WHERE is_active = TRUE
-        ORDER BY array_position(ARRAY['R','I','A','S','E','C'], dimension), order_index";
+        ORDER BY array_position(ARRAY['R','I','A','S','E','C'], dimension), order_index, id";
 
     private static ?bool $available = null;
 

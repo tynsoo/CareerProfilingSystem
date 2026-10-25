@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/ExamSchedule.php';
 require_once __DIR__ . '/../lib/RetakeRequest.php';
 require_once __DIR__ . '/../lib/AssessmentProgress.php';
+require_once __DIR__ . '/../lib/RiasecProfile.php';
 
 $user = Auth::requireLogin();
 if ($user['role'] !== 'student') {
@@ -46,4 +47,9 @@ jsonResponse([
         'C' => (int) $row['score_c'],
     ],
     'topTypes' => json_decode($row['top_types'], true),
+    // Ranked interests, ordered code and tie / flat-profile checks (modules/CareerProfiling/lib/RiasecProfile.php).
+    'riasecProfile' => RiasecProfile::derive([
+        'R' => $row['score_r'], 'I' => $row['score_i'], 'A' => $row['score_a'],
+        'S' => $row['score_s'], 'E' => $row['score_e'], 'C' => $row['score_c'],
+    ]),
 ]);

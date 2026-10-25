@@ -19,14 +19,13 @@ class TwoFactor
     private const EXPIRY_MINUTES = 5;
     private const MAX_ATTEMPTS = 5;
 
-    /**
-     * Whether a staff password change needs the emailed code. Always: it cannot be switched off (secure by default), so
-     * someone using an account left signed in cannot change its password and lock the owner out. The old twoFactor
-     * setting is no longer read. ($pdo kept for callers.)
-     */
+    /** Whether the twoFactor security policy is currently turned on. */
     public static function isEnabled(PDO $pdo): bool
     {
-        return true;
+        $stmt = $pdo->prepare("SELECT value FROM security_policies WHERE key = 'twoFactor'");
+        $stmt->execute();
+        $value = $stmt->fetchColumn();
+        return $value === 'true';
     }
 
     /**

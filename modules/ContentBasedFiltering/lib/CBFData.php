@@ -6,7 +6,7 @@ require_once __DIR__ . '/RecommendationPipeline.php';
 
 /**
  * Loads the inputs of the CBF engine from the existing tables, so that
- * api/worksheet-submit.php and db/cbf_debug.php both build
+ * modules/CareerProfiling/api/worksheet-submit.php and db/cbf_debug.php both build
  * the student profile and the program dataset the same way.
  *
  *   Student profile  <- assessments (latest attempt: score_r .. score_c) -> used by the CBF
@@ -99,6 +99,54 @@ class CBFData
     }
 
     /**
+     * Recompute every student who has a Career Worksheet with the current program codes and
+     * settings: their latest RIASEC assessment and latest worksheet, saved as a new
+     * `recommendations` row each (older rows stay as history). Used after a program's Holland code
+     * changes (modules/CareerDataset/api/programs.php) and by db/recompute_recommendations.php.
+     * Each student is saved in a transaction of its own; one failure does not stop the others.
+     * Sends nothing to students.
+     *
+     * @param callable|null $report called per student: fn(string $schoolId, ?array $saved, ?string $error)
+     * @return array{recomputed: int, failed: int}
+     */
+    public static function recomputeAll(PDO $pdo, ?callable $report = null): array
+    {
+        $students = $pdo->query(
+            "SELECT s.user_id, s.school_id, a.id AS assessment_id,
+                    (SELECT w.id FROM worksheets w WHERE w.student_id = s.user_id ORDER BY w.submitted_at DESC LIMIT 1) AS worksheet_id
+             FROM students s JOIN assessments a ON a.student_id = s.user_id AND a.is_latest = TRUE
+             ORDER BY s.school_id"
+        )->fetchAll();
+        $done = 0;
+        $failed = 0;
+        foreach ($students as $st) {
+            if ($st['worksheet_id'] === null) {
+                continue; // no worksheet yet -> no recommendation to refresh
+            }
+            $pdo->beginTransaction();
+            try {
+                $profile = self::studentProfile($pdo, (int) $st['user_id']);
+                $saved = self::saveRecommendation(
+                    $pdo, (int) $st['user_id'], $profile, $profile['statedProgramId'], (int) $st['assessment_id'], (int) $st['worksheet_id']
+                );
+                $pdo->commit();
+                $done++;
+                if ($report) {
+                    $report($st['school_id'], $saved, null);
+                }
+            } catch (Throwable $e) {
+                $pdo->rollBack();
+                $failed++;
+                error_log('[recompute] ' . $st['school_id'] . ': ' . $e->getMessage());
+                if ($report) {
+                    $report($st['school_id'], null, $e->getMessage());
+                }
+            }
+        }
+        return ['recomputed' => $done, 'failed' => $failed];
+    }
+
+    /**
      * Run the recommendation sources (modules/ContentBasedFiltering/lib/RecommendationPipeline.php: CBF, worksheet,
      * WEKA prediction model) for one student and save the result as a new
      * `recommendations` row (earlier rows are kept as history). Also raises the
@@ -131,6 +179,7 @@ class CBFData
         $scoresForStorage = array_map(fn($r) => [
             'programId' => $r['id'], 'hollandCode' => $r['hollandCode'], 'courseVector' => $r['courseVector'],
             'dotProduct' => $r['dotProduct'], 'courseMagnitude' => $r['courseMagnitude'], 'cosine' => $r['cosine'],
+            'letterOrder' => $r['letterOrder'],   // 1st/2nd/3rd letter matches (orders ties only)
             'studentVector' => $cbf['studentVector'], 'studentMagnitude' => $cbf['studentMagnitude'],
         ], $cbf['results']);
 

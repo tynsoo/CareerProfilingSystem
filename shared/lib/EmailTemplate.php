@@ -13,25 +13,6 @@ class EmailTemplate
         string $footerNote = "If you didn't request this, you can safely ignore this email."): string
     {
         $year = date('Y');
-        $actionRows = $link === '' ? ($expiryNote === '' ? '' : <<<HTML
-<tr>
-<td style="padding:20px 32px 28px 32px;">
-<p style="margin:0;font-size:12px;color:#94a3b8;">{$expiryNote}</p>
-</td>
-</tr>
-HTML) : <<<HTML
-<tr>
-<td style="padding:8px 32px 8px 32px;text-align:center;">
-<a href="{$link}" style="display:inline-block;background-color:#ed1c24;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:14px 36px;border-radius:8px;">{$ctaLabel}</a>
-</td>
-</tr>
-<tr>
-<td style="padding:20px 32px 28px 32px;">
-<p style="margin:0 0 6px 0;font-size:12px;color:#94a3b8;">{$expiryNote} If the button above doesn't work, copy and paste this link into your browser:</p>
-<p style="margin:0;font-size:12px;word-break:break-all;"><a href="{$link}" style="color:#ed1c24;text-decoration:none;">{$link}</a></p>
-</td>
-</tr>
-HTML;
         return <<<HTML
 <!DOCTYPE html>
 <html lang="en">
@@ -52,7 +33,17 @@ HTML;
 <div style="font-size:14px;line-height:1.65;color:#475569;">{$bodyHtml}</div>
 </td>
 </tr>
-{$actionRows}
+<tr>
+<td style="padding:8px 32px 8px 32px;text-align:center;">
+<a href="{$link}" style="display:inline-block;background-color:#ed1c24;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:14px 36px;border-radius:8px;">{$ctaLabel}</a>
+</td>
+</tr>
+<tr>
+<td style="padding:20px 32px 28px 32px;">
+<p style="margin:0 0 6px 0;font-size:12px;color:#94a3b8;">{$expiryNote} If the button above doesn't work, copy and paste this link into your browser:</p>
+<p style="margin:0;font-size:12px;word-break:break-all;"><a href="{$link}" style="color:#ed1c24;text-decoration:none;">{$link}</a></p>
+</td>
+</tr>
 <tr>
 <td style="background-color:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;">
 <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">Center for Guidance and Counseling &mdash; Mapúa MCL<br>
@@ -70,27 +61,13 @@ HTML;
 
     /**
      * Large-code display shell — used for the password-change verification
-     * code (modules/Authentication/lib/TwoFactor.php). The code itself is what the user needs, shown large
-     * and monospaced so it's easy to read and re-type. With $link, a button under the code opens the page
-     * where the code is entered (the staff account setup email).
+     * code (modules/Authentication/lib/TwoFactor.php). Unlike render() above, there's no link/CTA
+     * to click; the code itself is what the user needs, shown large and
+     * monospaced so it's easy to read and re-type.
      */
-    public static function renderCode(string $heading, string $bodyHtml, string $code, string $expiryNote,
-        string $ctaLabel = '', string $link = ''): string
+    public static function renderCode(string $heading, string $bodyHtml, string $code, string $expiryNote): string
     {
         $year = date('Y');
-        $buttonRow = $link === '' ? '' : <<<HTML
-<tr>
-<td style="padding:0 32px 12px 32px;text-align:center;">
-<a href="{$link}" style="display:inline-block;background-color:#ed1c24;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:14px 36px;border-radius:8px;">{$ctaLabel}</a>
-</td>
-</tr>
-<tr>
-<td style="padding:0 32px 24px 32px;">
-<p style="margin:0 0 6px 0;font-size:12px;color:#94a3b8;text-align:center;">If the button doesn't work, copy and paste this link into your browser:</p>
-<p style="margin:0;font-size:12px;word-break:break-all;text-align:center;"><a href="{$link}" style="color:#ed1c24;text-decoration:none;">{$link}</a></p>
-</td>
-</tr>
-HTML;
         $codeSpaced = implode(' ', str_split($code)); // "482913" -> "4 8 2 9 1 3", easier to read at a glance
         return <<<HTML
 <!DOCTYPE html>
@@ -122,7 +99,6 @@ HTML;
 <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">{$expiryNote}</p>
 </td>
 </tr>
-{$buttonRow}
 <tr>
 <td style="background-color:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;">
 <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">Center for Guidance and Counseling &mdash; Mapúa MCL<br>

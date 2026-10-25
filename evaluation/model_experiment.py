@@ -356,7 +356,7 @@ def main():
     scales = (["scores"] if "scores" in encs else []) + ["top3"]
     cbf_variants = [(sc, enc) for sc in scales for enc in ("ranksum", "binary", "proposed", "steep", "flat")]
     cbf_train = {v: evaluate([cbf_scores(r, *v) for r in train], y_train, k) for v in cbf_variants}
-    current_cbf = (scales[0], "ranksum")  # what the web app does
+    current_cbf = (scales[0], "binary")  # what the web app does (rank-sum 3-2-1 is a comparison only; not approved)
     best_cbf = max(cbf_variants, key=lambda v: cbf_train[v]["MRR"])
 
     # Best deployable classifier (chosen on CV MRR only).
@@ -460,7 +460,7 @@ def main():
     if best_clf is not None:
         alg, _, opts, enc = configs[best_clf]
         out.append(f"**Selected on train:** CBF variant = student {best_cbf[0]}, course {best_cbf[1]} "
-                   f"(the web app uses student {current_cbf[0]}, course rank-sum 3-2-1); "
+                   f"(the web app uses student {current_cbf[0]}, course binary); "
                    f"deployable classifier = {alg} {' '.join(opts)} on '{enc}' features; hybrid w = {hybrid_w:.1f}.")
         base = [t for g, n, s, c, t in rows if g == "CBF" and "(web app)" in n][0]
         clf_t = [t for g, n, s, c, t in rows if n == f"{alg} [{enc}]"][0]
@@ -483,7 +483,7 @@ def main():
             out.append(f"\nThe hybrid weight chosen on train is w = {hybrid_w:.0f}: combining the two did not improve the "
                        f"cross-validated MRR, so the simpler {'CBF' if hybrid_w == 1 else 'classifier'} should be kept.")
     out.append("\nNotes: Top1/Hit/MRR/NDCG are tie-aware expected values (CBF ties are common: the 32 programs "
-               "have only 11 distinct binary course vectors, 22 with the rank-sum weights). With one relevant course per student, MAP = MRR, "
+               "have only 11 distinct binary course vectors, 22 with the rank-sum weights, which are not used). With one relevant course per student, MAP = MRR, "
                f"Recall@{k} = Hit@{k} and Precision@{k} = Hit@{k}/{k}. macroF1/kappa use each method's single top "
                "course (CBF ties broken by catalogue order). 'scores' features are a reference only: the web app "
                "can use them only if the dataset came from the same instrument and scale.")

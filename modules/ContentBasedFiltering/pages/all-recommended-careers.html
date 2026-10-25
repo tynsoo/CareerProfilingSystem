@@ -7,7 +7,6 @@
 <title>CBF Candidate Programs — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -40,7 +39,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -111,9 +110,9 @@
           <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Programs Most Similar to Students' RIASEC Profiles</h1>
           <p class="text-sm text-slate-500 mt-1">How many students have each program as a best RIASEC match.</p>
         </div>
-        <div class="pp-filter-search w-full sm:w-72">
-          <img src="images/admin/icon-search2.svg" alt="">
-          <input id="searchInput" type="text" placeholder="Search programs..." aria-label="Search programs" class="pp-filter-input">
+        <div class="relative w-full sm:w-72">
+          <img src="images/analytics/icon-filter.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3">
+          <input id="searchInput" type="text" placeholder="Search careers..." aria-label="Search careers" class="w-full bg-white border border-slate-300 rounded-md pl-9 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400">
         </div>
       </div>
 
@@ -137,19 +136,30 @@
           </table>
         </div>
         <div class="border-t border-slate-200 px-4 py-4">
-          <p id="resultCount" class="text-sm text-slate-500"></p>
+          <p id="resultCount" class="text-sm text-slate-500">Showing 25 of 25 careers</p>
         </div>
       </div>
 
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
         <span>&middot;</span>
         <a href="accessibility" class="hover:text-gray-600 hover:underline">Accessibility</a>
       </footer>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
   </div>
 </div>
 
@@ -167,7 +177,25 @@
     headerAvatarWrap.innerHTML = `<img src="${currentUser.avatarUrl}" alt="" class="w-full h-full object-cover">`;
   }
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -220,10 +248,10 @@
       <tr>
         <td class="px-5 py-4 text-sm text-slate-600">${index + 1}</td>
         <td class="px-5 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">${escapeHtml(career.title)}</td>
-        <td class="px-5 py-4">${PP.college.badge(career.collegeCode)}</td>
+        <td class="px-5 py-4 text-sm text-slate-500">${escapeHtml(career.collegeCode)}</td>
         <td class="px-5 py-4"><div class="flex items-center gap-3">
           <span class="text-sm text-slate-600 w-8">${career.students}</span>
-          <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full" style="width:${career.width}%;background:${PP.college.color(career.collegeCode)}"></div></div>
+          <div class="w-32 h-1.5 rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[#19427b]" style="width:${career.width}%"></div></div>
         </div></td>
         <td class="px-5 py-4 text-sm text-slate-600">${career.percent.toFixed(1)}%</td>
       </tr>`;
@@ -231,25 +259,17 @@
 
   function render(list) {
     const tbody = document.getElementById('careersTableBody');
-    const empty = CAREERS.length ? 'No programs match your search.' : 'No students have matched to any program yet.';
     tbody.innerHTML = list.length
       ? list.map((c, i) => renderRow(c, i)).join('')
-      : '<tr><td colspan="5" class="px-5 py-12 text-center text-sm text-slate-500">' + empty + '</td></tr>';
+      : '<tr><td colspan="5" class="px-5 py-12 text-center text-sm text-slate-500">No students have matched to any program yet.</td></tr>';
     document.getElementById('resultCount').textContent = `Showing ${list.length} of ${CAREERS.length} programs`;
   }
 
-  // The search is kept in this tab (sessionStorage, never the page address), so Reload and Back keep it
-  // (PP.listState in js/ui-state.js). It filters the list already loaded, so no request per key.
-  const listState = PP.listState({ search: '' }, ['search']);
-  const searchInput = document.getElementById('searchInput');
-  function applySearch() {
-    const typed = searchInput.value.trim();
-    listState.save({ search: typed });
-    const q = typed.toLowerCase();
-    render(q ? CAREERS.filter(c => c.title.toLowerCase().includes(q)) : CAREERS);
-  }
-  searchInput.value = listState.read().search;
-  searchInput.addEventListener('input', applySearch);
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    const filtered = q ? CAREERS.filter(c => c.title.toLowerCase().includes(q)) : CAREERS;
+    render(filtered);
+  });
 
   (async function loadData() {
     const careersBody = document.getElementById('careersTableBody');
@@ -281,7 +301,7 @@
       })
       .sort((a, b) => b.students - a.students);
 
-    applySearch(); // shows everything, or the search kept from before a Reload
+    render(CAREERS);
   })();
 })();
 </script>

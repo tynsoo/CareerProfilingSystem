@@ -124,11 +124,11 @@
             '<a href="' + escapeHtml(item.link) + '" class="flex items-start gap-3 px-4 py-3">' +
             iconFor(item.type) +
             '<div class="min-w-0 flex-1">' + heading +
-            '<p class="text-xs text-gray-500 mt-1">' + timeAgo(item.ts) + '</p></div>' +
+            '<p class="text-xs text-gray-400 mt-1">' + timeAgo(item.ts) + '</p></div>' +
             (isUnread ? '<span class="mt-2 w-2 h-2 rounded-full bg-[#ed1c24] shrink-0" aria-label="Unread"></span>' : '') +
             '</a></li>';
         }).join('')
-      : '<li class="px-4 py-8 text-center text-sm text-gray-500">You\'re all caught up.</li>';
+      : '<li class="px-4 py-8 text-center text-sm text-gray-400">You\'re all caught up.</li>';
   }
 
   function load() {
@@ -136,7 +136,7 @@
       .then(function (res) { return res.ok ? res.json() : Promise.reject(); })
       .then(render)
       .catch(function () {
-        list.innerHTML = '<li class="px-4 py-6 text-center text-sm text-gray-500">Unable to load notifications.' +
+        list.innerHTML = '<li class="px-4 py-6 text-center text-sm text-gray-400">Unable to load notifications.' +
           ' <button type="button" id="notifRetry" class="text-[#ed1c24] font-medium hover:underline">Try again</button></li>';
         if (countLabel) countLabel.textContent = '';
         var retry = document.getElementById('notifRetry');

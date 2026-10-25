@@ -108,4 +108,4 @@ if ($noBranch) {
 $model = ['version' => $version, 'source' => basename($file), 'imported_at' => date('c'), 'features' => 'top3', 'tree' => $tree];
 file_put_contents(PredictionModel::MODEL_FILE, json_encode($model, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
 echo "\nSaved to config/prediction_model.json ($version).\n"
-    . "Next: check config/cbf.php decision_tree (enabled, show_to_students), then run php db/recompute_recommendations.php\n";
+    . "Next: check config/cbf.php decision_tree.enabled, then run php db/recompute_recommendations.php\n";

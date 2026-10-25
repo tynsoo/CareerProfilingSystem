@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/QuestionBank.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditChange.php';
+require_once __DIR__ . '/../lib/AssessmentVersion.php';
 
 $pdo = Database::get();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -36,9 +37,6 @@ if ($method === 'GET') {
     $user = Auth::requireLogin();
     $isStaff = $user['role'] !== 'student';
     $includeInactive = $isStaff && isset($_GET['all']); // the staff question-bank page passes ?all=1
-    if ($includeInactive) {
-        Rbac::requireAccess('questionBank', 'limited'); // the whole bank, hidden questions included: Question Bank (permission table)
-    }
     $balance = QuestionBank::balance(activeCounts($pdo));
 
     // Students only get a question set that is ready: the same number of active questions for every type.
@@ -46,11 +44,25 @@ if ($method === 'GET') {
         jsonResponse(['questions' => [], 'unavailable' => true, 'error' => 'The assessment is being updated by the Guidance Office. Please check back soon.'], 409);
     }
 
+    // Students get the immutable version (question set) of exactly these questions; the submission
+    // is scored only against this set (modules/CareerProfiling/api/assessment-submit.php, modules/CareerProfiling/lib/AssessmentVersion.php).
+    if (!$isStaff) {
+        try {
+            $questions = AssessmentVersion::activeQuestions($pdo);
+            $set = AssessmentVersion::setFor($pdo, $questions);
+        } catch (PDOException $e) {
+            error_log('[assessment-questions] ' . $e->getMessage() . ' (run php db/migrate_add_assessment_versions.php)');
+            jsonResponse(['questions' => [], 'unavailable' => true, 'error' => 'The assessment is being updated by the Guidance Office. Please check back soon.'], 503);
+        }
+        $_SESSION['assessmentQuestionSetId'] = $set['id'];
+        jsonResponse(['questions' => array_map(fn($q) => $q + ['isActive' => true], $questions), 'questionSetId' => $set['id']]);
+    }
+
     $sql = 'SELECT id, dimension, order_index, question_text_enc, is_active FROM assessment_questions';
     if (!$includeInactive) {
         $sql .= ' WHERE is_active = TRUE';
     }
-    $sql .= " ORDER BY array_position(ARRAY['R','I','A','S','E','C'], dimension), order_index";
+    $sql .= " ORDER BY array_position(ARRAY['R','I','A','S','E','C'], dimension), order_index, id";
     $rows = $pdo->query($sql)->fetchAll();
 
     $questions = array_map(fn($r) => [
@@ -69,7 +81,7 @@ if ($method === 'GET') {
 }
 
 if ($method === 'PUT') {
-    Rbac::requireAccess('questionBank', 'full');
+    Rbac::requireAccess('rac', 'full');
 
     $body = readJsonBody();
     $id = (int) ($body['id'] ?? 0);
@@ -111,7 +123,7 @@ if ($method === 'PUT') {
 }
 
 if ($method === 'POST') {
-    $user = Rbac::requireAccess('questionBank', 'full');
+    $user = Rbac::requireAccess('rac', 'full');
     $body = readJsonBody();
     $action = (string) ($body['action'] ?? 'add');
 
@@ -176,7 +188,7 @@ if ($method === 'POST') {
 }
 
 if ($method === 'DELETE') {
-    $user = Rbac::requireAccess('questionBank', 'full');
+    $user = Rbac::requireAccess('rac', 'full');
     $body = readJsonBody();
     $id = (int) ($body['id'] ?? 0);
     if ($id <= 0) {

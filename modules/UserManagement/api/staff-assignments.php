@@ -4,11 +4,11 @@ require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../StudentManagement/lib/Sections.php';
 require_once __DIR__ . '/../../../shared/lib/AcademicYear.php';
 
-// Account Management: sections are assigned to each guidance counselor / facilitator by whoever holds Full on Manage staff
-// accounts (permission table, Security Configuration): the Head of Guidance by default. A staff member then sees only those
-// sections' students (modules/UserManagement/lib/StaffScope.php); with nothing assigned they see everyone, so nobody may
-// change their own sections (clearing them would widen what they see).
-$user = Rbac::requireAccess('staffAccounts', $_SERVER['REQUEST_METHOD'] === 'GET' ? 'limited' : 'full');
+// Account Management: sections are assigned to each guidance counselor / facilitator by whoever holds the "Guidance Counselor"
+// permission (Security Configuration). It is its own permission, separate from Staff Accounts (approving sign-ups): the
+// Head of Guidance has it, nobody else by default. A staff member then sees only those sections' students
+// (modules/UserManagement/lib/StaffScope.php); with nothing assigned they see everyone.
+$user = Rbac::requireAccess('counselor', $_SERVER['REQUEST_METHOD'] === 'GET' ? 'limited' : 'full');
 $pdo = Database::get();
 
 /** Every section that can be assigned: the active sections list plus any section on this year's roster. */
@@ -52,10 +52,6 @@ if (!is_array($sections)) {
     jsonResponse(['success' => false, 'error' => 'Invalid sections.'], 400);
 }
 
-if ($userId === (int) $user['id']) {
-    jsonResponse(['success' => false, 'error' => 'You cannot change your own sections. Ask the Head of Guidance.'], 403);
-}
-
 $exists = $pdo->prepare("SELECT 1 FROM users WHERE id = ? AND role = 'counselor'");
 $exists->execute([$userId]);
 if (!$exists->fetch()) {
@@ -91,5 +87,5 @@ try {
     jsonResponse(['success' => false, 'error' => 'Could not save the sections. Has the staff_sections table been created?'], 500);
 }
 
-AuditLogger::log($user['id'], $user['role'], 'assign_staff_sections', 'user', (string) $userId, count($clean) . ' section(s): ' . implode(', ', array_map(fn($s) => $s['strand'] . ' ' . $s['section'], $clean)));
+AuditLogger::log($user['id'], 'admin', 'assign_staff_sections', 'user', (string) $userId, count($clean) . ' section(s): ' . implode(', ', array_map(fn($s) => $s['strand'] . ' ' . $s['section'], $clean)));
 jsonResponse(['success' => true, 'sections' => array_values($clean)]);

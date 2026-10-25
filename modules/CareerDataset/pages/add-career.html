@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="js/csrf.js"></script><script src="js/ui-state.js"></script>
-<title>Add Program — Program Mapping Crosswalk — Career Profiling System</title>
+<title>Add Career — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   body{ font-family:'Inter', sans-serif; }
+  select{ appearance:none; -webkit-appearance:none; }
 </style>
 <link rel="stylesheet" href="css/motion.css">
 </head>
@@ -39,7 +39,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -102,17 +102,12 @@
 
       <!-- Page Header -->
       <div class="flex items-center gap-3 mb-6">
-        <a href="career-dataset" class="text-slate-500 hover:text-slate-600">
-          <img src="images/admin/icon-chevron-left.svg" alt="Back to Program Mapping Crosswalk" class="w-2.5 h-4">
+        <a href="career-dataset" class="text-slate-400 hover:text-slate-600">
+          <img src="images/admin/icon-chevron-left.svg" alt="Back" class="w-2.5 h-4">
         </a>
         <div>
-          <nav aria-label="Breadcrumb" class="text-xs text-slate-500 mb-1">
-            <a href="career-dataset" class="hover:underline">Program Mapping Crosswalk</a>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">Add Program</span>
-          </nav>
           <h1 class="text-2xl font-bold text-slate-900">Add Program</h1>
-          <p class="text-sm text-slate-500 mt-1">Add a new MMCL program to the Program Mapping Crosswalk.</p>
+          <p class="text-sm text-slate-500 mt-1">Add a new MMCL program to the career dataset.</p>
         </div>
       </div>
 
@@ -149,17 +144,17 @@
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-slate-600">Related SHS Strands <span class="text-slate-500">(optional)</span></label>
+          <label class="text-xs font-medium text-slate-600">Related SHS Strands <span class="text-slate-400">(optional; for reference only, not used in the recommendations)</span></label>
           <div id="strandsInput" class="flex flex-wrap gap-x-4 gap-y-2"></div>
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-xs font-medium text-slate-600">Description <span class="text-slate-500">(optional)</span></label>
+          <label class="text-xs font-medium text-slate-600">Description <span class="text-slate-400">(optional)</span></label>
           <textarea id="descriptionInput" rows="3" maxlength="1000" placeholder="A short description of what this program covers and where it leads." class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-xs font-medium text-slate-600">Careers <span class="text-slate-500">(optional, one per line, up to 8)</span></label>
+          <label class="text-xs font-medium text-slate-600">Careers <span class="text-slate-400">(optional, one per line, up to 8)</span></label>
           <textarea id="careersInput" rows="4" placeholder="Software Engineer&#10;Data Analyst&#10;Systems Analyst" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
         </div>
 
@@ -173,7 +168,7 @@
 
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -183,18 +178,23 @@
   </div>
 </div>
 
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (async function() {
   const sessionData = await (await fetch('api/session.php')).json();
   const currentUser = sessionData.user;
   if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
     window.location.replace('staff-login');
-    return;
-  }
-  // Adding a program needs Full on Program Mapping Crosswalk; View Only goes back to the list instead of a form it cannot
-  // save (api/programs.php refuses it too).
-  if (!PP.may(currentUser, 'programs', 'full')) {
-    window.location.replace('career-dataset');
     return;
   }
 
@@ -208,7 +208,22 @@
   if (nameEl) nameEl.textContent = currentUser.displayName || currentUser.username;
   if (roleEl) roleEl.textContent = currentUser.positionLabel || roleLabels[currentUser.role] || currentUser.role;
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', function() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() { window.location.href = 'staff-login'; });
+  });
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -243,6 +258,8 @@
     const res = await fetch('api/programs.php?meta=1');
     if (!res.ok) throw new Error('bad status');
     const data = await res.json();
+    // Only staff with Full access to the Career Dataset add programs; everyone else goes back to the list.
+    if (data.canEdit !== true) { window.location.replace('career-dataset'); return; }
     (data.colleges || []).forEach(function(c) {
       const opt = document.createElement('option');
       opt.value = c.id;
@@ -273,6 +290,7 @@
           hollandCode: document.getElementById('hollandCodeInput').value.trim(),
           description: document.getElementById('descriptionInput').value.trim(),
           careers: document.getElementById('careersInput').value.split('\n'),
+          relatedStrands: Array.from(document.querySelectorAll('.strand-cb:checked')).map(function(cb) { return cb.value; }),
         })
       });
       const data = await res.json();

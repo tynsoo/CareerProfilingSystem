@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/QuestionBank.php';
+require_once __DIR__ . '/../lib/AssessmentVersion.php';
+require_once __DIR__ . '/../lib/RiasecProfile.php';
 require_once __DIR__ . '/../lib/RetakeRequest.php';
 require_once __DIR__ . '/../lib/AssessmentProgress.php';
 
@@ -14,7 +16,7 @@ if ($user['role'] !== 'student') {
     jsonResponse(['success' => false, 'error' => 'Only students can submit the RIASEC assessment.'], 403);
 }
 // Never trust the client to have honestly gone through the access-code gate in
-// assessment-instructions.html. The unlock is kept in the database (modules/CareerProfiling/lib/AssessmentProgress.php,
+// modules/CareerProfiling/pages/assessment-instructions.html. The unlock is kept in the database (modules/CareerProfiling/lib/AssessmentProgress.php,
 // valid until the session ends plus a short grace period) and in the session.
 $access = AssessmentProgress::access(Database::get(), (int) $user['id']);
 if ($access['closed']) {
@@ -26,48 +28,41 @@ if (!$access['unlocked'] && empty($_SESSION['assessmentUnlocked'])) {
 
 $body = readJsonBody();
 $answers = $body['answers'] ?? null;
+$setId = $body['questionSetId'] ?? null;
 
 if (!is_array($answers) || count($answers) === 0) {
     jsonResponse(['success' => false, 'error' => 'No answers were sent.'], 400);
 }
-foreach ($answers as $a) {
-    if (!is_int($a) || $a < 1 || $a > 5) {
-        jsonResponse(['success' => false, 'error' => 'Each answer must be an integer from 1 to 5.'], 400);
-    }
-}
-
-$pdo = Database::get();
-
-// Same ordering as api/assessment-questions.php's GET, so answers[i] lines up with questions[i].
-$questions = $pdo->query(
-    "SELECT dimension FROM assessment_questions WHERE is_active = TRUE
-     ORDER BY array_position(ARRAY['R','I','A','S','E','C'], dimension), order_index"
-)->fetchAll(PDO::FETCH_COLUMN);
-
-// Staff can add and remove questions, so the count is whatever is active now. The assessment is only open while every
-// type has the same number of active questions; refuse a submission that was taken against a different set.
-$perType = array_count_values($questions);
-if (!QuestionBank::balance($perType)['ok']) {
-    jsonResponse(['success' => false, 'error' => 'The assessment is being updated by the Guidance Office. Please try again later.'], 409);
-}
-if (count($answers) !== count($questions)) {
+// Answers must name the question set they were given for (modules/CareerProfiling/lib/AssessmentVersion.php).
+// A page loaded before versioning sends a plain list of numbers: it cannot prove which questions it
+// showed. The set is checked below against the active questions, not against the PHP session, so a
+// student who signs in again and continues (saved progress) can still submit.
+if (!is_int($setId)) {
     jsonResponse(['success' => false, 'error' => 'The questions were updated while you were answering. Please start the assessment again.'], 409);
 }
 
+$pdo = Database::get();
+try {
+    $set = AssessmentVersion::loadSet($pdo, $setId);
+    $current = AssessmentVersion::fingerprint(AssessmentVersion::activeQuestions($pdo));
+} catch (Throwable $e) {
+    error_log('[assessment-submit] ' . $e->getMessage());
+    jsonResponse(['success' => false, 'error' => 'Failed to save assessment. Please try again.'], 500);
+}
+// Scored only against the set the student was shown, and only while it is still the active one.
+if ($set === null || $set['fingerprint'] !== $current) {
+    jsonResponse(['success' => false, 'error' => 'The questions were updated while you were answering. Please start the assessment again.'], 409);
+}
+try {
+    $scored = AssessmentVersion::score($set['questions'], $answers);
+} catch (InvalidArgumentException $e) {
+    jsonResponse(['success' => false, 'error' => $e->getMessage()], 400);
+}
 // Each type's score is put on the same 10-50 scale every earlier result used (50 = 5 on every question of that type).
-$raw = ['R' => 0, 'I' => 0, 'A' => 0, 'S' => 0, 'E' => 0, 'C' => 0];
-foreach ($questions as $i => $dimension) {
-    $raw[$dimension] += $answers[$i];
-}
-$totals = [];
-foreach ($raw as $dimension => $sum) {
-    $totals[$dimension] = QuestionBank::scaleScore($sum, (int) ($perType[$dimension] ?? 0));
-}
+$totals = $scored['scores'];
 
-$labels = ['R' => 'Realistic', 'I' => 'Investigative', 'A' => 'Artistic', 'S' => 'Social', 'E' => 'Enterprising', 'C' => 'Conventional'];
-$ranked = $totals;
-arsort($ranked);
-$topTypes = array_map(fn($code) => $labels[$code], array_slice(array_keys($ranked), 0, 3));
+// Top three types, highest first; equal scores in R, I, A, S, E, C order (modules/CareerProfiling/lib/RiasecProfile.php).
+$topTypes = array_map(fn($code) => RiasecProfile::NAMES[$code], array_slice(RiasecProfile::order($totals), 0, 3));
 
 $studentId = (int) $user['id'];
 
@@ -91,13 +86,15 @@ try {
     $attemptNumber = (int) $attemptStmt->fetchColumn();
 
     $insert = $pdo->prepare(
-        'INSERT INTO assessments (student_id, attempt_number, is_latest, score_r, score_i, score_a, score_s, score_e, score_c, top_types)
-         VALUES (?, ?, TRUE, ?, ?, ?, ?, ?, ?, ?) RETURNING id'
+        'INSERT INTO assessments (student_id, attempt_number, is_latest, score_r, score_i, score_a, score_s, score_e, score_c, top_types,
+                                  question_set_id, answers_enc, scoring_version)
+         VALUES (?, ?, TRUE, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id'
     );
     $insert->execute([
         $studentId, $attemptNumber,
         $totals['R'], $totals['I'], $totals['A'], $totals['S'], $totals['E'], $totals['C'],
         json_encode($topTypes),
+        $set['id'], Crypto::enc(json_encode($scored['answers'])), AssessmentVersion::SCORING_VERSION,
     ]);
     $assessmentId = (int) $insert->fetchColumn();
 

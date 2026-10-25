@@ -9,7 +9,8 @@
 //    Only BS Tourism Management (EAS -> SEA) and BS Computer Engineering
 //    (RIC -> ICR) change on a database seeded from the crosswalk.
 // Programs not in the list (e.g. added later by an admin) are left untouched.
-// Safe to run more than once.
+// Safe to run more than once, but it resets these programs to the codes below: after staff have
+// changed a code on the Career Dataset page, running it again would undo that change.
 
 require_once __DIR__ . '/../shared/lib/Database.php';
 require_once __DIR__ . '/../modules/Encryption/lib/Crypto.php';

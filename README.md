@@ -42,7 +42,7 @@ modules/
   AuditLog/               Tamper-evident audit log, retention, PDF export
   SecurityConfiguration/  Security Configuration page and public settings
 shared/
-  api/_bootstrap.php      Loaded by every endpoint: session, CSRF check, JSON errors
+  shared/api/_bootstrap.php      Loaded by every endpoint: session, CSRF check, JSON errors
   lib/                    Classes every module uses (Database, Mailer, EmailTemplate, PdfWriter, Xlsx*, RateLimiter, ...)
   pages/                  Privacy, Terms and Accessibility pages
 css/ js/ images/          Front-end assets shared by all pages (loaded by URL)
@@ -155,18 +155,21 @@ Three recommendation sources are kept separate (`modules/ContentBasedFiltering/l
 
 1. **CBF** (`modules/ContentBasedFiltering/lib/CBFEngine.php`): the student's RIASEC profile (mean item score per type,
    [R, I, A, S, E, C]) is compared with every program's Holland code using cosine
-   similarity, cos(S, C) = (S · C) / (||S|| × ||C||). The guidance counselors rank the three letters of a
-   code (1st = strongest type, 3rd = weakest), so the program vector uses rank weights 3, 2, 1
-   (`holland_rank_weights` in `config/cbf.php`; RIC = [3, 2, 0, 0, 0, 1]). No 70/30 blend with the worksheet.
+   similarity, cos(S, C) = (S · C) / (||S|| × ||C||). Program vectors are binary (1 for each letter of
+   the counselor-approved code, e.g. RIC = [1, 1, 0, 0, 0, 1]). The counselors' 1-2-3 letter ranking
+   orders programs that have the same cosine: the program whose 1st letter is the student's
+   1st-ranked interest comes first, then the 2nd, then the 3rd. It is not a weight and changes no
+   cosine value or which programs are listed (letter-position weights such as 3-2-1 are not approved).
+   No 70/30 blend with the worksheet.
 2. **Worksheet**: the Preferred Course from the Career Electives Worksheet.
-3. **Prediction model (WEKA)**: not available yet; excluded and not called. The existing WEKA
-   code (`modules/ContentBasedFiltering/lib/PredictionModel.php`, `db/import_weka_tree.php`) is kept for the separate WEKA work.
+3. **Prediction Module (WEKA J48)**: shown to guidance staff only, beside the CBF results; it never
+   changes them (`modules/ContentBasedFiltering/lib/PredictionModel.php`; see the Prediction Module section below).
 
-The results page shows, in order: RIASEC profile, **Preferred Course** (what the student selected),
-**Best RIASEC Match** (courses tied at the highest cosine similarity; CBF only) and **Alternative
-Courses** (next-highest similarity). The Preferred Course never changes the CBF result. The final
-Best Match (CBF + prediction model + worksheet) is not computed until the prediction model exists.
-Cosine similarity is shown as "Cosine Similarity: 0.xxx", never as a percentage or an accuracy.
+The results page shows, in order: RIASEC profile, **Preferred Course** (what the student selected,
+compared with the CBF result), **Best RIASEC Match** (courses tied at the highest cosine
+similarity; CBF only; ties listed in the counselors' 1-2-3 letter order) and **Alternative Courses**
+(next-highest similarity). The Preferred Course never changes the CBF result. Students do not see
+cosine values; staff see them on the student profile, never as a percentage or an accuracy.
 
 To see the full CBF calculation for a student (student vector, and for every course its vector,
 dot product, magnitudes and cosine similarity):
@@ -189,11 +192,18 @@ in the Render dashboard after the first deploy.
 - Encrypted columns (suffixed `_enc`) use a Modified AES-256-CBC cipher with a key-dependent
   S-box (`modules/Encryption/lib/Crypto.php`, `modules/Encryption/lib/ModifiedAES256.php`) and are never used in `WHERE`/`ORDER BY`/
   `JOIN` — see the header comment in `db/schema.sql` for the convention.
-- Changing `APP_AES_KEY` (for example after it was exposed) needs `db/rotate_aes_key.php`: it re-encrypts
-  every `_enc` value and re-seals the audit log with the new key. Setting a new key without it leaves the
-  data unreadable. Suspend the web service, run it as a dry run first, then with `--apply`, set the new
-  key in Render, and resume the service. The header of that file has the details.
-- Module-level access is enforced via `modules/Authentication/lib/Rbac.php`; see `security-configuration.html` and
-  `api/security-config.php` for the admin-facing config UI.
+- Module-level access is enforced via `modules/Authentication/lib/Rbac.php`; see `modules/SecurityConfiguration/pages/security-configuration.html` and
+  `modules/SecurityConfiguration/api/security-config.php` for the admin-facing config UI.
 - All sensitive/state-changing actions are recorded via `modules/AuditLog/lib/AuditLogger.php` and viewable on
-  `audit-log.html`.
+  `modules/AuditLog/pages/audit-log.html`.
+
+## Prediction Module (Weka J48)
+
+Guidance staff see a Weka J48 prediction of the student's intended course beside the content-based
+recommendation. The model (`models/ProfilePath_J48_Binary_393.model`, 393 records) is exported to
+`config/prediction_model.json` with Weka's own predictions and probabilities, so the server needs no
+Java. See `tools/weka/README.md` for the export, the check against Weka, and the API.
+
+Scoring, reproducible assessments, ordered codes and ties, the CBF method and its limits, what each
+evaluation shows and the manuscript alignment are documented in `docs/methodology-notes.md`.
+

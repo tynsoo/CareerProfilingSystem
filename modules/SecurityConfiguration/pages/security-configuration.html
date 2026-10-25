@@ -7,7 +7,6 @@
 <title>Security Configuration — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,10 +14,8 @@
   .perm-cell { display:inline-flex; align-items:center; justify-content:center; padding:6px 10px; border-radius:8px; border:1px solid transparent; cursor:pointer; background:transparent; }
   .perm-cell:hover { background:#f1f5f9; border-color:#cbd5e1; }
   .perm-cell.changed { background:#fffbeb; border-color:#f59e0b; }
-  /* Permission table: lighter lines between the features of one page, and the unsaved-change count on a tab. */
-  #rbacTableBody .rbac-sub { border-top-color:#f1f5f9; }
-  .rbac-tab-count { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; margin-left:6px; padding:0 5px; border-radius:9999px; background:#fffbeb; border:1px solid #f59e0b; color:#b45309; font-size:11px; font-weight:600; }
   body{ font-family:'Inter', sans-serif; }
+  select{ appearance:none; -webkit-appearance:none; }
   /* Security Overview tiles: gray icon, orange when the number is above 0 */
   .overview-tile { color:#64748b; transition:border-color .15s; }
   .overview-tile:hover { border-color:#001c43; }
@@ -47,11 +44,10 @@
     </div>
     <nav id="adminNav" data-active="security-configuration" class="flex-1 flex flex-col gap-0.5 py-2 overflow-auto"></nav>
     <script src="js/admin-nav.js"></script>
-    <script src="js/rbac-features.js"></script>
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -123,8 +119,8 @@
         <!-- LEFT COLUMN (span 2) -->
         <div class="xl:col-span-2 flex flex-col gap-6">
 
-          <!-- Role-Based Access Control: the whole table, edited by the administrator (the only one who opens this page).
-               Other staff see their own levels on My Access (modules/SecurityConfiguration/pages/my-access.html). -->
+          <!-- Role-Based Access Control. The administrator sees and edits the whole table; other staff see "Your Access"
+               (their own column, view only), filled in by renderOwnAccess(). -->
           <div id="rbacCard" class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div class="border-b border-slate-200 flex items-center justify-between px-5 py-5 flex-wrap gap-3">
               <div class="flex items-center gap-3">
@@ -134,6 +130,7 @@
                   <p id="rbacSubtitle" class="text-xs text-slate-500">Manage what each user role can access and do within the system.</p>
                 </div>
               </div>
+              <span id="rbacRoleChip" class="hidden inline-flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap"></span>
               <div id="rbacActions" class="hidden items-center gap-2 flex-wrap">
                 <span id="rbacPendingCount" class="text-xs text-slate-500"></span>
                 <button type="button" id="rbacCancelBtn" class="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Cancel</button>
@@ -143,13 +140,13 @@
 
             <p id="rbacMessage" class="hidden px-5 pt-3 text-xs" aria-live="polite"></p>
             <p id="rbacViewOnlyNote" class="hidden px-5 pt-3 text-xs text-slate-500">View only: only the administrator can change permissions.</p>
-            <!-- One sidebar group at a time; unsaved changes stay when you switch (each tab shows how many it holds). -->
-            <div id="rbacTabs" class="flex flex-wrap gap-2 px-5 pt-4 pb-1" aria-label="Permission groups"></div>
+            <div id="rbacOwnList" class="hidden divide-y divide-slate-200"></div>
+            <p id="rbacOwnFoot" class="hidden px-5 py-3 border-t border-slate-200 text-xs text-slate-500">Need more access? Ask the administrator. Only the administrator can change permissions.</p>
             <div id="rbacTableWrap" class="overflow-x-auto">
               <table class="w-full text-left border-collapse min-w-[700px]">
                 <thead class="bg-slate-50/50 border-b border-slate-200">
                   <tr>
-                    <th class="px-5 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Page / Feature</th>
+                    <th class="px-5 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase">Module / Feature</th>
                     <th class="px-3 py-4 text-xs font-semibold tracking-wide text-slate-500 uppercase text-center">
                       <div class="flex items-center justify-center gap-1"><img src="images/security/icon-admin.svg" alt="" class="w-2.5 h-3">Administrator</div>
                     </th>
@@ -211,11 +208,14 @@
                   <div class="flex flex-col gap-1.5">
                     <p class="text-sm font-semibold text-slate-800">Email Verification for Staff Password Changes</p>
                     <p class="text-xs text-slate-500">Confirm password changes with a code sent by email.</p>
+                    <span class="bg-green-50 border border-green-200 text-green-700 text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded w-fit">Recommended</span>
                   </div>
-                  <span class="enforced-slot"></span>
+                  <button type="button" id="toggle2fa" class="w-11 h-6 rounded-full relative shrink-0" aria-pressed="true" aria-label="Email verification for staff password changes">
+                    <span class="absolute top-0.5 w-[18px] h-[18px] rounded-full bg-white transition-all"></span>
+                  </button>
                 </div>
                 <div class="flex flex-col gap-2 pl-0">
-                  <p class="text-xs text-slate-500">Guidance Counselors, Facilitators and Administrators must enter a 6-digit code emailed to them before a new password takes effect. The code expires after 5 minutes.</p>
+                  <p class="text-xs text-slate-500">When on, Guidance Counselors, Facilitators and Administrators must enter a 6-digit code emailed to them before a new password takes effect. The code expires after 5 minutes.</p>
                   <div class="flex items-center gap-2">
                     <img src="images/security/icon-shield-small.svg" alt="" class="w-4 h-3">
                     <p class="text-xs text-slate-500">Applies to password changes, not sign-in</p>
@@ -228,8 +228,11 @@
                   <div class="flex flex-col gap-1.5">
                     <p class="text-sm font-semibold text-slate-800">Automatic Session Timeout</p>
                     <p class="text-xs text-slate-500">End inactive sessions after a period of inactivity.</p>
+                    <span class="bg-green-50 border border-green-200 text-green-700 text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded w-fit">Recommended</span>
                   </div>
-                  <span class="enforced-slot"></span>
+                  <button type="button" id="toggleSessionTimeout" class="w-11 h-6 rounded-full relative shrink-0" aria-pressed="true" aria-label="Automatic session timeout">
+                    <span class="absolute top-0.5 w-[18px] h-[18px] rounded-full bg-white transition-all"></span>
+                  </button>
                 </div>
                 <div class="flex items-center justify-between">
                   <label for="timeoutDuration" class="text-xs text-slate-600">Timeout Duration</label>
@@ -295,29 +298,24 @@
 </div>
 
 <!-- Confirm permission changes (shown before saving changes to account modules or to the Guidance Counselor column) -->
-<div id="rbacConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-lg">
-    <div class="pp-dialog-head">
-      <h2 id="rbacConfirmTitle" class="pp-dialog-title">Save permission changes?</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="pp-dialog-form">
-      <ul id="rbacConfirmList" class="flex flex-col gap-2"></ul>
-    </div>
-    <div class="pp-dialog-foot">
-      <button type="button" id="rbacConfirmCancel" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="rbacConfirmSave" class="pp-btn pp-btn-primary">Save</button>
+<div id="rbacConfirmModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="rbacConfirmTitle">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 flex flex-col gap-4">
+    <h3 id="rbacConfirmTitle" class="text-lg font-semibold text-black">Confirm permission changes</h3>
+    <ul id="rbacConfirmList" class="flex flex-col gap-2 overflow-y-auto" style="max-height:50vh"></ul>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="rbacConfirmCancel" class="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Go back</button>
+      <button type="button" id="rbacConfirmSave" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Confirm and save</button>
     </div>
   </div>
 </div>
 <!-- Policy Edit Modal -->
-<div id="policyModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-md">
-    <div class="pp-dialog-head">
-      <h2 id="policyModalTitle" class="pp-dialog-title"></h2>
-      <button type="button" id="policyModalClose" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
+<div id="policyModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="policyModalTitle">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <h3 id="policyModalTitle" class="text-lg font-bold text-slate-900"></h3>
+      <button type="button" id="policyModalClose" class="text-slate-500 hover:text-slate-600 text-xl leading-none" aria-label="Close">&times;</button>
     </div>
-    <div class="pp-dialog-form">
+    <div class="px-6 py-5 flex flex-col gap-4">
       <div id="policyStatusRow" class="flex items-center justify-between">
         <p id="policyToggleLabel" class="text-sm font-medium text-slate-800">Status</p>
         <button type="button" id="policyEnabledToggle" aria-labelledby="policyToggleLabel" class="w-11 h-6 rounded-full relative shrink-0">
@@ -328,16 +326,27 @@
       <div id="policyAlwaysOnNote" class="hidden">
         <p class="flex items-start gap-2 text-xs text-slate-700 bg-slate-100 border border-slate-200 rounded-md px-3 py-2">
           <svg viewBox="0 0 24 24" fill="none" class="w-3 h-3 shrink-0 mt-0.5" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2.5"/></svg>
-          <span><span class="font-semibold">Always enforced.</span> <span id="policyAlwaysOnText"></span></span>
+          <span><span class="font-semibold">Always enforced.</span> Password rules can't be turned off.</span>
         </p>
       </div>
       <div id="policyFields" class="flex flex-col gap-4"></div>
       <!-- Shown when saving fails, so the window does not close as if it worked. -->
       <p id="policyModalError" class="hidden text-sm text-red-600" role="alert"></p>
     </div>
-    <div class="pp-dialog-foot">
-      <button type="button" id="policyModalCancel" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="policyModalSave" class="pp-btn pp-btn-primary">Save</button>
+    <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button type="button" id="policyModalCancel" class="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Cancel</button>
+      <button type="button" id="policyModalSave" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:bg-red-600">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
     </div>
   </div>
 </div>
@@ -350,11 +359,6 @@
     window.location.replace('staff-login');
     return;
   }
-  // The administrator's page (router.php refuses it to other staff); they see their own access on My Access.
-  if (currentUser.role !== 'admin') {
-    window.location.replace('my-access');
-    return;
-  }
 
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
   if (currentUser.avatarUrl) {
@@ -365,7 +369,25 @@
   document.getElementById('headerUserName').textContent = currentUser.displayName || currentUser.username;
   document.getElementById('headerUserRole').textContent = currentUser.positionLabel || roleLabels[currentUser.role] || currentUser.role;
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -406,9 +428,18 @@
   })();
 
   (async function() {
-    // The permission table: the rows and their grouping come from js/rbac-features.js (shared with My Access).
-    const MODULES = PP.rbacFeatures.modules;
-    const featureGroups = function() { return PP.rbacFeatures.groups(); };
+    const MODULES = [
+      { id: 'career', label: 'Career Profile Input', desc: 'Programs and their RIASEC codes (Career Dataset)', icon: 'images/security/icon-module-career.svg', iconClass: 'w-[17.5px] h-4 mt-0.5' },
+      { id: 'rac', label: 'RIASEC Assessment', desc: 'View and manage assessments', icon: 'images/security/icon-module-rac.svg', iconClass: 'w-[10.5px] h-4 mt-0.5' },
+      { id: 'recommendations', label: 'Recommendations', desc: 'View recommendations only', icon: 'images/security/icon-module-recommendations.svg', iconClass: 'w-3.5 h-4 mt-0.5' },
+      { id: 'counselor', label: 'Guidance Counselor', desc: 'Account Management. Full: assign sections to counselors and facilitators. View Only: look at the assignments', icon: 'images/security/icon-module-counselor.svg', iconClass: 'w-3 h-4 mt-0.5' },
+      { id: 'monitoring', label: 'Student Monitoring', desc: 'View student progress and status', icon: 'images/security/icon-module-monitoring.svg', iconClass: 'w-4 h-4 mt-0.5' },
+      { id: 'announcements', label: 'Announcements', desc: 'Send updates to students', icon: 'images/security/icon-module-announcements.svg', iconClass: 'w-4 h-4 mt-0.5' },
+      { id: 'examinations', label: 'Assessment Scheduling', desc: 'Assessment schedules and rooms', icon: 'images/security/icon-module-examinations.svg', iconClass: 'w-4 h-4 mt-0.5' },
+      { id: 'counselingNotes', label: 'Counseling Notes', desc: 'Session notes on student profiles', icon: 'images/security/icon-module-counseling-notes.svg', iconClass: 'w-3.5 h-4 mt-0.5' },
+      { id: 'staffAccounts', label: 'Staff Accounts', desc: 'Account Management. Full: approve sign-ups, send access codes, deactivate staff. View Only: look at the list', icon: 'images/security/icon-module-counselor.svg', iconClass: 'w-3 h-4 mt-0.5' },
+      { id: 'sections', label: 'Section Management', desc: 'Account Management. Full: add and deactivate sections. View Only: look at them', icon: 'images/security/icon-people.svg', iconClass: 'w-4 h-4 mt-0.5' }
+    ];
     const RBAC_COLUMNS = ['admin', 'counselor', 'facilitator']; // Student access is fixed, so it is not shown
     const LEVEL_LABEL = { full: 'Full Access', limited: 'View Only', none: 'No Access' };
     let state = null;
@@ -502,56 +533,55 @@
       });
     }
 
-    // Only the administrator opens this page (Rbac::ADMIN_PAGES); other staff see their own access on My Access (my-access).
-    // The table shows one sidebar group at a time, in tabs (Overview, Assessment, Student Support, Administration).
-    // Changes are kept in `pending` for the whole table, so switching tabs never drops them; Save Changes saves every tab.
-    let rbacTab = 0;
-    const pendingIn = g => g.pages.reduce((n, p) => n + p.features.reduce((k, m) => k + RBAC_COLUMNS.filter(r => (m.id + '|' + r) in pending).length, 0), 0);
-    function renderRbacTabs(groups) {
-      document.getElementById('rbacTabs').innerHTML = groups.map((g, i) => {
-        const n = pendingIn(g);
-        return '<button type="button" class="pp-filter-tab rbac-tab" data-tab="' + i + '" aria-pressed="' + (i === rbacTab) + '">' + g.title +
-          (n ? ' <span class="rbac-tab-count" aria-label="' + n + ' unsaved change' + (n === 1 ? '' : 's') + '">' + n + '</span>' : '') + '</button>';
+    // Everyone but the administrator sees only their own access, as a list with one clear label per area (the server
+    // sends only their own column: api/security-config.php).
+    const OWN_PILL = {
+      full: 'bg-green-50 border border-green-200 text-green-700',
+      limited: 'bg-amber-50 border border-amber-200 text-amber-700',
+      none: 'bg-slate-100 border border-slate-200 text-slate-600'
+    };
+    function renderOwnAccess(role) {
+      const label = ROLE_LABEL[role] || 'your role';
+      document.getElementById('rbacTitle').textContent = 'Your Access';
+      document.getElementById('rbacSubtitle').textContent = 'What you can do in ProfilePath as a ' + label + '. Set by the administrator.';
+      const chip = document.getElementById('rbacRoleChip');
+      chip.innerHTML = '<img src="images/security/icon-counselor.svg" alt="" class="w-2.5 h-3">';
+      chip.appendChild(document.createTextNode(label));
+      chip.classList.remove('hidden');
+      ['rbacTableWrap', 'rbacViewOnlyNote', 'rbacActions'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      document.getElementById('rbacOwnFoot').classList.remove('hidden');
+      const list = document.getElementById('rbacOwnList');
+      list.innerHTML = MODULES.map(m => {
+        const lvl = levelOf(m.id, role);
+        return '<div class="flex items-center justify-between gap-4 px-5 py-3">' +
+          '<div class="flex items-start gap-3"><img src="' + m.icon + '" alt="" class="' + m.iconClass + '">' +
+          '<div><p class="text-sm font-medium text-slate-800">' + m.label + '</p><p class="text-xs text-slate-500">' + m.desc + '</p></div></div>' +
+          '<span class="' + (OWN_PILL[lvl] || OWN_PILL.none) + ' text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap">' + (LEVEL_LABEL[lvl] || LEVEL_LABEL.none) + '</span>' +
+          '</div>';
       }).join('');
+      list.classList.remove('hidden');
     }
-    document.getElementById('rbacTabs').addEventListener('click', function(e) {
-      const tab = e.target.closest('.rbac-tab');
-      if (!tab) return;
-      rbacTab = Number(tab.dataset.tab);
-      renderRbacTable();
-      document.querySelector('#rbacTabs .rbac-tab[data-tab="' + rbacTab + '"]').focus();
-    });
 
     function renderRbacTable() {
+      if (state.rbacOwnOnly) {
+        renderOwnAccess(state.rbacOwnOnly);
+        return;
+      }
       // Only the administrator gets editable cells from the server (Rbac::editableLevels); everyone else just looks.
       document.getElementById('rbacViewOnlyNote').classList.toggle('hidden', MODULES.some(m => RBAC_COLUMNS.some(r => isEditable(m.id, r))));
       const tbody = document.getElementById('rbacTableBody');
-      const cellsFor = (m, name) => RBAC_COLUMNS.map(r => {
-        const lvl = levelOf(m.id, r);
-        if (!isEditable(m.id, r)) return '<td class="px-3 py-3 text-center">' + permIcon(lvl) + '</td>';
-        const changed = (m.id + '|' + r) in pending;
-        return '<td class="px-3 py-3 text-center"><button type="button" class="perm-cell' + (changed ? ' changed' : '') + '" data-module="' + m.id + '" data-role="' + r + '" title="' + LEVEL_LABEL[lvl] + '. Click to change." aria-label="' + ROLE_LABEL[r] + ', ' + name + ': ' + LEVEL_LABEL[lvl] + '. Click to change.">' + permIcon(lvl) + '</button></td>';
-      }).join('');
-      const groups = featureGroups();
-      rbacTab = Math.min(rbacTab, groups.length - 1);
-      renderRbacTabs(groups);
-      // Each page of the chosen group: a page with one feature is one row (the page's name); a page with several shows its
-      // name, then a row per feature under it.
-      tbody.innerHTML = groups[rbacTab].pages.map(p => {
-        const pageName = '<span class="text-slate-500 mt-0.5">' + p.icon + '</span>';
-        if (p.features.length === 1) {
-          const m = p.features[0];
-          return '<tr><td class="px-5 py-3"><div class="flex items-start gap-3">' + pageName +
-            '<div><p class="text-sm font-medium text-slate-800">' + p.label + '</p><p class="text-xs text-slate-500">' + m.desc + '</p></div>' +
-            '</div></td>' + cellsFor(m, p.label) + '</tr>';
-        }
-        return '<tr><th colspan="4" scope="rowgroup" class="px-5 pt-3 pb-1 text-left"><div class="flex items-center gap-3">' + pageName +
-            '<span class="text-sm font-semibold text-slate-900">' + p.label + '</span></div></th></tr>' +
-          p.features.map(m =>
-            '<tr class="rbac-sub"><td class="py-2.5 pr-5" style="padding-left:52px">' +
-              '<p class="text-sm font-medium text-slate-800">' + m.label + '</p><p class="text-xs text-slate-500">' + m.desc + '</p>' +
-            '</td>' + cellsFor(m, p.label + ', ' + m.label) + '</tr>'
-          ).join('');
+      tbody.innerHTML = MODULES.map(m => {
+        const cells = RBAC_COLUMNS.map(r => {
+          const lvl = levelOf(m.id, r);
+          if (!isEditable(m.id, r)) return '<td class="px-3 py-3 text-center">' + permIcon(lvl) + '</td>';
+          const changed = (m.id + '|' + r) in pending;
+          return '<td class="px-3 py-3 text-center"><button type="button" class="perm-cell' + (changed ? ' changed' : '') + '" data-module="' + m.id + '" data-role="' + r + '" title="' + LEVEL_LABEL[lvl] + '. Click to change." aria-label="' + ROLE_LABEL[r] + ', ' + m.label + ': ' + LEVEL_LABEL[lvl] + '. Click to change.">' + permIcon(lvl) + '</button></td>';
+        }).join('');
+        return '<tr>' +
+          '<td class="px-5 py-3"><div class="flex items-start gap-3">' +
+          '<img src="' + m.icon + '" alt="" class="' + m.iconClass + '">' +
+          '<div><p class="text-sm font-medium text-slate-800">' + m.label + '</p><p class="text-xs text-slate-500">' + m.desc + '</p></div>' +
+          '</div></td>' + cells + '</tr>';
       }).join('');
       updateRbacActions();
     }
@@ -610,18 +640,39 @@
         saveBtn.disabled = false;
       }
     }
-    // Pop-up windows (permission confirm, policy edit) use the shared pop-up behaviour (PP.dialog in js/ui-state.js).
+    // Pop-up windows (permission confirm, policy edit) work from the keyboard: focus moves into the window,
+    // Tab stays inside it, Escape closes it, and focus goes back to what opened it.
+    const confirmModal = document.getElementById('rbacConfirmModal');
     const policyModal = document.getElementById('policyModal');
-    const confirmDialog = PP.dialog('rbacConfirmModal');
-    const policyDialog = PP.dialog(policyModal, {
-      onClose: function() {
-        const key = currentPolicyKey;
-        currentPolicyKey = null;
-        // The policy list is redrawn after a save, so the row that opened the window may be gone: focus its new copy.
-        if (key && (document.activeElement === document.body || policyModal.contains(document.activeElement))) {
-          const row = document.querySelector('.policy-row[data-policy="' + key + '"]');
-          if (row) row.focus();
-        }
+    const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]';
+    function openDialog(modal) {
+      modal.returnFocus = document.activeElement;
+      modal.classList.remove('hidden');
+      const first = modal.querySelector(FOCUSABLE);
+      if (first) first.focus();
+    }
+    function closeDialog(modal, fallback) {
+      modal.classList.add('hidden');
+      // The opener may have been redrawn while the window was open (the policy list is after a save).
+      const back = modal.returnFocus && document.body.contains(modal.returnFocus) ? modal.returnFocus : fallback;
+      if (back) back.focus();
+    }
+    document.addEventListener('keydown', function(e) {
+      const open = [confirmModal, policyModal].find(m => !m.classList.contains('hidden'));
+      if (!open) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (open === policyModal) closePolicyModal(); else closeDialog(confirmModal);
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const items = Array.from(open.querySelectorAll(FOCUSABLE)).filter(el => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !open.contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !open.contains(document.activeElement))) {
+        e.preventDefault(); first.focus();
       }
     });
     function openRbacConfirm() {
@@ -632,7 +683,7 @@
           (isSensitive(c.module, c.role) ? ' <span class="ml-1 bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-semibold uppercase px-2 py-0.5 rounded">Sensitive</span>' : '') +
         '</li>'
       ).join('');
-      confirmDialog.open(document.getElementById('rbacConfirmSave'));
+      openDialog(confirmModal);
     }
     document.getElementById('rbacSaveBtn').addEventListener('click', function() {
       const changes = pendingChanges();
@@ -640,8 +691,10 @@
       // Changes to account modules or to the Guidance Counselor column are confirmed before they are saved.
       if (changes.some(c => isSensitive(c.module, c.role))) openRbacConfirm(); else saveRbac(false);
     });
+    document.getElementById('rbacConfirmCancel').addEventListener('click', () => closeDialog(confirmModal));
+    confirmModal.addEventListener('click', e => { if (e.target.id === 'rbacConfirmModal') closeDialog(confirmModal); });
     document.getElementById('rbacConfirmSave').addEventListener('click', async function() {
-      confirmDialog.close();
+      closeDialog(confirmModal);
       await saveRbac(true);
     });
     const POLICY_META = {
@@ -650,14 +703,11 @@
       // Its switch deletes old audit log entries (modules/AuditLog/lib/AuditRetention.php), so it is named for that.
       retention: { title: 'Audit Log Retention', toggleLabel: 'Delete older logs automatically' }
     };
-    // Password rules and Account Lockout are always on (no switch; the server ignores an "off"); sign-in logging is
-    // always on too, so it has no card. The note in the window says which rule can't be turned off.
-    const ALWAYS_ON = ['password', 'lockout'];
-    const ALWAYS_ON_TEXT = { password: "Password rules can't be turned off.", lockout: "Account lockout can't be turned off." };
+    // The password policy is always on (no switch); sign-in logging is always on too, so it has no card.
+    const ALWAYS_ON = ['password'];
     // "Enforced" with a lock, in a neutral color: a rule that always applies, not a switch that happens to be on
-    // (green is kept for real switches, like Audit Log Retention's "Auto-delete on").
-    // Same badge as every status (css/components.css .pp-badge), with the lock in place of the dot.
-    const ENFORCED_BADGE = '<span class="pp-badge pp-badge-gray pp-badge-icon">' +
+    // (green is kept for real switches, like Account Lockout's "Enabled").
+    const ENFORCED_BADGE = '<span class="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap">' +
       '<svg viewBox="0 0 24 24" fill="none" class="w-3 h-3 shrink-0" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2.5"/></svg>Enforced</span>';
 
     function policyDesc(key) {
@@ -689,8 +739,8 @@
         const badge = ALWAYS_ON.includes(key)
           ? ENFORCED_BADGE
           : p.enabled
-          ? PP.badge(onText, 'green')
-          : PP.badge(offText, 'gray');
+          ? '<span class="bg-green-50 border border-green-200 text-green-700 text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap">' + onText + '</span>'
+          : '<span class="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap">' + offText + '</span>';
         const tag = isAdmin ? 'button' : 'div';
         return '<' + tag + ' type="button" class="policy-row w-full flex items-center justify-between px-[17px] py-4 text-left' + (isAdmin ? ' hover:bg-slate-50' : '') + (idx > 0 ? ' border-t border-slate-100' : '') + '" data-policy="' + key + '">' +
           '<div><p class="text-sm font-medium text-slate-800">' + POLICY_META[key].title + '</p><p class="text-xs text-slate-500 policy-desc">' + policyDesc(key) + '</p></div>' +
@@ -728,13 +778,10 @@
           '<label class="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" id="fldReqSymbol" ' + (p.requireSymbol ? 'checked' : '') + '> Require symbol</label>';
       }
       if (key === 'lockout') {
-        // Same limits as the server (modules/Authentication/lib/LoginLock.php), which refuses anything outside them.
         return '<div class="flex items-center justify-between"><label for="fldMaxAttempts" class="text-xs text-slate-600">Failed Attempts Before Lockout</label>' +
-          '<input type="number" id="fldMaxAttempts" min="3" max="10" value="' + p.maxAttempts + '" aria-describedby="fldMaxAttemptsHint" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-20 text-right"></div>' +
-          '<p id="fldMaxAttemptsHint" class="text-xs text-slate-500 -mt-3">From 3 to 10 attempts.</p>' +
+          '<input type="number" id="fldMaxAttempts" min="1" max="20" value="' + p.maxAttempts + '" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-20 text-right"></div>' +
           '<div class="flex items-center justify-between"><label for="fldLockoutMinutes" class="text-xs text-slate-600">Lockout Duration (minutes)</label>' +
-          '<input type="number" id="fldLockoutMinutes" min="15" max="1440" value="' + p.lockoutMinutes + '" aria-describedby="fldLockoutMinutesHint" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-20 text-right"></div>' +
-          '<p id="fldLockoutMinutesHint" class="text-xs text-slate-500 -mt-3">At least 15 minutes.</p>';
+          '<input type="number" id="fldLockoutMinutes" min="1" max="1440" value="' + p.lockoutMinutes + '" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-20 text-right"></div>';
       }
       if (key === 'retention') {
         return '<div class="flex items-center justify-between"><label for="fldRetentionDays" class="text-xs text-slate-600">Keep entries for (days)<br><span class="text-slate-500">90 to 365 days</span></label>' +
@@ -774,12 +821,20 @@
       }
       document.getElementById('policyStatusRow').classList.toggle('hidden', alwaysOn);
       document.getElementById('policyAlwaysOnNote').classList.toggle('hidden', !alwaysOn);
-      document.getElementById('policyAlwaysOnText').textContent = ALWAYS_ON_TEXT[key] || '';
       document.getElementById('policyModalError').classList.add('hidden');
       updateRetentionWarning();
-      policyDialog.open();
+      openDialog(policyModal);
     }
-    function closePolicyModal() { policyDialog.close(); }
+    function closePolicyModal() {
+      const key = currentPolicyKey;
+      currentPolicyKey = null;
+      closeDialog(policyModal, key ? document.querySelector('.policy-row[data-policy="' + key + '"]') : null);
+    }
+    document.getElementById('policyModalClose').addEventListener('click', closePolicyModal);
+    document.getElementById('policyModalCancel').addEventListener('click', closePolicyModal);
+    document.getElementById('policyModal').addEventListener('click', function(e) {
+      if (e.target.id === 'policyModal') closePolicyModal();
+    });
     document.getElementById('policyEnabledToggle').addEventListener('click', function() {
       draftPolicyEnabled = !draftPolicyEnabled;
       setToggleVisual(this, draftPolicyEnabled);
@@ -795,6 +850,7 @@
         body.requireNumber = document.getElementById('fldReqNumber').checked;
         body.requireSymbol = document.getElementById('fldReqSymbol').checked;
       } else if (currentPolicyKey === 'lockout') {
+        body.enabled = draftPolicyEnabled;
         body.maxAttempts = parseInt(document.getElementById('fldMaxAttempts').value, 10) || 5;
         body.lockoutMinutes = parseInt(document.getElementById('fldLockoutMinutes').value, 10) || 15;
       } else if (currentPolicyKey === 'retention') {
@@ -827,35 +883,51 @@
       }
     });
 
-    // Email verification and the session timeout are always on (the server ignores an "off"), so both cards show the
-    // Enforced badge instead of a switch. Only the timeout length (15, 30 or 60 minutes) can be chosen.
-    document.querySelectorAll('.enforced-slot').forEach(function(slot) { slot.innerHTML = ENFORCED_BADGE; });
-
     function renderSecuritySettings() {
+      setToggleVisual(document.getElementById('toggle2fa'), state.settings.twoFactor);
+      setToggleVisual(document.getElementById('toggleSessionTimeout'), state.settings.sessionTimeoutEnabled);
       const select = document.getElementById('timeoutDuration');
       select.value = String(state.settings.timeoutMinutes);
       updateTimeoutDesc();
+      updateTimeoutDisabledState();
       if (!isAdmin) {
-        select.disabled = true;
-        select.classList.add('opacity-60', 'cursor-not-allowed');
+        [document.getElementById('toggle2fa'), document.getElementById('toggleSessionTimeout'), select].forEach(el => {
+          el.disabled = true;
+          el.classList.add('opacity-60', 'cursor-not-allowed');
+        });
       }
     }
     function updateTimeoutDesc() {
-      document.getElementById('timeoutDescText').textContent =
-        'Users will be logged out after ' + state.settings.timeoutMinutes + ' minutes of inactivity.';
+      const desc = document.getElementById('timeoutDescText');
+      desc.textContent = state.settings.sessionTimeoutEnabled
+        ? 'Users will be logged out after ' + state.settings.timeoutMinutes + ' minutes of inactivity.'
+        : 'Automatic session timeout is disabled.';
+    }
+    function updateTimeoutDisabledState() {
+      const select = document.getElementById('timeoutDuration');
+      select.disabled = select.disabled || !state.settings.sessionTimeoutEnabled;
+      select.classList.toggle('opacity-50', !state.settings.sessionTimeoutEnabled);
     }
 
-    // The select is disabled while a save is in flight, so a second change cannot overwrite the first.
+    // Both toggles (and the timeout duration select) share this one save
+    // function, which sends a full snapshot of all three settings together
+    // -- so clicking a second control before the first save's request
+    // finishes fires a second overlapping request with its own snapshot.
+    // Whichever response the server processes last silently overwrites the
+    // other, which can revert the toggle that was "clicked fast" even
+    // though the UI already shows it flipped. Guarding with a single
+    // in-flight flag (disabling the controls for the duration) closes that
+    // race instead of just narrowing it.
     let savingSettings = false;
     async function saveSettings() {
       if (savingSettings) return;
       savingSettings = true;
-      const select = document.getElementById('timeoutDuration');
-      select.disabled = true;
+      const controls = [document.getElementById('toggle2fa'), document.getElementById('toggleSessionTimeout'), document.getElementById('timeoutDuration')];
+      controls.forEach(el => { el.disabled = true; });
       try {
         const res = await fetch('api/security-config.php', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'settings', timeoutMinutes: state.settings.timeoutMinutes })
+          body: JSON.stringify({ type: 'settings', twoFactor: state.settings.twoFactor, sessionTimeoutEnabled: state.settings.sessionTimeoutEnabled, timeoutMinutes: state.settings.timeoutMinutes })
         });
         const data = await res.json();
         if (data.success) {
@@ -863,11 +935,24 @@
         }
       } finally {
         savingSettings = false;
-        select.disabled = false;
+        controls.forEach(el => { el.disabled = false; });
+        updateTimeoutDisabledState();
       }
     }
 
     if (isAdmin) {
+      document.getElementById('toggle2fa').addEventListener('click', function() {
+        state.settings.twoFactor = !state.settings.twoFactor;
+        setToggleVisual(this, state.settings.twoFactor);
+        saveSettings();
+      });
+      document.getElementById('toggleSessionTimeout').addEventListener('click', function() {
+        state.settings.sessionTimeoutEnabled = !state.settings.sessionTimeoutEnabled;
+        setToggleVisual(this, state.settings.sessionTimeoutEnabled);
+        updateTimeoutDesc();
+        updateTimeoutDisabledState();
+        saveSettings();
+      });
       document.getElementById('timeoutDuration').addEventListener('change', function() {
         state.settings.timeoutMinutes = parseInt(this.value, 10);
         updateTimeoutDesc();

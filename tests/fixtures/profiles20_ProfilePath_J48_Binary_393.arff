@@ -1,0 +1,32 @@
+% The 20 possible ProfilePath inputs (exactly three 1s), class unknown
+@RELATION profilepath_profiles20
+
+@ATTRIBUTE R NUMERIC
+@ATTRIBUTE I NUMERIC
+@ATTRIBUTE A NUMERIC
+@ATTRIBUTE S NUMERIC
+@ATTRIBUTE E NUMERIC
+@ATTRIBUTE C NUMERIC
+@ATTRIBUTE 'Actual Course' {'BA Communication','B Multimedia Arts','BS Computer Science','BS Information Technology','BS Biology','BS Medical Technology','BS Pharmacy','BS Physical Therapy','BS Psychology','BS Nursing','BS Accountancy','BSBA Major in Financial Management','BSBA Major in Operations Management','BS Hospitality Management','BS Tourism Management','BS Marketing','BS Architecture','BS Chemical Engineering','BS Civil Engineering','BS Mechanical Engineering','BS Electrical Engineering','BS Electronics Engineering','BS Industrial Engineering','BS Computer Engineering','BS Aeronautical Engineering','BS Aviation Management','BS Marine Engineering','BS Marine Transportation'}
+
+@DATA
+1,1,1,0,0,0,?
+1,1,0,1,0,0,?
+1,1,0,0,1,0,?
+1,1,0,0,0,1,?
+1,0,1,1,0,0,?
+1,0,1,0,1,0,?
+1,0,1,0,0,1,?
+1,0,0,1,1,0,?
+1,0,0,1,0,1,?
+1,0,0,0,1,1,?
+0,1,1,1,0,0,?
+0,1,1,0,1,0,?
+0,1,1,0,0,1,?
+0,1,0,1,1,0,?
+0,1,0,1,0,1,?
+0,1,0,0,1,1,?
+0,0,1,1,1,0,?
+0,0,1,1,0,1,?
+0,0,1,0,1,1,?
+0,0,0,1,1,1,?

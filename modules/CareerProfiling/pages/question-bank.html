@@ -7,7 +7,6 @@
 <title>Question Bank — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +38,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -116,7 +115,7 @@
       </div>
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -127,14 +126,13 @@
 </div>
 
 <!-- Edit Question Modal -->
-<div id="editQuestionModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-md">
-    <div class="pp-dialog-head">
-      <h2 class="pp-dialog-title" id="editQuestionTitle">Edit question</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
+<div id="editQuestionModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+      <h2 class="text-lg font-bold text-slate-900" id="editQuestionTitle">Edit Question</h2>
+      <button type="button" class="edit-question-close-btn text-slate-400 hover:text-slate-600 text-xl leading-none" aria-label="Close">&times;</button>
     </div>
-    <form id="editQuestionForm">
-    <div class="pp-dialog-form">
+    <form id="editQuestionForm" class="px-6 py-5 flex flex-col gap-4">
       <input type="hidden" id="editQuestionId">
       <input type="hidden" id="editQuestionDim">
       <div class="flex flex-col gap-1">
@@ -145,16 +143,36 @@
         <input type="checkbox" id="editQuestionActive" class="accent-[#ed1c24]">
         Active (shown to students)
       </label>
-    </div>
-    <div class="pp-dialog-foot">
-      <button type="button" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="submit" class="pp-btn pp-btn-primary">Save</button>
-    </div>
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" class="edit-question-close-btn px-4 py-2 text-sm font-medium text-slate-600 rounded-md border border-slate-300 hover:bg-slate-50">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Save Changes</button>
+      </div>
     </form>
   </div>
 </div>
 
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
+  </div>
+</div>
+
 <div id="toastContainer" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+<div id="genericConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <p id="genericConfirmMessage" class="text-sm text-gray-700" style="white-space:pre-line"></p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="genericConfirmCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="genericConfirmOkBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
   function showToast(message, isError) {
     const container = document.getElementById('toastContainer');
@@ -164,6 +182,31 @@
     container.appendChild(toast);
     setTimeout(function() { toast.remove(); }, 5000);
   }
+  function showConfirm(message) {
+    return new Promise(function(resolve) {
+      const modal = document.getElementById('genericConfirmModal');
+      document.getElementById('genericConfirmMessage').textContent = message;
+      modal.classList.remove('hidden');
+      setTimeout(function() { modal.classList.add('is-open'); }, 16);
+      const okBtn = document.getElementById('genericConfirmOkBtn');
+      const cancelBtn = document.getElementById('genericConfirmCancelBtn');
+      function cleanup(result) {
+        modal.classList.remove('is-open');
+        setTimeout(function() { modal.classList.add('hidden'); }, 260);
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        modal.removeEventListener('click', onBackdrop);
+        resolve(result);
+      }
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      function onBackdrop(e) { if (e.target.id === 'genericConfirmModal') cleanup(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      modal.addEventListener('click', onBackdrop);
+    });
+  }
+
 
 (async function() {
   const sessionData = await (await fetch('api/session.php')).json();
@@ -171,13 +214,6 @@
   if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'counselor')) {
     window.location.replace('staff-login');
     return;
-  }
-  // Full on Question Bank (permission table) adds, edits and removes questions; View Only looks. The server checks each change.
-  const canEdit = PP.may(currentUser, 'questionBank', 'full');
-  if (!canEdit) {
-    // Loading the O*NET set replaces the questions, so View Only does not get the button (style: it is inline in the header).
-    document.getElementById('loadOnetBtn').style.display = 'none';
-    document.querySelector('main h1 + p').textContent = 'The assessment questions students answer, by RIASEC type.';
   }
 
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
@@ -223,7 +259,25 @@
   }, { passive: true });
   })();
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   const DIMENSIONS = [
     { code: 'R', label: 'Realistic' },
@@ -275,16 +329,15 @@
   function questionRow(q, position) {
     return '<div class="flex items-center justify-between gap-4 px-5 py-3' + (q.isActive ? '' : ' opacity-60') + '">' +
       '<div class="flex items-center gap-3 min-w-0">' +
-        '<span class="text-xs font-semibold text-slate-500 w-6 shrink-0">' + (q.isActive ? '#' + position : '') + '</span>' +
+        '<span class="text-xs font-semibold text-slate-400 w-6 shrink-0">' + (q.isActive ? '#' + position : '') + '</span>' +
         '<p class="text-sm text-slate-800">' + escapeHtml(q.text) + '</p>' +
       '</div>' +
       '<div class="flex items-center gap-3 shrink-0">' +
-        (q.isActive ? '' : PP.badge('Hidden', 'gray')) +
-        (!canEdit ? '' :
+        (q.isActive ? '' : '<span class="bg-slate-100 text-slate-500 text-xs font-medium px-2.5 py-1 rounded-full">Hidden</span>') +
         '<button type="button" class="edit-question-btn rounded-md hover:bg-slate-100 flex items-center justify-center" style="width:30px;height:30px" data-id="' + q.id + '" aria-label="Edit question" title="Edit"><img src="images/admin/icon-row-edit.svg" alt="" class="w-3.5 h-3.5"></button>' +
         '<button type="button" class="btn-danger delete-question-btn text-[#ed1c24] rounded-md hover:bg-red-50 flex items-center justify-center" style="width:30px;height:30px" data-id="' + q.id + '" aria-label="Remove question" title="Remove">' +
           '<svg class="w-4 h-4" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>' +
-        '</button>') +
+        '</button>' +
       '</div>' +
     '</div>';
   }
@@ -305,11 +358,11 @@
 
       return '<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">' +
         '<div class="border-b border-slate-200 px-5 py-4 flex items-center justify-between gap-3">' +
-          '<h2 class="text-base font-bold text-slate-900">' + dim.label + ' (' + dim.code + ') <span class="text-xs font-medium text-slate-500 ml-1">' + active.length + ' active</span></h2>' +
-          (!canEdit ? '' : '<button type="button" class="add-question-btn text-xs font-semibold text-[#ed1c24] hover:underline" data-dim="' + dim.code + '">+ Add question</button>') +
+          '<h2 class="text-base font-bold text-slate-900">' + dim.label + ' (' + dim.code + ') <span class="text-xs font-medium text-slate-400 ml-1">' + active.length + ' active</span></h2>' +
+          '<button type="button" class="add-question-btn text-xs font-semibold text-[#ed1c24] hover:underline" data-dim="' + dim.code + '">+ Add question</button>' +
         '</div>' +
         '<div class="divide-y divide-slate-100">' +
-          (activeHtml || '<p class="px-5 py-4 text-sm text-slate-500">No active questions.</p>') + toggle + hiddenHtml +
+          (activeHtml || '<p class="px-5 py-4 text-sm text-slate-400">No active questions.</p>') + toggle + hiddenHtml +
         '</div>' +
       '</div>';
     }).join('');
@@ -334,25 +387,29 @@
   function openEditModal(id) {
     const q = questions.find(function(q) { return String(q.id) === String(id); });
     if (!q) return;
-    document.getElementById('editQuestionTitle').textContent = 'Edit question';
+    document.getElementById('editQuestionTitle').textContent = 'Edit Question';
     document.getElementById('editQuestionId').value = q.id;
     document.getElementById('editQuestionDim').value = q.dimension;
     document.getElementById('editQuestionText').value = q.text;
     document.getElementById('editQuestionActive').checked = q.isActive;
-    editDialog.open();
+    editModal.classList.remove('hidden');
   }
   function openAddModal(dim) {
     const label = DIMENSIONS.find(function(d) { return d.code === dim; }).label;
-    document.getElementById('editQuestionTitle').textContent = 'Add a ' + label + ' question';
+    document.getElementById('editQuestionTitle').textContent = 'Add Question \u2014 ' + label;
     document.getElementById('editQuestionId').value = '';
     document.getElementById('editQuestionDim').value = dim;
     document.getElementById('editQuestionText').value = '';
     document.getElementById('editQuestionActive').checked = true;
-    editDialog.open();
+    editModal.classList.remove('hidden');
+    document.getElementById('editQuestionText').focus();
   }
-  // The shared pop-up behaviour (PP.dialog in js/ui-state.js): x, Cancel and Escape close it; the form is cleared.
-  const editDialog = PP.dialog(editModal, { onClose: function() { editForm.reset(); } });
-  function closeEditModal() { editDialog.close(); }
+  function closeEditModal() {
+    editModal.classList.add('hidden');
+    editForm.reset();
+  }
+  document.querySelectorAll('.edit-question-close-btn').forEach(function(btn) { btn.addEventListener('click', closeEditModal); });
+  editModal.addEventListener('click', function(e) { if (e.target === editModal) closeEditModal(); });
 
   async function send(method, body) {
     const res = await fetch('api/assessment-questions.php', {
@@ -384,7 +441,7 @@
   async function removeQuestion(id) {
     const q = questions.find(function(q) { return String(q.id) === String(id); });
     if (!q) return;
-    const ok = await PP.confirm('"' + q.text + '" will be removed for good. This cannot be undone.', { title: 'Delete this question?', okLabel: 'Delete', danger: true });
+    const ok = await showConfirm('Remove this question permanently?\n\n"' + q.text + '"');
     if (!ok) return;
     const data = await send('DELETE', { id: q.id });
     if (!data.success) { showToast(data.error || 'Could not remove the question.', true); return; }
@@ -392,7 +449,7 @@
   }
 
   document.getElementById('loadOnetBtn').addEventListener('click', async function() {
-    const ok = await PP.confirm('5 for each type. Every other question is hidden, not deleted. Students who are partway through the assessment will start again.', { title: 'Use the 30 O*NET Mini Interest Profiler questions?', okLabel: 'Use these questions' });
+    const ok = await showConfirm('Use the 30 questions of the O*NET Mini Interest Profiler (5 for each type)?\n\nEvery other question is hidden, not deleted. Students who are partway through the assessment will start again.');
     if (!ok) return;
     const data = await send('POST', { action: 'loadOnet' });
     if (!data.success) { showToast(data.error || 'Could not load the question set.', true); return; }

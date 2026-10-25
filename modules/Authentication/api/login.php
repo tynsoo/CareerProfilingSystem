@@ -34,7 +34,11 @@ const LOCKED_MESSAGE = 'Account temporarily locked due to repeated failed attemp
 function lockoutPolicy(PDO $pdo): array
 {
     $rows = $pdo->query("SELECT key, value FROM security_policies WHERE key LIKE 'lockout.%'")->fetchAll(PDO::FETCH_KEY_PAIR);
-    return LoginLock::policy($rows); // always on, within the limits the administrator can set
+    return [
+        'enabled' => ($rows['lockout.enabled'] ?? 'true') === 'true',
+        'maxAttempts' => (int) ($rows['lockout.maxAttempts'] ?? 5),
+        'lockoutMinutes' => (int) ($rows['lockout.lockoutMinutes'] ?? 15),
+    ];
 }
 
 // No real username or email is this long; it is treated like an unknown one.
@@ -195,8 +199,7 @@ if ($user['role'] === 'counselor') {
     $sessionData['positionLabel'] = StaffPosition::label($user['staff_position'] ?? null);
 }
 
-// Staff land on the first sidebar page that is open to them (the permission table can close Student Information).
-$redirect = $user['role'] === 'student' ? 'assessment' : Rbac::firstOpenPage(Rbac::roleKey($user));
+$redirect = 'admin-dashboard';
 if ($user['role'] === 'student') {
     $studentStmt = $pdo->prepare('SELECT school_id, first_name_enc, last_name_enc, strand, grade_level, section, registered_at FROM students WHERE user_id = ?');
     $studentStmt->execute([$user['id']]);

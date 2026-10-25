@@ -20,6 +20,12 @@ require_once __DIR__ . '/CBFEngine.php';
  * The tree is imported from WEKA's printed J48 output by db/import_weka_tree.php
  * into config/prediction_model.json, so WEKA/Java is not needed on the server.
  * When that file does not exist, the model is "not available" and predict() returns null.
+ *
+ * Binary lookup format ('format' => 'weka-j48-binary-lookup'), written by
+ * tools/weka/ExportJ48Lookup.java from the saved Weka .model file itself: the model's six
+ * numeric 0/1 inputs have exactly three 1s, so there are only 20 possible inputs, and the file
+ * holds Weka's own prediction and full class distribution for each of them (class set to
+ * missing). Predictions and probabilities therefore equal Weka's exactly; see predictBinary().
  */
 class PredictionModel
 {
@@ -32,15 +38,168 @@ class PredictionModel
         'SOCIAL' => 'S', 'ENTERPRISING' => 'E', 'CONVENTIONAL' => 'C',
     ];
 
-    /** The imported model, or null when none has been imported. */
+    /**
+     * The installed model, or null when none is installed.
+     *
+     * @throws UnexpectedValueException when an exported lookup file is damaged or does not fit
+     */
     public static function load(?string $file = null): ?array
     {
-        $file ??= self::MODEL_FILE;
+        // PREDICTION_MODEL_FILE (environment) points to another model file, e.g. in tests.
+        $file ??= (getenv('PREDICTION_MODEL_FILE') ?: self::MODEL_FILE);
         if (!is_file($file)) {
             return null;
         }
         $model = json_decode((string) file_get_contents($file), true);
+        if (is_array($model) && ($model['format'] ?? null) === self::LOOKUP_FORMAT) {
+            self::validateLookup($model);   // a broken export is refused, never half-used
+            return $model;
+        }
         return is_array($model) && isset($model['tree']) ? $model : null;
+    }
+
+    /** Format written by tools/weka/ExportJ48Lookup.java. */
+    public const LOOKUP_FORMAT = 'weka-j48-binary-lookup';
+    /** The only feature encoding the lookup serves: 1 for the three highest scores, else 0. */
+    public const BINARY_ENCODING = 'top3-binary';
+
+    /**
+     * Numeric split points in a printed J48 tree ("C <= 0" -> ['C <= 0', 0.0]).
+     *
+     * @return array<int,array{0:string,1:float}>
+     */
+    public static function splitThresholds(string $treeText): array
+    {
+        $out = [];
+        foreach (preg_split('/\R/', $treeText) as $line) {
+            if (preg_match('/^[|\s]*([A-Za-z]+)\s*(<=|>=|<|>)\s*(-?[0-9.]+(?:[Ee][-+]?[0-9]+)?)/', $line, $m)) {
+                $out[] = [trim($line), (float) $m[3]];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Checks an exported lookup before it is used: inputs R, I, A, S, E, C in that order,
+     * numeric; all 20 three-of-six profiles present; one probability per class label; each
+     * distribution sums to 1; Weka's predicted class is a valid label.
+     *
+     * @throws UnexpectedValueException describing the first problem found
+     */
+    public static function validateLookup(array $model): void
+    {
+        $fail = fn(string $m) => throw new UnexpectedValueException("Prediction model file: $m");
+        if (($model['attributes'] ?? null) !== CBFEngine::DIMENSIONS) {
+            $fail('inputs must be R, I, A, S, E, C in that order.');
+        }
+        if (($model['attribute_type'] ?? null) !== 'numeric') {
+            $fail('inputs must be numeric 0/1.');
+        }
+        // Only the top-three binary encoding can be served by the 20-input lookup. Exports made
+        // before the encoding was recorded (exporter v1) have none; for every export the tree's
+        // splits must also fit 0/1 inputs, which a raw-score model's splits (e.g. "C <= 12") do not.
+        $encoding = $model['feature_encoding'] ?? null;
+        if ($encoding !== null && $encoding !== self::BINARY_ENCODING) {
+            $fail("feature encoding '$encoding' cannot be served by the binary lookup (only " . self::BINARY_ENCODING . ').');
+        }
+        foreach (self::splitThresholds((string) ($model['tree'] ?? '')) as [$line, $t]) {
+            if ($t < 0 || $t >= 1) {
+                $fail("the tree splits at '$line'; top-three binary inputs are 0 or 1, so this is not a binary model.");
+            }
+        }
+        $labels = $model['class_labels'] ?? null;
+        if (!is_array($labels) || $labels === [] || count(array_unique($labels)) !== count($labels)) {
+            $fail('class labels are missing or repeated.');
+        }
+        if (($model['class_index'] ?? null) !== 6) {
+            $fail('the class must be the 7th attribute.');
+        }
+        $profiles = $model['profiles'] ?? [];
+        $expected = array_map(fn($bits) => implode(',', $bits), self::allBinaryProfiles());
+        if (array_diff($expected, array_keys($profiles)) || count($profiles) !== 20) {
+            $fail('it must contain exactly the 20 profiles with three 1s.');
+        }
+        foreach ($profiles as $key => $p) {
+            $dist = $p['distribution'] ?? null;
+            if (!is_array($dist) || count($dist) !== count($labels)) {
+                $fail("profile $key has no probability for every class.");
+            }
+            if (abs(array_sum($dist) - 1.0) > 1e-9 || min($dist) < 0) {
+                $fail("profile $key: probabilities do not sum to 1.");
+            }
+            $i = $p['predicted_index'] ?? null;
+            if ($i !== null && (!is_int($i) || !isset($labels[$i]) || $labels[$i] !== $p['predicted'])) {
+                $fail("profile $key: predicted class does not match the class labels.");
+            }
+        }
+    }
+
+    /** The 20 inputs with exactly three 1s, in R, I, A, S, E, C order (RIA, RIS, ... SEC). */
+    public static function allBinaryProfiles(): array
+    {
+        $out = [];
+        for ($a = 0; $a < 6; $a++) {
+            for ($b = $a + 1; $b < 6; $b++) {
+                for ($c = $b + 1; $c < 6; $c++) {
+                    $bits = array_fill(0, 6, 0);
+                    $bits[$a] = $bits[$b] = $bits[$c] = 1;
+                    $out[] = $bits;
+                }
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Raw RIASEC scores -> the model's six inputs: 1 for the three highest-scoring types, 0 for
+     * the rest; equal scores are ordered R, I, A, S, E, C (the rule used to prepare the training
+     * data; a project rule, not an O*NET rule). Exactly three inputs are 1.
+     *
+     * The scores must follow the assessment's scoring rules (config/cbf.php: whole numbers from
+     * items x min answer to items x max answer, i.e. 10-50); anything else is rejected, never
+     * replaced by 0.
+     *
+     * @param array<string,int|float|string|null>|null $scores keyed R..C
+     * @return int[] six 0/1 values in R, I, A, S, E, C order
+     * @throws InvalidArgumentException for missing or invalid scores
+     */
+    public static function binaryInputs(?array $scores, ?array $config = null): array
+    {
+        CBFEngine::studentVector($scores, $config);     // presence, numeric and range checks
+        foreach (CBFEngine::DIMENSIONS as $d) {
+            if ((float) $scores[$d] != floor((float) $scores[$d])) {
+                throw new InvalidArgumentException("The RIASEC score for $d ({$scores[$d]}) is not a whole number.");
+            }
+        }
+        $top = CBFEngine::topRiasecLetters($scores, 3);   // shared ranking (modules/CareerProfiling/lib/RiasecProfile.php)
+        return array_map(fn($d) => in_array($d, $top, true) ? 1 : 0, CBFEngine::DIMENSIONS);
+    }
+
+    /**
+     * Prediction from an exported lookup model: Weka's predicted class and its full class
+     * distribution for this student's inputs.
+     *
+     * ranked: every class, highest probability first; equal probabilities keep the model's
+     * class-label order (the order Weka declares the classes). That display rule is
+     * deterministic but arbitrary for ties: tie-averaged evaluation metrics (Hit@3, MRR) do
+     * not describe it exactly. The predicted class is Weka's own classifyInstance() result
+     * (for a J48 leaf, the first class with the highest probability).
+     *
+     * @return array{inputs:int[], predicted:?string, distribution:array<int,array{label:string,probability:float}>,
+     *               ranked:array<int,array{label:string,probability:float}>}
+     * @throws InvalidArgumentException for invalid scores (see binaryInputs())
+     */
+    public static function predictBinary(array $model, ?array $scores, ?array $config = null): array
+    {
+        $inputs = self::binaryInputs($scores, $config);
+        $entry = $model['profiles'][implode(',', $inputs)];
+        $distribution = [];
+        foreach ($model['class_labels'] as $i => $label) {
+            $distribution[] = ['label' => $label, 'probability' => (float) $entry['distribution'][$i], 'index' => $i];
+        }
+        $ranked = $distribution;
+        usort($ranked, fn($a, $b) => ($b['probability'] <=> $a['probability']) ?: ($a['index'] <=> $b['index']));
+        return ['inputs' => $inputs, 'predicted' => $entry['predicted'], 'distribution' => $distribution, 'ranked' => $ranked];
     }
 
     /**
@@ -104,6 +263,9 @@ class PredictionModel
      */
     public static function predictLabelFromScores(array $model, array $scores): ?string
     {
+        if (($model['format'] ?? null) === self::LOOKUP_FORMAT) {
+            return self::predictBinary($model, $scores)['predicted'];
+        }
         $features = $model['features'] ?? 'top3';
         if ($features === 'top3') {
             return self::predictLabel($model['tree'], CBFEngine::topRiasecLetters($scores, 3));

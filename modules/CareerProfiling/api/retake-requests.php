@@ -61,10 +61,7 @@ if ($user['role'] !== 'admin' && $user['role'] !== 'counselor') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // View counseling history (permission table): View Only lists who asked and when, but not the student's reason or the
-    // decision note; Full shows them too.
-    Rbac::requireAccess('counselingHistory', 'limited');
-    $seesText = Rbac::accessLevel('counselingHistory', Rbac::roleKey($user)) === 'full';
+    Rbac::requireAccess('counselingNotes', 'limited');
     $status = (string) ($_GET['status'] ?? 'pending');
     $where = '';
     $params = [];
@@ -88,11 +85,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'strand' => $r['strand'],
         'section' => $r['section'],
         'attemptNumber' => (int) $r['attempt_number'],
-        'reason' => $seesText ? (string) Crypto::dec($r['reason_enc']) : null,
+        'reason' => (string) Crypto::dec($r['reason_enc']),
         'status' => $r['status'],
         'requestedAt' => $r['requested_at'],
         'decidedAt' => $r['decided_at'],
-        'note' => $seesText && $r['decision_note_enc'] !== null ? (string) Crypto::dec($r['decision_note_enc']) : null,
+        'note' => $r['decision_note_enc'] !== null ? (string) Crypto::dec($r['decision_note_enc']) : null,
     ], $rows);
     $pendingCount = count(array_filter($requests, fn($r) => $r['status'] === 'pending'));
     if ($status !== 'pending') {
@@ -102,15 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         )->fetchAll();
         $pendingCount = count(array_filter($waiting, fn($r) => StaffScope::allows($scope, $r['strand'], $r['section'])));
     }
-    jsonResponse(['requests' => $requests, 'pendingCount' => $pendingCount, 'seesText' => $seesText]);
+    jsonResponse(['requests' => $requests, 'pendingCount' => $pendingCount]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user = Rbac::requireAccess('counselingStatus', 'full'); // Update counseling status (permission table)
-    // Retake decisions belong to the Guidance Counselor and the Administrator only (DFD process 4.0), whatever the table says.
-    if (Rbac::isFacilitator($user)) {
-        jsonResponse(['success' => false, 'error' => 'Only the Guidance Counselor and the Administrator can decide retake requests.'], 403);
-    }
+    $user = Rbac::requireAccess('counselingNotes', 'full');
     $body = readJsonBody();
     if (($body['type'] ?? '') !== 'decide') {
         jsonResponse(['success' => false, 'error' => 'Unknown type.'], 400);

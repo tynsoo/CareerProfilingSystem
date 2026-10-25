@@ -89,12 +89,9 @@ $idOf = array_column($progs, 'id', 'title');
 $profile = ['riasec' => ['R' => 15, 'I' => 40, 'A' => 12, 'S' => 18, 'E' => 35, 'C' => 45]];
 $run = RecommendationPipeline::run($profile, $progs, [$idOf['BS Nursing']], $off);
 check('all 32 programs compared, none excluded', count($run['cbf']['results']) === 32 && $run['cbf']['excluded'] === []);
-// Hand check with the rank weights 3-2-1: S = [1.5, 4.0, 1.2, 1.8, 3.5, 4.5]; CIE = 3x4.5 + 2x4.0 + 1x3.5 = 25.0
-// is the highest of the CEI/CIE/ECI/EIC/IEC programs (CEI = 24.5, IEC = ECI = 23.5, EIC = 23.0).
-check('Best RIASEC Match = the one program coded C-I-E (the student\'s own order), Nursing not among them',
-    $run['bestRiasecMatchIds'] === [$idOf['BS Accounting Information System']]
+check('Best RIASEC Match = the five programs coded with C, I and E (tied), Nursing not among them',
+    count($run['bestRiasecMatchIds']) === 5 && in_array($idOf['BS Accountancy'], $run['bestRiasecMatchIds'], true)
     && !in_array($idOf['BS Nursing'], $run['bestRiasecMatchIds'], true));
-check('Alternative Courses = the next level: BS Accountancy (C-E-I)', $run['alternativeIds'] === [$idOf['BS Accountancy']]);
 check('Preferred Course BS Nursing shown as differing', $run['preferred'][0] === ['id' => $idOf['BS Nursing'], 'inBestRiasecMatch' => false]);
 check('alternatives = the next similarity level, none of them a Best RIASEC Match',
     $run['alternativeIds'] && !array_intersect($run['alternativeIds'], $run['bestRiasecMatchIds']));

@@ -7,7 +7,6 @@
 <title>Help Center — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +38,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -124,27 +123,19 @@
               </div>
 
               <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
-                <div>
-                  <label for="bookingUrlInput" class="text-sm font-semibold text-slate-800">CGC Counseling Booking Link</label>
-                  <p id="bookingLinkHelp" class="text-xs text-slate-500 mt-1">Students who click <span class="font-medium text-slate-700">Avail Counseling</span> get this link by email. Saving a new link changes the emails sent from now on; emails already sent keep the link they had.</p>
-                </div>
+                <p class="text-sm font-semibold text-slate-800">Counseling Booking Link</p>
                 <div class="flex flex-col gap-2">
-                  <input type="url" id="bookingUrlInput" maxlength="300" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://" aria-describedby="bookingLinkHelp bookingLinkError" class="pp-filter-input w-full">
-                  <p id="bookingLinkError" class="hidden text-xs text-[#ed1c24]" role="alert"></p>
-                  <div class="flex items-center gap-3 flex-wrap">
-                    <button type="button" id="bookingLinkSave" class="pp-dim-disabled px-4 py-2 text-xs font-semibold text-white bg-[#0f2a6b] rounded-md hover:opacity-90">Save</button>
-                    <a id="bookingLinkOpen" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-xs font-medium text-[#0f2a6b] underline">Open saved link</a>
-                  </div>
+                  <input type="url" id="bookingUrlInput" maxlength="300" class="border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24]" placeholder="https://" aria-label="Counseling booking link">
+                  <button type="button" id="bookingLinkSave" class="self-start px-4 py-2 text-xs font-semibold text-white bg-[#0f2a6b] rounded-md hover:opacity-90">Save</button>
                 </div>
-                <p id="bookingLinkStatus" class="hidden text-xs" role="status" aria-live="polite"></p>
+                <p id="bookingLinkStatus" class="hidden text-xs" aria-live="polite"></p>
               </div>
 
         </div>
       </div>
-      <!-- Same tab buttons as Monitoring and Counseling Requests (css/components.css .pp-filter-tab); aria-pressed marks the chosen one. -->
-      <div class="flex gap-2 mb-4" role="group" aria-label="Which FAQs to show">
-        <button type="button" id="tabStaff" data-audience="staff" aria-pressed="false" class="faq-tab pp-filter-tab">Staff FAQs</button>
-        <button type="button" id="tabStudent" data-audience="student" aria-pressed="false" class="faq-tab pp-filter-tab">Student FAQs</button>
+      <div class="flex gap-2 mb-4" role="tablist">
+        <button type="button" role="tab" id="tabStaff" data-audience="staff" class="faq-tab px-4 py-2 rounded-md text-sm font-medium border border-slate-300">Staff FAQs</button>
+        <button type="button" role="tab" id="tabStudent" data-audience="student" class="faq-tab px-4 py-2 rounded-md text-sm font-medium border border-slate-300">Student FAQs</button>
         <button type="button" id="addFaqBtn" class="hidden items-center justify-center gap-2 bg-[#ed1c24] text-white rounded-md px-4 py-2 text-sm font-medium shadow-sm hover:opacity-90" style="margin-left:auto">+ Add FAQ</button>
       </div>
 
@@ -157,7 +148,7 @@
         <div id="faqList" class="divide-y divide-slate-100"></div>
       </div>
     </main>
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -168,12 +159,8 @@
 </div>
 
 <div id="faqModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-lg">
-    <div class="pp-dialog-head">
-      <h2 id="faqModalTitle" class="pp-dialog-title">Add FAQ</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="pp-dialog-form">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-lg p-6 flex flex-col gap-4">
+    <h3 id="faqModalTitle" class="text-lg font-semibold text-black">Add FAQ</h3>
     <p id="faqModalAudience" class="text-xs text-gray-500"></p>
     <div>
       <label for="faqQuestion" class="block text-xs font-medium text-gray-600 mb-1">Question</label>
@@ -182,16 +169,26 @@
     <div>
       <label for="faqAnswer" class="block text-xs font-medium text-gray-600 mb-1">Answer</label>
       <textarea id="faqAnswer" rows="6" maxlength="2000" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
-      <p class="text-xs text-gray-500 mt-1"><span id="faqAnswerCount">0</span> / 2000. Plain text only. Line breaks are kept.</p>
+      <p class="text-xs text-gray-400 mt-1"><span id="faqAnswerCount">0</span> / 2000. Plain text only. Line breaks are kept.</p>
     </div>
     <p id="faqModalError" class="hidden text-xs text-[#ed1c24]" aria-live="polite"></p>
-    </div>
-    <div class="pp-dialog-foot">
-      <button type="button" id="faqCancelBtn" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="faqSaveBtn" class="pp-btn pp-btn-primary">Save</button>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="faqCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="faqSaveBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Save</button>
     </div>
   </div>
 </div>
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (async function() {
   const sessionData = await (await fetch('api/session.php')).json();
@@ -210,11 +207,11 @@
   document.getElementById('headerUserRole').textContent = currentUser.positionLabel || roleLabels[currentUser.role] || currentUser.role;
 
   // ---- Guidance Office: the office hours and the counseling booking link students see. The Head of Guidance and whoever
-  // holds Full on Help Center (set in the permission table) can change them; nobody else sees this card.
+  // holds Full on Counseling Notes (set in the permission table) can change them; nobody else sees this card.
   (async function() {
     let state = null;
     try { state = await (await fetch('api/security-config.php')).json(); } catch (e) { return; }
-    const level = (state.rbac && state.rbac.helpCenter && state.rbac.helpCenter[currentUser.rbacRole || currentUser.role]) || 'none';
+    const level = (state.rbac && state.rbac.counselingNotes && state.rbac.counselingNotes[currentUser.rbacRole || currentUser.role]) || 'none';
     if (currentUser.role !== 'admin' && level !== 'full') return;
     const isAdmin = true; // only people who may edit get this far
     document.getElementById('guidanceOfficeCard').classList.remove('hidden');
@@ -290,9 +287,9 @@
         return '<div class="flex items-center gap-3">' +
           '<label class="flex items-center gap-2 w-32 text-sm text-slate-700"><input type="checkbox" id="ohOpen_' + d[0] + '" class="w-4 h-4 accent-[#0f2a6b]"' + (r ? ' checked' : '') + '>' + d[1] + '</label>' +
           '<select id="ohFrom_' + d[0] + '" aria-label="' + d[1] + ' opening time" ' + sel + (r ? '' : ' disabled') + '>' + ohOptions(r ? r.open : '08:00') + '</select>' +
-          '<span class="text-xs text-slate-500">to</span>' +
+          '<span class="text-xs text-slate-400">to</span>' +
           '<select id="ohTo_' + d[0] + '" aria-label="' + d[1] + ' closing time" ' + sel + (r ? '' : ' disabled') + '>' + ohOptions(r ? r.close : '17:00') + '</select>' +
-          '<span class="text-xs text-slate-500" id="ohClosed_' + d[0] + '"' + (r ? ' hidden' : '') + '>Closed</span>' +
+          '<span class="text-xs text-slate-400" id="ohClosed_' + d[0] + '"' + (r ? ' hidden' : '') + '>Closed</span>' +
         '</div>';
       }).join('');
       OH_DAYS.forEach(function(d) {
@@ -310,43 +307,14 @@
       ohValidate();
     }
 
-    // The saved link: shown in the box, with "Open saved link" to check the page it points to. Save is on only when the
-    // box holds something different from what is saved.
-    function savedBookingUrl() { return (state.booking && state.booking.url) || ''; }
     function renderBookingLink() {
-      const saved = savedBookingUrl();
-      document.getElementById('bookingUrlInput').value = saved;
-      const open = document.getElementById('bookingLinkOpen');
-      open.classList.toggle('hidden', saved === '');
-      if (saved) open.href = saved;
-      updateBookingSave();
+      document.getElementById('bookingUrlInput').value = (state.booking && state.booking.url) || '';
       if (!isAdmin) {
         [document.getElementById('bookingUrlInput'), document.getElementById('bookingLinkSave')].forEach(el => {
           el.disabled = true;
           el.classList.add('opacity-60', 'cursor-not-allowed');
         });
       }
-    }
-    // The same checks as the server (modules/Counseling/lib/BookingLink.php), so a mistake shows before saving.
-    function bookingLinkProblem(url) {
-      if (url === '') return '';
-      if (url.length > 300) return 'The link must be 300 characters or fewer.';
-      let parsed;
-      try { parsed = new URL(url); } catch (e) { return 'Enter a full web address that starts with https://'; }
-      if (parsed.protocol !== 'https:' || !parsed.hostname || !/^https:\/\//i.test(url)) return 'Enter a full web address that starts with https://';
-      if (parsed.username || parsed.password) return 'The link cannot contain a user name or password.';
-      return '';
-    }
-    function showBookingError(message) {
-      const err = document.getElementById('bookingLinkError');
-      const input = document.getElementById('bookingUrlInput');
-      err.textContent = message;
-      err.classList.toggle('hidden', !message);
-      if (message) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
-    }
-    function updateBookingSave() {
-      const value = document.getElementById('bookingUrlInput').value.trim();
-      document.getElementById('bookingLinkSave').disabled = !isAdmin || value === savedBookingUrl();
     }
 
 
@@ -372,54 +340,46 @@
         }
       });
 
-      const bookingInput = document.getElementById('bookingUrlInput');
-      bookingInput.addEventListener('input', function() {
-        document.getElementById('bookingLinkStatus').classList.add('hidden');
-        if (document.getElementById('bookingLinkError').textContent) showBookingError(bookingLinkProblem(bookingInput.value.trim()));
-        updateBookingSave();
-      });
-      bookingInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !document.getElementById('bookingLinkSave').disabled) document.getElementById('bookingLinkSave').click();
-      });
       document.getElementById('bookingLinkSave').addEventListener('click', async function() {
-        const btn = this;
         const statusEl = document.getElementById('bookingLinkStatus');
-        const url = bookingInput.value.trim();
-        statusEl.classList.add('hidden');
-        const problem = bookingLinkProblem(url);
-        showBookingError(problem);
-        if (problem) { bookingInput.focus(); return; }
-        // Removing the link hides Avail Counseling from students, so ask first.
-        if (url === '' && !(await PP.confirm('Students will not see Avail Counseling until a new link is saved.', { title: 'Remove the booking link?', okLabel: 'Remove link', danger: true }))) return;
-        const done = PP.busy(btn, 'Saving…');
-        let data = null;
-        try {
-          const res = await fetch('api/security-config.php', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'bookingLink', url })
-          });
-          data = await res.json().catch(() => null);
-          if (!res.ok && !(data && data.error)) data = { error: res.status === 403 ? 'You do not have permission to change the booking link.' : 'Could not save the link. Please try again.' };
-        } catch (e) {
-          data = { error: 'Unable to reach the server. Your link was not saved. Please try again.' };
-        } finally {
-          done();
-        }
-        if (data && data.success) {
+        const url = document.getElementById('bookingUrlInput').value.trim();
+        const res = await fetch('api/security-config.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'bookingLink', url })
+        });
+        const data = await res.json();
+        statusEl.classList.remove('hidden');
+        if (data.success) {
+          statusEl.textContent = url === '' ? 'Link removed.' : 'Saved.';
+          statusEl.className = 'text-xs text-green-600';
           await loadState();
-          statusEl.textContent = url === '' ? 'Link removed. Avail Counseling is hidden for students until a new link is saved.'
-            : 'Saved. Counseling booking emails sent from now on use this link.';
-          statusEl.className = 'text-xs text-green-700';
-          PP.toast(url === '' ? 'Booking link removed.' : 'Booking link saved.', false);
         } else {
-          showBookingError((data && data.error) || 'Could not save the link. Please try again.');
-          updateBookingSave();
+          statusEl.textContent = data.error || 'Failed to save.';
+          statusEl.className = 'text-xs text-[#ed1c24]';
         }
       });
 
   })();
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -461,13 +421,13 @@
   const faqList = document.getElementById('faqList');
   const faqMessage = document.getElementById('faqMessage');
   const addBtn = document.getElementById('addFaqBtn');
+  const TAB_ON = ['bg-[#0f2a6b]', 'text-white', 'border-[#0f2a6b]'];
+  const TAB_OFF = ['bg-white', 'text-slate-700'];
   const AUDIENCE_TEXT = {
     staff: { heading: 'Staff FAQs', sub: '' },
     student: { heading: 'Student FAQs', sub: '' }
   };
-  // The chosen tab lives in the page address (?audience=student), so Reload and Back keep it (PP.listState).
-  const listState = PP.listState({ audience: 'staff' }, []);
-  let audience = listState.read().audience === 'student' ? 'student' : 'staff';
+  let audience = 'staff';
   let faqs = [];
   let canEdit = false;
   let editingId = null;
@@ -485,7 +445,10 @@
     document.getElementById('faqSub').textContent = AUDIENCE_TEXT[audience].sub;
     document.getElementById('faqSub').classList.toggle('hidden', !AUDIENCE_TEXT[audience].sub);
     document.querySelectorAll('.faq-tab').forEach(function(tab) {
-      tab.setAttribute('aria-pressed', String(tab.dataset.audience === audience));
+      const on = tab.dataset.audience === audience;
+      TAB_ON.forEach(function(c) { tab.classList.toggle(c, on); });
+      TAB_OFF.forEach(function(c) { tab.classList.toggle(c, !on); });
+      tab.setAttribute('aria-selected', String(on));
     });
     addBtn.classList.toggle('hidden', !canEdit);
     addBtn.classList.toggle('flex', canEdit);
@@ -516,17 +479,15 @@
     }).join('');
   }
 
-  const getFaqs = PP.latestJson(); // a new tab click cancels the list still on its way
   async function loadFaqs() {
     PP.showSkeleton(faqList, '<div class="px-6 py-4">' + PP.skeleton.lines(5, 16) + '</div>');
     try {
-      const data = await getFaqs('api/faqs.php?audience=' + audience);
+      const data = await PP.fetchJson('api/faqs.php?audience=' + audience);
       faqList.removeAttribute('aria-busy');
       faqs = data.faqs || [];
       canEdit = !!data.canEdit;
       renderFaqs();
     } catch (e) {
-      if (e.cancelled) return; // a newer tab click replaced this one
       PP.showError(faqList, e.message || 'Could not load the FAQs.', loadFaqs);
     }
   }
@@ -537,12 +498,7 @@
   }
 
   document.querySelectorAll('.faq-tab').forEach(function(tab) {
-    tab.addEventListener('click', function() {
-      audience = tab.dataset.audience;
-      listState.save({ audience: audience });
-      openIds = {};
-      loadFaqs();
-    });
+    tab.addEventListener('click', function() { audience = tab.dataset.audience; openIds = {}; loadFaqs(); });
   });
 
   faqList.addEventListener('click', async function(e) {
@@ -562,7 +518,7 @@
       if (f) openModal(f);
     } else if (del) {
       const f = faqs.find(function(x) { return x.id === Number(del.dataset.id); });
-      if (!f || !(await PP.confirm('"' + f.question + '" will be removed. This cannot be undone.', { title: 'Delete this FAQ?', okLabel: 'Delete', danger: true }))) return;
+      if (!f || !(await PP.confirm('Delete this FAQ?\n\n' + f.question + '\n\nThis cannot be undone.', { okLabel: 'Delete', danger: true }))) return;
       const data = await postFaq({ type: 'delete', id: f.id });
       if (data.success) { showMessage('FAQ deleted.', false); await loadFaqs(); } else { showMessage(data.error || 'Could not delete the FAQ.', true); }
     } else if (move) {
@@ -584,12 +540,16 @@
     aInput.value = faq ? faq.answer : '';
     document.getElementById('faqAnswerCount').textContent = aInput.value.length;
     modalError.classList.add('hidden');
-    faqDialog.open(qInput);
+    modal.classList.remove('hidden');
+    setTimeout(function() { modal.classList.add('is-open'); qInput.focus(); }, 16);
   }
-  // The shared pop-up behaviour (PP.dialog in js/ui-state.js): x, Cancel and Escape close it.
-  const faqDialog = PP.dialog(modal);
-  function closeModal() { faqDialog.close(); }
+  function closeModal() {
+    modal.classList.remove('is-open');
+    setTimeout(function() { modal.classList.add('hidden'); }, 260);
+  }
   addBtn.addEventListener('click', function() { openModal(null); });
+  document.getElementById('faqCancelBtn').addEventListener('click', closeModal);
+  modal.addEventListener('click', function(e) { if (e.target.id === 'faqModal') closeModal(); });
   aInput.addEventListener('input', function() { document.getElementById('faqAnswerCount').textContent = aInput.value.length; });
   document.getElementById('faqSaveBtn').addEventListener('click', async function() {
     const question = qInput.value.trim(), answer = aInput.value.trim();

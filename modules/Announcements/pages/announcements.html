@@ -7,7 +7,6 @@
 <title>Announcements — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +38,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -179,20 +178,20 @@
               <p class="text-xs font-medium text-slate-600">Start from a template</p>
               <button type="button" id="newTemplateBtn" class="text-xs font-semibold text-[#19427b] hover:underline">+ New template</button>
             </div>
-            <div id="templateButtons" style="display:flex;flex-direction:column;gap:8px"><p class="text-xs text-slate-500">Loading…</p></div>
+            <div id="templateButtons" style="display:flex;flex-direction:column;gap:8px"><p class="text-xs text-slate-400">Loading…</p></div>
           </div>
           <form id="createForm" class="flex flex-col gap-4">
             <div>
               <div class="flex items-center justify-between mb-1">
                 <label class="block text-xs font-medium text-slate-600" for="annTitle">Title</label>
-                <span class="text-[11px] text-slate-500"><span id="titleCount">0</span> / 255</span>
+                <span class="text-[11px] text-slate-400"><span id="titleCount">0</span> / 255</span>
               </div>
               <input type="text" id="annTitle" required maxlength="255" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
             </div>
             <div>
               <div class="flex items-center justify-between mb-1">
                 <label class="block text-xs font-medium text-slate-600" for="annBody">Message</label>
-                <span class="text-[11px] text-slate-500"><span id="bodyCount">0</span> / 2000</span>
+                <span class="text-[11px] text-slate-400"><span id="bodyCount">0</span> / 2000</span>
               </div>
               <textarea id="annBody" required rows="4" maxlength="2000" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
             </div>
@@ -230,35 +229,36 @@
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           <div class="border-b border-slate-200 px-6 py-4 flex flex-col gap-3">
             <div class="flex items-center gap-3 flex-wrap">
-              <div class="pp-filter-search flex-1 min-w-[180px]">
-                <svg viewBox="0 -960 960 960" fill="#64748B" aria-hidden="true"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
-                <input type="text" id="annSearch" placeholder="Search announcements…" aria-label="Search announcements" class="pp-filter-input">
+              <div class="relative flex-1 min-w-[180px]">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 -960 960 960" fill="#64748B"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
+                <input type="text" id="annSearch" placeholder="Search announcements…" aria-label="Search announcements" class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
               </div>
-              <select id="annSort" aria-label="Sort announcements" class="pp-filter-select">
+              <select id="annSort" aria-label="Sort announcements" class="border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#ed1c24]">
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
               </select>
             </div>
-            <!-- Same tab buttons as Monitoring and Counseling Requests (css/components.css .pp-filter-tab); aria-pressed marks the chosen one. -->
-            <div class="flex items-center gap-2 flex-wrap" id="annTabs" role="group" aria-label="Which announcements to show">
-              <button type="button" aria-pressed="false" class="ann-tab pp-filter-tab" data-tab="all">All <span class="ann-tab-count" data-count="all"></span></button>
-              <button type="button" aria-pressed="false" class="ann-tab pp-filter-tab" data-tab="published">Published <span class="ann-tab-count" data-count="published"></span></button>
-              <button type="button" aria-pressed="false" class="ann-tab pp-filter-tab" data-tab="scheduled">Scheduled <span class="ann-tab-count" data-count="scheduled"></span></button>
-              <button type="button" aria-pressed="false" class="ann-tab pp-filter-tab" data-tab="draft">Drafts <span class="ann-tab-count" data-count="draft"></span></button>
+            <div class="flex items-center gap-2 flex-wrap" id="annTabs" role="tablist">
+              <button type="button" role="tab" class="ann-tab" data-tab="all">All <span class="ann-tab-count" data-count="all">0</span></button>
+              <button type="button" role="tab" class="ann-tab" data-tab="published">Published <span class="ann-tab-count" data-count="published">0</span></button>
+              <button type="button" role="tab" class="ann-tab" data-tab="scheduled">Scheduled <span class="ann-tab-count" data-count="scheduled">0</span></button>
+              <button type="button" role="tab" class="ann-tab" data-tab="draft">Drafts <span class="ann-tab-count" data-count="draft">0</span></button>
             </div>
           </div>
           <div id="announcementsList" class="divide-y divide-slate-100">
-            <p class="px-6 py-8 text-center text-sm text-slate-500">Loading…</p>
+            <p class="px-6 py-8 text-center text-sm text-slate-400">Loading…</p>
           </div>
-          <!-- Filled by PP.pager: "Showing 1 to 25 of N announcements", Rows per page and the page buttons. -->
-          <div id="annPager"></div>
+          <div class="border-t border-slate-200 px-6 py-3 flex items-center justify-between gap-3 flex-wrap">
+            <p class="text-sm text-slate-500" id="annPagerSummary">&nbsp;</p>
+            <div class="flex items-center gap-1" id="annPager"></div>
+          </div>
         </div>
 
       </div>
 
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -269,15 +269,11 @@
 </div>
 
 <div id="tplModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-lg">
-    <div class="pp-dialog-head">
-      <h2 id="tplModalTitle" class="pp-dialog-title">New template</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="pp-dialog-form">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-lg p-6 flex flex-col gap-4">
+    <h3 id="tplModalTitle" class="text-lg font-semibold text-black">New template</h3>
     <p class="text-xs text-gray-500">Write the title and message an announcement should start with. You can change them before sending.</p>
     <div>
-      <label for="tplName" class="block text-xs font-medium text-gray-600 mb-1">Template name <span class="text-gray-500">(the button label)</span></label>
+      <label for="tplName" class="block text-xs font-medium text-gray-600 mb-1">Template name <span class="text-gray-400">(the button label)</span></label>
       <input type="text" id="tplName" maxlength="80" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
     </div>
     <div>
@@ -287,17 +283,37 @@
     <div>
       <label for="tplBody" class="block text-xs font-medium text-gray-600 mb-1">Message</label>
       <textarea id="tplBody" rows="6" maxlength="2000" class="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
-      <p class="text-xs text-gray-500 mt-1"><span id="tplBodyCount">0</span> / 2000. Plain text only. Line breaks are kept.</p>
+      <p class="text-xs text-gray-400 mt-1"><span id="tplBodyCount">0</span> / 2000. Plain text only. Line breaks are kept.</p>
     </div>
     <p id="tplError" class="hidden text-xs text-[#ed1c24]" aria-live="polite"></p>
-    </div>
-    <div class="pp-dialog-foot">
-      <button type="button" id="tplCancelBtn" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="tplSaveBtn" class="pp-btn pp-btn-primary">Save</button>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="tplCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="tplSaveBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Save template</button>
     </div>
   </div>
 </div>
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
+  </div>
+</div>
+
 <div id="toastContainer" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+<div id="genericConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <p id="genericConfirmMessage" class="text-sm text-gray-700"></p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="genericConfirmCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="genericConfirmOkBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
   function showToast(message, isError) {
     const container = document.getElementById('toastContainer');
@@ -307,6 +323,31 @@
     container.appendChild(toast);
     setTimeout(function() { toast.remove(); }, 5000);
   }
+  function showConfirm(message) {
+    return new Promise(function(resolve) {
+      const modal = document.getElementById('genericConfirmModal');
+      document.getElementById('genericConfirmMessage').textContent = message;
+      modal.classList.remove('hidden');
+      setTimeout(function() { modal.classList.add('is-open'); }, 16);
+      const okBtn = document.getElementById('genericConfirmOkBtn');
+      const cancelBtn = document.getElementById('genericConfirmCancelBtn');
+      function cleanup(result) {
+        modal.classList.remove('is-open');
+        setTimeout(function() { modal.classList.add('hidden'); }, 260);
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        modal.removeEventListener('click', onBackdrop);
+        resolve(result);
+      }
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      function onBackdrop(e) { if (e.target.id === 'genericConfirmModal') cleanup(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      modal.addEventListener('click', onBackdrop);
+    });
+  }
+
 
 (async function() {
   const sessionData = await (await fetch('api/session.php')).json();
@@ -337,7 +378,25 @@
     document.getElementById('readOnlyNotice').classList.remove('hidden');
   }
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -389,29 +448,23 @@
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
   }
 
-  // ---- List: tabs, search, sort, paging (all done in the browser; the list is small, loaded once) ----
-  // Tab, sort and page live in the page address (Reload, Back); the search stays in this tab only (PP.listState).
-  const annSearch = document.getElementById('annSearch');
-  const annSort = document.getElementById('annSort');
-  const listState = PP.listState({ tab: 'all', sort: 'newest', page: 1, pageSize: 25, search: '' }, ['search']);
-  const saved = listState.read();
+  // ---- List: tabs, search, sort, paging (all done in the browser; the list is small) ----
+  const PAGE_SIZE = 5;
   let all = [];
-  let tab = ['all', 'published', 'scheduled', 'draft'].includes(saved.tab) ? saved.tab : 'all';
-  let page = saved.page;
-  let pageSize = [25, 50, 100].includes(saved.pageSize) ? saved.pageSize : 25;
-  annSearch.value = saved.search;
-  annSort.value = saved.sort === 'oldest' ? 'oldest' : 'newest';
-  const pager = PP.pager('annPager', {
-    noun: ['announcement', 'announcements'], label: 'Announcement pages', pageSize: pageSize, emptyText: 'No announcements to show',
-    onChange: function(p, size, focusRole) { page = p; pageSize = size; renderList(focusRole); }
-  });
+  let tab = 'all';
+  let page = 1;
 
+  const TAB_STYLE_ACTIVE = ['background:#001c43', 'color:#ffffff', 'border-color:#001c43'];
   function paintTabs() {
     const counts = { all: all.length, published: 0, scheduled: 0, draft: 0 };
     all.forEach(function(a) { counts[a.state]++; });
     document.querySelectorAll('.ann-tab').forEach(function(btn) {
-      btn.setAttribute('aria-pressed', btn.dataset.tab === tab ? 'true' : 'false');
-      btn.querySelector('.ann-tab-count').textContent = '(' + counts[btn.dataset.tab] + ')';
+      const active = btn.dataset.tab === tab;
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      btn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;border:1px solid #cbd5e1;border-radius:9999px;padding:4px 12px;font-size:12px;font-weight:500;background:#fff;color:#475569;cursor:pointer;' + (active ? TAB_STYLE_ACTIVE.join(';') : '');
+      const c = btn.querySelector('.ann-tab-count');
+      c.textContent = counts[btn.dataset.tab];
+      c.style.cssText = 'font-size:11px;border-radius:9999px;padding:0 6px;' + (active ? 'background:rgba(255,255,255,0.2)' : 'background:#f1f5f9');
     });
   }
 
@@ -450,7 +503,7 @@
     const actions = [];
     if (canWrite && a.editable) actions.push('<button type="button" class="edit-btn text-xs font-medium text-[#19427b] hover:underline" data-id="' + a.id + '">' + (a.state === 'draft' ? 'Edit draft' : 'Edit') + '</button>');
     if (remind === 'ready') actions.push('<button type="button" class="remind-btn text-xs font-medium text-[#19427b] hover:underline" data-id="' + a.id + '">Remind unread</button>');
-    if (remind === 'cooldown') actions.push('<span class="text-xs text-slate-500" title="A reminder can be sent once every 24 hours">Reminder sent recently</span>');
+    if (remind === 'cooldown') actions.push('<span class="text-xs text-slate-400" title="A reminder can be sent once every 24 hours">Reminder sent recently</span>');
     if (canWrite) actions.push('<button type="button" class="btn-danger delete-btn text-xs font-medium text-[#ed1c24] hover:underline" data-id="' + a.id + '">Delete</button>');
     return '<div class="px-6 py-4 flex flex-col gap-2">' +
       '<div class="flex items-center gap-2 flex-wrap">' + stateChip(a) + audienceChip(a) + '</div>' +
@@ -462,28 +515,38 @@
     '</div>';
   }
 
-  function renderList(focusRole) {
+  function renderList() {
     paintTabs();
-    const needle = annSearch.value.trim().toLowerCase();
+    const needle = document.getElementById('annSearch').value.trim().toLowerCase();
     let rows = all.filter(function(a) {
       if (tab !== 'all' && a.state !== tab) return false;
       return !needle || a.title.toLowerCase().includes(needle) || a.body.toLowerCase().includes(needle);
     });
     rows.sort(function(x, y) {
       const d = new Date(String(x.publishAt).replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00')) - new Date(String(y.publishAt).replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00'));
-      return annSort.value === 'oldest' ? d : -d;
+      return document.getElementById('annSort').value === 'oldest' ? d : -d;
     });
-    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-    page = Math.min(Math.max(1, page), totalPages);
-    listState.save({ tab: tab, sort: annSort.value, page: page, pageSize: pageSize, search: annSearch.value.trim() });
-    const start = (page - 1) * pageSize;
-    const slice = rows.slice(start, start + pageSize);
+    const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    page = Math.min(page, totalPages);
+    const start = (page - 1) * PAGE_SIZE;
+    const slice = rows.slice(start, start + PAGE_SIZE);
     const list = document.getElementById('announcementsList');
     list.innerHTML = slice.length
       ? slice.map(renderRow).join('')
-      : '<p class="px-6 py-8 text-center text-sm text-slate-500">' + (all.length ? 'No announcements match.' : 'No announcements yet.') + '</p>';
-    pager.render({ page: page, pageSize: pageSize, total: rows.length, totalPages: totalPages, shown: slice.length, startIndex: rows.length ? start + 1 : 0 });
-    pager.focus(focusRole);
+      : '<p class="px-6 py-8 text-center text-sm text-slate-400">' + (all.length ? 'No announcements match.' : 'No announcements yet.') + '</p>';
+
+    document.getElementById('annPagerSummary').textContent = rows.length
+      ? 'Showing ' + (start + 1) + '–' + (start + slice.length) + ' of ' + rows.length + ' announcement' + (rows.length === 1 ? '' : 's')
+      : ' ';
+    const pager = document.getElementById('annPager');
+    pager.innerHTML = totalPages > 1
+      ? '<button type="button" class="pg-btn px-3 py-1.5 text-xs border border-slate-300 rounded-md ' + (page === 1 ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-50') + '" data-page="' + (page - 1) + '"' + (page === 1 ? ' disabled' : '') + '>Prev</button>' +
+        Array.from({ length: totalPages }, function(_, i) {
+          const n = i + 1;
+          return '<button type="button" class="pg-btn px-3 py-1.5 text-xs border rounded-md ' + (n === page ? 'bg-[#ed1c24] text-white border-[#ed1c24]' : 'border-slate-300 text-slate-600 hover:bg-slate-50') + '" data-page="' + n + '">' + n + '</button>';
+        }).join('') +
+        '<button type="button" class="pg-btn px-3 py-1.5 text-xs border border-slate-300 rounded-md ' + (page === totalPages ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-50') + '" data-page="' + (page + 1) + '"' + (page === totalPages ? ' disabled' : '') + '>Next</button>'
+      : '';
   }
 
   let annLoadedOnce = false;
@@ -511,15 +574,21 @@
     page = 1;
     renderList();
   });
-  annSearch.addEventListener('input', function() { page = 1; renderList(); });
-  annSort.addEventListener('change', function() { page = 1; renderList(); });
+  document.getElementById('annSearch').addEventListener('input', function() { page = 1; renderList(); });
+  document.getElementById('annSort').addEventListener('change', function() { page = 1; renderList(); });
+  document.getElementById('annPager').addEventListener('click', function(e) {
+    const btn = e.target.closest('.pg-btn');
+    if (!btn || btn.disabled) return;
+    page = Number(btn.dataset.page);
+    renderList();
+  });
 
   document.getElementById('announcementsList').addEventListener('click', async function(e) {
     const del = e.target.closest('.delete-btn');
     const rem = e.target.closest('.remind-btn');
     const edit = e.target.closest('.edit-btn');
     if (del) {
-      if (!(await PP.confirm('This cannot be undone.', { title: 'Delete this announcement?', okLabel: 'Delete', danger: true }))) return;
+      if (!(await showConfirm('Delete this announcement? This cannot be undone.'))) return;
       del.disabled = true;
       await fetch('api/announcements.php', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -531,7 +600,7 @@
       const a = all.find(function(x) { return x.id === Number(rem.dataset.id); });
       const unread = a ? a.audienceCount - a.readCount : 0;
       const rosterOnly = a ? (a.rosterOnlyCount || 0) : 0;
-      if (!(await PP.confirm('"' + (a ? a.title : 'This announcement') + '" will be emailed to the ' + unread + ' registered student' + (unread === 1 ? '' : 's') + ' who have not seen it' + (rosterOnly ? ' and the ' + rosterOnly + ' roster student' + (rosterOnly === 1 ? '' : 's') + ' who have not registered yet' : '') + '. You can do this once every 24 hours.', { title: 'Send a reminder?', okLabel: 'Send reminder' }))) return;
+      if (!(await showConfirm('Email a reminder about "' + (a ? a.title : 'this announcement') + '" to the ' + unread + ' registered student' + (unread === 1 ? '' : 's') + ' who have not seen it' + (rosterOnly ? ' and the ' + rosterOnly + ' roster student' + (rosterOnly === 1 ? '' : 's') + ' who have not registered yet' : '') + '? You can do this once every 24 hours.'))) return;
       rem.disabled = true;
       const res = await fetch('api/announcements.php', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -576,7 +645,7 @@
 
   function renderTemplates() {
     if (!templates.length) {
-      templateBox.innerHTML = '<p class="text-xs text-slate-500">No templates yet. Use "+ New template" to write one.</p>';
+      templateBox.innerHTML = '<p class="text-xs text-slate-400">No templates yet. Use "+ New template" to write one.</p>';
       return;
     }
     templateBox.innerHTML = templates.map(function(tp) {
@@ -606,12 +675,16 @@
     tplBody.value = tp ? tp.body : '';
     document.getElementById('tplBodyCount').textContent = tplBody.value.length;
     tplError.classList.add('hidden');
-    tplDialog.open(tplName);
+    tplModal.classList.remove('hidden');
+    setTimeout(function() { tplModal.classList.add('is-open'); tplName.focus(); }, 16);
   }
-  // The shared pop-up behaviour (PP.dialog in js/ui-state.js): x, Cancel and Escape close it.
-  const tplDialog = PP.dialog(tplModal);
-  function closeTemplateModal() { tplDialog.close(); }
+  function closeTemplateModal() {
+    tplModal.classList.remove('is-open');
+    setTimeout(function() { tplModal.classList.add('hidden'); }, 260);
+  }
   document.getElementById('newTemplateBtn').addEventListener('click', function() { openTemplateModal(null); });
+  document.getElementById('tplCancelBtn').addEventListener('click', closeTemplateModal);
+  tplModal.addEventListener('click', function(e) { if (e.target.id === 'tplModal') closeTemplateModal(); });
   tplBody.addEventListener('input', function() { document.getElementById('tplBodyCount').textContent = tplBody.value.length; });
   document.getElementById('tplSaveBtn').addEventListener('click', async function() {
     const payload = { name: tplName.value.trim(), title: tplTitle.value.trim(), body: tplBody.value.trim() };
@@ -633,6 +706,7 @@
       this.disabled = false;
     }
   });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && !tplModal.classList.contains('hidden')) closeTemplateModal(); });
 
   templateBox.addEventListener('click', async function(e) {
     const use = e.target.closest('.tpl-btn');
@@ -643,7 +717,7 @@
     const tp = templates.find(function(x) { return x.id === Number(el.dataset.id); });
     if (!tp) return;
     if (use) {
-      if ((titleInput.value.trim() || bodyInput.value.trim()) && !(await PP.confirm('What you have typed in the title and message will be replaced.', { title: 'Use this template?', okLabel: 'Replace' }))) return;
+      if ((titleInput.value.trim() || bodyInput.value.trim()) && !(await showConfirm('Replace what you have typed with this template?'))) return;
       titleInput.value = tp.title;
       bodyInput.value = tp.body;
       updateCounts();
@@ -651,7 +725,7 @@
     } else if (edit) {
       openTemplateModal(tp);
     } else if (del) {
-      if (!(await PP.confirm('Announcements already sent are not affected.', { title: 'Delete the template "' + tp.name + '"?', okLabel: 'Delete', danger: true }))) return;
+      if (!(await showConfirm('Delete the template "' + tp.name + '"? Announcements already sent are not affected.'))) return;
       const res = await fetch('api/announcement-templates.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'delete', id: tp.id }) });
       const data = await res.json();
       showToast(data.success ? 'Template deleted.' : (data.error || 'Could not delete the template.'), !data.success);
@@ -720,7 +794,7 @@
       if (!s) return '';
       return '<span class="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-700 text-xs rounded-full pl-2.5 pr-1.5 py-1">' +
         escapeHtml(s.name) +
-        '<button type="button" class="chip-remove text-slate-500 hover:text-[#ed1c24] text-sm leading-none px-0.5" data-id="' + id + '" aria-label="Remove ' + escapeHtml(s.name) + '">&times;</button>' +
+        '<button type="button" class="chip-remove text-slate-400 hover:text-[#ed1c24] text-sm leading-none px-0.5" data-id="' + id + '" aria-label="Remove ' + escapeHtml(s.name) + '">&times;</button>' +
       '</span>';
     }).join('');
     document.getElementById('selectedCount').textContent = selectedStudentIds.size;
@@ -739,9 +813,9 @@
     resultsBox.innerHTML = matches.length
       ? matches.map(function(s) {
           return '<button type="button" class="student-option w-full text-left px-3 py-2 text-sm hover:bg-slate-50" data-id="' + s.userId + '">' +
-            escapeHtml(s.name) + ' <span class="text-xs text-slate-500">(' + escapeHtml(s.strand) + (s.section ? ' ' + escapeHtml(s.section) : '') + ')</span></button>';
+            escapeHtml(s.name) + ' <span class="text-xs text-slate-400">(' + escapeHtml(s.strand) + (s.section ? ' ' + escapeHtml(s.section) : '') + ')</span></button>';
         }).join('')
-      : '<p class="text-xs text-slate-500 text-center py-4">No matching students.</p>';
+      : '<p class="text-xs text-slate-400 text-center py-4">No matching students.</p>';
     resultsBox.classList.remove('hidden');
   }
 
@@ -845,7 +919,7 @@
     // Sending is not undoable: an email to everyone goes out right away, so confirm it first.
     if (!isDraft && targetType === 'all' && !publishAtInput.value && audienceInfo) {
       const total = audienceInfo.registered + audienceInfo.notRegistered;
-      if (!(await PP.confirm('It will be emailed to ' + total + ' student' + (total === 1 ? '' : 's') + ' (' + audienceInfo.registered + ' registered, ' + audienceInfo.notRegistered + ' not registered yet).', { title: 'Send "' + body.title + '" now?', okLabel: 'Send now' }))) return;
+      if (!(await showConfirm('Send "' + body.title + '" now? It will be emailed to ' + total + ' student' + (total === 1 ? '' : 's') + ' (' + audienceInfo.registered + ' registered, ' + audienceInfo.notRegistered + ' not registered yet).'))) return;
     }
 
     const buttons = e.target.querySelectorAll('button[type="submit"]');

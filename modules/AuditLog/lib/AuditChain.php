@@ -147,39 +147,6 @@ class AuditChain
     }
 
     /**
-     * Re-seals every entry, and re-tags the anchor, with the current APP_AES_KEY. For the key-rotation
-     * tool only (modules/Encryption/lib/KeyRotation.php), which first checks the whole chain with the old
-     * key, so this never seals over a change. Must run inside a transaction.
-     *
-     * @param string $start the chain's start as read with the old key (anchor())
-     * @return int how many entries were re-sealed
-     */
-    public static function resealAll(PDO $pdo, string $start): int
-    {
-        self::lock($pdo);
-        if ($start !== self::ZERO || self::storedAnchor($pdo) !== null) {
-            self::setAnchor($pdo, $start);
-        }
-        $batch = $pdo->prepare('SELECT ' . self::ROW_SQL . ' FROM audit_log WHERE id > ? ORDER BY id LIMIT 500');
-        $update = $pdo->prepare('UPDATE audit_log SET prev_hash = ?, row_hash = ? WHERE id = ?');
-        $prev = $start;
-        $after = PHP_INT_MIN;
-        $sealed = 0;
-        do {
-            $batch->execute([$after]);
-            $rows = $batch->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($rows as $row) {
-                $hash = self::seal($prev, $row);
-                $update->execute([$prev, $hash, $row['id']]);
-                $prev = $hash;
-                $after = (int) $row['id'];
-                $sealed++;
-            }
-        } while (count($rows) === 500);
-        return $sealed;
-    }
-
-    /**
      * Checks every entry from the oldest: its seal matches its contents, and it links to the entry
      * before it. Reads one consistent snapshot of the log.
      *

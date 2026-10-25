@@ -81,9 +81,9 @@
     <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
       <svg viewBox="0 0 24 24" fill="none" class="w-7 h-7 text-green-600"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
-    <h3 class="text-lg font-semibold text-[#001c43]">Account activated</h3>
+    <h3 class="text-lg font-semibold text-[#001c43]">Account Activated</h3>
     <p class="text-sm text-gray-500 leading-relaxed">Your password is set. You can now sign in with your username or school email.</p>
-    <a href="staff-login" id="successSignInLink" class="w-full py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium shadow hover:opacity-90 transition text-center">Go to sign in</a>
+    <a href="staff-login" class="w-full py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium shadow hover:opacity-90 transition text-center">Go to Sign In</a>
   </div>
 </div>
 
@@ -118,7 +118,7 @@
         form.reset();
         var modal = document.getElementById('successModal');
         modal.classList.remove('hidden');
-        setTimeout(function() { modal.classList.add('is-open'); document.getElementById('successSignInLink').focus(); }, 16);
+        setTimeout(function() { modal.classList.add('is-open'); }, 16);
       } catch (err) {
         showMessage('Unable to reach the server. Please try again.');
       } finally {

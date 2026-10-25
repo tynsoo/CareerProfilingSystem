@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="js/csrf.js"></script><script src="js/ui-state.js"></script>
-<title>Program Mapping Crosswalk — Career Profiling System</title>
+<title>Career Dataset — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   body{ font-family:'Inter', sans-serif; }
+  select{ appearance:none; -webkit-appearance:none; }
 </style>
 <link rel="stylesheet" href="css/motion.css">
 </head>
@@ -39,7 +39,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -103,15 +103,15 @@
       <!-- Page Header -->
       <div class="flex items-start justify-between flex-wrap gap-4 mb-8">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Program Mapping Crosswalk</h1>
-          <p class="text-sm text-slate-500 mt-1">MMCL programs mapped to their RIASEC (Holland) codes and colleges.</p>
+          <h1 class="text-2xl font-bold text-slate-900">Career Dataset</h1>
+          <p class="text-sm text-slate-500 mt-1">MMCL programs and their RIASEC codes.</p>
         </div>
         <div class="flex items-center gap-3">
-          <div class="pp-filter-search w-64">
-            <img src="images/admin/icon-search2.svg" alt="">
-            <input type="text" id="searchInput" placeholder="Search programs..." aria-label="Search programs" class="pp-filter-input">
+          <div class="relative">
+            <img src="images/admin/icon-search2.svg" alt="" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4">
+            <input type="text" id="searchInput" placeholder="Search programs..." aria-label="Search programs" class="w-64 pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
           </div>
-          <a href="add-career" id="addProgramLink" class="flex items-center gap-2 bg-[#ed1c24] text-white rounded-md px-5 py-2.5 text-sm font-medium shadow-sm hover:opacity-90">
+          <a href="add-career" id="addProgramBtn" class="hidden flex items-center gap-2 bg-[#ed1c24] text-white rounded-md px-5 py-2.5 text-sm font-medium shadow-sm hover:opacity-90">
             <span class="font-black">+</span> Add Program
           </a>
         </div>
@@ -154,39 +154,46 @@
       <!-- Main Data Section -->
       <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
 
-        <!-- Filters Bar (the Audit Log filter style: each drop-down says what it filters; labels for screen readers) -->
-        <div class="border-b border-slate-200 px-5 py-4 flex items-center justify-between flex-wrap gap-3">
-          <div class="flex items-center gap-3 flex-wrap">
-            <div>
-              <label for="filterDepartment" class="pp-sr-only">College</label>
-              <select id="filterDepartment" class="pp-filter-select">
-                <option value="All">All Colleges</option>
-              </select>
+        <!-- Filters Bar -->
+        <div class="border-b border-slate-200 px-5 py-5 flex items-end justify-between flex-wrap gap-4">
+          <div class="flex items-start gap-4 flex-wrap">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-slate-600">College</label>
+              <div class="relative">
+                <select id="filterDepartment" class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[162px]">
+                  <option value="All">All Colleges</option>
+                </select>
+                <img src="images/admin/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-1.5 pointer-events-none">
+              </div>
             </div>
-            <div>
-              <label for="filterRiasec" class="pp-sr-only">RIASEC code</label>
-              <select id="filterRiasec" class="pp-filter-select">
-                <option value="All">All RIASEC Codes</option>
-                <option>R</option><option>I</option><option>A</option>
-                <option>S</option><option>E</option><option>C</option>
-              </select>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-slate-600">RIASEC Code</label>
+              <div class="relative">
+                <select id="filterRiasec" class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[121px]">
+                  <option value="All">All Codes</option>
+                  <option>R</option><option>I</option><option>A</option>
+                  <option>S</option><option>E</option><option>C</option>
+                </select>
+                <img src="images/admin/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-1.5 pointer-events-none">
+              </div>
             </div>
-            <div>
-              <label for="filterStatus" class="pp-sr-only">Status</label>
-              <select id="filterStatus" class="pp-filter-select">
-                <option value="All">All Status</option>
-                <option>Active</option>
-                <option>Inactive</option>
-              </select>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-medium text-slate-600">Status</label>
+              <div class="relative">
+                <select id="filterStatus" class="appearance-none bg-white border border-slate-300 rounded-md pl-3 pr-9 py-2 text-sm text-slate-700 w-[117px]">
+                  <option value="All">All Status</option>
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select>
+                <img src="images/admin/icon-chevron-select.svg" alt="" class="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-1.5 pointer-events-none">
+              </div>
             </div>
           </div>
-          <button type="button" id="clearFiltersBtn" disabled class="pp-clear-filters">
-            <span class="pp-clear-filters-icon" aria-hidden="true"></span>
-            Clear filters
+          <button type="button" id="clearFiltersBtn" class="flex items-center gap-2 border border-slate-300 rounded-md px-4 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50">
+            <img src="images/admin/icon-clear-filters.svg" alt="" class="w-4 h-3.5">
+            Clear Filters
           </button>
         </div>
-        <!-- The college colors (css/components.css), shown for the colleges in the dataset. -->
-        <div id="collegeLegend" class="college-legend px-5 py-3 border-b border-slate-100" aria-label="College colors"></div>
 
         <!-- Data Table -->
         <div class="overflow-x-auto">
@@ -205,13 +212,18 @@
           </table>
         </div>
 
-        <!-- Filled by PP.pager: "Showing 1 to 25 of N programs", Rows per page and the page buttons. -->
-        <div id="careerPager"></div>
+        <!-- Pagination -->
+        <div class="border-t border-slate-200 flex items-center justify-between px-6 py-4 flex-wrap gap-3">
+          <p class="text-sm text-slate-600" id="paginationSummary">
+            Showing <span class="font-medium" id="filterFrom">1</span> to <span class="font-medium" id="filterTo">10</span> of <span class="font-medium" id="filterTotal">126</span> careers
+          </p>
+          <div class="flex items-center gap-1" id="paginationBar"></div>
+        </div>
       </div>
 
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -222,14 +234,13 @@
 </div>
 
 <!-- Edit Career Modal -->
-<div id="editCareerModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-md">
-    <div class="pp-dialog-head">
-      <h2 class="pp-dialog-title">Edit program</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
+<div id="editCareerModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+      <h2 class="text-lg font-bold text-slate-900">Edit Career</h2>
+      <button type="button" class="edit-career-close-btn text-slate-400 hover:text-slate-600 text-xl leading-none" aria-label="Close">&times;</button>
     </div>
-    <form id="editCareerForm">
-    <div class="pp-dialog-form">
+    <form id="editCareerForm" class="px-6 py-5 flex flex-col gap-4">
       <input type="hidden" id="editCareerId">
       <div class="flex flex-col gap-1">
         <label class="text-xs font-medium text-slate-600">Program Title</label>
@@ -250,29 +261,50 @@
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-medium text-slate-600">Holland Code (3 letters)</label>
         <input type="text" id="editHollandCode" required maxlength="3" placeholder="e.g. RIC" class="border border-slate-300 rounded-md px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+        <p class="text-xs text-slate-500">Use only the code approved by the Guidance Office. Changing it recomputes every student's recommendations.</p>
       </div>
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-slate-600">Related SHS Strands <span class="text-slate-500">(optional; only used if the strand weight is above 0)</span></label>
+        <label class="text-xs font-medium text-slate-600">Related SHS Strands <span class="text-slate-400">(optional; for reference only, not used in the recommendations)</span></label>
         <div id="editStrands" class="flex flex-wrap gap-x-4 gap-y-2"></div>
       </div>
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-slate-600">Description <span class="text-slate-500">(optional)</span></label>
+        <label class="text-xs font-medium text-slate-600">Description <span class="text-slate-400">(optional)</span></label>
         <textarea id="editDescription" rows="3" maxlength="1000" placeholder="A short description of what this program covers and where it leads." class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
       </div>
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-slate-600">Careers <span class="text-slate-500">(optional, one per line, up to 8)</span></label>
+        <label class="text-xs font-medium text-slate-600">Careers <span class="text-slate-400">(optional, one per line, up to 8)</span></label>
         <textarea id="editCareers" rows="4" placeholder="Software Engineer&#10;Data Analyst&#10;Systems Analyst" class="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
       </div>
-    </div>
-    <div class="pp-dialog-foot">
-      <button type="button" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="submit" class="pp-btn pp-btn-primary">Save</button>
-    </div>
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" class="edit-career-close-btn px-4 py-2 text-sm font-medium text-slate-600 rounded-md border border-slate-300 hover:bg-slate-50">Cancel</button>
+        <button type="submit" id="editSaveBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90 disabled:opacity-50">Save Changes</button>
+      </div>
     </form>
   </div>
 </div>
 
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
+  </div>
+</div>
+
 <div id="toastContainer" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+<div id="genericConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <p id="genericConfirmMessage" class="text-sm text-gray-700 whitespace-pre-line"></p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="genericConfirmCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="genericConfirmOkBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
   function showToast(message, isError) {
     const container = document.getElementById('toastContainer');
@@ -282,6 +314,31 @@
     container.appendChild(toast);
     setTimeout(function() { toast.remove(); }, 5000);
   }
+  function showConfirm(message) {
+    return new Promise(function(resolve) {
+      const modal = document.getElementById('genericConfirmModal');
+      document.getElementById('genericConfirmMessage').textContent = message;
+      modal.classList.remove('hidden');
+      setTimeout(function() { modal.classList.add('is-open'); }, 16);
+      const okBtn = document.getElementById('genericConfirmOkBtn');
+      const cancelBtn = document.getElementById('genericConfirmCancelBtn');
+      function cleanup(result) {
+        modal.classList.remove('is-open');
+        setTimeout(function() { modal.classList.add('hidden'); }, 260);
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        modal.removeEventListener('click', onBackdrop);
+        resolve(result);
+      }
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      function onBackdrop(e) { if (e.target.id === 'genericConfirmModal') cleanup(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      modal.addEventListener('click', onBackdrop);
+    });
+  }
+
 
 (async function () {
   const sessionData = await (await fetch('api/session.php')).json();
@@ -290,16 +347,31 @@
     window.location.replace('staff-login');
     return;
   }
-  // Full on Program Mapping Crosswalk (permission table) adds and edits programs; View Only looks. The server checks each change.
-  const canEdit = PP.may(currentUser, 'programs', 'full');
-  if (!canEdit) document.getElementById('addProgramLink').classList.add('hidden');
 
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
   if (currentUser.avatarUrl) {
     headerAvatarWrap.innerHTML = `<img src="${currentUser.avatarUrl}" alt="" class="w-full h-full object-cover">`;
   }
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -339,11 +411,25 @@
   }, { passive: true });
   })();
 
-  // Badge colors by meaning (PP.badge in js/ui-state.js).
-  const STATUS_TONE = { Active: 'green', Inactive: 'gray' };
+  const COLLEGE_COLORS = [
+    { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
+    { bg: 'bg-[#fee2e2]', text: 'text-[#dc2626]' },
+    { bg: 'bg-[#fef9c3]', text: 'text-[#ca8a04]' },
+    { bg: 'bg-[#f3e8ff]', text: 'text-[#9333ea]' },
+    { bg: 'bg-[#e0e7ff]', text: 'text-[#4f46e5]' },
+    { bg: 'bg-[#e0f2fe]', text: 'text-[#0369a1]' },
+    { bg: 'bg-[#fae8ff]', text: 'text-[#a21caf]' },
+    { bg: 'bg-[#ffedd5]', text: 'text-[#c2410c]' }
+  ];
+  const STATUS_COLORS = {
+    Active:   { bg: 'bg-[#dcfce7]', text: 'text-[#16a34a]' },
+    Inactive: { bg: 'bg-slate-100', text: 'text-slate-500' }
+  };
 
   let programs = [];
+  let canEdit = false;   // Full on "Career Profile Input" (admin and Guidance Counselors by default); others view only
   let colleges = [];
+  let collegeColor = {};
 
   const tbody = document.getElementById('careerTableBody');
   const searchInput = document.getElementById('searchInput');
@@ -351,20 +437,8 @@
   const filterRiasec = document.getElementById('filterRiasec');
   const filterStatus = document.getElementById('filterStatus');
   const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-
-  // Filters and the page live in the page address (Reload, Back, a shared link); the search box stays in
-  // this tab only (PP.listState in js/ui-state.js), same as every other staff list.
-  const listState = PP.listState({ search: '', department: 'All', riasec: 'All', status: 'All', page: 1, pageSize: 25 }, ['search']);
-  const state = listState.read();
-  if (![25, 50, 100].includes(state.pageSize)) state.pageSize = 25;
-  const pager = PP.pager('careerPager', {
-    noun: ['program', 'programs'], label: 'Program list pages', pageSize: state.pageSize, emptyText: 'No programs to show',
-    onChange: function (page, pageSize, focusRole) {
-      state.page = page;
-      state.pageSize = pageSize;
-      render(focusRole);
-    }
-  });
+  const filterFrom = document.getElementById('filterFrom');
+  const filterTo = document.getElementById('filterTo');
 
   function escapeHtml(str) {
     return String(str)
@@ -381,38 +455,35 @@
   }
 
   function renderRow(program) {
+    const dept = collegeColor[program.collegeCode] || { bg: 'bg-slate-100', text: 'text-slate-600' };
+    const status = STATUS_COLORS[program.status] || STATUS_COLORS.Active;
     const rowOpacity = program.status === 'Inactive' ? ' opacity-60' : '';
     return `
       <tr data-id="${program.id}" class="${rowOpacity}">
         <td class="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">${escapeHtml(program.title)}</td>
         <td class="px-6 py-4"><div class="flex gap-1.5">${riasecBadges(program.hollandCode)}</div></td>
-        <td class="px-6 py-4">${PP.college.badge(program.collegeCode)}</td>
-        <td class="px-6 py-4">${PP.badge(program.status, STATUS_TONE[program.status] || 'green')}</td>
-        <td class="px-6 py-4"><div class="flex items-center gap-3">${!canEdit ? '' : `
+        <td class="px-6 py-4"><span class="inline-block ${dept.bg} ${dept.text} text-xs font-medium px-3 py-1 rounded-full">${escapeHtml(program.collegeCode)}</span></td>
+        <td class="px-6 py-4"><span class="inline-block ${status.bg} ${status.text} text-xs font-medium px-3 py-1 rounded-full">${escapeHtml(program.status)}</span></td>
+        <td class="px-6 py-4"><div class="flex items-center gap-3">${canEdit ? `
           <button type="button" class="edit-career-btn" data-id="${program.id}"><img src="images/admin/icon-row-edit.svg" alt="Edit" class="w-3.5 h-3.5"></button>
-          <button type="button" class="toggle-active-career-btn text-xs font-semibold rounded-md px-2.5 py-1 border whitespace-nowrap ${program.status === 'Active' ? 'btn-danger text-[#ed1c24] border-[#ed1c24] hover:bg-red-50' : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50'}" data-id="${program.id}" data-active="${program.status === 'Active' ? '1' : '0'}" data-title="${escapeHtml(program.title)}">${program.status === 'Active' ? 'Deactivate' : 'Reactivate'}</button>`}
+          <button type="button" class="toggle-active-career-btn text-xs font-semibold rounded-md px-2.5 py-1 border whitespace-nowrap ${program.status === 'Active' ? 'btn-danger text-[#ed1c24] border-[#ed1c24] hover:bg-red-50' : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50'}" data-id="${program.id}" data-active="${program.status === 'Active' ? '1' : '0'}" data-title="${escapeHtml(program.title)}">${program.status === 'Active' ? 'Deactivate' : 'Reactivate'}</button>` : '<span class="text-xs text-slate-400">View only</span>'}
         </div></td>
       </tr>`;
   }
+
+  const PAGE_SIZE = 8;
+  const state = { page: 1 };
 
   function applyFilters() {
     state.page = 1;
     render();
   }
 
-  function render(focusRole) {
+  function render() {
     const search = searchInput.value.trim().toLowerCase();
     const dept = filterDepartment.value;
     const riasec = filterRiasec.value;
     const status = filterStatus.value;
-
-    state.search = searchInput.value.trim();
-    state.department = dept;
-    state.riasec = riasec;
-    state.status = status;
-    listState.save(state);
-
-    clearFiltersBtn.disabled = !search && dept === 'All' && riasec === 'All' && status === 'All';
 
     const filtered = programs.filter(p => {
       const matchesSearch = !search || p.title.toLowerCase().includes(search);
@@ -422,22 +493,59 @@
       return matchesSearch && matchesDept && matchesRiasec && matchesStatus;
     });
 
-    const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     state.page = Math.min(state.page, totalPages);
-    listState.save(state);
-    const offset = (state.page - 1) * state.pageSize;
-    const pageItems = filtered.slice(offset, offset + state.pageSize);
+    const offset = (state.page - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(offset, offset + PAGE_SIZE);
 
     tbody.innerHTML = pageItems.length
       ? pageItems.map(renderRow).join('')
       : '<tr><td colspan="5" class="px-6 py-12 text-center text-sm text-slate-500">No programs match your filters.</td></tr>';
 
-    pager.render({
-      page: state.page, pageSize: state.pageSize, total: filtered.length, totalPages,
-      shown: pageItems.length, startIndex: filtered.length ? offset + 1 : 0
-    });
-    pager.focus(focusRole);
+    filterFrom.textContent = filtered.length ? String(offset + 1) : '0';
+    filterTo.textContent = String(offset + pageItems.length);
+    document.getElementById('filterTotal').textContent = String(filtered.length);
+
+    renderPagination(state.page, totalPages);
     bindEditButtons();
+  }
+
+  function renderPagination(page, totalPages) {
+    const bar = document.getElementById('paginationBar');
+    const btnBase = 'w-9 h-9 flex items-center justify-center rounded-md text-sm font-medium';
+    const active = 'bg-[#ed1c24] border border-[#ed1c24] text-white';
+    const inactive = 'border border-slate-300 text-slate-700 hover:bg-slate-50';
+
+    const pages = [];
+    for (let p = 1; p <= totalPages; p++) {
+      if (p === 1 || p === totalPages || Math.abs(p - page) <= 2) pages.push(p);
+    }
+    const withEllipses = [];
+    let prevPage = 0;
+    pages.forEach(p => {
+      if (prevPage && p - prevPage > 1) withEllipses.push('...');
+      withEllipses.push(p);
+      prevPage = p;
+    });
+
+    let html = '<button type="button" data-page="' + (page - 1) + '" ' + (page <= 1 ? 'disabled' : '') +
+      ' class="page-nav-btn w-9 h-9 flex items-center justify-center border border-slate-300 rounded-md hover:bg-slate-50 ' + (page <= 1 ? 'opacity-40 cursor-not-allowed' : '') + '">' +
+      '<img src="images/admin/icon-page-prev.svg" alt="Previous" class="w-1.5 h-2.5"></button>';
+    withEllipses.forEach(p => {
+      if (p === '...') {
+        html += '<span class="w-9 h-9 flex items-center justify-center text-slate-500 text-sm">...</span>';
+      } else {
+        html += '<button type="button" data-page="' + p + '" class="page-btn ' + btnBase + ' ' + (p === page ? active : inactive) + '">' + p + '</button>';
+      }
+    });
+    html += '<button type="button" data-page="' + (page + 1) + '" ' + (page >= totalPages ? 'disabled' : '') +
+      ' class="page-nav-btn w-9 h-9 flex items-center justify-center border border-slate-300 rounded-md hover:bg-slate-50 ' + (page >= totalPages ? 'opacity-40 cursor-not-allowed' : '') + '">' +
+      '<img src="images/admin/icon-page-next.svg" alt="Next" class="w-1.5 h-2.5"></button>';
+
+    bar.innerHTML = html;
+    bar.querySelectorAll('button[data-page]:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', () => { state.page = Number(btn.dataset.page); render(); });
+    });
   }
 
   function bindEditButtons() {
@@ -451,9 +559,9 @@
     tbody.querySelectorAll('.toggle-active-career-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const willDeactivate = btn.dataset.active === '1';
-        const ok = await PP.confirm(
-          willDeactivate ? 'It will no longer be offered as a career match. You can reactivate it later.' : 'It will be offered as a career match again.',
-          { title: (willDeactivate ? 'Deactivate' : 'Reactivate') + ` "${btn.dataset.title}"?`, okLabel: willDeactivate ? 'Deactivate' : 'Reactivate', danger: willDeactivate }
+        const ok = await showConfirm(
+          (willDeactivate ? 'Deactivate' : 'Reactivate') + ` "${btn.dataset.title}"? ` +
+          (willDeactivate ? 'It will no longer be offered as a career match, but can be re-activated later.' : 'It will be offered as a career match again.')
         );
         if (!ok) return;
         btn.disabled = true;
@@ -495,16 +603,21 @@
     editTitle.value = program.title;
     editDepartment.value = program.collegeId;
     editHollandCode.value = program.hollandCode;
+    editHollandCode.dataset.original = program.hollandCode;   // to warn before a code change
     editDescription.value = program.description || '';
     editCareers.value = (program.careers || []).join('\n');
     editStatus.value = program.status;
     renderStrandCheckboxes(program.relatedStrands || []);
-    editDialog.open();
+    editModal.classList.remove('hidden');
   }
 
-  // The shared pop-up behaviour (PP.dialog in js/ui-state.js): x, Cancel and Escape close it; the form is cleared.
-  const editDialog = PP.dialog(editModal, { onClose: () => editForm.reset() });
-  function closeEditModal() { editDialog.close(); }
+  function closeEditModal() {
+    editModal.classList.add('hidden');
+    editForm.reset();
+  }
+
+  document.querySelectorAll('.edit-career-close-btn').forEach(btn => btn.addEventListener('click', closeEditModal));
+  editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
 
   editForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -516,16 +629,33 @@
       return;
     }
 
+    // The CBF compares every student with every program's code, so a code change affects everyone.
+    const previousCode = editHollandCode.dataset.original || '';
+    if (previousCode && hollandCode !== previousCode) {
+      const ok = await showConfirm(
+        'Change the RIASEC code of "' + editTitle.value.trim() + '" from ' + previousCode + ' to ' + hollandCode + '?\n\n' +
+        'This changes the code the recommendations (CBF) use for this program, and every student\'s ' +
+        'recommendations will be recomputed. Use only the code approved by the Guidance Office.'
+      );
+      if (!ok) return;
+    }
+
+    const saveBtn = document.getElementById('editSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = previousCode && hollandCode !== previousCode ? 'Saving and updating recommendations…' : 'Saving…';
     const res = await fetch('api/programs.php', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: id, title: editTitle.value.trim(), collegeId: Number(editDepartment.value),
         hollandCode: hollandCode, status: editStatus.value,
         description: editDescription.value.trim(),
-        careers: editCareers.value.split('\n')
+        careers: editCareers.value.split('\n'),
+        relatedStrands: Array.from(document.querySelectorAll('.edit-strand-cb:checked')).map(cb => cb.value)
       })
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Changes';
     if (!res.ok || !data.success) {
       showToast(data.error || 'Failed to save changes.', true);
       return;
@@ -533,6 +663,14 @@
 
     await loadData();
     closeEditModal();
+    if (data.hollandCodeChanged) {
+      showToast('Saved. RIASEC code changed from ' + data.previousHollandCode + ' to ' + data.hollandCode + '; ' +
+        data.recomputed + (data.recomputed === 1 ? ' student\'s' : ' students\'') + ' recommendations were updated.' +
+        (data.recomputeFailed ? ' ' + data.recomputeFailed + ' could not be updated; run php db/recompute_recommendations.php.' : ''),
+        data.recomputeFailed > 0);
+    } else {
+      showToast('Saved.');
+    }
   });
 
   // ---- Filters wiring ----
@@ -544,7 +682,6 @@
     filterRiasec.value = 'All';
     filterStatus.value = 'All';
     applyFilters();
-    searchInput.focus(); // the button just turned off, so keep the keyboard in the filter bar
   });
 
   // ---- Init ----
@@ -562,9 +699,12 @@
     }
     tbody.removeAttribute('aria-busy');
     programs = data.programs;
+    canEdit = data.canEdit === true;
+    document.getElementById('addProgramBtn').classList.toggle('hidden', !canEdit);
     colleges = data.colleges;
     strandOptions = data.strands || [];
-    PP.college.legend(document.getElementById('collegeLegend'), colleges.map(c => ({ code: c.code, name: c.name })));
+    collegeColor = {};
+    colleges.forEach((c, i) => { collegeColor[c.code] = COLLEGE_COLORS[i % COLLEGE_COLORS.length]; });
 
     const collegeOptions = '<option value="All">All Colleges</option>' +
       colleges.map(c => `<option value="${c.code}">${escapeHtml(c.code)}</option>`).join('');
@@ -575,12 +715,7 @@
     document.getElementById('statActive').textContent = programs.filter(p => p.status === 'Active').length;
     document.getElementById('statColleges').textContent = colleges.length;
 
-    // Start from the filters saved in the page address (Reload, Back, a shared link).
-    searchInput.value = state.search;
-    filterDepartment.value = state.department;
-    filterRiasec.value = state.riasec;
-    filterStatus.value = state.status;
-    render();
+    applyFilters();
   }
   loadData();
 })();

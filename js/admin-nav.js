@@ -6,13 +6,6 @@
  * right after it; data-active names the menu item to highlight (a page that
  * is a child of a menu item, like Student Profile, names its parent).
  * The Logout button below the menu stays in each page's own markup.
- *
- * A page closed to this person (every feature on it is No Access in the permission table, Security Configuration) is not
- * shown at all, and a group left with no pages loses its heading too; My Access still lists every feature with its level,
- * so the person can see why a page is missing. The administrator's own pages (Security Configuration, Audit Log) are not
- * shown to other staff either; they get My Access instead. The list of closed pages comes from api/session.php
- * (user.closedPages): drawn at once from this tab's cached profile, then again from the fresh answer (the 'pp:session'
- * event from js/ui-state.js). router.php refuses those pages too; this only shows it.
  */
 (function () {
   var ICONS = {
@@ -37,7 +30,7 @@
       { id: 'analytics', href: 'analytics', label: 'Analytics &amp; Report', icon: 'analytics' }
     ] },
     { title: 'Assessment', items: [
-      { id: 'career-dataset', href: 'career-dataset', label: 'Program Mapping Crosswalk', icon: 'database' },
+      { id: 'career-dataset', href: 'career-dataset', label: 'Career Dataset', icon: 'database' },
       { id: 'question-bank', href: 'question-bank', label: 'Question Bank', icon: 'quiz' },
       { id: 'assessment-scheduling', href: 'assessment-scheduling', label: 'Assessment Scheduling', icon: 'calendar' },
       { id: 'monitoring', href: 'monitoring', label: 'Monitoring', icon: 'monitoring' }
@@ -47,13 +40,10 @@
       { id: 'counseling-requests', href: 'counseling-requests', label: 'Counseling Requests', icon: 'headset' },
       { id: 'staff-help-center', href: 'staff-help-center', label: 'Help Center', icon: 'help' }
     ] },
-    // only: 'admin' = the Head of Guidance's own pages (Rbac::ADMIN_PAGES), not shown to other staff at all;
-    // only: 'staff' = for Guidance Counselors and Facilitators (their own access, read-only).
     { title: 'Administration', items: [
       { id: 'account-management', href: 'account-management', label: 'Account Management', icon: 'manage' },
-      { id: 'security-configuration', href: 'security-configuration', label: 'Security Configuration', icon: 'shield', only: 'admin' },
-      { id: 'my-access', href: 'my-access', label: 'My Access', icon: 'shield', only: 'staff' },
-      { id: 'audit-log', href: 'audit-log', label: 'Audit Log', icon: 'history', only: 'admin' }
+      { id: 'security-configuration', href: 'security-configuration', label: 'Security Configuration', icon: 'shield' },
+      { id: 'audit-log', href: 'audit-log', label: 'Audit Log', icon: 'history' }
     ] }
   ];
 
@@ -65,49 +55,13 @@
   if (!nav || nav.id !== 'adminNav') nav = document.getElementById('adminNav');
   if (!nav) return;
   var active = nav.getAttribute('data-active') || '';
-  var drawn = null;
 
-  function icon(it) {
-    return '<svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="' + ICONS[it.icon] + '"/></svg>';
-  }
-
-  // Items marked "only" show for that role alone. Before the person is known (a first page with nothing cached yet), only
-  // the shared items and the page you are on are drawn; the rest follows the moment the session answers.
-  function shown(it, role) {
-    if (!it.only || it.id === active) return true;
-    if (!role) return false;
-    return it.only === (role === 'admin' ? 'admin' : 'staff');
-  }
-
-  function draw(user) {
-    var closed = user && Array.isArray(user.closedPages) ? user.closedPages : [];
-    var role = user ? user.role : '';
-    var key = role + '|' + closed.join(',');
-    if (key === drawn) return;
-    drawn = key;
-    var first = true;
-    nav.innerHTML = MENU.map(function (group) {
-      var items = group.items.filter(function (it) {
-        return shown(it, role) && (it.id === active || closed.indexOf(it.id) === -1);
-      }).map(function (it) {
-        return '<a href="' + it.href + '" class="' + ITEM + (it.id === active ? ACTIVE : IDLE) + '"' + (it.id === active ? ' aria-current="page"' : '') + '>' +
-          icon(it) + it.label + '</a>';
-      }).join('');
-      if (!items) return '';
-      var heading = '<p class="px-6 ' + (first ? 'pt-2' : 'pt-6') + ' pb-2 text-xs font-semibold tracking-wide text-white/60 uppercase">' + group.title + '</p>';
-      first = false;
-      return heading + items;
+  nav.innerHTML = MENU.map(function (group, i) {
+    var items = group.items.map(function (it) {
+      return '<a href="' + it.href + '" class="' + ITEM + (it.id === active ? ACTIVE : IDLE) + '"' + (it.id === active ? ' aria-current="page"' : '') + '>' +
+        '<svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="' + ICONS[it.icon] + '"/></svg>' +
+        it.label + '</a>';
     }).join('');
-  }
-
-  draw(window.PP && PP.cachedUser ? PP.cachedUser() : null);
-  window.addEventListener('pp:session', function (e) { draw(e.detail); });
-
-  // The same groups, pages, names and icons for the permission table (js/rbac-features.js: Security Configuration and My
-  // Access), so the two never drift apart. Every item, whatever the role.
-  if (window.PP) {
-    PP.navMenu = MENU.map(function (group) {
-      return { title: group.title, items: group.items.map(function (it) { return { id: it.id, label: it.label, icon: icon(it) }; }) };
-    });
-  }
+    return '<p class="px-6 ' + (i === 0 ? 'pt-2' : 'pt-6') + ' pb-2 text-xs font-semibold tracking-wide text-white/60 uppercase">' + group.title + '</p>' + items;
+  }).join('');
 })();

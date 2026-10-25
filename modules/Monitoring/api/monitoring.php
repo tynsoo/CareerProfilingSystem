@@ -116,9 +116,9 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
     $titles = programTitles($pdo, array_merge([], ...array_map('topMatchIds', $rows)));
 
     $reasonLabels = [
-        'low_confidence' => 'Below minimum confidence threshold',
-        'manual_escalation' => 'Escalated for counselor review',
-        'other' => 'Flagged for manual review',
+        'low_confidence' => 'Low RIASEC match score',
+        'manual_escalation' => 'Escalated to counselor',
+        'other' => 'Manual review',
     ];
 
     $result = array_map(function ($r) use ($titles, $reasonLabels, $threshold) {

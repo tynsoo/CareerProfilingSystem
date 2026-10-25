@@ -78,15 +78,6 @@ class Crypto
         return self::pkcs7Unpad($padded);
     }
 
-    /**
-     * Forgets the cipher built from APP_AES_KEY, so the next enc()/dec() reads the key again. Only the
-     * key-rotation tool (modules/Encryption/lib/KeyRotation.php) changes APP_AES_KEY while running.
-     */
-    public static function forgetKey(): void
-    {
-        self::$cipher = null;
-    }
-
     private static function masterKey(): string
     {
         $key = base64_decode((string) envValue('APP_AES_KEY'), true);

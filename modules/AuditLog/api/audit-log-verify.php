@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
 // (modules/AuditLog/lib/AuditChain.php) and records the check and its result in the log. A POST, because it writes that
 // entry; the CSRF check in _bootstrap.php applies.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user = Rbac::requireRole('admin');
+    $user = Rbac::requireAccess('rac', 'full');
     if ($user['role'] !== 'admin') {
         jsonResponse(['success' => false, 'error' => 'Only administrators can check the audit log.'], 403);
     }

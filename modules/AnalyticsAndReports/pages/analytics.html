@@ -7,13 +7,13 @@
 <title>Analytics &amp; Report — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   body{ font-family:'Inter', sans-serif; }
+  select{ appearance:none; -webkit-appearance:none; }
   /* Send Analytics Report */
   .report-tick { flex:0 0 16px; height:16px; margin-top:2px; border-radius:9999px; background:#e6f3eb url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b8a47' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7'/%3E%3C/svg%3E") center/10px no-repeat; }
   #reportEmail[aria-invalid="true"] { border-color:#b91c1c; }
@@ -47,7 +47,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -114,26 +114,34 @@
           <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Analytics &amp; Report</h1>
           <p class="text-sm text-slate-500 mt-1">Insights and trends based on student assessments and career profiling data.</p>
         </div>
-        <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-3">
           <div class="flex items-center gap-2">
-            <label for="ayFilter" class="pp-filter-label">School Year</label>
-            <select id="ayFilter" class="pp-filter-select"></select>
+            <label for="ayFilter" class="text-xs font-medium text-slate-600">School year</label>
+            <select id="ayFilter" class="border border-slate-300 rounded-md px-3 py-2.5 text-sm text-slate-700 bg-white shadow-sm"></select>
           </div>
-          <div class="flex items-center gap-2">
-            <label for="strandFilter" class="pp-filter-label">Strand</label>
-            <select id="strandFilter" class="pp-filter-select">
-              <option value="">All Strands</option>
-              <option value="STEM">STEM</option>
-              <option value="ABM">ABM</option>
-              <option value="ICT">ICT</option>
-              <option value="HUMSS">HUMSS</option>
-            </select>
-          </div>
-          <div class="flex items-center gap-2">
-            <label for="sectionFilter" class="pp-filter-label">Section</label>
-            <select id="sectionFilter" class="pp-filter-select" disabled>
-              <option value="">Select a strand first</option>
-            </select>
+          <div class="relative">
+            <button type="button" id="filtersBtn" class="flex items-center gap-2 bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+              <img src="images/analytics/icon-filter.svg" alt="" class="w-3.5 h-3">
+              <span id="filtersBtnLabel">Filters</span>
+            </button>
+            <div id="filtersPanel" class="hidden absolute left-0 top-[calc(100%+8px)] w-64 bg-white border border-slate-200 rounded-xl shadow-lg p-4 z-20">
+              <label class="block text-xs font-medium text-slate-600 mb-1">Strand</label>
+              <select id="strandFilter" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm mb-3">
+                <option value="">All Strands</option>
+                <option value="STEM">STEM</option>
+                <option value="ABM">ABM</option>
+                <option value="ICT">ICT</option>
+                <option value="HUMSS">HUMSS</option>
+              </select>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Section</label>
+              <select id="sectionFilter" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm mb-3">
+                <option value="">All Sections</option>
+              </select>
+              <div class="flex items-center gap-2">
+                <button type="button" id="applyStrandFilter" class="flex-1 bg-[#ed1c24] text-white text-sm font-medium rounded-md py-2 hover:opacity-90">Apply</button>
+                <button type="button" id="clearStrandFilter" class="flex-1 border border-slate-300 text-slate-700 text-sm font-medium rounded-md py-2 hover:bg-slate-50">Clear</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -230,7 +238,7 @@
             </div>
           </div>
           <p class="text-sm"><span id="metricStrandPercent" class="font-semibold text-[#673ab7]">—</span> <span class="text-slate-500">of total students</span></p>
-          <p class="text-xs text-slate-500">(<span id="metricStrandCount">0</span> students)</p>
+          <p class="text-xs text-slate-400">(<span id="metricStrandCount">0</span> students)</p>
         </div>
       </div>
 
@@ -267,7 +275,7 @@
             <p id="statsCompleted" class="text-3xl font-bold text-[#1b8a47]">—</p>
           </div>
           <div id="statsChartBox" style="position:relative;height:220px"><canvas id="statsChart"></canvas></div>
-          <p id="statsChartEmpty" class="hidden text-sm text-slate-500 text-center py-6">No students are expected yet.</p>
+          <p id="statsChartEmpty" class="hidden text-sm text-slate-400 text-center py-6">No students are expected yet.</p>
         </div>
       </div>
 
@@ -275,7 +283,7 @@
       <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 mb-6">
         <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Assessment Completion by Academic Year</p>
         <div id="yearBox" style="position:relative"><canvas id="yearChart" height="180"></canvas></div>
-        <p id="yearChartEmpty" class="hidden text-sm text-slate-500 text-center py-6">No Academic Year data yet.</p>      </div>
+        <p id="yearChartEmpty" class="hidden text-sm text-slate-400 text-center py-6">No Academic Year data yet.</p>      </div>
 
       <!-- Recommended Careers Table -->
       <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
@@ -286,7 +294,6 @@
           <div id="topCareersBox" style="position:relative;height:280px">
             <canvas id="topCareersChart" aria-label="Top 5 recommended programs by number of students matched"></canvas>
           </div>
-          <div id="topCareersLegend" class="college-legend mt-3" aria-label="Bar colors: the program's college"></div>
           <p id="topCareersEmpty" class="hidden px-5 py-8 text-center text-sm text-slate-500">No recommendations computed yet.</p>
         </div>
         <div class="border-t border-slate-200 flex items-center justify-between px-4 py-4">
@@ -298,7 +305,7 @@
         </div>
       </div>
 
-      <!-- Analytics Report: preview, export as a PDF and (with Full on Send analytics report) email it (api/analytics-report.php) -->
+      <!-- Send Analytics Report (administrator and Guidance Counselors): emails the Analytics Report as a PDF (api/analytics-report.php) -->
       <section id="sendReportCard" class="hidden bg-white border border-slate-200 rounded-xl shadow-sm mt-6" aria-labelledby="sendReportTitle">
         <div class="border-b border-slate-200 px-5 py-5 flex items-start gap-4">
           <span class="w-10 h-10 rounded-lg bg-[#eef3fc] flex items-center justify-center shrink-0" aria-hidden="true">
@@ -306,12 +313,12 @@
           </span>
           <div>
             <h2 id="sendReportTitle" class="text-base font-semibold text-slate-900">Send Analytics Report</h2>
-            <p id="sendReportIntro" class="text-sm text-slate-500 mt-0.5">Generate and send a summary of the current ProfilePath analytics to the school principal or another authorized school official.</p>
+            <p class="text-sm text-slate-500 mt-0.5">Generate and send a summary of the current ProfilePath analytics to the school principal or another authorized school official.</p>
           </div>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 p-5">
           <form id="sendReportForm" class="lg:col-span-3 flex flex-col gap-4" novalidate>
-            <div id="reportEmailField">
+            <div>
               <label for="reportEmail" class="block text-sm font-medium text-slate-700 mb-1.5">Recipient email address</label>
               <input type="email" id="reportEmail" name="reportEmail" autocomplete="email" maxlength="254" spellcheck="false" autocapitalize="none"
                 placeholder="principal@school.edu.ph" aria-describedby="reportEmailHint reportEmailError"
@@ -352,7 +359,7 @@
 
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -362,47 +369,65 @@
   </div>
 </div>
 
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
+  </div>
+</div>
+
 <div id="toastContainer" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+<div id="genericConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <p id="genericConfirmMessage" class="text-sm text-gray-700"></p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="genericConfirmCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="genericConfirmOkBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- Send Analytics Report: preview of the report that would be attached -->
-<div id="reportPreviewModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-xl">
-    <div class="pp-dialog-head pb-4 border-b border-slate-200">
+<div id="reportPreviewModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reportPreviewTitle">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-3xl max-h-[90vh] flex flex-col">
+    <div class="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-slate-200">
       <div>
         <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Preview</p>
-        <h2 id="reportPreviewTitle" class="pp-dialog-title mt-0.5">ProfilePath Career Profiling System: Analytics Summary Report</h2>
+        <h3 id="reportPreviewTitle" class="text-base font-semibold text-slate-900 mt-0.5">ProfilePath Career Profiling System: Analytics Summary Report</h3>
         <p id="reportPreviewMeta" class="text-xs text-slate-500 mt-1"></p>
       </div>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close preview"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button type="button" data-close-dialog aria-label="Close preview" class="w-8 h-8 -mr-2 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 shrink-0">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
     </div>
     <div id="reportPreviewBody" class="px-6 py-5 overflow-y-auto flex flex-col gap-6" tabindex="0" aria-label="Report contents"></div>
-    <div class="pp-dialog-foot border-t border-slate-200">
-      <button type="button" data-dialog-close class="pp-btn pp-btn-secondary">Close</button>
-      <button type="button" id="reportDownloadBtn" class="pp-btn pp-btn-primary gap-2" title="The report shown here as a PDF file, for the school year and filters on this page.">
+    <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-xl">
+      <button type="button" id="reportDownloadBtn" class="inline-flex items-center gap-2 bg-[#0f2a6b] text-white rounded-md px-4 py-2 text-sm font-medium shadow-sm hover:opacity-90" title="The report shown here as a PDF file, for the school year and filters on this page.">
         <svg class="w-4 h-4" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
         Export as PDF
       </button>
+      <button type="button" data-close-dialog class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-md bg-white hover:bg-slate-50">Close</button>
     </div>
   </div>
 </div>
 
 <!-- Send Analytics Report: confirm before anything is emailed -->
-<div id="reportConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-md" aria-describedby="reportConfirmText">
-    <div class="pp-dialog-head">
-      <h2 id="reportConfirmTitle" class="pp-dialog-title">Send this report?</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="pp-dialog-form">
+<div id="reportConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reportConfirmTitle" aria-describedby="reportConfirmText">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-md p-6 flex flex-col gap-4">
+    <h3 id="reportConfirmTitle" class="text-lg font-semibold text-slate-900">Send this report?</h3>
     <dl class="rounded-lg border border-slate-200 divide-y divide-slate-200 text-sm">
       <div class="px-4 py-2.5"><dt class="text-xs text-slate-500">To</dt><dd id="reportConfirmEmail" class="font-semibold text-slate-900 break-all"></dd></div>
       <div class="px-4 py-2.5"><dt class="text-xs text-slate-500">Report</dt><dd class="text-slate-800">ProfilePath Career Profiling System: Analytics Summary Report</dd></div>
       <div class="px-4 py-2.5"><dt class="text-xs text-slate-500">Covers</dt><dd id="reportConfirmScope" class="text-slate-800"></dd></div>
     </dl>
     <p id="reportConfirmText" class="text-sm text-slate-600">A PDF report with assessment participation, career interests and the other tables in the preview, with charts, built from the latest data. Totals and percentages only, no student details.</p>
-    </div>
-    <div class="pp-dialog-foot">
-      <button type="button" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="reportConfirmSendBtn" class="pp-btn pp-btn-primary">Send report</button>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" data-close-dialog class="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Cancel</button>
+      <button type="button" id="reportConfirmSendBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#0f2a6b] rounded-md hover:opacity-90">Confirm send</button>
     </div>
   </div>
 </div>
@@ -416,6 +441,31 @@
     container.appendChild(toast);
     setTimeout(function() { toast.remove(); }, 5000);
   }
+  function showConfirm(message) {
+    return new Promise(function(resolve) {
+      const modal = document.getElementById('genericConfirmModal');
+      document.getElementById('genericConfirmMessage').textContent = message;
+      modal.classList.remove('hidden');
+      setTimeout(function() { modal.classList.add('is-open'); }, 16);
+      const okBtn = document.getElementById('genericConfirmOkBtn');
+      const cancelBtn = document.getElementById('genericConfirmCancelBtn');
+      function cleanup(result) {
+        modal.classList.remove('is-open');
+        setTimeout(function() { modal.classList.add('hidden'); }, 260);
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        modal.removeEventListener('click', onBackdrop);
+        resolve(result);
+      }
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      function onBackdrop(e) { if (e.target.id === 'genericConfirmModal') cleanup(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      modal.addEventListener('click', onBackdrop);
+    });
+  }
+
 
 (async function() {
   const sessionData = await (await fetch('api/session.php')).json();
@@ -433,7 +483,25 @@
   document.getElementById('headerUserName').textContent = currentUser.displayName || currentUser.username;
   document.getElementById('headerUserRole').textContent = currentUser.positionLabel || roleLabels[currentUser.role] || currentUser.role;
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -473,43 +541,33 @@
   }, { passive: true });
   })();
 
+  const filtersBtn = document.getElementById('filtersBtn');
+  const filtersPanel = document.getElementById('filtersPanel');
+  const filtersBtnLabel = document.getElementById('filtersBtnLabel');
   const strandFilter = document.getElementById('strandFilter');
   const sectionFilter = document.getElementById('sectionFilter');
 
-  // Section depends on Strand: picking a Strand unlocks its own sections; with no Strand, Section
-  // stays disabled (a section already belongs to one strand, so there is nothing to narrow yet).
-  // The map comes from the API (modules/StudentManagement/lib/Sections.php), single source of truth.
+  filtersBtn.addEventListener('click', (e) => { e.stopPropagation(); filtersPanel.classList.toggle('hidden'); if (!filtersPanel.classList.contains('hidden')) refreshSections(); });
+  filtersPanel.addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', () => filtersPanel.classList.add('hidden'));
+
+  // Sections offered depend on the strand: one strand -> only its own
+  // sections; All Strands -> every section. The map comes from the API
+  // (modules/StudentManagement/lib/Sections.php) so there is a single source of truth.
   let sectionsByStrand = null;
   function renderSectionOptions() {
     if (!sectionsByStrand) return;
     const strand = strandFilter.value;
-    if (!strand) {
-      sectionFilter.innerHTML = '<option value="">Select a strand first</option>';
-      sectionFilter.value = '';
-      sectionFilter.disabled = true;
-      return;
-    }
     const previous = sectionFilter.value;
-    const sections = sectionsByStrand[strand] || [];
+    const sections = strand
+      ? (sectionsByStrand[strand] || [])
+      : Array.from(new Set(Object.values(sectionsByStrand).flat()));
     sectionFilter.innerHTML = '<option value="">All Sections</option>' +
       sections.map(s => '<option value="' + escapeHtml(s) + '">' + escapeHtml(s) + '</option>').join('');
     sectionFilter.value = sections.includes(previous) ? previous : '';
-    sectionFilter.disabled = false;
   }
-  // Strand and Section apply the moment they change (no Apply button).
-  strandFilter.addEventListener('change', () => {
-    renderSectionOptions();
-    state.strand = strandFilter.value;
-    state.section = sectionFilter.value; // renderSectionOptions() may have reset Section
-    listState.save(state);
-    load();
-  });
-  sectionFilter.addEventListener('change', () => {
-    state.section = sectionFilter.value;
-    listState.save(state);
-    load();
-  });
-  // Reads the section list fresh, so a section added a moment ago is already there.
+  strandFilter.addEventListener('change', renderSectionOptions);
+  // Read the section list again each time the panel opens, so a section added a moment ago is already there.
   async function refreshSections() {
     try {
       const res = await fetch('api/sections.php?all=1');
@@ -521,6 +579,18 @@
       renderSectionOptions();
     } catch (e) { /* keep the list we have */ }
   }
+
+  document.getElementById('applyStrandFilter').addEventListener('click', () => {
+    filtersPanel.classList.add('hidden');
+    load(strandFilter.value, sectionFilter.value.trim());
+  });
+  document.getElementById('clearStrandFilter').addEventListener('click', () => {
+    strandFilter.value = '';
+    renderSectionOptions();
+    sectionFilter.value = '';
+    filtersPanel.classList.add('hidden');
+    load('', '');
+  });
 
   function escapeHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -551,17 +621,22 @@
   let statsChartInstance = null;
   let careersChartInstance = null;
 
-  // Filters live in the page address (Reload, Back, a shared link). No search box on this page.
-  const listState = PP.listState({ strand: '', section: '', academicYear: '' }, []);
-  const state = listState.read();
+  let selectedAy = '';
+  let shownStrand = '', shownSection = '';
   const ayFilter = document.getElementById('ayFilter');
   ayFilter.addEventListener('change', function() {
-    state.academicYear = ayFilter.value;
-    listState.save(state);
-    load();
+    selectedAy = ayFilter.value;
+    load(shownStrand, shownSection);
   });
-  async function load() {
-    const params = new URLSearchParams({ strand: state.strand, section: state.section, academicYear: state.academicYear });
+  async function load(strand, section) {
+    section = section || '';
+    shownStrand = strand || '';
+    shownSection = section;
+    const labelParts = [];
+    if (strand) labelParts.push(strand);
+    if (section) labelParts.push(section);
+    filtersBtnLabel.textContent = labelParts.length ? 'Filters: ' + labelParts.join(', ') : 'Filters';
+    const params = new URLSearchParams({ strand: strand || '', section: section, academicYear: selectedAy });
     const statIds = ['metricCompletionRate', 'metricCompletionCount', 'metricCounselingRate', 'metricCounselingCount', 'metricMmclRate', 'metricMmclCount', 'metricTopStrand', 'metricStrandPercent', 'statsCompleted'];
     const chartBoxes = ['strandBox', 'riasecBox', 'sectionBox', 'statsChartBox', 'yearBox', 'topCareersBox'];
     statIds.forEach(PP.statLoading);
@@ -575,7 +650,7 @@
     } catch (e) {
       statIds.forEach(PP.statFailed);
       document.getElementById('topCareersSummary').textContent = '';
-      chartBoxes.forEach(function(id) { PP.chartError(id, e.message, load); });
+      chartBoxes.forEach(function(id) { PP.chartError(id, e.message, function() { load(strand, section); }); });
       return;
     }
     chartBoxes.forEach(PP.chartLoaded);
@@ -652,8 +727,6 @@
 
     // Ranked counts of categories -> horizontal bars, so long program names stay readable.
     document.getElementById('topCareersEmpty').classList.toggle('hidden', data.topCareers.length > 0);
-    // Each bar takes its program's college color; the legend lists those colleges once each.
-    PP.college.legend(document.getElementById('topCareersLegend'), [...new Set(data.topCareers.map(c => c.collegeCode).filter(Boolean))]);
     document.getElementById('topCareersChart').parentElement.classList.toggle('hidden', data.topCareers.length === 0);
     if (careersChartInstance) careersChartInstance.destroy();
     if (data.topCareers.length) {
@@ -662,7 +735,7 @@
         type: 'bar',
         data: {
           labels: data.topCareers.map((c, i) => (i + 1) + '. ' + shorten(c.title)),
-          datasets: [{ data: data.topCareers.map(c => c.count), backgroundColor: data.topCareers.map(c => PP.college.color(c.collegeCode)), borderRadius: 4, barThickness: 28 }]
+          datasets: [{ data: data.topCareers.map(c => c.count), backgroundColor: '#19427b', borderRadius: 4, barThickness: 28 }]
         },
         options: {
           indexAxis: 'y',
@@ -797,19 +870,9 @@
     document.getElementById('reportScope').textContent = who + ', Academic Year ' + (data.academicYear || 'not set');
   }
 
-  // ---- Analytics Report: preview it (Analytics and reports), export it as a PDF (View Only on Export student results: it
-  // holds totals only) and email it (Full on Send analytics report). api/analytics-report.php checks each again. The report
-  // follows the filters on this page (lastExportFilter).
-  if (PP.may(currentUser, 'analytics')) {
-    const canEmail = PP.may(currentUser, 'analyticsEmail', 'full');
-    if (!canEmail) {
-      document.getElementById('sendReportTitle').textContent = 'Analytics Report';
-      document.getElementById('sendReportIntro').textContent = 'Preview a summary of the current ProfilePath analytics.';
-      document.getElementById('reportEmailField').classList.add('hidden');
-      // style, not the "hidden" class: these buttons are inline-flex, which comes after "hidden" in css/tailwind.css and wins.
-      document.getElementById('sendReportBtn').style.display = 'none';
-    }
-    if (!PP.may(currentUser, 'exportResults')) document.getElementById('reportDownloadBtn').style.display = 'none';
+  // ---- Send Analytics Report: the administrator and Guidance Counselors, not Guidance Facilitators
+  // (api/analytics-report.php checks this again). The report follows the filters on this page (lastExportFilter).
+  if (['admin', 'counselor'].includes(currentUser.rbacRole || currentUser.role)) {
     const card = document.getElementById('sendReportCard');
     const form = document.getElementById('sendReportForm');
     const emailInput = document.getElementById('reportEmail');
@@ -847,9 +910,35 @@
       statusEl.className = 'text-sm rounded-md border px-3.5 py-2.5 ' + (ok ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800');
     }
 
-    // Dialogs: the shared pop-up behaviour (PP.dialog in js/ui-state.js).
-    const previewDialog = PP.dialog(previewModal);
-    const confirmDialog = PP.dialog(confirmModal);
+    // Dialogs: Escape and the close buttons close them, Tab stays inside, and focus goes back to the button that opened them.
+    let openDialog = null, returnFocus = null;
+    function openModal(modal, focusEl, returnTo) {
+      returnFocus = returnTo || document.activeElement;
+      openDialog = modal;
+      modal.classList.remove('hidden');
+      setTimeout(function() { modal.classList.add('is-open'); (focusEl || modal.querySelector('button')).focus(); }, 16);
+    }
+    function closeModal() {
+      if (!openDialog) return;
+      const modal = openDialog;
+      openDialog = null;
+      modal.classList.remove('is-open');
+      setTimeout(function() { modal.classList.add('hidden'); }, 260);
+      if (returnFocus) returnFocus.focus();
+    }
+    [previewModal, confirmModal].forEach(function(modal) {
+      modal.addEventListener('click', function(e) { if (e.target === modal || e.target.closest('[data-close-dialog]')) closeModal(); });
+    });
+    document.addEventListener('keydown', function(e) {
+      if (!openDialog) return;
+      if (e.key === 'Escape') { e.stopPropagation(); closeModal(); return; }
+      if (e.key !== 'Tab') return;
+      const items = Array.from(openDialog.querySelectorAll('button, [tabindex="0"]')).filter(function(el) { return !el.disabled && el.offsetParent !== null; });
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }, true);
 
     // Preview: the report as tables, built on the server from the same data as the PDF.
     const fmt = function(v) { return typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString() : v.toFixed(1)) : v; };
@@ -873,7 +962,7 @@
       const body = document.getElementById('reportPreviewBody');
       document.getElementById('reportPreviewMeta').textContent = '';
       body.innerHTML = '<p class="text-sm text-slate-500">Preparing the preview…</p>';
-      previewDialog.open();
+      openModal(previewModal);
       try {
         const res = await fetch('api/analytics-report.php?' + reportParams());
         const data = await res.json().catch(function() { return {}; });
@@ -895,13 +984,13 @@
       if (!email) { emailInput.focus(); return; }
       document.getElementById('reportConfirmEmail').textContent = email;
       document.getElementById('reportConfirmScope').textContent = document.getElementById('reportScope').textContent;
-      confirmDialog.open(confirmSendBtn);
+      openModal(confirmModal, confirmSendBtn, sendBtn);
     });
     confirmSendBtn.addEventListener('click', async function() {
       if (sending) return;
       sending = true;
       const email = emailInput.value.trim();
-      confirmDialog.close();
+      closeModal();
       const stop = PP.busy(sendBtn, 'Sending…');
       previewBtn.disabled = true;
       let focusAfter = sendBtn; // the button was disabled while sending, which drops keyboard focus; put it back
@@ -932,11 +1021,7 @@
     });
   }
 
-  // Restore the filters saved in the page address, then load once.
-  strandFilter.value = state.strand;
-  await refreshSections();
-  sectionFilter.value = state.section;
-  await load();
+  await load('', '');
 })();
 </script>
 

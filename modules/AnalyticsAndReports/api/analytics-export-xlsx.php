@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(['error' => 'Method not allowed'], 405);
 }
 
-$user = Rbac::requireAccess('exportResults', 'full');
+$user = Rbac::requireAccess('monitoring', 'full');
 $pdo = Database::get();
 
 // Every download sends an email: keep one person from using it to flood an inbox.

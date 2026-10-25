@@ -36,11 +36,11 @@ DIMENSIONS = ["R", "I", "A", "S", "E", "C"]  # fixed vector order
 
 # Encodings for a 3-letter Holland code: weight of the 1st, 2nd and 3rd letter
 # (absent letters = 0). These are ENGINEERING choices, not weights defined by
-# Holland's theory. "ranksum" (3, 2, 1) follows the guidance counselors' ranking of
-# the letters (1st = strongest) with rank-sum weights, and is what the web app uses
-# (config/cbf.php holland_rank_weights). "binary" (letter present = 1) ignores the order
-# and is kept as a comparison; the others are compared in `weights`.
-DEFAULT_ENCODING = "ranksum"
+# Holland's theory. "binary" (letter present = 1) is what the web app uses
+# (modules/ContentBasedFiltering/lib/CBFEngine.php). "ranksum" (3, 2, 1) turns the counselors'
+# 1st/2nd/3rd order of the letters into weights; it is NOT approved (the counselors' 1-2-3 is a
+# ranking order, not weights) and is kept only as an offline comparison, like the others in `weights`.
+DEFAULT_ENCODING = "binary"
 ENCODINGS = {
     "ranksum": (3.0, 2.0, 1.0),
     "proposed": (1.00, 0.67, 0.33),
@@ -244,6 +244,8 @@ def paired_bootstrap(a, b, iters=2000, seed=7):
 # Short names accepted in the course column (case, spaces, dots and hyphens ignored).
 # Ambiguous abbreviations (e.g. BSMT = Medical Technology or Marine Transportation)
 # are deliberately left out; use the full name for those.
+# Short names, and misspellings found in the team's dataset and Weka model labels
+# (the same ones config/course_aliases.php maps for the web app).
 COURSE_ALIASES = {
     "BA Communication": ["BACOMM", "ABCOMM"],
     "B Multimedia Arts": ["BS Multimedia Arts", "BMMA", "BSMMA"],
@@ -253,14 +255,16 @@ COURSE_ALIASES = {
     "BS Medical Technology": ["BSMEDTECH"],
     "BS Pharmacy": ["BSPHARMA"],
     "BS Physical Therapy": ["BSPT"],
-    "BS Psychology": ["BSPSYCH"],
+    "BS Psychology": ["BSPSYCH", "BS Pyschology"],
     "BS Nursing": ["BSN"],
     "BS Accountancy": ["BSA"],
     "BS Accounting Information System": ["BSAIS"],
-    "BSBA Major in Financial Management": ["BS Business Administration Major in Financial Management", "BSBAFM"],
-    "BSBA Major in Operations Management": ["BS Business Administration Major in Operations Management", "BSBAOM"],
+    "BSBA Major in Financial Management": ["BS Business Administration Major in Financial Management", "BSBAFM",
+                                           "BS Business Administration Major in Financial Managements"],
+    "BSBA Major in Operations Management": ["BS Business Administration Major in Operations Management", "BSBAOM",
+                                            "BS Business Administration Major in Operations Managements"],
     "BSBA Major in Sustainability Management": ["BS Business Administration Major in Sustainability Management", "BSBASM"],
-    "BS Hospitality Management": ["BSHM"],
+    "BS Hospitality Management": ["BSHM", "BS Hospitality Managment"],
     "BS Tourism Management": ["BSTM"],
     "BS International Business": ["BSIB"],
     "BS Architecture": ["BSARCH"],
@@ -299,6 +303,9 @@ def read_students(path, drop=DROP_DEFAULT, quiet=False):
              "course": "ActualCourse", "actualcourse": "ActualCourse", **{d.lower(): d for d in DIMENSIONS}}
     header = [alias.get(h.strip().lower().replace(" ", ""), h.strip()) for h in raw[0]]
     rows = [dict(zip(header, r)) for r in raw[1:] if any(c.strip() for c in r)]
+    if "StudentID" not in header:  # anonymised files (scores and course only): number the rows
+        for n, r in enumerate(rows, 1):
+            r["StudentID"] = f"row{n}"
     for r in rows:  # columns missing from the file (e.g. letters nobody marked) count as blank
         for d in DIMENSIONS:
             r.setdefault(d, "")
@@ -334,17 +341,24 @@ def write_arff(path, rows, scale, fmt="top3"):
 
     fmt="top3"    : R..C nominal {x,blank}: x = one of the student's top 3 types (the
                     adviser's format, which modules/ContentBasedFiltering/lib/PredictionModel.php runs in the web app)
-    fmt="numeric" : R..C numeric, from student_vector(row, scale)"""
-    classes = ",".join("'" + c.replace("'", "\\'") + "'" for c in COURSE_NAMES)
+    fmt="numeric" : R..C numeric, from student_vector(row, scale)
+    fmt="binary"  : R..C numeric 0/1, 1 = one of the student's top 3 types (ties in R,I,A,S,E,C
+                    order), class "Actual Course" with only the courses present: the format of the
+                    deployed Prediction Module model (tools/weka/README.md)"""
+    names = [c for c in COURSE_NAMES if c in {r["ActualCourse"] for r in rows}] if fmt == "binary" else COURSE_NAMES
+    classes = ",".join("'" + c.replace("'", "\\'") + "'" for c in names)
     with open(path, "w", encoding="utf-8") as f:
-        f.write("@RELATION student_riasec\n\n")
+        f.write("@RELATION ONET_RIASEC_Top3_Binary\n\n" if fmt == "binary" else "@RELATION student_riasec\n\n")
         for d in DIMENSIONS:
             f.write(f"@ATTRIBUTE {d} {{x,blank}}\n" if fmt == "top3" else f"@ATTRIBUTE {d} NUMERIC\n")
-        f.write(f"@ATTRIBUTE ActualCourse {{{classes}}}\n\n@DATA\n")
+        class_name = "'Actual Course'" if fmt == "binary" else "ActualCourse"
+        f.write(f"@ATTRIBUTE {class_name} {{{classes}}}\n\n@DATA\n")
         for r in rows:
             if fmt == "top3":
                 vec = student_vector(r, "top3")
                 cells = ["x" if v else "blank" for v in vec]
+            elif fmt == "binary":
+                cells = [str(int(v)) for v in student_vector(r, "top3")]
             else:
                 cells = [f"{v:g}" for v in student_vector(r, scale)]
             f.write(",".join(cells) + ",'" + r["ActualCourse"].replace("'", "\\'") + "'\n")
@@ -356,6 +370,16 @@ def cmd_courses(a):
     rows = [[col, name, orig, final, *[f"{v:.2f}" for v in holland_to_vector(final)]] for col, name, orig, final in COURSES]
     write_csv(a.out, ["College", "Course", "OriginalHollandCode", "FinalHollandCode", *DIMENSIONS], rows)
     print(f"Wrote {a.out} ({len(rows)} courses, {DEFAULT_ENCODING} encoding {ENCODINGS[DEFAULT_ENCODING]} on FinalHollandCode)")
+
+
+def cmd_arff(a):
+    """Every student as the deployed model's training file (top-3 binary, numeric 0/1)."""
+    rows = read_students(a.students)
+    write_arff(a.out, rows, "top3", "binary")
+    ties = sum(1 for r in rows if not is_marked_row(r) and third_place_tie(r))
+    print(f"Wrote {a.out}: {len(rows)} students, {len({r['ActualCourse'] for r in rows})} courses, top-3 binary (0/1)")
+    if ties:
+        print(f"  {ties} student(s) tie for 3rd place; the 1 goes to the earlier letter in R,I,A,S,E,C order (the app's rule)")
 
 
 def cmd_split(a):
@@ -664,6 +688,9 @@ def main():
         if name == "cbf":
             s.add_argument("--encoding", choices=list(ENCODINGS), default=DEFAULT_ENCODING)
             s.add_argument("--out", default="cbf_results.csv")
+    w = sub.add_parser("arff", help="training file for the deployed Prediction Module model (top-3 binary)")
+    w.add_argument("--students", required=True)
+    w.add_argument("--out", default="all_binary.arff")
     g = sub.add_parser("agreement")
     g.add_argument("--students", required=True, help="student CSV with the course column (all students)")
     g.add_argument("--model", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config", "prediction_model.json"))
@@ -674,7 +701,7 @@ def main():
     c.add_argument("--k", type=int, default=3)
     c.add_argument("--out", default="comparison_results.csv")
     a = p.parse_args()
-    {"courses": cmd_courses, "split": cmd_split, "cbf": cmd_cbf, "weights": cmd_weights, "compare": cmd_compare, "agreement": cmd_agreement}[a.cmd](a)
+    {"courses": cmd_courses, "split": cmd_split, "cbf": cmd_cbf, "weights": cmd_weights, "compare": cmd_compare, "agreement": cmd_agreement, "arff": cmd_arff}[a.cmd](a)
 
 
 if __name__ == "__main__":

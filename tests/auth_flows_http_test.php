@@ -180,19 +180,18 @@ $backdate = function (Client $c, int $secondsAgo) use ($pdo) {
     $pdo->prepare("UPDATE sessions SET data = ? WHERE id = ?")->execute([$new, $sid]);
     return $n === 1;
 };
-$setPol('sessionTimeoutEnabled', 'true'); $setPol('timeoutMinutes', '15');
+$setPol('sessionTimeoutEnabled', 'true'); $setPol('timeoutMinutes', '5');
 $s = new Client($base); $s->login($num, $ownerPw, 'student');
 check('fresh session is valid', $s->req('GET', '/api/my-account.php')['code'] === 200);
-check('(test setup) last-activity time moved back 14 minutes', $backdate($s, 840));
-check('idle 14 minutes with a 15 minute limit: still signed in', $s->req('GET', '/api/my-account.php')['code'] === 200);
-check('(test setup) last-activity time moved back 16 minutes', $backdate($s, 960));
-check('idle 16 minutes with a 15 minute limit: signed out (401)', $s->req('GET', '/api/my-account.php')['code'] === 401);
+check('(test setup) last-activity time moved back 4 minutes', $backdate($s, 240));
+check('idle 4 minutes with a 5 minute limit: still signed in', $s->req('GET', '/api/my-account.php')['code'] === 200);
+check('(test setup) last-activity time moved back 6 minutes', $backdate($s, 360));
+check('idle 6 minutes with a 5 minute limit: signed out (401)', $s->req('GET', '/api/my-account.php')['code'] === 401);
 check('and the session stays dead afterwards', $s->req('GET', '/api/my-account.php')['code'] === 401);
-// The timeout cannot be switched off: an old "false" left in the table is ignored (modules/Authentication/lib/Auth.php).
 $s2 = new Client($base); $s2->login($num, $ownerPw, 'student'); $backdate($s2, 3600); $setPol('sessionTimeoutEnabled', 'false');
-check('even with sessionTimeoutEnabled=false in the table, a session idle 60 minutes is signed out', $s2->req('GET', '/api/my-account.php')['code'] === 401);
+check('with the timeout switched off an old session is still valid', $s2->req('GET', '/api/my-account.php')['code'] === 200);
 $setPol('sessionTimeoutEnabled', $origEn === false ? 'true' : (string) $origEn); $setPol('timeoutMinutes', $orig === false ? '30' : (string) $orig);
-echo "  INFO: the Security Configuration API accepts only 15, 30 or 60 minutes (Auth::TIMEOUT_CHOICES)\n";
+echo "  INFO: the Security Configuration API clamps the timeout to 5-240 minutes (modules/SecurityConfiguration/api/security-config.php)\n";
 
 $cleanup();
 echo "\n=== Summary: $pass passed, $fail failed ===\n";

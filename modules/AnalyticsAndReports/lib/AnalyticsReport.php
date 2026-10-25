@@ -226,19 +226,16 @@ class AnalyticsReport
 
         $programIds = array_map(fn($r) => (int) $r['top_program_id'], $careerCounts);
         $titles = [];
-        $collegeCodes = [];
         if ($programIds) {
             $placeholders = implode(',', array_fill(0, count($programIds), '?'));
-            $stmt = $pdo->prepare("SELECT p.id, p.title_enc, c.code AS college_code FROM programs p LEFT JOIN colleges c ON c.id = p.college_id WHERE p.id IN ($placeholders)");
+            $stmt = $pdo->prepare("SELECT id, title_enc FROM programs WHERE id IN ($placeholders)");
             $stmt->execute($programIds);
             foreach ($stmt->fetchAll() as $r) {
                 $titles[(int) $r['id']] = Crypto::dec($r['title_enc']);
-                $collegeCodes[(int) $r['id']] = (string) ($r['college_code'] ?? '');
             }
         }
         $topCareers = array_map(fn($r) => [
             'title' => $titles[(int) $r['top_program_id']] ?? 'Removed program',
-            'collegeCode' => $collegeCodes[(int) $r['top_program_id']] ?? '',   // for the chart's college colors
             'count' => (int) $r['cnt'],
             'percent' => $recCount > 0 ? round(((int) $r['cnt'] / $recCount) * 100, 1) : 0,
         ], $careerCounts);

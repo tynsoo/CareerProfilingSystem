@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(['error' => 'Method not allowed'], 405);
 }
 
-Rbac::requireAccess('roster', 'limited'); // looking at what was uploaded: View Only is enough
+Rbac::requireAccess('rac', 'full');
 $pdo = Database::get();
 $ay = AcademicYear::current();
 

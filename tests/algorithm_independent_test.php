@@ -27,8 +27,8 @@ $thrown = false; try { CBFEngine::studentVector(['R' => 30]); } catch (InvalidAr
 check('missing types rejected', $thrown);
 
 echo "\n=== Course vectors ===\n";
-check('AES -> [0,0,3,1,2,0] (rank weights 3-2-1: A 3, E 2, S 1)', CBFEngine::courseVector('AES') === [0, 0, 3, 1, 2, 0]);
-check('lowercase/space tolerated: RIS -> [3,2,0,1,0,0]', CBFEngine::courseVector(' ris ') === [3, 2, 0, 1, 0, 0]);
+check('AES -> [0,0,1,1,1,0]', CBFEngine::courseVector('AES') === [0, 0, 1, 1, 1, 0]);
+check('lowercase/space tolerated', CBFEngine::courseVector(' ris ') === [1, 1, 0, 1, 0, 0]);
 foreach (['', null, 'RR', 'RIAS', 'RRI', 'XYZ', 'R1A'] as $bad) {
     check('invalid code ' . var_export($bad, true) . ' -> null', CBFEngine::courseVector($bad) === null);
 }
@@ -46,7 +46,7 @@ check('zero vector -> null, not 0', CBFEngine::cosineSimilarity([0,0,0,0,0,0], [
 echo "\n=== compute(): selection rules ===\n";
 $programs = [
     ['id' => 1, 'title' => 'P1', 'hollandCode' => 'RIA'],
-    ['id' => 2, 'title' => 'P2', 'hollandCode' => 'RIA'],   // same code as P1 -> equal cosine
+    ['id' => 2, 'title' => 'P2', 'hollandCode' => 'AIR'],   // same letter set as P1 -> equal cosine
     ['id' => 3, 'title' => 'P3', 'hollandCode' => 'SEC'],
     ['id' => 4, 'title' => 'P4', 'hollandCode' => 'RIS'],
     ['id' => 5, 'title' => 'Bad', 'hollandCode' => null],
@@ -54,11 +54,10 @@ $programs = [
 $res = CBFEngine::compute(['R' => 50, 'I' => 40, 'A' => 30, 'S' => 20, 'E' => 10, 'C' => 10], $programs);
 $byId = []; foreach ($res['results'] as $r) { $byId[$r['id']] = $r['cosine']; }
 check('P1 and P2 equal', $byId[1] === $byId[2]);
-// S=[5,4,3,2,1,1], |S|=sqrt56, |C|=sqrt14 (weights 3,2,1) so |S||C|=sqrt784=28:
-// RIA = [3,2,1,0,0,0] dot=15+8+3=26 -> 0.9286 ; RIS = [3,2,0,1,0,0] dot=15+8+2=25 -> 0.8929 ; SEC = [0,0,0,3,2,1] dot=6+2+1=9 -> 0.3214
-check('P1 = 26/28 = 0.9286', near($byId[1], 0.9286));
-check('P4 = 25/28 = 0.8929', near($byId[4], 0.8929));
-check('P3 = 9/28 = 0.3214', near($byId[3], 0.3214));
+// S=[5,4,3,2,1,1]: RIA dot=12,|S|=sqrt56 -> 12/sqrt(168)=0.9258 ; RIS dot=11 -> 11/sqrt168=0.8487 ; SEC dot=4 -> 0.3086
+check('P1 = 0.9258', near($byId[1], 0.9258));
+check('P4 = 0.8487', near($byId[4], 0.8487));
+check('P3 = 0.3086', near($byId[3], 0.3086));
 check('Best match = tied P1,P2 (ids 1,2)', $res['candidates'] === [1, 2]);
 check('Alternatives = next level (P4)', $res['alternatives'] === [4]);
 check('invalid-code program excluded, not scored', count($res['excluded']) === 1 && $res['excluded'][0]['id'] === 5);

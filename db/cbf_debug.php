@@ -52,12 +52,16 @@ if ($cbf['status'] !== 'available') {
     exit(1);
 }
 
+// Which of the program's 1st, 2nd and 3rd letters match the student's 1st, 2nd and 3rd interests,
+// e.g. "1 2 -" (used only to order courses with the same cosine similarity).
+$letters = fn(array $m) => implode(' ', array_map(fn($i) => $m[$i] ? (string) ($i + 1) : '-', array_keys($m)));
+
 if ($format === '--csv') {
     $out = fopen('php://stdout', 'w');
-    fputcsv($out, ['Course', 'RIASEC', 'Course Vector [R,I,A,S,E,C]', 'Dot Product', '||S||', '||C||', 'Cosine Similarity', 'Result']);
+    fputcsv($out, ['Course', 'RIASEC', 'Course Vector [R,I,A,S,E,C]', 'Dot Product', '||S||', '||C||', 'Cosine Similarity', '1-2-3 Letter Match', 'Result']);
     foreach ($cbf['results'] as $r) {
         fputcsv($out, [$r['title'], $r['hollandCode'], '[' . implode(', ', $r['courseVector']) . ']', $r['dotProduct'],
-            $cbf['studentMagnitude'], $r['courseMagnitude'], $r['cosine'],
+            $cbf['studentMagnitude'], $r['courseMagnitude'], $r['cosine'], $letters($r['letterOrder']),
             in_array($r['id'], $cbf['candidateIds'], true) ? 'Best RIASEC Match' : (in_array($r['id'], $cbf['alternatives'], true) ? 'Alternative' : '')]);
     }
     exit;
@@ -66,11 +70,12 @@ if ($format === '--csv') {
 echo "CBF calculation for $schoolId   cos(S, C) = (S · C) / (||S|| x ||C||)\n\n";
 echo 'Student RIASEC totals : ' . implode('  ', array_map(fn($d) => "$d={$cbf['studentScores'][$d]}", CBFEngine::DIMENSIONS)) . "\n";
 echo 'Student vector S      : [' . implode(', ', $cbf['studentVector']) . "]  (mean item score = total / 10, order R,I,A,S,E,C)\n";
-echo "||S||                 : {$cbf['studentMagnitude']}\n\n";
-printf("%-62s %-6s %-20s %8s %7s %8s\n", 'Course', 'RIASEC', 'Course vector C', 'S·C', '||C||', 'Cosine');
+echo "||S||                 : {$cbf['studentMagnitude']}\n";
+echo "Equal cosine values are listed by the 1-2-3 letter match (1st, then 2nd, then 3rd), then program order.\n\n";
+printf("%-62s %-6s %-20s %8s %7s %8s %-7s\n", 'Course', 'RIASEC', 'Course vector C', 'S·C', '||C||', 'Cosine', '1-2-3');
 foreach ($cbf['results'] as $r) {
-    printf("%-62s %-6s %-20s %8s %7s %8.4f%s\n", substr($r['title'], 0, 62), $r['hollandCode'], '[' . implode(',', $r['courseVector']) . ']',
-        $r['dotProduct'], $r['courseMagnitude'], $r['cosine'], in_array($r['id'], $cbf['candidateIds'], true) ? '  <- Best RIASEC Match'
+    printf("%-62s %-6s %-20s %8s %7s %8.4f %-7s%s\n", substr($r['title'], 0, 62), $r['hollandCode'], '[' . implode(',', $r['courseVector']) . ']',
+        $r['dotProduct'], $r['courseMagnitude'], $r['cosine'], $letters($r['letterOrder']), in_array($r['id'], $cbf['candidateIds'], true) ? '  <- Best RIASEC Match'
             : (in_array($r['id'], $cbf['alternatives'], true) ? '  <- Alternative' : ''));
 }
 foreach ($cbf['excluded'] as $x) {

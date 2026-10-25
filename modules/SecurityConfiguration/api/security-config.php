@@ -5,38 +5,47 @@ require_once __DIR__ . '/../../../shared/lib/AcademicYear.php';
 require_once __DIR__ . '/../../Counseling/lib/OfficeHours.php';
 require_once __DIR__ . '/../../Counseling/lib/BookingLink.php';
 require_once __DIR__ . '/../../Authentication/lib/PasswordPolicy.php';
-require_once __DIR__ . '/../../Authentication/lib/LoginLock.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditChange.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditRetention.php';
 
 $user = Rbac::requireRole('admin', 'counselor');
 $pdo = Database::get();
 
+// 'announcements' was added to modules/Authentication/lib/Rbac.php's MODULES and to
+// security-configuration.html's UI but this const was never updated to
+// match — meaning loadRbac() silently omitted that row and any RBAC change
+// posted for it was silently dropped by the in_array() guard below. Fixed
+// here alongside adding 'examinations' the same way.
+const RBAC_MODULES = ['career', 'rac', 'recommendations', 'counselor', 'monitoring', 'announcements', 'examinations', 'counselingNotes', 'sections', 'staffAccounts'];
 const RBAC_ROLES = ['admin', 'counselor', 'facilitator', 'student'];
 const RBAC_LEVELS = ['full', 'limited', 'none'];
-// The row names, for the audit log (the page shows the same names, grouped by sidebar page).
-const RBAC_LABELS = [
-    'dashboard' => 'Dashboard', 'studentInfo' => 'Student information', 'studentAccounts' => 'Student account management',
-    'assessmentResults' => 'Assessment results', 'recommendations' => 'Career recommendations', 'notesCreate' => 'Create counseling notes',
-    'exportResults' => 'Export student results', 'analytics' => 'Analytics and reports', 'analyticsEmail' => 'Send analytics report',
-    'programs' => 'Program Mapping Crosswalk', 'questionBank' => 'Question Bank', 'examinations' => 'Assessment Scheduling',
-    'monitoring' => 'Flagged student monitoring', 'announcements' => 'Announcements', 'counselingHistory' => 'View counseling history',
-    'counselingStatus' => 'Update counseling status', 'helpCenter' => 'Help Center', 'roster' => 'Student roster management',
-    'staffAccounts' => 'Manage staff accounts',
-];
 
-/** The table as it is enforced (Rbac::levelsFor: saved rows, else the defaults; the administrator always Full). */
 function loadRbac(PDO $pdo): array
 {
-    Rbac::forgetSaved();
-    $byRole = [];
-    foreach (RBAC_ROLES as $r) {
-        $byRole[$r] = Rbac::levelsFor($r);
-    }
+    $rows = $pdo->query('SELECT module, role, access_level FROM security_rbac')->fetchAll();
     $rbac = [];
-    foreach (Rbac::modules() as $m) {
-        foreach (RBAC_ROLES as $r) {
-            $rbac[$m][$r] = $byRole[$r][$m];
+    $seenFacilitator = [];
+    foreach (RBAC_MODULES as $m) {
+        $rbac[$m] = array_fill_keys(RBAC_ROLES, 'none');
+    }
+    foreach ($rows as $r) {
+        if (isset($rbac[$r['module']]) && in_array($r['role'], RBAC_ROLES, true)) {
+            $rbac[$r['module']][$r['role']] = $r['access_level'];
+            if ($r['role'] === 'facilitator') {
+                $seenFacilitator[$r['module']] = true;
+            }
+        }
+    }
+    // A database from before the Facilitator column: show what Rbac::accessLevel() will actually apply.
+    foreach (RBAC_MODULES as $m) {
+        if (!isset($seenFacilitator[$m])) {
+            $rbac[$m]['facilitator'] = Rbac::facilitatorDefault($m, $rbac[$m]['counselor']);
+        }
+    }
+    // A Student holds only what Rbac::STUDENT_MODULES allows; show what is enforced.
+    foreach (RBAC_MODULES as $m) {
+        if (!in_array($m, Rbac::STUDENT_MODULES, true)) {
+            $rbac[$m]['student'] = 'none';
         }
     }
     return $rbac;
@@ -46,7 +55,7 @@ function loadRbac(PDO $pdo): array
 function editableMatrix(array $user, array $rbac): array
 {
     $out = [];
-    foreach (Rbac::modules() as $m) {
+    foreach (RBAC_MODULES as $m) {
         foreach (RBAC_ROLES as $r) {
             $out[$m][$r] = Rbac::editableLevels(Rbac::roleKey($user), $m, $r, $rbac);
         }
@@ -69,8 +78,9 @@ function loadPolicies(PDO $pdo): array
                 'requireUpper' => $b('password.requireUpper', true), 'requireLower' => $b('password.requireLower', true),
                 'requireNumber' => $b('password.requireNumber', true), 'requireSymbol' => $b('password.requireSymbol', true),
             ],
-            // Always on, within the limits the administrator can set (LoginLock::policy, the same rule sign-in uses).
-            'lockout' => LoginLock::policy($rows) + [
+            'lockout' => [
+                'enabled' => $b('lockout.enabled', true), 'maxAttempts' => $i('lockout.maxAttempts', 5),
+                'lockoutMinutes' => $i('lockout.lockoutMinutes', 15),
             ],
             // Its switch is "Delete older logs automatically" (modules/AuditLog/lib/AuditRetention.php), off unless turned on.
             'retention' => [
@@ -78,12 +88,9 @@ function loadPolicies(PDO $pdo): array
             ],
         ],
         'settings' => [
-            // Email verification for staff password changes and the session timeout are always on (secure by default);
-            // only the timeout length is chosen (Auth::TIMEOUT_CHOICES).
-            'twoFactor' => true,
-            'sessionTimeoutEnabled' => true,
-            'timeoutMinutes' => Auth::timeoutMinutes($rows['timeoutMinutes'] ?? null),
-            'timeoutChoices' => Auth::TIMEOUT_CHOICES,
+            'twoFactor' => $b('twoFactor', true),
+            'sessionTimeoutEnabled' => $b('sessionTimeoutEnabled', true),
+            'timeoutMinutes' => $i('timeoutMinutes', 30),
         ],
         // Detected from today's date (shared/lib/AcademicYear.php) — read-only here.
         'academicYear' => [
@@ -98,24 +105,8 @@ function loadPolicies(PDO $pdo): array
     ];
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && $user['role'] !== 'admin') {
-    // Other staff: Security Configuration is the Head of Guidance's page (Rbac::ADMIN_PAGES). Their pages read only their own
-    // column of the permission table, the School Year badge, and (Help Center) the office hours and booking link. The
-    // security policies and settings are not sent to them (need to know).
-    $ownRole = Rbac::roleKey($user);
-    $policies = loadPolicies($pdo);
-    jsonResponse([
-        'rbac' => array_map(fn($levels) => [$ownRole => $levels[$ownRole] ?? 'none'], loadRbac($pdo)),
-        'rbacOwnOnly' => $ownRole,
-        'canEditRoster' => Rbac::accessLevel('roster', $ownRole) === 'full',
-        'academicYear' => $policies['academicYear'],
-        'officeHours' => $policies['officeHours'],
-        'booking' => $policies['booking'],
-    ]);
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // The administrator: the whole page. The daily cleanup's own markers are not settings changes, so they do not count as updates.
+    // The daily cleanup's own markers are not settings changes, so they do not count as updates.
     $lastUpdatedStmt = $pdo->prepare(
         'SELECT GREATEST(
             (SELECT MAX(updated_at) FROM security_rbac),
@@ -125,28 +116,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $lastUpdatedStmt->execute([AuditRetention::LAST_RUN_KEY, AuditChain::ANCHOR_KEY]);
     $lastUpdated = $lastUpdatedStmt->fetchColumn();
 
-    // Security Overview card: sign-in numbers (they link to the Audit Log) and flags waiting (they link to Monitoring).
-    // A lockout is logged (api/login.php) the moment an account reaches the maximum failed attempts,
-    // so this counts accounts that were actually locked out, not every wrong password.
+    // Security Overview card: each number goes only to someone who can open the page it links to
+    // (null otherwise, and the page leaves that tile out). Sign-in numbers -> Audit Log (Full on 'rac',
+    // as in api/audit-log.php); flags waiting -> Monitoring (any access, everyone on the team sees all flags).
     $roleKey = Rbac::roleKey($user);
-    $lockouts7d = (int) $pdo->query(
-        "SELECT COUNT(*) FROM audit_log WHERE action = 'login_lockout' AND created_at >= NOW() - INTERVAL '7 days'"
-    )->fetchColumn();
-    $sharedLogins7d = (int) $pdo->query(
-        "SELECT COUNT(*) FROM audit_log WHERE action = 'login_shared_suspected' AND created_at >= NOW() - INTERVAL '7 days'"
-    )->fetchColumn();
-    $pendingFlags = (int) $pdo->query("SELECT COUNT(*) FROM monitoring_flags WHERE status = 'pending'")->fetchColumn();
+    $seesAuditLog = Rbac::accessLevel('rac', $roleKey) === 'full';
+    $seesMonitoring = Rbac::accessLevel('monitoring', $roleKey) !== 'none';
+    $lockouts7d = $sharedLogins7d = $pendingFlags = null;
+    if ($seesAuditLog) {
+        // A lockout is logged (api/login.php) the moment an account reaches the maximum failed attempts,
+        // so this counts accounts that were actually locked out, not every wrong password.
+        $lockouts7d = (int) $pdo->query(
+            "SELECT COUNT(*) FROM audit_log WHERE action = 'login_lockout' AND created_at >= NOW() - INTERVAL '7 days'"
+        )->fetchColumn();
+        $sharedLogins7d = (int) $pdo->query(
+            "SELECT COUNT(*) FROM audit_log WHERE action = 'login_shared_suspected' AND created_at >= NOW() - INTERVAL '7 days'"
+        )->fetchColumn();
+    }
+    if ($seesMonitoring) {
+        $pendingFlags = (int) $pdo->query("SELECT COUNT(*) FROM monitoring_flags WHERE status = 'pending'")->fetchColumn();
+    }
 
-    // The whole permission table: the administrator is the only one who can change it.
     $rbacNow = loadRbac($pdo);
+    // The full permission table is for the administrator, who is the only one who can change it. Other staff are sent only
+    // their own column ("Your Access" on the page; the other pages need it to know what they may do), never the other
+    // roles' permissions: need to know, as with the full IP addresses in the Audit Log.
+    $isAdmin = $user['role'] === 'admin';
+    $ownRole = Rbac::roleKey($user);
+    $rbacShown = $isAdmin ? $rbacNow : array_map(fn($levels) => [$ownRole => $levels[$ownRole] ?? 'none'], $rbacNow);
     jsonResponse([
-        'rbac' => $rbacNow,
-        'rbacOwnOnly' => null,
-        // what may be changed in the table (empty for a fixed cell), and which changes ask for a confirmation
-        'rbacEditable' => editableMatrix($user, $rbacNow),
+        'rbac' => $rbacShown,
+        // Non-administrators see "Your Access" (their own column, view only) instead of the whole table.
+        'rbacOwnOnly' => $isAdmin ? null : $ownRole,
+        // what this person may change in the table (empty for a fixed cell), and which changes ask for a confirmation
+        'rbacEditable' => $isAdmin ? editableMatrix($user, $rbacNow) : (object) [],
         'rbacSensitive' => ['modules' => Rbac::SENSITIVE_MODULES, 'roles' => ['counselor']],
-        // Uploading class rosters: Full on Student roster management.
-        'canEditRoster' => Rbac::accessLevel('roster', $roleKey) === 'full',
+        // Uploading class rosters: administrator or Guidance Counselor with Full access to the roster module.
+        'canEditRoster' => Rbac::accessLevel('rac', Rbac::roleKey($user)) === 'full'
+            && (Rbac::roleKey($user) !== 'facilitator' || Rbac::accessLevel('sections', 'facilitator') === 'full'),
         'lastUpdated' => $lastUpdated,
         'overview' => [
             'lockouts7d' => $lockouts7d,
@@ -160,10 +167,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = readJsonBody();
     $type = $body['type'] ?? '';
 
-    // The Guidance Office hours and the counseling booking link (edited on the Staff Help Center) are kept up to date by
-    // whoever holds Full on Help Center (permission table). Everything else here, the table included, is the administrator's.
+    // The Guidance Office hours and the counseling booking link are kept up to date by whoever holds Full on Counseling Notes
+    // (set in the permission table). Everything else here, the permission table included, is the administrator's.
     if (in_array($type, ['officeHours', 'bookingLink'], true)) {
-        $user = Rbac::requireAccess('helpCenter', 'full');
+        $user = Rbac::requireAccess('counselingNotes', 'full');
     } elseif ($type === 'rbac') {
         // Only the Head of Guidance (administrator) changes permissions; Rbac::editableLevels says the same for each cell.
         if ($user['role'] !== 'admin') {
@@ -178,7 +185,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!is_array($changes)) {
             jsonResponse(['success' => false, 'error' => 'Invalid changes payload.'], 400);
         }
-        $moduleLabels = RBAC_LABELS;
+        $moduleLabels = [
+            'career' => 'Career Profile Input', 'rac' => 'RIASEC Assessment', 'recommendations' => 'Recommendations', 'counselor' => 'Guidance Counselor accounts',
+            'monitoring' => 'Student Monitoring', 'announcements' => 'Announcements', 'examinations' => 'Assessment Scheduling',
+            'counselingNotes' => 'Counseling Notes', 'staffAccounts' => 'Staff Accounts', 'sections' => 'Section Management',
+        ];
         $roleLabels = ['admin' => 'Administrator', 'counselor' => 'Guidance Counselor', 'facilitator' => 'Guidance Facilitator', 'student' => 'Student'];
         $levelLabels = ['full' => 'Full Access', 'limited' => 'View Only', 'none' => 'No Access'];
 
@@ -189,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $module = is_array($c) ? (string) ($c['module'] ?? '') : '';
             $role = is_array($c) ? (string) ($c['role'] ?? '') : '';
             $level = is_array($c) ? (string) ($c['level'] ?? '') : '';
-            if (!in_array($module, Rbac::modules(), true) || !in_array($role, RBAC_ROLES, true) || !in_array($level, RBAC_LEVELS, true)) {
+            if (!in_array($module, RBAC_MODULES, true) || !in_array($role, RBAC_ROLES, true) || !in_array($level, RBAC_LEVELS, true)) {
                 jsonResponse(['success' => false, 'error' => 'Invalid permission change.'], 400);
             }
             $from = $current[$module][$role];
@@ -264,18 +275,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $set('password.requireNumber', !empty($body['requireNumber']) ? 'true' : 'false');
             $set('password.requireSymbol', !empty($body['requireSymbol']) ? 'true' : 'false');
         } elseif ($key === 'lockout') {
-            // Always on (it cannot be turned off); the numbers must be inside the limits, or nothing is saved.
-            $attempts = (int) ($body['maxAttempts'] ?? 0);
-            $minutes = (int) ($body['lockoutMinutes'] ?? 0);
-            if ($attempts < LoginLock::ATTEMPTS_MIN || $attempts > LoginLock::ATTEMPTS_MAX) {
-                jsonResponse(['success' => false, 'error' => 'Failed attempts must be from ' . LoginLock::ATTEMPTS_MIN . ' to ' . LoginLock::ATTEMPTS_MAX . '.'], 400);
-            }
-            if ($minutes < LoginLock::MINUTES_MIN || $minutes > LoginLock::MINUTES_MAX) {
-                jsonResponse(['success' => false, 'error' => 'The lockout must last at least ' . LoginLock::MINUTES_MIN . ' minutes (at most ' . LoginLock::MINUTES_MAX . ').'], 400);
-            }
-            $set('lockout.enabled', 'true');
-            $set('lockout.maxAttempts', (string) $attempts);
-            $set('lockout.lockoutMinutes', (string) $minutes);
+            $set('lockout.enabled', !empty($body['enabled']) ? 'true' : 'false');
+            $set('lockout.maxAttempts', (string) max(1, min(20, (int) ($body['maxAttempts'] ?? 5))));
+            $set('lockout.lockoutMinutes', (string) max(1, min(1440, (int) ($body['lockoutMinutes'] ?? 15))));
         } else {
             $enabled = !empty($body['enabled']) ? 'true' : 'false';
             $set(AuditRetention::ON_KEY, $enabled);
@@ -348,20 +350,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt->execute([$k, $v, $user['id']]);
         };
-        // Only the timeout length changes here: email verification and the timeout itself are always on.
-        $minutes = (int) ($body['timeoutMinutes'] ?? 0);
-        if (!in_array($minutes, Auth::TIMEOUT_CHOICES, true)) {
-            jsonResponse(['success' => false, 'error' => 'Choose a timeout of ' . implode(', ', Auth::TIMEOUT_CHOICES) . ' minutes.'], 400);
-        }
         $beforeSettings = loadPolicies($pdo)['settings'];
-        $set('twoFactor', 'true');
-        $set('sessionTimeoutEnabled', 'true');
-        $set('timeoutMinutes', (string) $minutes);
+        $set('twoFactor', !empty($body['twoFactor']) ? 'true' : 'false');
+        $set('sessionTimeoutEnabled', !empty($body['sessionTimeoutEnabled']) ? 'true' : 'false');
+        $set('timeoutMinutes', (string) max(5, min(240, (int) ($body['timeoutMinutes'] ?? 30))));
 
         $fresh = loadPolicies($pdo);
         AuditLogger::log($user['id'], $user['role'], 'update_settings', 'security_policies', 'settings', AuditChange::detail(
             'Sign-in and session settings', $beforeSettings, $fresh['settings'],
-            ['twoFactor' => 'Email verification for password changes', 'sessionTimeoutEnabled' => 'Session timeout', 'timeoutMinutes' => 'Timeout length (minutes)']
+            ['twoFactor' => 'Two-step sign-in', 'sessionTimeoutEnabled' => 'Session timeout', 'timeoutMinutes' => 'Timeout length (minutes)']
         ));
         jsonResponse(['success' => true] + $fresh);
     }

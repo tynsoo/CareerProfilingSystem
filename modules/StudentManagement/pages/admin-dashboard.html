@@ -8,7 +8,6 @@
 <title>Admin Dashboard — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -36,9 +35,7 @@
   .fp-grid { display:grid; grid-template-columns:1fr; gap:20px; }
   @media (min-width:640px) { .fp-grid { grid-template-columns:1fr 1fr; gap:24px; } }
   .fp-group { display:flex; flex-direction:column; gap:14px; min-width:0; }
-  /* Group headings: a thin line underneath marks each one as a section label, not an option. */
-  .fp-heading { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#0f2a6b;
-    padding-bottom:6px; border-bottom:1px solid #e2e8f0; }
+  .fp-heading { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#475569; }
   .fp-field { border:0; margin:0; padding:0; min-width:0; }
   .fp-label { display:block; font-size:12px; font-weight:500; color:#334155; margin-bottom:6px; padding:0; }
   .fp-options { display:flex; flex-wrap:wrap; gap:6px; }
@@ -49,6 +46,12 @@
   .fp-option span:hover { background:#f1f5f9; }
   .fp-option input:checked + span { background:#0f2a6b; border-color:#0f2a6b; color:#fff; }
   .fp-option input:focus-visible + span { outline:2px solid #0f2a6b; outline-offset:2px; }
+  .fp-filter-count:not(.hidden) { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px;
+    background:#0f2a6b; color:#fff; font-size:11px; font-weight:600; }
+  .fp-chip { display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 4px 0 10px; border:1px solid #cbd5e1; border-radius:9999px;
+    background:#f8fafc; font-size:12px; color:#334155; }
+  .fp-chip button { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:9999px; color:#475569; }
+  .fp-chip button:hover { background:#e2e8f0; color:#0f172a; }
 </style>
 </head>
 <body class="bg-[#f9fafb]">
@@ -74,7 +77,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -141,118 +144,155 @@
           <h1 class="text-2xl font-bold text-gray-900">Student Information Dashboard</h1>
           <p class="text-sm text-gray-500 mt-1">Overview of student assessments and counseling status</p>
         </div>
-        <div class="flex items-center gap-3 flex-wrap">
-          <div class="flex items-center gap-2">
-            <label for="ayFilter" class="pp-filter-label">School Year</label>
-            <select id="ayFilter" class="pp-filter-select"></select>
-          </div>
-          <div class="flex items-center gap-2">
-            <label for="filterStrand" class="pp-filter-label">Strand</label>
-            <select id="filterStrand" class="pp-filter-select">
-              <option value="">All Strands</option>
-              <option value="STEM">STEM</option>
-              <option value="ABM">ABM</option>
-              <option value="ICT">ICT</option>
-              <option value="HUMSS">HUMSS</option>
-            </select>
-          </div>
-          <div class="flex items-center gap-2">
-            <label for="filterSection" class="pp-filter-label">Section</label>
-            <select id="filterSection" class="pp-filter-select" disabled>
-              <option value="">Select a strand first</option>
-            </select>
-          </div>
+        <div class="flex items-center gap-2">
+          <label for="ayFilter" class="text-xs font-medium text-gray-600">School year</label>
+          <select id="ayFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></select>
         </div>
       </div>
 
-      <!-- Summary Cards: totals and shares only (the assessment is taken once a year, so there is no monthly trend).
-           Each opens its number split by strand in #breakdownPanel, as on the Audit Log (see the script). -->
-      <div id="summaryCards" class="pp-card-grid mb-6">
+      <!-- Summary Cards: totals and shares only (the assessment is taken once a year, so there is no monthly trend) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
-        <button type="button" id="cardTotalBtn" data-card="total" aria-expanded="false" aria-controls="breakdownPanel"
-          class="summary-card text-left w-full bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex items-start gap-4">
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start gap-4">
             <span class="w-12 h-12 rounded-lg bg-[#dbeafe] flex items-center justify-center shrink-0">
               <img src="images/admin/card-icon-students.svg" alt="" class="w-5 h-5">
             </span>
-            <span class="block min-w-0">
-              <span class="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Total Students</span>
-              <span class="block text-3xl font-bold text-gray-900" id="cardTotalStudents">—</span>
-            </span>
-        </button>
-        <button type="button" id="cardCompletedBtn" data-card="completed" aria-expanded="false" aria-controls="breakdownPanel"
-          class="summary-card text-left w-full bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex items-start gap-4">
+            <div class="min-w-0">
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Total Students</p>
+              <p class="text-3xl font-bold text-gray-900" id="cardTotalStudents">—</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start gap-4">
             <span class="w-12 h-12 rounded-lg bg-[#dcfce7] flex items-center justify-center shrink-0">
               <img src="images/admin/card-icon-assessments.svg" alt="" class="w-4 h-5">
             </span>
-            <span class="block min-w-0">
-              <span class="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Assessments Completed</span>
-              <span class="block text-3xl font-bold text-gray-900" id="cardCompleted">—</span>
-              <span class="block text-xs mt-1 font-medium whitespace-nowrap text-emerald-700" id="cardCompletedPct">—</span>
-            </span>
-        </button>
-        <button type="button" id="cardPendingBtn" data-card="pending" aria-expanded="false" aria-controls="breakdownPanel"
-          class="summary-card text-left w-full bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex items-start gap-4">
+            <div class="min-w-0">
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Assessments Completed</p>
+              <p class="text-3xl font-bold text-gray-900" id="cardCompleted">—</p>
+            </div>
+          </div>
+          <div class="pt-3 pl-16">
+            <span class="text-sm font-medium text-emerald-700" id="cardCompletedPct">—</span>
+          </div>
+        </div>
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start gap-4">
             <span class="w-12 h-12 rounded-lg bg-[#ffedd5] flex items-center justify-center shrink-0">
               <img src="images/admin/card-icon-pending.svg" alt="" class="w-5 h-5">
             </span>
-            <span class="block min-w-0">
-              <span class="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Pending Assessments</span>
-              <span class="block text-3xl font-bold text-gray-900" id="cardPending">—</span>
-              <span class="block text-xs mt-1 font-medium whitespace-nowrap text-amber-700" id="cardPendingPct">—</span>
-            </span>
-        </button>
-        <button type="button" id="cardMismatchedBtn" data-card="mismatched" aria-expanded="false" aria-controls="breakdownPanel"
-          class="summary-card text-left w-full bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex items-start gap-4">
+            <div class="min-w-0">
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Pending Assessments</p>
+              <p class="text-3xl font-bold text-gray-900" id="cardPending">—</p>
+            </div>
+          </div>
+          <div class="pt-3 pl-16">
+            <span class="text-sm font-medium text-amber-700" id="cardPendingPct">—</span>
+          </div>
+        </div>
+        <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div class="flex items-start gap-4">
             <span class="w-12 h-12 rounded-lg bg-[#f3e8ff] flex items-center justify-center shrink-0">
               <img src="images/admin/card-icon-counseling.svg" alt="" class="w-5 h-5">
             </span>
-            <span class="block min-w-0">
-              <span class="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Mismatched Results</span>
-              <span class="block text-3xl font-bold text-gray-900" id="cardMismatched">—</span>
-              <span class="block text-xs mt-1 font-medium whitespace-nowrap text-purple-700" id="cardMismatchedPct">—</span>
-            </span>
-        </button>
+            <div class="min-w-0">
+              <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">Mismatched Results</p>
+              <p class="text-3xl font-bold text-gray-900" id="cardMismatched">—</p>
+            </div>
+          </div>
+          <div class="pt-3 pl-16">
+            <span class="text-sm font-medium text-purple-700" id="cardMismatchedPct">—</span>
+          </div>
+        </div>
       </div>
 
-      <!-- Breakdown of the selected card by strand (opened by clicking a card). A strand filters the table. -->
-      <section id="breakdownPanel" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm px-5 py-4 mb-8" aria-labelledby="breakdownTitle">
-        <div class="flex items-center justify-between gap-3 mb-2">
-          <h2 id="breakdownTitle" class="text-sm font-semibold text-gray-900"></h2>
-          <button type="button" id="breakdownClose" class="text-sm font-medium text-gray-600 hover:bg-gray-50 px-2 py-1 rounded-md">Close</button>
+      <!-- Sections at a glance -->
+      <div id="sectionCompletionCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
+        <div class="border-b border-gray-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-gray-900">Student Progress by Section</h2>
+            <p class="text-xs text-gray-500 mt-1">Registered, assessed and pending students in each section.</p>
+            <div class="text-xs text-gray-600" style="display:flex;flex-wrap:wrap;align-items:center;margin-top:8px;row-gap:4px" aria-label="Chart colors">
+              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#93c5fd;display:inline-block"></span>Registered</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#0f2a6b;display:inline-block"></span>Assessed</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#f59e0b;display:inline-block"></span>Pending</span>
+            </div>
+          </div>
         </div>
-        <div id="breakdownRows"></div>
-        <p id="breakdownNote" class="text-xs text-gray-500 mt-2"></p>
-      </section>
-
+        <div class="px-6 pt-4"><p id="completionSummaryLine" class="text-sm text-gray-700"></p></div>
+        <div class="p-6 pt-3"><div id="completionChartBox" style="position:relative;height:260px"><canvas id="sectionCompletionChart" aria-label="Registered, assessed and pending students by section"></canvas></div></div>
+      </div>
+      <div id="statusCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
+        <div class="border-b border-gray-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-gray-900">Student Status</h2>
+            <p class="text-xs text-gray-500 mt-1">Assessed, pending and not registered students.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <label for="statusSection" class="text-sm text-gray-600">Section</label>
+            <select id="statusSection" class="border border-gray-300 rounded-md px-3 py-2 text-sm"></select>
+          </div>
+        </div>
+        <div class="p-6">
+          <div id="statusChartBox" style="position:relative;height:300px"><canvas id="statusChart" aria-label="Assessed, pending and not registered students"></canvas></div>
+          <p id="statusEmpty" class="hidden text-sm text-gray-500 text-center py-10">No students in this section yet.</p>
+        </div>
+        <div class="px-6 pb-6 flex flex-wrap items-center gap-2">
+          <span class="text-xs text-gray-500">Download for the section picked above:</span>
+          <button type="button" id="dlNotRegistered" class="border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Not registered (CSV)</button>
+          <button type="button" id="dlNotAssessed" class="border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Not assessed (CSV)</button>
+        </div>
+      </div>
       <!-- Data Table Section -->
       <!-- No overflow-hidden here: the Filters drop-down hangs below its button and must be able to extend past a short table. -->
-      <div id="studentListCard" class="bg-white border border-gray-200 rounded-xl shadow-sm mb-8">
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
 
         <div class="border-b border-gray-200 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between px-4 sm:px-6 py-5 gap-3">
           <div>
             <h2 class="text-lg font-bold text-gray-900">Student Information and Assessment Overview</h2>
           </div>
           <div class="ov-controls">
-            <div class="pp-filter-search ov-search">
-              <svg viewBox="0 -960 960 960" fill="#64748B" aria-hidden="true"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
-              <input type="text" id="studentSearch" placeholder="Search students" aria-label="Search students by name" class="pp-filter-input">
+            <div class="relative ov-search">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" viewBox="0 -960 960 960" fill="#64748B"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
+              <input type="text" id="studentSearch" placeholder="Search by name..." aria-label="Search by name" class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
             </div>
+            <button type="button" id="downloadListBtn" class="ov-btn flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Download list (CSV)</button>
+            <button type="button" id="emailListedBtn" class="ov-btn hidden items-center justify-center gap-2 border border-[#0f2a6b] text-[#0f2a6b] rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-slate-50">Email these students</button>
             <div class="relative ov-filter">
-              <button type="button" id="filterBtn" aria-expanded="false" aria-controls="filterPanel" class="pp-filter-btn ov-btn">
+              <button type="button" id="filterBtn" aria-expanded="false" aria-controls="filterPanel" class="ov-btn flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 <svg class="w-3.5 h-3.5" viewBox="0 -960 960 960" fill="#64748B" aria-hidden="true"><path d="M400-240v-80h160v80H400ZM240-440v-80h480v80H240ZM120-640v-80h720v80H120Z"/></svg>
                 Filters
-                <span id="filterCount" class="pp-filter-count hidden"></span>
+                <span id="filterCount" class="fp-filter-count hidden"></span>
               </button>
               <div id="filterPanel" role="dialog" aria-label="Filter students" class="hidden absolute right-0 top-[calc(100%+8px)] bg-white border border-gray-200 rounded-xl shadow-lg z-10">
-                <!-- No title: the panel opens right under the Filters button. The × is its only close button (and Escape). -->
-                <div class="flex justify-end px-3 pt-2">
-                  <button type="button" id="closeFilters" aria-label="Close filters" class="w-8 h-8 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100">
+                <div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100">
+                  <h3 class="text-sm font-semibold text-gray-900">Filter students</h3>
+                  <button type="button" id="closeFilters" aria-label="Close filters" class="w-8 h-8 -mr-2 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
                   </button>
                 </div>
-                <div class="fp-grid px-5 pb-4 max-h-[60vh] overflow-y-auto">
+                <div class="fp-grid px-5 py-4 max-h-[60vh] overflow-y-auto">
                   <div class="fp-group">
-                    <p class="fp-heading">Account</p>
+                    <p class="fp-heading">Class</p>
+                    <fieldset class="fp-field">
+                      <legend class="fp-label">Strand</legend>
+                      <div class="fp-options">
+                        <label class="fp-option"><input type="radio" name="filterStrand" value="" checked><span>All</span></label>
+                        <label class="fp-option"><input type="radio" name="filterStrand" value="STEM"><span>STEM</span></label>
+                        <label class="fp-option"><input type="radio" name="filterStrand" value="ABM"><span>ABM</span></label>
+                        <label class="fp-option"><input type="radio" name="filterStrand" value="ICT"><span>ICT</span></label>
+                        <label class="fp-option"><input type="radio" name="filterStrand" value="HUMSS"><span>HUMSS</span></label>
+                      </div>
+                    </fieldset>
+                    <div>
+                      <label for="filterSection" class="fp-label">Section</label>
+                      <select id="filterSection" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white">
+                        <option value="">All sections</option>
+                      </select>
+                    </div>
+                    <p class="fp-heading pt-2">Account</p>
                     <fieldset class="fp-field">
                       <legend class="fp-label">Registration</legend>
                       <div class="fp-options">
@@ -261,8 +301,8 @@
                         <label class="fp-option"><input type="radio" name="filterRegistration" value="notRegistered"><span>Not registered</span></label>
                       </div>
                     </fieldset>
-                    <fieldset id="filterAccountField" class="fp-field">
-                      <legend class="fp-label">Status</legend>
+                    <fieldset class="fp-field">
+                      <legend class="fp-label">Account</legend>
                       <div class="fp-options">
                         <label class="fp-option"><input type="radio" name="filterAccount" value="" checked><span>All</span></label>
                         <label class="fp-option"><input type="radio" name="filterAccount" value="active"><span>Active</span></label>
@@ -301,21 +341,15 @@
                     </fieldset>
                   </div>
                 </div>
-                <!-- No Apply or Done button: every choice updates the list right away; ×, Escape or a click outside closes the panel. -->
+                <div class="flex items-center justify-between gap-3 px-5 py-3 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+                  <button type="button" id="clearFilters" class="text-sm font-medium text-gray-600 hover:text-gray-900 px-2 py-2 -ml-2 rounded-md">Clear all</button>
+                  <button type="button" id="applyFilters" class="bg-[#0f2a6b] text-white text-sm font-medium rounded-md px-5 py-2 hover:opacity-90">Apply filters</button>
+                </div>
               </div>
             </div>
-            <button type="button" id="clearFilters" disabled class="pp-clear-filters ov-btn">
-              <span class="pp-clear-filters-icon" aria-hidden="true"></span>
-              Clear filters
-            </button>
-            <button type="button" id="downloadListBtn" class="pp-filter-btn ov-btn" title="A PDF of every student in the list below, with the filters in use">
-              <img src="images/audit/icon-export.svg" alt="" class="w-4 h-4">
-              <span id="downloadListLabel">Export PDF</span>
-            </button>
-            <button type="button" id="emailListedBtn" class="pp-filter-btn is-navy ov-btn hidden">Email these students</button>
           </div>
         </div>
-        <div id="activeFilters" class="pp-chips hidden" aria-label="Filters in use"></div>
+        <div id="activeFilters" class="hidden px-4 sm:px-6 py-3 border-b border-gray-200 flex flex-wrap items-center gap-2" aria-label="Filters in use"></div>
         <p id="noResults" class="hidden px-6 py-6 text-sm text-gray-500 text-center">No students match your search or filters.</p>
 
         <div class="overflow-auto max-h-[60vh]" id="studentTableScroll">
@@ -326,7 +360,7 @@
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Name</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Strand</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Section</th>
-                <th id="accountHead" class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Account</th>
+                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Account</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Assessment Status</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Assessment Date</th>
                 <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Top 3 RIASEC</th>
@@ -340,52 +374,14 @@
           </table>
         </div>
 
-        <!-- Filled by PP.pager: "Showing 1 to 50 of N students", Rows per page and the page buttons. -->
-        <div id="studentPager"></div>
-        <p class="text-xs text-red-600 hidden px-6 pb-4" id="exportError" role="alert"></p>
-      </div>
-
-      <!-- Sections at a glance -->
-      <div id="sectionCompletionCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
-        <div class="border-b border-gray-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-bold text-gray-900">Student Progress by Section</h2>
-            <p class="text-xs text-gray-500 mt-1">Registered, assessed and pending students in each section.</p>
-            <div class="text-xs text-gray-600" style="display:flex;flex-wrap:wrap;align-items:center;margin-top:8px;row-gap:4px" aria-label="Chart colors">
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#93c5fd;display:inline-block"></span>Registered</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#0f2a6b;display:inline-block"></span>Assessed</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#f59e0b;display:inline-block"></span>Pending</span>
-            </div>
-          </div>
-        </div>
-        <div class="px-6 pt-4"><p id="completionSummaryLine" class="text-sm text-gray-700"></p></div>
-        <div class="p-6 pt-3"><div id="completionChartBox" style="position:relative;height:260px"><canvas id="sectionCompletionChart" aria-label="Registered, assessed and pending students by section"></canvas></div></div>
-      </div>
-      <div id="statusCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
-        <div class="border-b border-gray-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-bold text-gray-900">Student Status</h2>
-            <p class="text-xs text-gray-500 mt-1">Assessed, pending and not registered students.</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <label for="statusSection" class="pp-filter-label">Section</label>
-            <select id="statusSection" class="pp-filter-select"></select>
-          </div>
-        </div>
-        <div class="p-6">
-          <div id="statusChartBox" style="position:relative;height:300px"><canvas id="statusChart" aria-label="Assessed, pending and not registered students"></canvas></div>
-          <p id="statusEmpty" class="hidden text-sm text-gray-500 text-center py-10">No students in this section yet.</p>
-        </div>
-        <div class="px-6 pb-6 flex flex-wrap items-center gap-2">
-          <span class="text-xs text-gray-500">Download for the section picked above:</span>
-          <button type="button" id="dlNotRegistered" class="border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Not registered (CSV)</button>
-          <button type="button" id="dlNotAssessed" class="border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Not assessed (CSV)</button>
+        <div class="border-t border-gray-200 px-6 py-4">
+          <p class="text-sm text-gray-500" id="paginationSummary">Loading…</p>
         </div>
       </div>
 
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -396,12 +392,8 @@
 </div>
 
 <div id="inviteModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-md">
-    <div class="pp-dialog-head">
-      <h2 class="pp-dialog-title" id="inviteTitle">Invite to register</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="pp-dialog-form">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-md p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black" id="inviteTitle">Invite to register</h3>
     <div class="flex flex-col gap-2 text-sm text-gray-700">
       <p><span class="font-medium text-gray-900">To:</span> <span id="inviteTo"></span></p>
       <p><span class="font-medium text-gray-900">Subject:</span> Create your ProfilePath account</p>
@@ -412,10 +404,20 @@
       </div>
     </div>
     <p id="inviteError" class="hidden text-sm text-[#ed1c24]"></p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="inviteCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="inviteSendBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Send invitation</button>
     </div>
-    <div class="pp-dialog-foot">
-      <button type="button" id="inviteCancelBtn" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="inviteSendBtn" class="pp-btn pp-btn-primary">Send invitation</button>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
     </div>
   </div>
 </div>
@@ -428,23 +430,6 @@
     window.location.replace('staff-login');
     return;
   }
-  // What this person may do here (the permission table on Security Configuration). The server checks every request; this
-  // only hides what they cannot use: account actions and emails (Student account management, Full) and the downloads with
-  // student names (Export student results, Full).
-  const canManageAccounts = PP.may(currentUser, 'studentAccounts', 'full');
-  const canExportNames = PP.may(currentUser, 'exportResults', 'full');
-  if (!canExportNames) {
-    document.getElementById('downloadListBtn').classList.add('hidden');
-    document.getElementById('dlNotRegistered').parentElement.classList.add('hidden');
-  }
-  // No Access on Student account management: no Account column and no Account status filter (api/students.php does not
-  // send the account state to them either).
-  const seesAccounts = PP.may(currentUser, 'studentAccounts');
-  const COLS = seesAccounts ? 10 : 9;
-  if (!seesAccounts) {
-    document.getElementById('accountHead').remove();
-    document.getElementById('filterAccountField').remove();
-  }
 
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
   if (currentUser.avatarUrl) {
@@ -454,7 +439,25 @@
   document.getElementById('headerUserName').textContent = currentUser.displayName || currentUser.username;
   document.getElementById('headerUserRole').textContent = currentUser.positionLabel || roleLabels[currentUser.role] || currentUser.role;
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   function toggleDropdown(panel, ...others) {
     others.forEach(p => p.classList.add('hidden'));
@@ -468,15 +471,13 @@
   const filterBtn = document.getElementById('filterBtn');
   const filterPanel = document.getElementById('filterPanel');
 
-  // The Filters panel stays open until its × is clicked (or Escape, for keyboard users): other menus and clicks
-  // elsewhere on the page leave it alone.
   notifBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    toggleDropdown(notifPanel, profilePanel);
+    toggleDropdown(notifPanel, profilePanel, filterPanel);
   });
   profileBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    toggleDropdown(profilePanel, notifPanel);
+    toggleDropdown(profilePanel, notifPanel, filterPanel);
   });
   function closeFilterPanel(returnFocus) {
     if (filterPanel.classList.contains('hidden')) return;
@@ -484,14 +485,12 @@
     filterBtn.setAttribute('aria-expanded', 'false');
     if (returnFocus) filterBtn.focus();
   }
-  // The Filters button only opens the panel; a second click keeps it open.
   filterBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    notifPanel.classList.add('hidden');
-    profilePanel.classList.add('hidden');
-    filterPanel.classList.remove('hidden');
-    filterBtn.setAttribute('aria-expanded', 'true');
-    filterPanel.querySelector('input:checked').focus();
+    toggleDropdown(filterPanel, notifPanel, profilePanel);
+    const open = !filterPanel.classList.contains('hidden');
+    filterBtn.setAttribute('aria-expanded', String(open));
+    if (open) filterPanel.querySelector('input:checked').focus();
   });
   document.getElementById('closeFilters').addEventListener('click', () => closeFilterPanel(true));
   filterPanel.addEventListener('keydown', (e) => {
@@ -500,6 +499,7 @@
   document.addEventListener('click', () => {
     notifPanel.classList.add('hidden');
     profilePanel.classList.add('hidden');
+    closeFilterPanel(false);
   });
 
   // Close open dropdown panels on scroll — they were anchored under their
@@ -531,28 +531,7 @@
   const searchInput = document.getElementById('studentSearch');
   const noResults = document.getElementById('noResults');
   const tbody = document.getElementById('studentTbody');
-  // The filters and page live in the page address, so Reload and Back show the same list. The search (it can be a
-  // name) is kept in this tab only, never in the address (PP.listState in js/ui-state.js).
-  const listState = PP.listState({ search: '', strand: '', section: '', status: '', counseling: '', registration: '', assessment: '', account: '', academicYear: '', page: 1, pageSize: 50 }, ['search']);
-  const state = listState.read();
-  if (!seesAccounts) state.account = ''; // an old address with ?account= does nothing for them
-  if (![25, 50, 100].includes(state.pageSize)) state.pageSize = 50;
-  searchInput.value = state.search;
-  const getStudents = PP.latestJson(); // a new request cancels the one still on its way
-  const pager = PP.pager('studentPager', {
-    noun: ['student', 'students'], label: 'Student list pages', pageSize: state.pageSize, emptyText: 'No students to show',
-    onChange: function(page, pageSize, focus) {
-      state.page = page;
-      state.pageSize = pageSize;
-      document.getElementById('studentTableScroll').scrollTop = 0;
-      load({ listOnly: true, focus: focus });
-    }
-  });
-  // Summary card breakdowns (see the script near the end): the card open and the last numbers. The picked strand is
-  // state.strand itself, so it shows on every card.
-  let openCard = null;
-  let lastSummary = null;
-  let pickedSets = null; // { before }: what a card's strand click replaced (status, assessment), put back when it is undone
+  const state = { search: '', strand: '', section: '', status: '', counseling: '', registration: '', assessment: '', account: '', academicYear: '' };
   let isPastYear = false;
   let lastTotal = 0;
   let statusSection = ''; // '' = all sections, otherwise "STRAND|SECTION"
@@ -597,6 +576,7 @@
     renderStatus(lastSectionRows);
   });
   let lastSectionRows = [];
+  let debounceHandle = null;
 
   // ---- Student progress by section: registered, assessed and still pending, each as a share of the students expected.
   let completionChart = null;
@@ -660,44 +640,8 @@
       summary.textContent = 'Unable to reach the server. Please try again.';
     }
   }
-  // Export PDF: every student matching the search and filters in use (not just this page), with the filters printed on it.
-  const downloadListBtn = document.getElementById('downloadListBtn');
-  const exportError = document.getElementById('exportError');
-  downloadListBtn.addEventListener('click', async function() {
-    const params = new URLSearchParams({ format: 'pdf', search: state.search, strand: state.strand, section: state.section, status: state.status, counseling: state.counseling, registration: state.registration, assessment: state.assessment, account: state.account, academicYear: state.academicYear });
-    const label = document.getElementById('downloadListLabel');
-    exportError.classList.add('hidden');
-    downloadListBtn.disabled = true;
-    downloadListBtn.setAttribute('aria-busy', 'true');
-    label.textContent = 'Preparing…';
-    try {
-      const res = await fetch('api/students.php?' + params.toString());
-      if (res.status === 401) { window.location.replace('staff-login'); return; }
-      if (!res.ok) {
-        let message = 'Could not export the PDF. Please try again.';
-        try { message = (await res.json()).error || message; } catch (e) {}
-        exportError.textContent = message;
-        exportError.classList.remove('hidden');
-        return;
-      }
-      const match = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '');
-      const url = URL.createObjectURL(await res.blob());
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = match ? match[1] : 'students.pdf';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-      PP.toast('PDF downloaded.', false);
-    } catch (e) {
-      exportError.textContent = 'Unable to reach the server. Please try again.';
-      exportError.classList.remove('hidden');
-    } finally {
-      label.textContent = 'Export PDF';
-      downloadListBtn.disabled = false;
-      downloadListBtn.removeAttribute('aria-busy');
-    }
+  document.getElementById('downloadListBtn').addEventListener('click', function() {
+    downloadCsv({ search: state.search, strand: state.strand, section: state.section, status: state.status, counseling: state.counseling, registration: state.registration, assessment: state.assessment, account: state.account, academicYear: state.academicYear });
   });
   function pickedSectionParams() {
     if (!statusSection) return {};
@@ -707,9 +651,20 @@
   document.getElementById('dlNotRegistered').addEventListener('click', function() { downloadCsv(Object.assign({ registration: 'notRegistered', academicYear: state.academicYear }, pickedSectionParams())); });
   document.getElementById('dlNotAssessed').addEventListener('click', function() { downloadCsv(Object.assign({ assessment: 'notAssessed', academicYear: state.academicYear }, pickedSectionParams())); });
 
-  // Badge colors by meaning (PP.badge in js/ui-state.js): not taking counseling is not an error, so it is gray.
-  const STATUS_TONE = { Completed: 'green', Pending: 'amber', 'Not Registered': 'blue' };
-  const COUNSELING_TONE = { Availed: 'green', 'Did Not Avail': 'gray' };
+  const STATUS_STYLE = {
+    Completed: { bg: 'bg-[#f0fdf4] border-[#bbf7d0] text-emerald-500', dot: 'images/admin/dot-green.svg' },
+    Pending: { bg: 'bg-[#fff7ed] border-[#fed7aa] text-amber-500', dot: 'images/admin/dot-orange.svg' },
+    'Not Registered': { bg: 'bg-[#eff6ff] border-[#bfdbfe] text-blue-500', dot: 'images/admin/dot-blue.svg' },
+  };
+  const COUNSELING_STYLE = {
+    Availed: { bg: 'bg-[#f0fdf4] border-[#bbf7d0] text-emerald-500', dot: 'images/admin/dot-green.svg' },
+    'Did Not Avail': { bg: 'bg-[#fef2f2] border-[#fecaca] text-red-500', dot: 'images/admin/dot-red.svg' },
+  };
+
+  function badge(label, style) {
+    return '<span class="inline-flex items-center gap-1.5 whitespace-nowrap ' + style.bg + ' text-xs font-medium px-3 py-1 rounded-full">' +
+      '<img src="' + style.dot + '" alt="" class="w-3 h-3"> ' + label + '</span>';
+  }
 
   // Shown in school time (Asia/Manila); Postgres may send "+08" without
   // minutes, which some browsers can't parse, so pad it first.
@@ -719,57 +674,45 @@
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' });
   }
 
-  // "View profile" as an eye: it opens the profile, it does not edit (the old pencil suggested editing).
-  const EYE_ICON = '<svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-300Zm0 220q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280Z"/></svg>';
-
   function renderRow(s, index) {
     const isRosterOnly = s.userId === null;
-    const statusCell = PP.badge(s.status, STATUS_TONE[s.status]);
+    const statusCell = badge(s.status, STATUS_STYLE[s.status]);
     // A student with no account has no sign-in to show.
     // Locked by wrong passwords (for example on exam day): shown right here with Unlock, so staff in the
     // room see it without opening each profile.
     const accountCell = isRosterOnly
-      ? PP.badge('No account', 'gray')
+      ? '<span class="inline-flex items-center bg-gray-100 border border-gray-200 text-gray-500 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">No account</span>'
       : (s.isActive && s.locked
           ? '<span class="inline-flex items-center gap-2 whitespace-nowrap">' +
-              PP.badge('Locked', 'amber') +
-              (canManageAccounts ? '<button type="button" class="unlock-btn text-xs font-semibold text-[#0f2a6b] underline" data-id="' + s.userId + '" data-name="' + escapeHtml(s.name) + '">Unlock</button>' : '') +
+              '<span class="inline-flex items-center bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium px-3 py-1 rounded-full">Locked</span>' +
+              '<button type="button" class="unlock-btn text-xs font-semibold text-[#0f2a6b] underline" data-id="' + s.userId + '" data-name="' + escapeHtml(s.name) + '">Unlock</button>' +
             '</span>'
           : s.isActive
-          ? PP.badge('Active', 'green')
-          : PP.badge('Deactivated', 'gray'));
+          ? '<span class="inline-flex items-center bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-600 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">Active</span>'
+          : '<span class="inline-flex items-center bg-gray-100 border border-gray-200 text-gray-500 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">Deactivated</span>');
     const counselingCell = s.counseling
-      ? PP.badge(s.counseling, COUNSELING_TONE[s.counseling])
+      ? badge(s.counseling, COUNSELING_STYLE[s.counseling])
       : '<span class="text-gray-500">No request</span>';
     const params = new URLSearchParams({ id: s.userId });
-    // Only the slots this person can ever use (open profile | counseling or register invite | activate or deactivate), so
-    // the buttons line up from row to row and no column stands empty. When opening the profile is all they can do, it is a
-    // labeled "View profile" button; next to other buttons it is an eye icon (it opens the profile, it does not edit).
-    // A roster-only entry has no account, so no profile to open.
+    // A roster-only entry has no account to open a profile for — no link,
+    // just a dash, matching the other empty-data cells in this row.
+    // Three fixed slots (open profile | counseling or register invite | activate or deactivate) so the buttons line up
+    // from row to row, whichever ones a row has.
     const BTN = 'display:inline-flex;align-items:center;justify-content:center;width:100%;height:32px;padding:0 8px;white-space:nowrap';
-    const NAVY_BTN = 'text-xs font-semibold rounded-md border text-[#0f2a6b] border-[#0f2a6b] hover:bg-slate-50';
-    const profileHref = 'student-profile?' + params.toString();
-    let actionCell;
-    if (!ACTION_SLOTS.invite && !ACTION_SLOTS.toggle) {
-      actionCell = isRosterOnly
-        ? '<span class="text-xs text-gray-500">No profile yet</span>'
-        : '<a href="' + profileHref + '" class="' + NAVY_BTN + '" style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;white-space:nowrap">' +
-            EYE_ICON + 'View profile</a>';
-    } else {
-      const cells = [isRosterOnly ? '' :
-        '<a href="' + profileHref + '" title="View profile" aria-label="View profile of ' + escapeHtml(s.name) + '" class="inline-flex items-center justify-center border border-gray-200 rounded shadow-sm hover:bg-gray-50 text-slate-500" style="width:32px;height:32px">' + EYE_ICON + '</a>'];
-      if (ACTION_SLOTS.invite) {
-        cells.push(isRosterOnly
-          ? (canManageAccounts && s.hasEmail && !isPastYear ? '<button type="button" class="invite-btn ' + NAVY_BTN + '" style="' + BTN + '" data-roster-id="' + s.rosterId + '" data-name="' + escapeHtml(s.name) + '">Invite to register</button>' : '')
-          // isActive is null when the account state is not sent (No Access on accounts); the server refuses a deactivated student.
-          : (canInvite && s.isActive !== false ? '<button type="button" class="counsel-invite-btn ' + NAVY_BTN + '" style="' + BTN + '" data-id="' + s.userId + '" data-name="' + escapeHtml(s.name) + '">Invite to counseling</button>' : ''));
-      }
-      if (ACTION_SLOTS.toggle) {
-        cells.push(isRosterOnly ? '' : '<button type="button" class="toggle-active-btn text-xs font-semibold rounded-md border ' + (s.isActive ? 'btn-danger text-[#ed1c24] border-[#ed1c24] hover:bg-red-50' : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50') + '" style="' + BTN + '" data-id="' + s.userId + '" data-active="' + (s.isActive ? '1' : '0') + '" data-name="' + escapeHtml(s.name) + '">' + (s.isActive ? 'Deactivate' : 'Activate') + '</button>');
-      }
-      actionCell = '<div style="display:grid;grid-template-columns:' + ACTION_SLOTS.columns + ';gap:8px;align-items:center;justify-content:center">' +
-        cells.map(function(html) { return html || '<span></span>'; }).join('') + '</div>';
-    }
+    const slot = function(html) { return html || '<span></span>'; };
+    const wrap = function(a, b, c) {
+      return '<div style="display:grid;grid-template-columns:32px 150px 96px;gap:8px;align-items:center;justify-content:center">' + slot(a) + slot(b) + slot(c) + '</div>';
+    };
+    const actionCell = isRosterOnly
+      ? wrap('', s.hasEmail && !isPastYear
+          ? '<button type="button" class="invite-btn text-xs font-semibold rounded-md border text-[#0f2a6b] border-[#0f2a6b] hover:bg-slate-50" style="' + BTN + '" data-roster-id="' + s.rosterId + '" data-name="' + escapeHtml(s.name) + '">Invite to register</button>'
+          : '', '')
+      : wrap(
+          '<a href="student-profile?' + params.toString() + '" title="Open profile" class="inline-flex items-center justify-center border border-gray-200 rounded shadow-sm hover:bg-gray-50" style="width:32px;height:32px">' +
+            '<svg class="w-4 h-4" viewBox="0 -960 960 960" fill="#64748B"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg></a>',
+          canInvite && s.isActive ? '<button type="button" class="counsel-invite-btn text-xs font-semibold rounded-md border text-[#0f2a6b] border-[#0f2a6b] hover:bg-slate-50" style="' + BTN + '" data-id="' + s.userId + '" data-name="' + escapeHtml(s.name) + '">Invite to counseling</button>' : '',
+          '<button type="button" class="toggle-active-btn text-xs font-semibold rounded-md border ' + (s.isActive ? 'btn-danger text-[#ed1c24] border-[#ed1c24] hover:bg-red-50' : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50') + '" style="' + BTN + '" data-id="' + s.userId + '" data-active="' + (s.isActive ? '1' : '0') + '" data-name="' + escapeHtml(s.name) + '">' + (s.isActive ? 'Deactivate' : 'Activate') + '</button>'
+        );
     return '<tr>' +
       '<td class="px-6 py-4 text-sm text-gray-500">' + index + '</td>' +
       '<td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + escapeHtml(s.name) +
@@ -777,7 +720,7 @@
       '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-500">' + escapeHtml(s.strand) + '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-500">' + escapeHtml(s.section) + '</td>' +
-      (seesAccounts ? '<td class="px-6 py-4 whitespace-nowrap">' + accountCell + '</td>' : '') +
+      '<td class="px-6 py-4 whitespace-nowrap">' + accountCell + '</td>' +
       '<td class="px-6 py-4 whitespace-nowrap">' + statusCell + '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">' + formatDate(s.assessmentDate) + '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">' + (s.riasec ? escapeHtml(s.riasec) : '<span class="text-gray-500">No result yet</span>') + '</td>' +
@@ -786,89 +729,65 @@
     '</tr>';
   }
 
-  // Loads one page of students (state.page) with the search and filters in use.
-  // opts.listOnly: a filter, search or page change. The cards and charts count every student in the school year (not the
-  // table's filters), so they stay as they are instead of flashing. opts.focus: the pager button to focus afterwards.
-  async function load(opts = {}) {
-    const listOnly = !!opts.listOnly && lastSummary !== null;
+  async function load() {
     const statIds = ['cardTotalStudents', 'cardCompleted', 'cardPending', 'cardMismatched'];
     const chartBoxes = ['completionChartBox', 'statusChartBox'];
-    listState.save(state);
-    PP.showSkeleton(tbody, PP.skeleton.rows(COLS, 6));
-    pager.loading();
-    if (!listOnly) {
-      statIds.forEach(PP.statLoading);
-      ['cardCompletedPct', 'cardPendingPct', 'cardMismatchedPct'].forEach(function(id) { document.getElementById(id).textContent = ''; });
-      if (!completionChart) { document.getElementById('sectionCompletionCard').classList.remove('hidden'); PP.chartLoading('completionChartBox'); }
-      if (!statusChart) { document.getElementById('statusCard').classList.remove('hidden'); PP.chartLoading('statusChartBox'); }
-    }
+    PP.showSkeleton(tbody, PP.skeleton.rows(10, 6));
+    document.getElementById('paginationSummary').innerHTML = PP.skeleton.line('220px');
+    statIds.forEach(PP.statLoading);
+    ['cardCompletedPct', 'cardPendingPct', 'cardMismatchedPct'].forEach(function(id) { document.getElementById(id).textContent = ''; });
+    if (!completionChart) { document.getElementById('sectionCompletionCard').classList.remove('hidden'); PP.chartLoading('completionChartBox'); }
+    if (!statusChart) { document.getElementById('statusCard').classList.remove('hidden'); PP.chartLoading('statusChartBox'); }
     const params = new URLSearchParams({
-      page: state.page, pageSize: state.pageSize, search: state.search, strand: state.strand, section: state.section, status: state.status,
-      counseling: state.counseling, registration: state.registration, assessment: state.assessment, account: state.account, academicYear: state.academicYear,
+      all: '1', search: state.search, strand: state.strand, section: state.section, status: state.status, counseling: state.counseling,
+      registration: state.registration, assessment: state.assessment, account: state.account, academicYear: state.academicYear,
     });
     let data;
     try {
-      data = await getStudents('api/students.php?' + params.toString());
+      data = await PP.fetchJson('api/students.php?' + params.toString());
     } catch (e) {
-      if (e.cancelled) return; // a newer request replaced this one
-      if (e.status === 401) { window.location.replace('staff-login'); return; }
-      PP.showError(tbody, e.message, load, COLS);
-      pager.clear();
-      if (!listOnly) {
-        statIds.forEach(PP.statFailed);
-        chartBoxes.forEach(function(id) { PP.chartError(id, e.message, load); });
-      }
+      PP.showError(tbody, e.message, load, 10);
+      statIds.forEach(PP.statFailed);
+      document.getElementById('paginationSummary').textContent = '';
+      chartBoxes.forEach(function(id) { PP.chartError(id, e.message, load); });
       return;
     }
     tbody.removeAttribute('aria-busy');
-    // Only the parts this person may see (the permission table): the cards and charts (Dashboard), the list (Student information).
-    document.getElementById('summaryCards').classList.toggle('hidden', data.seesCards === false);
-    document.getElementById('studentListCard').classList.toggle('hidden', data.seesList === false);
+    chartBoxes.forEach(PP.chartLoaded);
     isPastYear = !!data.isPastYear;
     lastTotal = data.total;
-    state.page = data.page; // the server keeps the page inside the list (a page past the end shows the last one)
-    listState.save(state);
-    pager.render(Object.assign({}, data, { shown: data.students.length }));
-    pager.focus(opts.focus);
-    noResults.classList.toggle('hidden', data.students.length !== 0);
-    tbody.innerHTML = data.students.length
-      ? data.students.map((s, i) => renderRow(s, data.startIndex + i)).join('')
-      : '';
-    renderEmailButton();
-    if (listOnly) { renderBreakdown(); return; } // a strand picked in a card breakdown may have just been changed
-
-    chartBoxes.forEach(PP.chartLoaded);
     renderYearOptions(data);
 
-    if (data.summary) {
-      document.getElementById('cardTotalStudents').textContent = data.summary.totalStudents.toLocaleString();
-      document.getElementById('cardCompleted').textContent = data.summary.completedCount.toLocaleString();
-      document.getElementById('cardPending').textContent = data.summary.pendingCount.toLocaleString();
-      document.getElementById('cardMismatched').textContent = data.summary.mismatchedCount.toLocaleString();
-      const pct = (n) => data.summary.totalStudents > 0 ? Math.round((n / data.summary.totalStudents) * 100) + '% of total' : '0% of total';
-      document.getElementById('cardCompletedPct').textContent = pct(data.summary.completedCount);
-      document.getElementById('cardPendingPct').textContent = pct(data.summary.pendingCount);
-      // Mismatched is a share of the students who finished the assessment.
-      document.getElementById('cardMismatchedPct').textContent = data.summary.completedCount > 0 ? Math.round((data.summary.mismatchedCount / data.summary.completedCount) * 100) + '% of completed' : '0% of completed';
-    }
-    lastSummary = data.summary || {}; // no cards for this person: later list changes still reload the list only
-    renderBreakdown();
+    document.getElementById('cardTotalStudents').textContent = data.summary.totalStudents.toLocaleString();
+    document.getElementById('cardCompleted').textContent = data.summary.completedCount.toLocaleString();
+    document.getElementById('cardPending').textContent = data.summary.pendingCount.toLocaleString();
+    document.getElementById('cardMismatched').textContent = data.summary.mismatchedCount.toLocaleString();
+    const pct = (n) => data.summary.totalStudents > 0 ? Math.round((n / data.summary.totalStudents) * 100) + '% of total' : '0% of total';
+    document.getElementById('cardCompletedPct').textContent = pct(data.summary.completedCount);
+    document.getElementById('cardPendingPct').textContent = pct(data.summary.pendingCount);
+    // Mismatched is a share of the students who finished the assessment.
+    document.getElementById('cardMismatchedPct').textContent = data.summary.completedCount > 0 ? Math.round((data.summary.mismatchedCount / data.summary.completedCount) * 100) + '% of completed' : '0% of completed';
 
     const secRows = data.sections || [];
     lastSectionRows = secRows;
     renderStatus(secRows);
     renderCompletion(secRows);
-  }
+    noResults.classList.toggle('hidden', data.students.length !== 0);
+    tbody.innerHTML = data.students.length
+      ? data.students.map((s, i) => renderRow(s, data.startIndex + i)).join('')
+      : '';
 
-  // Staff can email everyone currently listed when the list is Pending or Mismatched students.
-  // Past school years are looked at, not acted on: no emails from them.
-  function renderEmailButton() {
+    // Staff can email everyone currently listed when the list is Pending or Mismatched students.
+    // Past school years are looked at, not acted on: no emails from them.
     const emailBtn = document.getElementById('emailListedBtn');
     const inviteMode = !isPastYear && state.registration === 'notRegistered' && !(state.status === 'Pending' || state.status === 'Mismatched');
-    const showEmail = canManageAccounts && !isPastYear && (state.status === 'Pending' || state.status === 'Mismatched' || inviteMode);
+    const showEmail = !isPastYear && (state.status === 'Pending' || state.status === 'Mismatched' || inviteMode);
     emailBtn.classList.toggle('hidden', !showEmail);
     emailBtn.classList.toggle('flex', showEmail);
     emailBtn.textContent = inviteMode ? 'Email: invite to register' : (state.status === 'Mismatched' ? 'Email: visit the Guidance Office' : 'Email: assessment reminder');
+
+    document.getElementById('paginationSummary').innerHTML =
+      'Showing <span class="font-medium text-gray-900">' + data.total.toLocaleString() + '</span> student' + (data.total === 1 ? '' : 's') + '. Scroll the table to see more.';
   }
 
   // "Email these students": a reminder to the Pending students, or a request to visit the
@@ -880,7 +799,7 @@
     }
     const kind = state.status === 'Mismatched' ? 'mismatch' : 'pending';
     const what = kind === 'mismatch' ? 'ask the listed students to visit the Guidance Office' : 'send the listed students an assessment reminder';
-    if (!(await PP.confirm('This will ' + what + '. A student receives at most one such email per day; students without an account are skipped.', { title: 'Email these students?', okLabel: 'Send email' }))) return;
+    if (!(await PP.confirm('Email these students? This will ' + what + '. A student receives at most one such email per day; students without an account are skipped.'))) return;
     const btn = this, label = btn.textContent;
     btn.disabled = true; btn.textContent = 'Sending…';
     const summary = document.getElementById('paginationSummary');
@@ -907,16 +826,20 @@
   // ---- Invite students who are on the class roster but have not registered: a pop-up shows the email, then sends it.
   const inviteModal = document.getElementById('inviteModal');
   let inviteBody = null;
-  // The shared pop-up behaviour (PP.dialog in js/ui-state.js): x, Cancel and Escape close it.
-  const inviteDialog = PP.dialog(inviteModal);
-  function closeInvite() { inviteDialog.close(); }
+  function closeInvite() {
+    inviteModal.classList.remove('is-open');
+    setTimeout(function() { inviteModal.classList.add('hidden'); }, 260);
+  }
   function openInvite(opts) {
     inviteBody = opts.body;
     document.getElementById('inviteTo').textContent = opts.to;
     document.getElementById('inviteFirst').textContent = opts.first || 'there';
     document.getElementById('inviteError').classList.add('hidden');
-    inviteDialog.open(document.getElementById('inviteSendBtn'));
+    inviteModal.classList.remove('hidden');
+    setTimeout(function() { inviteModal.classList.add('is-open'); }, 16);
   }
+  document.getElementById('inviteCancelBtn').addEventListener('click', closeInvite);
+  inviteModal.addEventListener('click', function(e) { if (e.target.id === 'inviteModal') closeInvite(); });
   document.getElementById('inviteSendBtn').addEventListener('click', async function() {
     const btn = this, errEl = document.getElementById('inviteError');
     btn.disabled = true;
@@ -950,19 +873,15 @@
   let canInvite = currentUser.role === 'admin';
   try {
     const inviteCfg = await (await fetch('api/security-config.php')).json();
-    canInvite = ((inviteCfg.rbac && inviteCfg.rbac.counselingStatus && inviteCfg.rbac.counselingStatus[currentUser.rbacRole || currentUser.role]) || 'none') === 'full' && (currentUser.rbacRole || currentUser.role) !== 'facilitator'; // Facilitators never invite or decide retakes (DFD process 4.0)
+    canInvite = ((inviteCfg.rbac && inviteCfg.rbac.counselingNotes && inviteCfg.rbac.counselingNotes[currentUser.rbacRole || currentUser.role]) || 'none') === 'full';
   } catch (e) {}
-  // The Actions column's slots for this person (renderRow): the profile, then an invite (to counseling, or to register
-  // for a student with no account yet) and activate or deactivate, only when they may use them.
-  const ACTION_SLOTS = { invite: canInvite || canManageAccounts, toggle: canManageAccounts };
-  ACTION_SLOTS.columns = ['32px', ACTION_SLOTS.invite ? '150px' : '', ACTION_SLOTS.toggle ? '96px' : ''].filter(Boolean).join(' ');
 
   // ---- Account actions on a registered student's row: invite to counseling (the CGC booking link), activate / deactivate.
   tbody.addEventListener('click', async function(e) {
     const summary = document.getElementById('paginationSummary');
     const unlockBtn = e.target.closest('.unlock-btn');
     if (unlockBtn) {
-      if (!(await PP.confirm('The account was locked after too many wrong passwords. They can sign in again right away.', { title: 'Unlock "' + unlockBtn.dataset.name + '"?', okLabel: 'Unlock' }))) return;
+      if (!(await PP.confirm('Unlock "' + unlockBtn.dataset.name + '"? The account was locked after too many wrong passwords. They can sign in again right away.', { okLabel: 'Unlock' }))) return;
       unlockBtn.disabled = true;
       try {
         const res = await fetch('api/students.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'unlock', userId: Number(unlockBtn.dataset.id) }) });
@@ -978,7 +897,7 @@
     }
     const inviteBtn = e.target.closest('.counsel-invite-btn');
     if (inviteBtn) {
-      if (!(await PP.confirm(inviteBtn.dataset.name + ' will be sent the CGC booking link by email and in their notifications.', { title: 'Invite to a counseling session?', okLabel: 'Send invitation' }))) return;
+      if (!(await PP.confirm('Invite "' + inviteBtn.dataset.name + '" to a counseling session? They will be sent the CGC booking link by email and in their notifications.'))) return;
       inviteBtn.disabled = true;
       try {
         const res = await fetch('api/counseling-invite.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId: Number(inviteBtn.dataset.id) }) });
@@ -996,8 +915,8 @@
     const toggleBtn = e.target.closest('.toggle-active-btn');
     if (toggleBtn) {
       const willDeactivate = toggleBtn.dataset.active === '1';
-      if (!(await PP.confirm(willDeactivate ? 'They will no longer be able to sign in. You can reactivate later.' : 'They will be able to sign in again.',
-        { title: (willDeactivate ? 'Deactivate' : 'Reactivate') + ' "' + toggleBtn.dataset.name + '"?', okLabel: willDeactivate ? 'Deactivate' : 'Reactivate', danger: willDeactivate }))) return;
+      if (!(await PP.confirm((willDeactivate ? 'Deactivate' : 'Activate') + ' "' + toggleBtn.dataset.name + '"? ' +
+        (willDeactivate ? 'They will no longer be able to sign in. You can reactivate later.' : 'They will be able to sign in again.'), { okLabel: willDeactivate ? 'Deactivate' : 'Activate', danger: willDeactivate }))) return;
       toggleBtn.disabled = true;
       try {
         const res = await fetch('api/students.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'toggleActive', userId: Number(toggleBtn.dataset.id) }) });
@@ -1021,38 +940,29 @@
   }
   ayFilter.addEventListener('change', function() {
     state.academicYear = ayFilter.value;
-    state.page = 1;
     load();
   });
 
-  // The search waits until typing stops for 300 ms, then shows the first page of matches.
-  const searchSoon = PP.debounce(function() {
-    state.search = searchInput.value.trim();
-    state.page = 1;
-    load({ listOnly: true });
-  }, 300);
-  searchInput.addEventListener('input', function() { updateClearBtn(); searchSoon(); });
-  // Strand and Section sit at the top of the page, next to School Year (same as Analytics). Section depends on
-  // Strand: picking a Strand unlocks its own sections; with no Strand, Section stays disabled (a section already
-  // belongs to one strand, so there is nothing to narrow yet). sectionOptions comes from Account Management.
-  const filterStrand = document.getElementById('filterStrand');
-  const filterSection = document.getElementById('filterSection');
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceHandle);
+    debounceHandle = setTimeout(() => {
+      state.search = searchInput.value.trim();
+            load();
+    }, 300);
+  });
+  // The Section filter is a drop-down of the sections the Head of Guidance / counselors maintain (Account
+  // Management), read fresh each time the panel opens so a section added a moment ago is already there.
+  // With All Strands it lists every section; with one strand, just that strand's.
   let sectionOptions = []; // [{ strand, code, isActive }]
   function renderSectionFilter() {
-    const strand = filterStrand.value;
-    if (!strand) {
-      filterSection.innerHTML = '<option value="">Select a strand first</option>';
-      filterSection.value = '';
-      filterSection.disabled = true;
-      return;
-    }
-    const previous = filterSection.value || state.section; // the saved section, before its option has been loaded
-    const list = sectionOptions.filter(function(s) { return s.strand === strand; });
-    filterSection.innerHTML = '<option value="">All Sections</option>' + list.map(function(s) {
-      return '<option value="' + escapeHtml(s.code) + '">' + escapeHtml(s.code) + (s.isActive ? '' : ' (inactive)') + '</option>';
+    const sec = document.getElementById('filterSection');
+    const strand = getChoice('filterStrand');
+    const previous = sec.value;
+    const list = sectionOptions.filter(function(s) { return !strand || s.strand === strand; });
+    sec.innerHTML = '<option value="">All sections</option>' + list.map(function(s) {
+      return '<option value="' + escapeHtml(s.code) + '">' + escapeHtml(s.code) + (strand ? '' : ' (' + escapeHtml(s.strand) + ')') + (s.isActive ? '' : ' (inactive)') + '</option>';
     }).join('');
-    filterSection.value = list.some(function(s) { return s.code === previous; }) ? previous : '';
-    filterSection.disabled = false;
+    sec.value = list.some(function(s) { return s.code === previous; }) ? previous : '';
   }
   async function refreshSectionFilter() {
     try {
@@ -1066,38 +976,20 @@
     } catch (e) { /* keep the list we already have */ }
     renderSectionFilter();
   }
-  // Strand and Section apply the moment they change (no Apply button).
-  // A change by hand is the user's own choice: a card click's "put back" memory (pickedSets) is dropped, as on the Audit Log.
-  filterStrand.addEventListener('change', function() {
-    pickedSets = null;
-    renderSectionFilter();
-    state.strand = filterStrand.value;
-    state.section = filterSection.value; // renderSectionFilter() may have reset Section
-    state.page = 1;
-    renderActiveFilters();
-    load({ listOnly: true });
-  });
-  filterSection.addEventListener('change', function() {
-    pickedSets = null;
-    state.section = filterSection.value;
-    state.page = 1;
-    renderActiveFilters();
-    load({ listOnly: true });
-  });
+  document.querySelectorAll('input[name="filterStrand"]').forEach(function(r) { r.addEventListener('change', renderSectionFilter); });
+  document.getElementById('filterBtn').addEventListener('click', refreshSectionFilter);
   refreshSectionFilter();
 
-  // Each filter: the state key it sets, its control (a radio group by name, or a drop-down), and its label for the
-  // chips. Strand and Section are chip:false: they always show at the top of the page, so they never need a chip
-  // or to count toward the Filters button's badge (that badge is only for what is inside the popover).
+  // Each filter: the state key it sets, its control (a radio group by name, or the Section drop-down), and its label for the chips.
   const FILTERS = [
-    { key: 'strand', select: 'filterStrand', label: 'Strand', chip: false },
-    { key: 'section', select: 'filterSection', label: 'Section', chip: false },
+    { key: 'strand', name: 'filterStrand', label: 'Strand' },
+    { key: 'section', select: 'filterSection', label: 'Section' },
     { key: 'registration', name: 'filterRegistration', label: 'Registration' },
     { key: 'account', name: 'filterAccount', label: 'Account' },
     { key: 'status', name: 'filterStatus', label: 'Assessment status' },
     { key: 'assessment', name: 'filterAssessment', label: 'Assessed' },
     { key: 'counseling', name: 'filterCounseling', label: 'Counseling status' }
-  ].filter(function(f) { return seesAccounts || f.key !== 'account'; });
+  ];
   function getChoice(name) {
     const checked = document.querySelector('input[name="' + name + '"]:checked');
     return checked ? checked.value : '';
@@ -1116,236 +1008,74 @@
   }
   // The Filters button shows how many are on, and each one in use is a chip under the toolbar that removes it.
   function renderActiveFilters() {
-    const active = FILTERS.filter(function(f) { return f.chip !== false && state[f.key]; });
+    const active = FILTERS.filter(function(f) { return state[f.key]; });
     const count = document.getElementById('filterCount');
     count.textContent = active.length;
     count.classList.toggle('hidden', active.length === 0);
     filterBtn.setAttribute('aria-label', active.length ? 'Filters, ' + active.length + ' in use' : 'Filters');
     const box = document.getElementById('activeFilters');
     box.classList.toggle('hidden', active.length === 0);
+    box.classList.toggle('flex', active.length > 0);
     box.innerHTML = active.map(function(f) {
       const text = f.label + ': ' + choiceText(f, state[f.key]);
-      return '<span class="pp-chip">' + escapeHtml(text) +
+      return '<span class="fp-chip">' + escapeHtml(text) +
         '<button type="button" data-remove-filter="' + f.key + '" aria-label="Remove ' + escapeHtml(text) + '">' +
         '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button></span>';
-    }).join('');
-    updateClearBtn();
-  }
-  // Clear filters: grey until a filter or the search is in use, then navy (as on the Audit Log).
-  const clearFiltersBtn = document.getElementById('clearFilters');
-  function updateClearBtn() {
-    clearFiltersBtn.disabled = !(searchInput.value.trim() || FILTERS.some(function(f) { return state[f.key]; }));
+    }).join('') + (active.length > 1 ? '<button type="button" data-remove-filter="all" class="text-xs font-medium text-gray-600 hover:text-gray-900 underline underline-offset-2 px-1">Clear all</button>' : '');
   }
   document.getElementById('activeFilters').addEventListener('click', function(e) {
     const btn = e.target.closest('[data-remove-filter]');
     if (!btn) return;
     const key = btn.dataset.removeFilter;
-    const f = filterFor(key);
-    setControl(f, '');
-    state[f.key] = '';
-    pickedSets = null;
-    state.page = 1;
+    FILTERS.forEach(function(f) {
+      if (key !== 'all' && f.key !== key) return;
+      setControl(f, '');
+      state[f.key] = '';
+    });
+    if (key === 'all' || key === 'strand') renderSectionFilter();
     renderActiveFilters();
-    load({ listOnly: true });
+    load();
     // The chip just removed had focus; keep the keyboard in the same place.
     const next = document.querySelector('#activeFilters button') || filterBtn;
     next.focus();
   });
-  // No Apply button: a choice in the panel updates the list at once.
-  filterPanel.addEventListener('change', function() {
+  document.getElementById('applyFilters').addEventListener('click', () => {
     FILTERS.forEach(function(f) { state[f.key] = controlValue(f); });
-    pickedSets = null;
-    state.page = 1;
     renderActiveFilters();
-    load({ listOnly: true });
+    load();
+    closeFilterPanel(true);
   });
-  // Clear filters resets the search and every filter and shows the first page of all students.
-  clearFiltersBtn.addEventListener('click', () => {
-    searchSoon.cancel();
-    searchInput.value = '';
-    state.search = '';
+  // Clear all resets the choices in the panel and shows every student again; the search box keeps its text.
+  document.getElementById('clearFilters').addEventListener('click', () => {
     FILTERS.forEach(function(f) { setControl(f, ''); state[f.key] = ''; });
-    pickedSets = null;
-    state.page = 1;
     renderSectionFilter();
     renderActiveFilters();
-    // The button just became disabled, which drops keyboard focus. Keep focus in the filter bar.
-    searchInput.focus();
-    load({ listOnly: true });
+    load();
   });
   // The panel opens leftward from the Filters button. On a narrower screen it keeps inside the table card (so it never slides
   // under the sidebar), and below 560px it shows one column. On a phone the CSS already makes it full width.
   function fitFilterPanel() {
     filterPanel.style.width = '';
-    filterPanel.style.left = '';
-    filterPanel.style.right = '';
     filterPanel.querySelector('.fp-grid').style.gridTemplateColumns = '';
     if (window.innerWidth < 640) return;
     const card = filterBtn.closest('.rounded-xl').getBoundingClientRect();
-    const btn = filterBtn.getBoundingClientRect();
-    const roomLeft = Math.floor(btn.right - card.left - 16);
-    const roomRight = Math.floor(card.right - btn.left - 16);
-    // Open toward the side with more room (the toolbar wraps onto its own line on narrower screens).
-    if (roomRight > roomLeft) { filterPanel.style.left = '0'; filterPanel.style.right = 'auto'; }
-    const room = Math.max(roomLeft, roomRight);
+    const room = Math.floor(filterBtn.getBoundingClientRect().right - card.left - 16);
     if (room < 680) {
       filterPanel.style.width = room + 'px';
       if (room < 560) filterPanel.querySelector('.fp-grid').style.gridTemplateColumns = '1fr';
     }
   }
   window.addEventListener('resize', () => { if (!filterPanel.classList.contains('hidden')) fitFilterPanel(); });
-  // Opening the panel shows the filters in use (a chip or a card breakdown may have changed them while it was closed).
+  // Closing without Apply leaves the table as it is, so the panel shows the filters in use the next time it opens.
   filterBtn.addEventListener('click', () => {
     if (filterPanel.classList.contains('hidden')) return;
     FILTERS.forEach(function(f) { if (!f.select) setControl(f, state[f.key] || ''); });
+    renderSectionFilter();
+    document.getElementById('filterSection').value = state.section || '';
     fitFilterPanel();
     filterPanel.querySelector('input:checked').focus();
   });
 
-  // ---- Card breakdowns, same rule as the Audit Log: click a card to see its number split by strand; click a strand to
-  // show only those students in the table. The picked strand is the Strand filter itself (top of the page), so it stays
-  // picked on every card until it is cleared. On a card with its own filter (Completed, Pending, Mismatched), clicking
-  // the picked strand first narrows the table to that card's students; clicking it again clears the strand.
-  // One card open at a time. The numbers count every student in view, before the table's filters, like the cards
-  // themselves. Values go in with textContent.
-  const breakdownPanel = document.getElementById('breakdownPanel');
-  const breakdownTitle = document.getElementById('breakdownTitle');
-  const breakdownRows = document.getElementById('breakdownRows');
-  const breakdownNote = document.getElementById('breakdownNote');
-  // Each card: its title, its number per strand, its bar color (the card icon's), what a strand click sets besides
-  // Strand, and the word for its students in the notes. The status and assessed filters are set together, so an
-  // earlier choice cannot empty the table.
-  const CARDS = {
-    total: { title: 'Total students by strand', count: function(b) { return b.total; }, color: '#2563eb', sets: {}, group: '' },
-    completed: { title: 'Assessments completed by strand', count: function(b) { return b.completed; }, color: '#16a34a', sets: { status: 'Completed', assessment: '' }, group: 'completed' },
-    pending: { title: 'Pending assessments by strand', count: function(b) { return b.pending; }, color: '#d97706', sets: { status: '', assessment: 'notAssessed' }, group: 'pending' },
-    mismatched: { title: 'Mismatched results by strand', count: function(b) { return b.mismatched; }, color: '#9333ea', sets: { status: 'Mismatched', assessment: '' }, group: 'mismatched' },
-  };
-
-  function filterFor(key) { return FILTERS.find(function(f) { return f.key === key; }); }
-  // True when the table already shows this card's students (its own filters are on). Always true for Total.
-  function cardFiltersOn(card) {
-    const sets = CARDS[card].sets;
-    return Object.keys(sets).every(function(k) { return state[k] === sets[k]; });
-  }
-  function applyFilterValues(values) {
-    Object.keys(values).forEach(function(k) { state[k] = values[k]; setControl(filterFor(k), values[k]); });
-    renderSectionFilter();
-    state.section = filterSection.value; // a section of another strand is reset, so the table never comes back empty for it
-    state.page = 1;
-    renderActiveFilters();
-    load({ listOnly: true });
-  }
-  function setCardsExpanded() {
-    document.querySelectorAll('.summary-card').forEach(function(card) {
-      card.setAttribute('aria-expanded', card.dataset.card === openCard ? 'true' : 'false');
-    });
-  }
-  function closeBreakdown(focusCard) {
-    if (openCard === null) return;
-    const card = document.querySelector('.summary-card[data-card="' + openCard + '"]');
-    openCard = null;
-    breakdownPanel.classList.add('hidden');
-    setCardsExpanded();
-    if (focusCard && card) card.focus();
-  }
-  function renderBreakdown() {
-    if (openCard === null || !lastSummary || !Array.isArray(lastSummary.byStrand)) return;
-    const info = CARDS[openCard];
-    const groups = lastSummary.byStrand;
-    const sum = groups.reduce(function(n, b) { return n + info.count(b); }, 0);
-    const exact = cardFiltersOn(openCard); // the table shows this card's students
-    // The rows are rebuilt after every load; keep keyboard focus on the strand that had it.
-    const focused = breakdownRows.contains(document.activeElement) ? document.activeElement.dataset.strand : null;
-    breakdownTitle.textContent = info.title;
-    breakdownRows.replaceChildren.apply(breakdownRows, groups.map(function(b) {
-      const n = info.count(b);
-      const pct = sum > 0 ? Math.round((n / sum) * 100) : 0;
-      const isPicked = state.strand === b.strand; // the Strand filter, so it carries over to every card
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.className = isPicked ? 'breakdown-row is-picked' : 'breakdown-row';
-      row.dataset.strand = b.strand;
-      row.disabled = n === 0 && !isPicked;   // nothing to show; the picked one can always be clicked again
-      row.setAttribute('aria-pressed', isPicked ? 'true' : 'false');
-      row.setAttribute('aria-label', b.strand + ': ' + n.toLocaleString() + ', ' + pct + ' percent');
-      row.setAttribute('aria-describedby', 'breakdownNote');
-      const name = document.createElement('span');
-      name.className = 'breakdown-name';
-      name.textContent = b.strand;
-      if (isPicked) {
-        const tag = document.createElement('span');
-        tag.className = 'breakdown-tag';
-        tag.textContent = exact ? 'Showing' : 'Selected';
-        name.appendChild(tag);
-      }
-      const bar = document.createElement('span');
-      bar.className = 'breakdown-bar';
-      const fill = document.createElement('span');
-      fill.style.width = pct + '%';
-      fill.style.background = info.color;
-      bar.appendChild(fill);
-      const count = document.createElement('span');
-      count.className = 'breakdown-count';
-      count.textContent = n.toLocaleString();
-      const share = document.createElement('span');
-      share.className = 'breakdown-pct';
-      share.textContent = pct + '%';
-      row.append(name, bar, count, share);
-      return row;
-    }));
-    breakdownNote.textContent = !state.strand
-      ? 'Click a strand to show only its students in the table.'
-      : exact
-        ? 'Showing ' + state.strand + ' only in the table. Click it again to show all strands.'
-        : state.strand + ' is selected. Click it to show only its ' + info.group + ' students.';
-    if (focused) {
-      const again = breakdownRows.querySelector('[data-strand="' + CSS.escape(focused) + '"]');
-      if (again && !again.disabled) again.focus();
-      else document.querySelector('.summary-card[data-card="' + openCard + '"]').focus();
-    }
-  }
-  function toggleCard(card) {
-    if (openCard === card.dataset.card) { closeBreakdown(false); return; }
-    openCard = card.dataset.card;
-    setCardsExpanded();
-    breakdownPanel.classList.remove('hidden');
-    renderBreakdown();
-    // When the cards are stacked (phones, tablets), the panel sits below all four; bring it into view.
-    if (window.matchMedia('(max-width: 1023px)').matches) {
-      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      breakdownPanel.scrollIntoView({ block: 'nearest', behavior: still ? 'auto' : 'smooth' });
-    }
-  }
-  // The cards are real buttons, so Enter and Space already click them.
-  document.querySelectorAll('.summary-card').forEach(function(card) {
-    card.addEventListener('click', function() { toggleCard(card); });
-  });
-  document.getElementById('breakdownClose').addEventListener('click', function() { closeBreakdown(true); });
-  breakdownRows.addEventListener('click', function(e) {
-    const row = e.target.closest('.breakdown-row');
-    if (!row || row.disabled) return;
-    const sets = CARDS[openCard].sets;
-    if (row.dataset.strand === state.strand && cardFiltersOn(openCard)) {
-      // Already showing this card's students of this strand: clear the strand and put back what the card filters replaced.
-      const values = Object.assign({ strand: '' }, pickedSets ? pickedSets.before : {});
-      pickedSets = null;
-      applyFilterValues(values);
-      return;
-    }
-    // Pick the strand (or keep it) and narrow to this card's students. Remember each filter's value from before the
-    // first click that changed it, so clearing goes all the way back.
-    const before = pickedSets ? pickedSets.before : {};
-    Object.keys(sets).forEach(function(k) { if (!(k in before) && state[k] !== sets[k]) before[k] = state[k]; });
-    pickedSets = Object.keys(before).length ? { before: before } : null;
-    applyFilterValues(Object.assign({ strand: row.dataset.strand }, sets));
-  });
-
-  // Start from the filters saved in the page address (Reload, Back, a shared link).
-  FILTERS.forEach(function(f) { if (!f.select) setControl(f, state[f.key] || ''); });
-  filterStrand.value = state.strand || '';
-  renderSectionFilter();
-  renderActiveFilters();
   await load();
 })();
 </script>

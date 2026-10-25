@@ -3,17 +3,14 @@
  * Content-Based Filtering (CBF) settings. modules/ContentBasedFiltering/lib/CBFEngine.php reads them from here.
  *
  * The CBF compares the student's RIASEC profile with each program's Holland (RIASEC)
- * code using cosine similarity. The guidance counselors rank the three letters of a
- * program's code (1st = strongest type, 3rd = weakest), and the course vector uses that
- * rank. There is no 70/30 split with the worksheet and no strand or elective block.
+ * code using cosine similarity. Program vectors are binary: 1 for each letter in the
+ * counselor-approved code, 0 otherwise. The counselors' 1-2-3 order of the letters is used
+ * only to list programs that have the same cosine similarity (1st letter matching the
+ * student's 1st-ranked interest first, then 2nd, then 3rd); it is not a numeric weight and
+ * changes no similarity or membership. Letter-position weights such as 3-2-1 are not
+ * approved, so none are used. No 70/30 split with the worksheet, no strand or elective block.
  */
 return [
-    // Weight of the 1st, 2nd and 3rd letter of a program's Holland code (rank-sum weights:
-    // 3, 2, 1; only the ratio matters because cosine ignores the overall size). A letter
-    // that is not in the code gets 0.
-    'holland_rank_weights' => [3, 2, 1],
-
-
     // RIASEC scores are stored on a 10-50 scale per type, whatever the number of questions
     // (modules/CareerProfiling/lib/QuestionBank.php scaleScore; e.g. the 30-item O*NET Mini Interest Profiler, 5 per
     // type), i.e. as if each type had 10 items answered 1-5. The student vector uses each
@@ -28,16 +25,16 @@ return [
     'student_top_n' => 3,
 
     // ---- Prediction model (WEKA) -------------------------------------------------
-    // Source 3 of modules/ContentBasedFiltering/lib/RecommendationPipeline.php: the J48 tree imported into
-    // config/prediction_model.json (db/import_weka_tree.php). It is shown on its own and
-    // never changes the CBF result or the Preferred Course.
-    //   enabled           run the model when a recommendation is computed (needs the model file)
-    //   show_to_students  false = staff only (Student Profile); true = also on the student's
-    //                     Career Results page. Decide with the adviser: the model was trained on
-    //                     students' preferred courses and is right about 1 time in 9 on the test set.
+    // Source 3 of modules/ContentBasedFiltering/lib/RecommendationPipeline.php: the J48 model in config/prediction_model.json,
+    // exported from models/ProfilePath_J48_Binary_393.model with tools/weka/ExportJ48Lookup (Weka's
+    // own predictions and class probabilities for all 20 possible inputs; see
+    // tools/weka/README.md). It is shown on its own and never changes the CBF result or the
+    // Preferred Course.
+    //   enabled  run the model when a recommendation is computed (needs the model file).
+    // The prediction is shown to guidance staff only (modules/ContentBasedFiltering/api/recommendations.php); students never
+    // receive it. The model predicts students' intended/preferred course, not suitability.
     'decision_tree' => [
         'enabled' => true,
-        'show_to_students' => false,
     ],
     'mismatch' => [
         'definition' => 'no_common_course',      // future rule, once the prediction model exists

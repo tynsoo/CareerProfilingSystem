@@ -29,12 +29,9 @@ __pycache__/
 *.pyc
 
 # Evaluation data and outputs: student data, never commit (see evaluation/METHODOLOGY.md)
-evaluation/*.arff
-evaluation/riasec*.csv
-evaluation/student_profiles.csv
-evaluation/train.csv
-evaluation/test.csv
-evaluation/comparison_results.csv
-evaluation/cbf_results.csv
-evaluation/experiment_report*
-evaluation/j48_*.txt
+# Everything in evaluation/ that is not a script, the course list, the empty template or the methodology.
+evaluation/*
+!evaluation/*.py
+!evaluation/METHODOLOGY.md
+!evaluation/course_profiles.csv
+!evaluation/student_profiles_TEMPLATE.csv

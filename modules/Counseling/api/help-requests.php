@@ -8,9 +8,11 @@ $pdo = Database::get();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = readJsonBody();
 
-    // Staff with Full on Update counseling status (permission table): resolve an existing request.
+    // Admin/counselor: resolve an existing request.
     if (($body['type'] ?? '') === 'resolve') {
-        $user = Rbac::requireAccess('counselingStatus', 'full');
+        if ($user['role'] !== 'admin' && $user['role'] !== 'counselor') {
+            jsonResponse(['success' => false, 'error' => 'Forbidden'], 403);
+        }
         $id = (int) ($body['id'] ?? 0);
         if ($id <= 0) {
             jsonResponse(['success' => false, 'error' => 'Missing id.'], 400);
@@ -55,10 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // View counseling history (permission table): View Only lists who asked, when and about what (the subject is a fixed
-    // choice), but not the message the student wrote; Full shows the message too.
-    $user = Rbac::requireAccess('counselingHistory', 'limited');
-    $seesMessages = Rbac::accessLevel('counselingHistory', Rbac::roleKey($user)) === 'full';
+    if ($user['role'] !== 'admin' && $user['role'] !== 'counselor') {
+        jsonResponse(['error' => 'Forbidden'], 403);
+    }
 
     $status = $_GET['status'] ?? 'All';
     $sql = 'SELECT hr.id, hr.student_id, hr.name_enc, hr.subject_enc, hr.message_enc, hr.sent_at, hr.status, hr.resolved_at, s.strand, s.section
@@ -87,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'section' => $r['section'],
         'name' => Crypto::dec($r['name_enc']),
         'subject' => Crypto::dec($r['subject_enc']),
-        'message' => $seesMessages ? Crypto::dec($r['message_enc']) : null,
+        'message' => Crypto::dec($r['message_enc']),
         'sentAt' => $r['sent_at'],
         'status' => $r['status'],
         'resolvedAt' => $r['resolved_at'],
@@ -96,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $openCount = count($openIdsByAge);
 
-    jsonResponse(['requests' => $rows, 'openCount' => $openCount, 'seesMessages' => $seesMessages]);
+    jsonResponse(['requests' => $rows, 'openCount' => $openCount]);
 }
 
 jsonResponse(['error' => 'Method not allowed'], 405);

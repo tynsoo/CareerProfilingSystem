@@ -98,17 +98,16 @@ try {
     $r = $k->req('GET', "/api/counseling-notes.php?studentId=$stuB"); check('scoped counselor cannot read notes of an out-of-scope student', stripos($r['body'], 'QA PRIVATE NOTE') === false, $r['code'] . ' ' . substr($r['body'], 0, 120));
     $r = $k->req('POST', '/api/counseling-notes.php', ['studentId' => $stuB, 'note' => 'written by out-of-scope staff']); check('scoped counselor cannot write notes for an out-of-scope student', $r['code'] >= 400, $r['code'] . ' ' . substr($r['body'], 0, 100));
     $r = $k->req('GET', "/api/recommendations.php?studentId=$stuB"); check('scoped counselor cannot read recommendations of an out-of-scope student', $r['code'] >= 400 || stripos($r['body'], 'qa_stu_b') === false, $r['code'] . ' ' . substr($r['body'], 0, 100));
-    $r = $k->req('POST', '/api/security-config.php', ['type' => 'rbac', 'changes' => [['module' => 'programs', 'role' => 'counselor', 'level' => 'full']]]); check('counselor cannot raise own permissions', $r['code'] >= 400 || ($k->json($r)['success'] ?? false) !== true, $r['code'] . ' ' . substr($r['body'], 0, 100));
+    $r = $k->req('POST', '/api/security-config.php', ['type' => 'rbac', 'changes' => [['module' => 'career', 'role' => 'counselor', 'level' => 'full']]]); check('counselor cannot raise own permissions', $r['code'] >= 400 || ($k->json($r)['success'] ?? false) !== true, $r['code'] . ' ' . substr($r['body'], 0, 100));
     $r = $k->req('POST', '/api/security-config.php', ['type' => 'passwordPolicy', 'minLength' => 6]); check('counselor cannot change password policy', $r['code'] >= 400 || ($k->json($r)['success'] ?? false) !== true, $r['code'] . ' ' . substr($r['body'], 0, 100));
 
     echo "\n=== Facilitator restrictions (direct requests) ===\n";
     $f = new Client($base); $f->login('qa_facilitator', $pw, 'staff');
-    $r = $f->req('GET', "/api/counseling-notes.php?studentId=$stuA"); check('facilitator can view counseling notes (Table 5 default, owner decision 2026-10-24)', $r['code'] === 200, (string) $r['code']);
-    $r = $f->req('POST', '/api/counseling-notes.php', ['studentId' => $stuA, 'note' => 'facilitator write']); check('facilitator can create counseling notes (Table 5 default)', $r['code'] >= 200 && $r['code'] < 300, (string) $r['code']);
+    $r = $f->req('GET', "/api/counseling-notes.php?studentId=$stuA"); check('facilitator cannot view counseling notes', $r['code'] === 403, (string) $r['code']);
+    $r = $f->req('POST', '/api/counseling-notes.php', ['studentId' => $stuA, 'note' => 'facilitator write']); check('facilitator cannot create counseling notes', $r['code'] === 403, (string) $r['code']);
     $r = $f->req('GET', '/api/staff-approvals.php'); check('facilitator cannot list staff approvals', $r['code'] === 403, (string) $r['code']);
     $r = $f->req('POST', '/api/staff-approvals.php', ['id' => $counselor, 'action' => 'reject']); check('facilitator cannot reject staff', $r['code'] === 403, (string) $r['code']);
-    $r = $f->req('POST', '/api/counseling-invite.php', ['studentId' => $stuA]); check('facilitator cannot send counseling invitations (DFD process 4.0)', $r['code'] === 403, (string) $r['code']);
-    $r = $f->req('POST', '/api/retake-requests.php', ['type' => 'decide', 'id' => 0, 'decision' => 'approve']); check('facilitator cannot decide retake requests (DFD process 4.0)', $r['code'] === 403, (string) $r['code']);
+    $r = $f->req('POST', '/api/counseling-invite.php', ['studentId' => $stuA]); check('facilitator cannot send counseling invitations', $r['code'] === 403, (string) $r['code']);
     $r = $f->req('POST', '/api/roster-upload.php', '{}'); check('facilitator cannot upload rosters (view-only)', $r['code'] === 403, (string) $r['code']);
     $r = $f->req('POST', '/api/sections.php', ['type' => 'create', 'strand' => 'STEM', 'code' => 'QA-X']); check('facilitator cannot modify sections (view-only)', $r['code'] === 403, (string) $r['code']);
     $r = $f->req('POST', '/api/announcements.php', ['type' => 'create', 'title' => 'qa', 'body' => 'qa']); check('facilitator cannot post announcements under default matrix', $r['code'] === 403, (string) $r['code']);
@@ -143,7 +142,6 @@ try {
     foreach ($ids as $id) {
         $pdo->prepare("DELETE FROM counseling_notes WHERE student_id = ? OR author_id = ?")->execute([$id, $id]);
         $pdo->prepare("DELETE FROM audit_log WHERE actor_user_id = ?")->execute([$id]);
-        $pdo->prepare("DELETE FROM announcements WHERE created_by = ?")->execute([$id]); // left behind if a post was wrongly allowed
         $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
     }
 }

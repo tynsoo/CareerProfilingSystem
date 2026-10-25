@@ -146,7 +146,7 @@ function scheduleRow(array $s): array
         'notes' => $s['notes_enc'] !== null ? Crypto::dec($s['notes_enc']) : '',
         'scheduleType' => $s['schedule_type'],
         // Archived = the exam's end time has already passed (school time). Its
-        // access code stops working too (api/verify-access-code.php). Nothing is
+        // access code stops working too (modules/CareerProfiling/api/verify-access-code.php). Nothing is
         // ever deleted for this; the row simply moves out of the active list.
         'isArchived' => ExamSchedule::hasEnded($s['exam_date'], $s['end_time']),
     ];
@@ -154,7 +154,7 @@ function scheduleRow(array $s): array
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['mine'])) {
     // Student-facing: their own matched schedule(s) for the current AY,
-    // for the "My Exam Schedule" panel on assessment.html. Purely
+    // for the "My Exam Schedule" panel on modules/CareerProfiling/pages/assessment.html. Purely
     // informational — does not gate assessment entry (see Phase 2 note in
     // the plan: the existing global access-code flow is left unchanged).
     $user = Auth::requireLogin();
