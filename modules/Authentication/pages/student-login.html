@@ -150,7 +150,7 @@
           Need help? Contact your <span class="text-gray-500">system administrator</span>.
         </p>
         <a href="#about" class="md:hidden text-sm font-semibold text-center text-[#001c43]" style="text-decoration:none">Learn about ProfilePath <span class="cue-arrow" style="display:inline-block">&#8595;</span></a>
-        <p class="text-xs text-gray-500 text-center">
+        <p class="text-xs text-gray-400 text-center">
           <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
           <span class="mx-1.5">&middot;</span>
           <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -295,11 +295,6 @@
       const form = e.target;
       const username = form.username.value.trim();
       const password = form.password.value;
-      // Students sign in with their Student Number; an email here can never match (api/login.php).
-      if (username.includes('@')) {
-        showError('Sign in with your Student Number (numbers only), not your email.');
-        return;
-      }
       const submitBtn = form.querySelector('button[type="submit"]');
       const stopBusy = PP.busy(submitBtn, 'Signing in…');
       let redirecting = false;
@@ -318,11 +313,7 @@
           window.location.href = data.redirect;
           return;
         }
-        // The server gives one answer for a wrong number, a wrong password, an unverified account and no account at all,
-        // so the hint covers the usual cases without saying which one it was.
-        showError(!data.error || data.error === 'Invalid username or password.'
-          ? 'Wrong Student Number or password. Just signed up? Open the email we sent you first: it has the link to create your password, or says what to fix.'
-          : data.error);
+        showError(data.error || 'Invalid username or password.');
       } catch (err) {
         showError('Unable to reach the server. Please try again.');
       } finally {

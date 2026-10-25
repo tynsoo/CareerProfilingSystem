@@ -86,47 +86,11 @@ function registerAnswer(array $answer): void
     jsonResponse($answer);
 }
 
-// No account was made: log why (detail is encrypted; admins only, api/audit-log.php) and give the same answer.
-// With $helpTo (the address typed in the form), that inbox is told no account was made and what to check, so a
-// student whose details don't match the roster is not left waiting for a link that never comes. The page still
-// answers alike; only the owner of the typed inbox learns the details didn't match.
-function registerQuietEnd(array $answer, string $schoolId, string $reason, ?string $helpTo = null): void
+// Nothing is sent: log why (detail is encrypted; admins only, api/audit-log.php) and give the same answer.
+function registerQuietEnd(array $answer, string $schoolId, string $reason): void
 {
-    if ($helpTo !== null) {
-        $reason .= ' (' . registerHelpEmail($helpTo, $schoolId) . ')';
-    }
     AuditLogger::log(null, null, 'register_failed', 'student', null, "Student Number $schoolId: $reason");
     registerAnswer($answer);
-}
-
-/** Emails the typed address that no account was made; returns what happened, for the audit log. */
-function registerHelpEmail(string $email, string $schoolId): string
-{
-    // A couple an hour per address, so this form cannot be used to flood someone's inbox.
-    if (RateLimiter::tooMany('register-help-mail:' . $email, 2, 60)) {
-        return 'no help email: too many in the last hour';
-    }
-    $registerLink = rtrim((string) envValue('APP_URL'), '/') . '/student-register';
-    $safeId = htmlspecialchars($schoolId, ENT_QUOTES, 'UTF-8');
-    $html = EmailTemplate::render(
-        'We couldn\'t create your account',
-        '<p style="margin:0 0 12px 0;">Someone, most likely you, tried to create a ProfilePath account with this email and Student Number <strong>' . $safeId . '</strong>. '
-            . 'These details don\'t match this school year\'s class roster, so no account was made and you can\'t sign in yet.</p>'
-            . '<p style="margin:0 0 12px 0;">Please check that the Student Number is typed correctly (numbers only) and that this is the student email the Guidance Office has on file, then try again.</p>'
-            . '<p style="margin:0 0 12px 0;">If both are correct, visit the Center for Guidance and Counseling so they can check the class roster.</p>'
-            . '<p style="margin:0;">Already have an account? Sign in with your Student Number, or use "Forgot password". If this wasn\'t you, you can ignore this email.</p>',
-        'Try Again',
-        $registerLink,
-        'No account was created with these details.'
-    );
-    $text = "Someone, most likely you, tried to create a ProfilePath account with this email and Student Number $schoolId. "
-        . "These details don't match this school year's class roster, so no account was made and you can't sign in yet.\n\n"
-        . "Please check that the Student Number is typed correctly (numbers only) and that this is the student email the Guidance Office has on file, then try again:\n$registerLink\n\n"
-        . "If both are correct, visit the Center for Guidance and Counseling so they can check the class roster.\n\n"
-        . "Already have an account? Sign in with your Student Number, or use \"Forgot password\". If this wasn't you, you can ignore this email.";
-    return Mailer::send($email, 'Student', 'We couldn\'t create your ProfilePath account', $html, $text)
-        ? 'help email sent'
-        : 'help email could not be sent';
 }
 
 function registerVerificationEmail(string $firstName, string $verifyLink, bool $isNew): array
@@ -152,16 +116,16 @@ $rosterStmt = $pdo->prepare('SELECT name_enc, strand, section, email FROM assess
 $rosterStmt->execute([$currentAy, $schoolId]);
 $roster = $rosterStmt->fetch();
 if (!$roster) {
-    registerQuietEnd($sameAnswer, $schoolId, "not on the class roster for Academic Year $currentAy", $email);
+    registerQuietEnd($sameAnswer, $schoolId, "not on the class roster for Academic Year $currentAy");
 }
 // No hint of the email on file: with the school's email pattern, even a partly hidden address helps a stranger.
 if ($roster['email'] !== null && strtolower($roster['email']) !== $email) {
-    registerQuietEnd($sameAnswer, $schoolId, 'the email typed is not the one on the class roster', $email);
+    registerQuietEnd($sameAnswer, $schoolId, 'the email typed is not the one on the class roster');
 }
 
 $gradeLevel = Sections::gradeLevel($roster['section']);
 if ($gradeLevel === null) {
-    registerQuietEnd($sameAnswer, $schoolId, 'the section on the class roster is not valid (fix the roster)', $email);
+    registerQuietEnd($sameAnswer, $schoolId, 'the section on the class roster is not valid (fix the roster)');
 }
 // The roster stores "LASTNAME, FIRSTNAME MIDDLE".
 try {
@@ -172,7 +136,7 @@ try {
 }
 [$lastName, $firstName] = array_pad(array_map('trim', explode(',', $fullName, 2)), 2, '');
 if ($lastName === '' || $firstName === '') {
-    registerQuietEnd($sameAnswer, $schoolId, 'the name on the class roster is incomplete (fix the roster)', $email);
+    registerQuietEnd($sameAnswer, $schoolId, 'the name on the class roster is incomplete (fix the roster)');
 }
 $strand = $roster['strand'];
 $section = $roster['section'];
@@ -196,10 +160,10 @@ if ($account) {
     // (the email belongs to someone else's account, or the number was registered with another address) nobody is
     // emailed: a new link must never go to an address other than the one this form was filled in with.
     if ($account['role'] !== 'student' || strtolower((string) $account['username']) !== strtolower($schoolId)) {
-        registerQuietEnd($sameAnswer, $schoolId, 'the email already belongs to another account', $email);
+        registerQuietEnd($sameAnswer, $schoolId, 'the email already belongs to another account');
     }
     if (strtolower((string) $account['email']) !== $email) {
-        registerQuietEnd($sameAnswer, $schoolId, 'already registered with a different email (check with the student)', $email);
+        registerQuietEnd($sameAnswer, $schoolId, 'already registered with a different email (check with the student)');
     }
     // A few emails an hour at most, so this form cannot be used to flood a student's inbox. The limit is per account
     // and shared with "Resend it" on the sign-in page (api/resend-verification.php).

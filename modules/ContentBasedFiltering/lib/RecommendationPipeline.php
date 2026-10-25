@@ -77,7 +77,13 @@ class RecommendationPipeline
         if (empty($config['decision_tree']['enabled'])) {
             return $unavailable('Prediction model switched off (config/cbf.php decision_tree.enabled).');
         }
-        $model ??= PredictionModel::load();
+        try {
+            $model ??= PredictionModel::load();
+        } catch (UnexpectedValueException $e) {
+            // A damaged or mismatched model file: report it; the CBF result is unaffected.
+            error_log('[prediction] ' . $e->getMessage());
+            return $unavailable($e->getMessage());
+        }
         if ($model === null) {
             return $unavailable('No prediction model imported (php db/import_weka_tree.php).');
         }

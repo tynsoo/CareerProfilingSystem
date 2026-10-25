@@ -16,11 +16,16 @@ def student(sid, vec, actual="BS Architecture"):
 
 
 class Vectors(unittest.TestCase):
-    def test_default_is_ranksum_like_the_web_app(self):
-        self.assertEqual(m.DEFAULT_ENCODING, "ranksum")
-        self.assertEqual(m.holland_to_vector("IRC"), [2.0, 3.0, 0.0, 0.0, 0.0, 1.0])
-        self.assertEqual(m.holland_to_vector("RIC"), [3.0, 2.0, 0.0, 0.0, 0.0, 1.0])
-        self.assertEqual(m.holland_to_vector("AES"), [0.0, 0.0, 3.0, 1.0, 2.0, 0.0])
+    def test_default_is_binary_like_the_web_app(self):
+        self.assertEqual(m.DEFAULT_ENCODING, "binary")
+        self.assertEqual(m.holland_to_vector("IRC"), [1.0, 1.0, 0.0, 0.0, 0.0, 1.0])
+        self.assertEqual(m.holland_to_vector("RIC"), m.holland_to_vector("ICR"))   # order not used
+        self.assertEqual(m.holland_to_vector("AES"), [0.0, 0.0, 1.0, 1.0, 1.0, 0.0])
+
+    def test_ranksum_is_kept_only_as_a_comparison(self):
+        r = m.ENCODINGS["ranksum"]
+        self.assertEqual(m.holland_to_vector("IRC", r), [2.0, 3.0, 0.0, 0.0, 0.0, 1.0])
+        self.assertEqual(m.holland_to_vector("RIC", r), [3.0, 2.0, 0.0, 0.0, 0.0, 1.0])
 
     def test_proposed_encoding_examples(self):
         p = m.ENCODINGS["proposed"]
@@ -255,6 +260,23 @@ class Evaluation(unittest.TestCase):
         self.assertAlmostEqual(p, 0.25)                 # 2 * (1/2)^3
         self.assertEqual(m.mcnemar_exact([1, 0], [1, 0])[2], 1.0)
 
+
+
+class BinaryArff(unittest.TestCase):
+    def test_deployed_format_from_an_anonymised_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            src = os.path.join(d, "s.csv")
+            with open(src, "w", newline="") as f:   # synthetic rows; no student column
+                f.write("R,I,A,S,E,C,Actual Course\n3,2,6,1,19,8,BSBAOM\n10,10,9,9,2,1,BSN\n")
+            rows = m.read_students(src)
+            out = os.path.join(d, "a.arff")
+            m.write_arff(out, rows, "top3", "binary")
+            text = open(out).read()
+        self.assertEqual([r["StudentID"] for r in rows], ["row1", "row2"])
+        self.assertIn("@ATTRIBUTE R NUMERIC", text)
+        self.assertIn("@ATTRIBUTE 'Actual Course' {'BS Nursing','BSBA Major in Operations Management'}", text)
+        self.assertIn("0,0,1,0,1,1,'BSBA Major in Operations Management'", text)   # E, C, A
+        self.assertIn("1,1,1,0,0,0,'BS Nursing'", text)                           # A ties S for 3rd: A first
 
 if __name__ == "__main__":
     unittest.main()

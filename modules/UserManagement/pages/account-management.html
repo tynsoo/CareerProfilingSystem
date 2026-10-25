@@ -7,7 +7,6 @@
 <title>Account Management — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +38,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -125,7 +124,7 @@
                   <th class="px-5 py-3 text-xs font-semibold tracking-wide text-gray-600 uppercase">Sections</th>
                   <th class="px-5 py-3 text-xs font-semibold tracking-wide text-gray-600 uppercase">Signed Up</th>
                   <th class="px-5 py-3 text-xs font-semibold tracking-wide text-gray-600 uppercase">Status</th>
-                  <th id="staffActionHead" class="px-5 py-3 text-xs font-semibold tracking-wide text-gray-600 uppercase text-center">Action</th>
+                  <th class="px-5 py-3 text-xs font-semibold tracking-wide text-gray-600 uppercase text-center">Action</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100" id="staffTbody">
@@ -136,18 +135,18 @@
         </section>
 
         <!-- Sections -->
-        <section id="sectionsSection" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div class="border-b border-gray-200 px-5 py-5">
             <h2 class="text-base font-semibold text-gray-900">Sections</h2>
           </div>
           <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4" id="sectionsContainer">
-            <p class="text-xs text-gray-500">Loading…</p>
+            <p class="text-xs text-gray-400">Loading…</p>
           </div>
           <p id="sectionsStatus" class="hidden text-xs px-5 pb-4" aria-live="polite"></p>
         </section>
 
         <!-- Class roster -->
-        <section id="rosterSection" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div class="border-b border-gray-200 px-5 py-5">
             <h2 class="text-base font-semibold text-gray-900">Class Roster</h2>
           </div>
@@ -189,7 +188,7 @@
 
       </div>
     </main>
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -200,20 +199,38 @@
 </div>
 
 <div id="toastContainer" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+<div id="genericConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <p id="genericConfirmMessage" class="text-sm text-gray-700"></p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="genericConfirmCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="genericConfirmOkBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <div id="assignModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-md">
-    <div class="pp-dialog-head">
-      <h2 class="pp-dialog-title" id="assignModalTitle">Assign sections</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-md max-h-[85vh] flex flex-col">
+    <div class="px-6 pt-5 pb-3">
+      <h3 class="text-lg font-semibold text-gray-900" id="assignModalTitle">Assign sections</h3>
+      <p class="text-xs text-gray-500 mt-1">This person will only see the students of the sections you tick. Leave everything unticked to let them see all sections.</p>
     </div>
-    <div class="pp-dialog-form">
-      <p class="text-xs text-gray-500">This person will only see the students of the sections you tick. Leave everything unticked to let them see all sections.</p>
-      <div id="assignModalBody"></div>
-      <p id="assignModalError" class="hidden text-xs text-[#ed1c24]"></p>
+    <div class="px-6 pb-2 overflow-auto" id="assignModalBody"></div>
+    <p id="assignModalError" class="hidden px-6 text-xs text-[#ed1c24]"></p>
+    <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
+      <button type="button" id="assignCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="assignSaveBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#0f2a6b] rounded-md hover:opacity-90">Save</button>
     </div>
-    <div class="pp-dialog-foot">
-      <button type="button" id="assignCancelBtn" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="assignSaveBtn" class="pp-btn pp-btn-primary">Save</button>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
     </div>
   </div>
 </div>
@@ -227,6 +244,31 @@
     container.appendChild(toast);
     setTimeout(function() { toast.remove(); }, 5000);
   }
+  function showConfirm(message) {
+    return new Promise(function(resolve) {
+      const modal = document.getElementById('genericConfirmModal');
+      document.getElementById('genericConfirmMessage').textContent = message;
+      modal.classList.remove('hidden');
+      setTimeout(function() { modal.classList.add('is-open'); }, 16);
+      const okBtn = document.getElementById('genericConfirmOkBtn');
+      const cancelBtn = document.getElementById('genericConfirmCancelBtn');
+      function cleanup(result) {
+        modal.classList.remove('is-open');
+        setTimeout(function() { modal.classList.add('hidden'); }, 260);
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        modal.removeEventListener('click', onBackdrop);
+        resolve(result);
+      }
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      function onBackdrop(e) { if (e.target.id === 'genericConfirmModal') cleanup(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      modal.addEventListener('click', onBackdrop);
+    });
+  }
+
 (async function() {
   const sessionData = await (await fetch('api/session.php')).json();
   const currentUser = sessionData.user;
@@ -243,7 +285,22 @@
   document.getElementById('headerUserName').textContent = currentUser.displayName || currentUser.username;
   document.getElementById('headerUserRole').textContent = currentUser.positionLabel || roleLabels[currentUser.role] || currentUser.role;
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', function() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() { window.location.href = 'staff-login'; });
+  });
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -282,31 +339,35 @@
   // ---------- Staff accounts ----------
   // The administrator always manages these. A guidance counselor or facilitator sees the list only when the
   // administrator gave them "Staff Accounts" access (Security Configuration, Edit Roles): Full lets them approve
-  // sign-ups, send access codes and assign sections, View Only just looks (Manage staff accounts, permission table).
+  // sign-ups and send access codes, View Only just looks. Assigning sections is the separate "Guidance Counselor" permission.
   let staffLevel = isAdmin ? 'full' : 'none';
-  // Assigning sections to staff is part of Manage staff accounts (Full).
+  // Assigning sections is the separate "Guidance Counselor" permission.
   let canAssign = isAdmin;
   if (!isAdmin) {
     try {
       const cfg = await (await fetch('api/security-config.php')).json();
       const me = currentUser.rbacRole || currentUser.role;
       staffLevel = (cfg.rbac && cfg.rbac.staffAccounts && cfg.rbac.staffAccounts[me]) || 'none';
-      canAssign = ((cfg.rbac && cfg.rbac.staffAccounts && cfg.rbac.staffAccounts[me]) || 'none') === 'full'; // Manage staff accounts
+      canAssign = ((cfg.rbac && cfg.rbac.counselor && cfg.rbac.counselor[me]) || 'none') === 'full';
     } catch (e) {}
   }
   if (staffLevel !== 'none') {
     document.getElementById('staffSection').classList.remove('hidden');
     const staffTbody = document.getElementById('staffTbody');
-    // View Only has no staff actions, so the Action column is left out instead of standing empty.
-    const showActions = staffLevel === 'full';
-    const staffCols = showActions ? 7 : 6;
-    if (!showActions) document.getElementById('staffActionHead').remove();
 
     function staffBadge(a) {
-      if (a.status === 'pending') return PP.badge('Awaiting approval', 'amber');
-      if (a.status === 'approved' && !a.activated) return PP.badge('Waiting for access code', 'blue');
-      if (a.status === 'rejected') return PP.badge('Rejected', 'red');
-      return a.isActive ? PP.badge('Active', 'green') : PP.badge('Deactivated', 'gray');
+      if (a.status === 'pending') {
+        return '<span class="inline-flex bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">Awaiting approval</span>';
+      }
+      if (a.status === 'approved' && !a.activated) {
+        return '<span class="inline-flex bg-sky-50 border border-sky-200 text-sky-700 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">Waiting for access code</span>';
+      }
+      if (a.status === 'rejected') {
+        return '<span class="inline-flex bg-red-50 border border-red-200 text-red-600 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">Rejected</span>';
+      }
+      return a.isActive
+        ? '<span class="inline-flex bg-[#f0fdf4] border border-[#bbf7d0] text-emerald-600 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">Active</span>'
+        : '<span class="inline-flex bg-gray-100 border border-gray-200 text-gray-500 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">Deactivated</span>';
     }
     function actionButtons(a) {
       if (staffLevel !== 'full') return '';
@@ -340,10 +401,10 @@
     // Which sections each staff member handles (none ticked = sees every section).
     let assignmentData = { assignments: {}, options: [] };
     function sectionsCell(a) {
-      if (a.status !== 'approved') return '<span class="text-gray-500">Not assigned</span>';
+      if (a.status !== 'approved') return '<span class="text-gray-400">Not assigned</span>';
       const mine = assignmentData.assignments[a.id] || [];
       const text = mine.length ? mine.map(function(s) { return escapeHtml(s.section); }).join(', ') : 'All sections';
-      return '<span class="' + (mine.length ? 'text-gray-700' : 'text-gray-500') + '">' + text + '</span>' + (canAssign
+      return '<span class="' + (mine.length ? 'text-gray-700' : 'text-gray-400') + '">' + text + '</span>' + (canAssign
         ? ' <button type="button" class="assign-sections text-xs font-semibold text-[#19427b] hover:underline ml-1" data-id="' + a.id + '" data-name="' + escapeHtml(a.fullName || a.email) + '">Assign</button>'
         : '');
     }
@@ -354,7 +415,7 @@
       try {
         accounts = (await PP.fetchJson('api/staff-approvals.php')).accounts || [];
       } catch (e) {
-        PP.showError(staffTbody, e.message, loadStaff, staffCols);
+        PP.showError(staffTbody, e.message, loadStaff, 7);
         return;
       }
       staffTbody.removeAttribute('aria-busy');
@@ -364,15 +425,15 @@
       badge.classList.toggle('hidden', pending === 0);
       staffTbody.innerHTML = accounts.length ? accounts.map(function(a) {
         return '<tr>' +
-          '<td class="px-5 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + (a.fullName ? escapeHtml(a.fullName) : '<span class="text-gray-500">No name</span>') + (a.username && a.username.indexOf('staff-') !== 0 ? '<span class="block text-xs font-normal text-gray-500">' + escapeHtml(a.username) + '</span>' : '') + '</td>' +
+          '<td class="px-5 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + (a.fullName ? escapeHtml(a.fullName) : '<span class="text-gray-400">No name</span>') + (a.username && a.username.indexOf('staff-') !== 0 ? '<span class="block text-xs font-normal text-gray-400">' + escapeHtml(a.username) + '</span>' : '') + '</td>' +
           '<td class="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">' + escapeHtml(a.position || 'Guidance Counselor') + '</td>' +
-          '<td class="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">' + (a.email ? escapeHtml(a.email) : '<span class="text-gray-500">No email</span>') + '</td>' +
+          '<td class="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">' + (a.email ? escapeHtml(a.email) : '<span class="text-gray-400">No email</span>') + '</td>' +
           '<td class="px-5 py-4 text-sm text-gray-500">' + sectionsCell(a) + '</td>' +
           '<td class="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">' + formatDate(a.createdAt) + '</td>' +
           '<td class="px-5 py-4 whitespace-nowrap">' + staffBadge(a) + '</td>' +
-          (showActions ? '<td class="px-5 py-4 text-center whitespace-nowrap">' + actionButtons(a) + '</td>' : '') +
+          '<td class="px-5 py-4 text-center whitespace-nowrap">' + actionButtons(a) + '</td>' +
         '</tr>';
-      }).join('') : '<tr><td colspan="' + staffCols + '" class="px-5 py-8 text-center text-sm text-gray-500">No staff accounts yet. Staff can sign up from the login page.</td></tr>';
+      }).join('') : '<tr><td colspan="7" class="px-5 py-8 text-center text-sm text-gray-500">No staff accounts yet. Staff can sign up from the login page.</td></tr>';
     }
 
     staffTbody.addEventListener('click', async function(e) {
@@ -380,18 +441,14 @@
       if (!btn || btn.disabled) return;
       const action = btn.dataset.action;
       const name = btn.dataset.name;
-      const deactivating = btn.dataset.active === '1';
       const prompts = {
-        approve: { title: 'Approve "' + name + '"?', text: 'They will be emailed a temporary access code to create their own password. You will not see the password.', ok: 'Approve' },
-        resendCode: { title: 'Send "' + name + '" a new access code?', text: 'Any earlier code stops working.', ok: 'Send code' },
-        reject: { title: 'Reject the sign-up of "' + name + '"?', text: 'They will be emailed and will not be able to sign in.', ok: 'Reject', danger: true },
-        toggleActive: deactivating
-          ? { title: 'Deactivate "' + name + '"?', text: 'They will no longer be able to sign in. You can reactivate later.', ok: 'Deactivate', danger: true }
-          : { title: 'Reactivate "' + name + '"?', text: 'They will be able to sign in again.', ok: 'Reactivate' },
-        unlock: { title: 'Unlock "' + name + '"?', text: 'The account was locked after too many wrong passwords. They can sign in again right away.', ok: 'Unlock' }
+        approve: 'Approve "' + name + '"? They will be emailed a temporary access code to create their own password. You will not see the password.',
+        resendCode: 'Email "' + name + '" a new temporary access code? Any earlier code stops working.',
+        reject: 'Reject the sign-up of "' + name + '"? They will be emailed and will not be able to sign in.',
+        toggleActive: (btn.dataset.active === '1' ? 'Deactivate' : 'Activate') + ' "' + name + '"?',
+        unlock: 'Unlock "' + name + '"? The account was locked after too many wrong passwords. They can sign in again right away.'
       };
-      const p = prompts[action];
-      if (!(await PP.confirm(p.text, { title: p.title, okLabel: p.ok, danger: !!p.danger }))) return;
+      if (!(await showConfirm(prompts[action]))) return;
       btn.disabled = true;
       const res = await fetch('api/staff-approvals.php', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -406,15 +463,16 @@
     // ---- Assign sections to a staff member ----
     const assignModal = document.getElementById('assignModal');
     let assignUserId = null;
-    // The shared pop-up behaviour (PP.dialog in js/ui-state.js): x, Cancel and Escape close it.
-    const assignDialog = PP.dialog(assignModal);
-    function closeAssign() { assignDialog.close(); }
+    function closeAssign() {
+      assignModal.classList.remove('is-open');
+      setTimeout(function() { assignModal.classList.add('hidden'); }, 260);
+    }
     staffTbody.addEventListener('click', function(e) {
       const b = e.target.closest('.assign-sections');
       if (!b) return;
       assignUserId = Number(b.dataset.id);
       const mine = (assignmentData.assignments[assignUserId] || []).map(function(s) { return s.strand + '|' + s.section; });
-      document.getElementById('assignModalTitle').textContent = 'Assign sections to ' + b.dataset.name;
+      document.getElementById('assignModalTitle').textContent = 'Assign sections — ' + b.dataset.name;
       document.getElementById('assignModalError').classList.add('hidden');
       const byStrand = {};
       (assignmentData.options || []).forEach(function(o) { (byStrand[o.strand] = byStrand[o.strand] || []).push(o); });
@@ -426,8 +484,11 @@
             return '<label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" class="assign-check accent-[#0f2a6b]" data-strand="' + escapeHtml(o.strand) + '" data-section="' + escapeHtml(o.section) + '"' + (mine.indexOf(key) !== -1 ? ' checked' : '') + '>' + escapeHtml(o.section) + '</label>';
           }).join('') + '</div></div>';
       }).join('') : '<p class="text-sm text-gray-500 py-4">No sections yet. Add sections or upload a class roster first.</p>';
-      assignDialog.open();
+      assignModal.classList.remove('hidden');
+      setTimeout(function() { assignModal.classList.add('is-open'); }, 16);
     });
+    document.getElementById('assignCancelBtn').addEventListener('click', closeAssign);
+    assignModal.addEventListener('click', function(e) { if (e.target.id === 'assignModal') closeAssign(); });
     document.getElementById('assignSaveBtn').addEventListener('click', async function() {
       const btn = this;
       const sections = Array.from(document.querySelectorAll('.assign-check:checked')).map(function(c) { return { strand: c.dataset.strand, section: c.dataset.section }; });
@@ -472,10 +533,10 @@
     // An error is a sentence to read, so it stays up longer than a confirmation.
     showSectionsStatus.timer = setTimeout(() => el.classList.add('hidden'), isError ? 9000 : 3000);
   }
-  // Full = can add and deactivate/reactivate sections; View Only = look at them.
-  // Comes from the Student roster management row of Security Configuration's permission table.
+  // Full = can add and deactivate/reactivate sections (a Guidance Facilitator only ever sees Limited).
+  // Comes from the 'sections' row of Security Configuration's permission table.
   function sectionsLevel() {
-    return (rbac && rbac.roster && rbac.roster[currentUser.rbacRole || currentUser.role]) || 'none'; // Student roster management
+    return (rbac && rbac.sections && rbac.sections[currentUser.rbacRole || currentUser.role]) || 'none';
   }
   // The same rules the server applies (modules/StudentManagement/lib/Sections.php), so a mistake is caught while typing. Returns '' when fine.
   function sectionCodeProblem(strand, code) {
@@ -513,32 +574,29 @@
     const level = sectionsLevel();
     const canAdd = level === 'full';
     const canToggle = level === 'full';
-    // View Only: the sections are plain labels (an inactive one crossed out, with the word for screen readers) and there is
-    // no Add box, instead of dimmed buttons that cannot be used.
+    const addDisabledAttr = canAdd ? '' : ' disabled';
+    const addDisabledCls = canAdd ? '' : ' opacity-60 cursor-not-allowed';
+    const disabledAttr = canToggle ? '' : ' disabled';
+    const disabledCls = canToggle ? '' : ' opacity-60 cursor-not-allowed';
     container.innerHTML = SECTION_STRANDS.map(function(strand) {
       const items = sectionsData.filter(s => s.strand === strand);
       const pills = items.length ? items.map(function(s) {
         const styleCls = s.isActive
-          ? 'bg-white border-gray-300 text-gray-700' + (canToggle ? ' hover:bg-gray-50' : '')
-          : 'bg-gray-100 border-gray-200 text-gray-500 line-through';
-        if (!canToggle) {
-          return '<span class="border rounded-full px-3 py-1.5 text-xs font-medium ' + styleCls + '">' + escapeHtml(s.code) +
-            (s.isActive ? '' : '<span class="pp-sr-only"> (inactive)</span>') + '</span>';
-        }
-        const pill = '<button type="button" class="section-pill border rounded-full px-3 py-1.5 text-xs font-medium ' + styleCls + '" data-id="' + s.id + '" title="' + (s.isActive ? 'Click to deactivate' : 'Click to reactivate') + '">' + escapeHtml(s.code) + '</button>';
+          ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+          : 'bg-gray-100 border-gray-200 text-gray-400 line-through';
+        const pill = '<button type="button" class="section-pill border rounded-full px-3 py-1.5 text-xs font-medium ' + styleCls + disabledCls + '" data-id="' + s.id + '"' + disabledAttr + ' title="' + (canToggle ? (s.isActive ? 'Click to deactivate' : 'Click to reactivate') : (s.isActive ? 'Active' : 'Inactive')) + '">' + escapeHtml(s.code) + '</button>';
+        if (!canToggle) return pill;
         return '<span style="display:inline-flex;align-items:center;gap:2px">' + pill +
           '<button type="button" class="btn-danger delete-section-btn" data-id="' + s.id + '" data-code="' + escapeHtml(s.code) + '" title="Delete section" aria-label="Delete section ' + escapeHtml(s.code) + '" style="width:20px;height:20px;border-radius:9999px;line-height:1;font-size:14px;color:#ed1c24;display:inline-flex;align-items:center;justify-content:center">&times;</button></span>';
-      }).join('') : '<p class="text-xs text-gray-500">No sections yet.</p>';
+      }).join('') : '<p class="text-xs text-gray-400">No sections yet.</p>';
       return '<div class="border border-gray-200 rounded-lg p-[17px] flex flex-col gap-3">' +
         '<p class="text-sm font-semibold text-gray-800">' + strand + '</p>' +
         '<div class="flex flex-wrap gap-2">' + pills + '</div>' +
-        (canAdd
-          ? '<div class="flex items-center gap-2">' +
-              '<input type="text" maxlength="5" autocapitalize="characters" spellcheck="false" class="add-section-input flex-1 min-w-0 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24]" placeholder="New section, e.g. S1115" aria-label="New ' + strand + ' section code" data-strand="' + strand + '">' +
-              '<button type="button" class="add-section-btn px-4 py-2 text-xs font-semibold text-white bg-[#0f2a6b] rounded-md hover:opacity-90 shrink-0" data-strand="' + strand + '">Add</button>' +
-            '</div>' +
-            '<p class="add-section-hint text-xs text-[#ed1c24] hidden" data-strand="' + strand + '"></p>'
-          : '') +
+        '<div class="flex items-center gap-2">' +
+          '<input type="text" maxlength="5" autocapitalize="characters" spellcheck="false" class="add-section-input flex-1 min-w-0 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24]' + addDisabledCls + '" placeholder="New section, e.g. S1115" aria-label="New ' + strand + ' section code" data-strand="' + strand + '"' + addDisabledAttr + '>' +
+          '<button type="button" class="add-section-btn px-4 py-2 text-xs font-semibold text-white bg-[#0f2a6b] rounded-md hover:opacity-90 shrink-0' + addDisabledCls + '" data-strand="' + strand + '"' + addDisabledAttr + '>Add</button>' +
+        '</div>' +
+        '<p class="add-section-hint text-xs text-[#ed1c24] hidden" data-strand="' + strand + '"></p>' +
       '</div>';
     }).join('');
 
@@ -554,7 +612,7 @@
         }
         let data = await toggle(false);
         if (data.needsConfirm) {
-          if (await PP.confirm(data.error, { title: 'Deactivate this section anyway?', okLabel: 'Deactivate', danger: true })) {
+          if (await showConfirm(data.error + ' Deactivate it anyway?')) {
             data = await toggle(true);
           } else {
             btn.disabled = false;
@@ -572,7 +630,7 @@
     });
     if (canToggle) container.querySelectorAll('.delete-section-btn').forEach(function(btn) {
       btn.addEventListener('click', async function() {
-        if (!(await PP.confirm('This cannot be undone. A section that already has students, roster entries or schedules cannot be deleted; deactivate it instead.', { title: 'Delete section "' + btn.dataset.code + '"?', okLabel: 'Delete', danger: true }))) return;
+        if (!(await showConfirm('Delete section "' + btn.dataset.code + '"? This cannot be undone. A section that already has students, roster entries or schedules cannot be deleted; deactivate it instead.'))) return;
         btn.disabled = true;
         const res = await fetch('api/sections.php', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -638,21 +696,15 @@
     rbac = cfg.rbac;
     canEditRoster = !!cfg.canEditRoster;
   } catch (e) { rbac = null; }
-  // No Access on Student roster management: the sections and class roster cards are not shown at all.
-  const seesRoster = sectionsLevel() !== 'none';
-  if (!seesRoster) {
-    ['sectionsSection', 'rosterSection'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
-  }
   if (!canEditRoster) {
-    // View Only on Student roster management: no template download or upload, just what has been uploaded.
-    // style, not the "hidden" class: both are inline-flex, which comes after "hidden" in css/tailwind.css and wins.
-    ['downloadTemplateBtn', 'uploadRosterBtn'].forEach(function(id) { document.getElementById(id).style.display = 'none'; });
+    // View-only (Guidance Facilitator): no template download or upload, just what has been uploaded.
+    ['downloadTemplateBtn', 'uploadRosterBtn'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
     const note = document.createElement('p');
     note.className = 'text-xs text-gray-500';
-    note.textContent = 'You have view-only access to the class roster. The Head of Guidance, or staff given Full access, uploads it.';
+    note.textContent = 'You have view-only access to the class roster. A Guidance Counselor or the Head of Guidance uploads it.';
     document.getElementById('rosterResult').before(note);
   }
-  if (seesRoster) await loadSections();
+  await loadSections();
 
   // ---------- Class roster ----------
   // The sections already uploaded for this academic year, so staff can see what is on the roster.
@@ -676,7 +728,7 @@
       PP.showError(body, e.message, loadRosterSections, 5);
     }
   }
-  if (seesRoster) loadRosterSections();
+  loadRosterSections();
   const resultEl = document.getElementById('rosterResult');
   function showRosterResult(text, isError) {
     resultEl.textContent = text;

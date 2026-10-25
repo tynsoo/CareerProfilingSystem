@@ -44,8 +44,6 @@ class StaffSetupCode
     {
         $code = self::generate();
         $pdo->prepare('UPDATE email_verification_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL')->execute([$userId]);
-        // A new code starts with a clean count of wrong tries.
-        $pdo->prepare('DELETE FROM rate_limit_hits WHERE rate_key = ?')->execute([self::wrongKey($userId)]);
         $pdo->prepare(
             "INSERT INTO email_verification_tokens (user_id, token_hash, expires_at) VALUES (?, ?, NOW() + INTERVAL '" . self::HOURS_VALID . " hours')"
         )->execute([$userId, self::hash($userId, $code)]);
@@ -58,27 +56,6 @@ class StaffSetupCode
         $stmt = $pdo->prepare('SELECT 1 FROM email_verification_tokens WHERE user_id = ? AND token_hash = ? AND used_at IS NULL AND expires_at > NOW()');
         $stmt->execute([$userId, self::hash($userId, $code)]);
         return (bool) $stmt->fetchColumn();
-    }
-
-    private static function wrongKey(int $userId): string
-    {
-        return 'staff-code-wrong:' . $userId;
-    }
-
-    /**
-     * Counts one wrong code for this account. On the MAX_WRONG_TRIES-th wrong try the current code is cancelled, so
-     * even the right code stops working and the Head of Guidance must send a new one. Returns true when it was cancelled.
-     */
-    public static function recordWrongTry(PDO $pdo, int $userId): bool
-    {
-        $pdo->prepare('INSERT INTO rate_limit_hits (rate_key) VALUES (?)')->execute([self::wrongKey($userId)]);
-        $count = $pdo->prepare("SELECT COUNT(*) FROM rate_limit_hits WHERE rate_key = ? AND created_at > NOW() - INTERVAL '" . self::HOURS_VALID . " hours'");
-        $count->execute([self::wrongKey($userId)]);
-        if ((int) $count->fetchColumn() < self::MAX_WRONG_TRIES) {
-            return false;
-        }
-        self::spend($pdo, $userId);
-        return true;
     }
 
     public static function spend(PDO $pdo, int $userId): void
@@ -96,14 +73,11 @@ class StaffSetupCode
             'Your account is approved',
             "<p style=\"margin:0 0 12px 0;\">Hi $safeName,</p>"
                 . "<p style=\"margin:0 0 12px 0;\">The Head of Guidance approved your ProfilePath staff account. Your username is <strong>$safeUser</strong>.</p>"
-                . "<p style=\"margin:0;\">To finish, click <strong>Set Your Password</strong>, enter this temporary access code, and create your password. You can sign in after that.</p>",
+                . "<p style=\"margin:0;\">To finish, open <a href=\"$link\">$link</a>, enter this temporary access code, and create your password.</p>",
             $code,
-            'This code can be used once and expires in ' . self::HOURS_VALID . ' hours. Never share it with anyone.',
-            'Set Your Password',
-            $link
+            'This code can be used once and expires in ' . self::HOURS_VALID . ' hours. Never share it with anyone.'
         );
-        $text = "Hi $displayName,\n\nThe Head of Guidance approved your ProfilePath staff account. Your username is $username.\n\nTemporary access code: $code\n\nSet your password here: $link
-Enter the code there and create your password. You can sign in after that. The code can be used once and expires in " . self::HOURS_VALID . " hours. Never share it with anyone.";
+        $text = "Hi $displayName,\n\nThe Head of Guidance approved your ProfilePath staff account. Your username is $username.\n\nTemporary access code: $code\n\nOpen $link, enter the code and create your password. The code can be used once and expires in " . self::HOURS_VALID . " hours. Never share it with anyone.";
         return [$html, $text];
     }
 }

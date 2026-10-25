@@ -33,14 +33,6 @@ if ($user !== null) {
     $user['rbacRole'] = Rbac::roleKey($user);
 }
 
-// Staff: their own level for each feature (pages hide what View Only does not allow) and the pages closed to them (the
-// sidebar leaves them out, js/admin-nav.js). Only their own column, never the other roles'. The server still checks every
-// request; this only shapes what the page shows.
-if ($user !== null && $user['role'] !== 'student') {
-    $user['access'] = Rbac::levelsFor($user['rbacRole']);
-    $user['closedPages'] = Rbac::closedPages($user['rbacRole']);
-}
-
 // Staff are shown by their own name (they sign in with email, so the login name is internal).
 if ($user !== null && $user['role'] !== 'student') {
     $stmt = Database::get()->prepare('SELECT full_name, username FROM users WHERE id = ?');

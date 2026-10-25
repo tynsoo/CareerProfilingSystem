@@ -99,19 +99,6 @@ student1,,x,,,x,x,bsit
 
 ## 3. Course-vector conversion
 
-> **Update (2026-10-22): rank weights 3-2-1.** The program profiles (the Holland codes) come from the
-> guidance counselors, Ms. Mylde Loraine L. De Guzman (Guidance Counselor) and Ms. Tricia Pauline S. Lacap
-> (Guidance Facilitator), and they rank the three letters: the 1st letter is the program's strongest type and
-> the 3rd its weakest (RIC: R 1st, I 2nd, C 3rd). The web app (`modules/ContentBasedFiltering/lib/CBFEngine.php`, `courseVector()`) and the
-> toolkit (`cbf_eval.py`, encoding `ranksum`) now give the 1st, 2nd and 3rd letter the weights 3, 2 and 1 (rank-sum
-> weights, Stillwell, Seaver & Edwards, 1981; set in `config/cbf.php` as `holland_rank_weights`). A letter that is
-> not in the code gets 0. Example: RIC -> [3, 2, 0, 0, 0, 1], IRC -> [2, 3, 0, 0, 0, 1], ICR -> [1, 3, 0, 0, 0, 2].
-> Every course vector has the same size, sqrt(14), so no program is favoured by size, and the 32 programs now have
-> 22 different vectors (the 22 different final codes) instead of 11. The weights are the ratio 3:2:1 of the
-> counselors' rank, not values fitted to data. The binary encoding described below is kept in `cbf_eval.py`
-> (`--encoding binary`) as a sensitivity comparison. Where this section and sections 5, 6, 10, 10a and 13 speak of
-> "binary" or "same letters = same similarity", read them with this update.
-
 **Vector order:** `[R, I, A, S, E, C]`.
 
 **[Theory]** A Holland code lists a person's or environment's three most prominent types
@@ -124,12 +111,15 @@ letter appears in the course's final Holland code (YES), and **0** if not (NO):
 |---|---|---|
 | Value | 1 | 0 |
 
-Example: IRC → `[1, 1, 0, 0, 0, 1]`. This is set in `config/cbf.php`
-(`holland_rank_weights = [1, 1, 1]`).
+Example: IRC → `[1, 1, 0, 0, 0, 1]`. This is built in
+`modules/ContentBasedFiltering/lib/CBFEngine.php`; there is no weight setting. The counselors' 1st, 2nd
+and 3rd letter order is not a numeric weight (3-2-1 weights are not approved). In the web app it only
+orders programs that have the same cosine (1st letter matching the student's 1st-ranked interest
+first, then 2nd, then 3rd); it changes no cosine value and no membership.
 
 **What binary encoding means:**
 
-- **Letter order is not used.** Codes with the same three letters get the same vector:
+- **Letter order is not used in the similarity.** Codes with the same three letters get the same vector:
   IRC, RIC and ICR are all `[1, 1, 0, 0, 0, 1]`. Under binary, the CBF cannot distinguish
   BS Computer Science (IRC) from BS Civil Engineering (RIC) or BS Computer Engineering (ICR).
 - **Validator revisions that only reorder letters have no effect on recommendations.** For
@@ -373,9 +363,8 @@ test students** at **matching output levels**:
 
 ## 10. Encoding decision, tie handling and counseling referral
 
-- **Encoding (updated 2026-10-22):** the course vector uses the counselors' letter rank with rank-sum
-  weights 3, 2, 1 (§3 update). The student vector is the six mean item scores. The older binary
-  encoding is kept only as a comparison.
+- **Encoding:** binary (YES = 1 / NO = 0) for both students (top 3 RIASEC types) and courses
+  (letters of the final Holland code). Weighted letter positions are **not used** (§3).
 - **Ties between courses.** Courses with the same score keep the same match percentage. When
   more courses tie than fit in the Top-3, they are listed in course-list order. The evaluation
   counts tied courses as equally likely (§9).
@@ -415,9 +404,9 @@ separate; none is given a numeric weight, and the worksheet never enters the cos
 | **3. Prediction model** | What course does the model predict from patterns in the training dataset? | WEKA decision tree | **not available** (no real dataset yet); excluded |
 
 - **Best RIASEC Match (CBF only):** every course tied at the highest cosine similarity. Because
-  course vectors use the rank weights 3-2-1, only courses with the same code (same letters in the same
-  order, e.g. the four IRC programs) always have the same similarity; such ties are shown together and
-  never broken.
+  course vectors are binary, courses with the same three letters (e.g. IRC, RIC, ICR) always have
+  the same similarity; such ties are all shown, listed by the counselors' 1-2-3 letter ranking
+  (the order only; every tied course stays a Best RIASEC Match).
 - **Alternative Courses (CBF only):** every course at the next-highest cosine similarity.
 - **Preferred Course:** the student's own selection, shown separately on the results page. It
   never increases, decreases, forces or replaces a CBF result. The page says whether it is also a
@@ -441,9 +430,10 @@ separate; none is given a numeric weight, and the worksheet never enters the cos
 3. **Instrument validity.** The project questionnaire has not been psychometrically validated (§4).
 4. **Expert-coding subjectivity.** Course codes come from the crosswalk and validator
    judgement. One reviewer's revisions may not generalise.
-5. **Encoding decision.** Binary encoding ignores letter order (§3). IRC, RIC and ICR are
-   treated as the same profile. This was chosen because weighted letter positions lack published
-   support.
+5. **Encoding decision.** Binary encoding ignores letter order in the similarity (§3). IRC, RIC
+   and ICR are treated as the same profile. This was chosen because weighted letter positions lack
+   published support. The 1-2-3 letter ranking only orders tied courses on screen; the evaluation's
+   tie-aware metrics count tied courses as sharing a rank, so this order does not change them.
 6. **Indistinguishable courses.** Under binary encoding, the 32 courses form only 11
    distinct vectors, which limits CBF Top-1. For example, the 11 courses with letters I, R and C
    always tie, so a student in any of them can reach at most 1/11 expected Top-1 from that tie
@@ -501,24 +491,22 @@ sample row).
 
 ## 13. Worked examples
 
-### Current method: mean-score student vector vs. rank-weighted course vector (the system)
+### Current method: top-3 binary student vs. binary course (the system)
 
-Development student (made-up scores, not research data): R 15, I 40, A 12, S 18, E 35, C 45.
-- Student vector S = scores / 10 = **[1.5, 4.0, 1.2, 1.8, 3.5, 4.5]**, ||S|| = **7.4451**.
-- Every course vector has ||C|| = sqrt(14) = **3.7417** (weights 3, 2, 1), so cosine = (S · C) / (7.4451 x 3.7417).
+Test student with scores R 36, I 39, A 37, S 32, E 39, C 41:
+- Top 3 = **C, I, E**, so the student vector is **S = [0, 1, 0, 0, 1, 1]**. This matches the
+  adviser's sample row (x under C, I, E).
+- ‖S‖ = √3 = 1.7321 and ‖C‖ = √3 = 1.7321, so similarity = shared letters ÷ 3.
 
-| Course (code) | Course vector C (R I A S E C) | S · C | Cosine |
+| Course (code) | Course vector C | Shared letters | Cosine |
 |---|---|---|---|
-| BS Accounting Information System (CIE) | [0, 2, 0, 0, 1, 3] | 2x4.0 + 1x3.5 + 3x4.5 = 25.0 | **0.8974** (Best RIASEC Match) |
-| BS Accountancy (CEI) | [0, 1, 0, 0, 2, 3] | 4.0 + 7.0 + 13.5 = 24.5 | **0.8795** (Alternative Course) |
-| BS Business Analytics with AI (IEC) | [0, 3, 0, 0, 2, 1] | 12.0 + 7.0 + 4.5 = 23.5 | 0.8436 |
-| BS Computer Science (IRC) | [2, 3, 0, 0, 0, 1] | 3.0 + 12.0 + 4.5 = 19.5 | 0.7000 |
-| BS Tourism Management (SEA) | [0, 0, 1, 3, 2, 0] | 1.2 + 5.4 + 7.0 = 13.6 | 0.4882 |
+| BS Accountancy (CEI) | [0, 1, 0, 0, 1, 1] | C, E, I → 3 | 3 / 3 = **100%** |
+| BS Accounting Information System (CIE) | [0, 1, 0, 0, 1, 1] | C, I, E → 3 | 3 / 3 = **100%** |
+| BS Computer Science (IRC) | [1, 1, 0, 0, 0, 1] | I, C → 2 | 2 / 3 ≈ **67%** |
+| BS Tourism Management (SEA) | [0, 0, 1, 1, 1, 0] | E → 1 | 1 / 3 ≈ **33%** |
 
-The student's strongest types in order are C, I, E, and the code CIE lists the same types in the same order, so it
-has the highest cosine. The same three letters in another order (CEI, IEC, ECI, EIC) score lower, which the older
-binary encoding could not show (it gave all five programs the same value). Numbers produced by running
-`CBFEngine::compute()`; hand check in `tests/pipeline_test.php`.
+All 32 courses for this student: **5 score 100%** (CEI, CIE, ECI, EIC, IEC), 18 score 67% and
+9 score 33%. The Top-3 shows 3 of the 5 tied courses, chosen by course-list order.
 
 ## 14. How to document this in the thesis
 
@@ -675,3 +663,46 @@ Preferred Course and the J48 prediction are shown beside it and never change it.
 - "CBF Best Match + Alternatives, ranked by J48 probability" scored test MRR 0.192 (CV 0.263)
   and is RIASEC-aligned by construction. It is recorded as future work: the J48 import keeps
   only each leaf's course, not its class probabilities.
+
+## 16. Accuracy ceiling for the top-3 binary inputs (`accuracy_ceiling.py`)
+
+The Prediction Module's inputs allow only 20 patterns (which three of R, I, A, S, E, C are a
+student's highest). Any classifier that uses only these inputs, J48 included, gives every student
+with the same pattern the same prediction. For each pattern it can at best predict the course most
+of those students chose. So the data alone sets an upper limit on accuracy:
+
+    ceiling = (sum over patterns of the most common course's count) / students
+
+`accuracy_ceiling.py --data <file>` reports, for the course and for the college:
+
+- this ceiling, plus the same limit for "the course is among the model's top 3";
+- the pattern-majority rule under stratified 10-fold cross-validation (seeds 1-10), next to ZeroR.
+
+**Reading the ceiling:** the ceiling is measured on the same students and is therefore optimistic.
+With few students per pattern it is inflated: on random data it is far above ZeroR, while the
+cross-validated rule is not. Use it as a limit ("no model on these inputs can exceed X%"), never
+as a model result. If the ceiling is below a required accuracy (e.g. 80%), no tuning of J48 can
+meet it; only a different target or different inputs could, and that needs approval.
+
+**Running it:** run on the team's own computer; the data file stays there and is ignored by git.
+The tests use synthetic fixtures only.
+
+**Result on the 393-record dataset (2026-10-24):** ceiling 24.68% exact course (top 3: 53.94%);
+best possible rule under 10-fold CV 17.91% (sd 0.78); ZeroR 7.89%. College as the target: ceiling
+48.35%, top 3 84.73%. 80% is not reachable for either target with these inputs.
+
+## 17. Final Prediction Module model (393 records, 2026-10-24)
+
+Training file built with `python cbf_eval.py arff --students <file>` (top-3 binary 0/1, ties for 3rd
+place, 84 students, in R, I, A, S, E, C order; 28 courses). Weka 3.9.6, stratified 10-fold
+cross-validation repeated with seeds 1-10:
+
+| Model | Accuracy mean (sd) | Kappa | Top 3 | MRR |
+|---|---|---|---|---|
+| J48 -C 0.1 -M 10 (deployed) | 17.12% (1.24) | 0.107 | 40.89% | 0.343 |
+| J48 -C 0.25 -M 2 (Weka default) | 17.20% (1.16) | 0.109 | 40.43% | 0.343 |
+| ZeroR | 7.76% (0.18) | −0.007 | 24.45% | 0.241 |
+
+The deployed settings were the team's existing ones, not chosen on these runs. The final tree (all
+393 records) has 7 leaves; see `tools/weka/README.md`. The 296- and 291-record results above are
+superseded and not comparable.

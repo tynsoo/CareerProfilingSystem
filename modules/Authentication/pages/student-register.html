@@ -111,7 +111,7 @@
         <p class="text-sm text-gray-500 text-center">
           Already have an account? <a href="student-login" class="text-[#ed1c24] font-semibold hover:underline">Sign in</a>
         </p>
-        <p class="text-xs text-gray-500 text-center">
+        <p class="text-xs text-gray-400 text-center">
           <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
           <span class="mx-1.5">&middot;</span>
           <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -140,16 +140,16 @@
     </div>
     <!-- The same words for every registration answer (api/register.php answers alike whether or not the details
          match the class list), so nothing here says whether an account was made. -->
-    <h3 class="text-lg font-semibold text-[#001c43]">Check your school email</h3>
-    <p class="text-sm text-gray-500 leading-relaxed">We've emailed the address you typed: a link to create your password, or, if your Student Number and email don't match the class roster, what to check.</p>
-    <p class="text-xs text-gray-500 leading-relaxed">Nothing after a few minutes? Check your spam folder, or visit the Guidance Office.</p>
+    <h3 class="text-lg font-semibold text-[#001c43]">Almost there! Check your school email.</h3>
+    <p class="text-sm text-gray-500 leading-relaxed">If your Student Number and email match the class list, we've sent you a link to create your password.</p>
+    <p class="text-xs text-gray-500 leading-relaxed">Nothing after a few minutes? Double-check both, or visit the Guidance Office.</p>
     <div id="successVerifyLinkBox" class="hidden w-full bg-amber-50 border border-amber-100 rounded-md px-3.5 py-2.5 text-left break-all">
       <p class="text-xs text-amber-800">The verification email couldn't be delivered. Use this link directly: <a id="successVerifyLinkAnchor" href="#" class="font-semibold underline"></a></p>
     </div>
-    <a href="student-login" id="successSignInLink" class="w-full py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium shadow hover:opacity-90 transition text-center">
-      Go to sign in
+    <a href="student-login" class="w-full py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium shadow hover:opacity-90 transition text-center">
+      Go to Sign In
     </a>
-    <button type="button" id="successModalClose" class="text-xs text-gray-500 hover:text-gray-600 hover:underline">
+    <button type="button" id="successModalClose" class="text-xs text-gray-400 hover:text-gray-600 hover:underline">
       Close
     </button>
   </div>
@@ -202,7 +202,7 @@
         linkBox.classList.add('hidden');
       }
       successModal.classList.remove('hidden');
-      setTimeout(function() { successModal.classList.add('is-open'); document.getElementById('successSignInLink').focus(); }, 16);
+      setTimeout(function() { successModal.classList.add('is-open'); }, 16);
     }
     function closeSuccessModal() {
       successModal.classList.remove('is-open');

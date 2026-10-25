@@ -11,7 +11,7 @@ require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
 // yet, with the link to register. POST { rosterId } invites one student; POST { all: true, strand?, section? } invites
 // everyone on the current roster who is still unregistered (within the staff member's sections). A student is invited at
 // most once a day. The roster email is only used here and is never sent back to the page.
-$user = Rbac::requireAccess('studentAccounts', 'full'); // Student account management (permission table)
+$user = Rbac::requireRole('admin', 'counselor');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);

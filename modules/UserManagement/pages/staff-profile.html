@@ -7,7 +7,6 @@
 <title>Profile Settings — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +38,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -168,13 +167,24 @@
 
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
         <span>&middot;</span>
         <a href="accessibility" class="hover:text-gray-600 hover:underline">Accessibility</a>
       </footer>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
   </div>
 </div>
 
@@ -247,7 +257,25 @@
   }
   renderAvatar(currentUser.avatarUrl);
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');

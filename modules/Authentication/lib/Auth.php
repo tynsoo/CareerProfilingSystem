@@ -32,8 +32,9 @@ class Auth
                 'secure' => $isHttps,
             ]);
             // PHP's default cleanup deletes sessions idle for 24 minutes, sooner than the app's own idle
-            // timeout (up to 60 minutes, enforced in currentUser()). Keep them longer than that, so students are
-            // not signed out at random in the middle of the assessment.
+            // timeout (up to 240 minutes, enforced in currentUser()). Keep them that long, so students are
+            // not signed out at random in the middle of the assessment. (This applies to everyone; with the
+            // timeout turned off, idle sessions are now cleaned up after 4 hours instead of about 24 minutes.)
             ini_set('session.gc_maxlifetime', '14400');
             session_start();
         }
@@ -70,35 +71,17 @@ class Auth
         }
         try {
             $rows = Database::get()
-                ->query("SELECT key, value FROM security_policies WHERE key = 'timeoutMinutes'")
+                ->query("SELECT key, value FROM security_policies WHERE key IN ('sessionTimeoutEnabled', 'timeoutMinutes')")
                 ->fetchAll(PDO::FETCH_KEY_PAIR);
         } catch (\Throwable $e) {
             // Fail open on a DB hiccup — a broken policy lookup shouldn't
             // mass-log-out every user mid-request.
             $rows = [];
         }
-        // Always on (secure by default: it cannot be switched off); only the length is chosen, from TIMEOUT_CHOICES.
         return self::$policyCache = [
-            'enabled' => true,
-            'minutes' => self::timeoutMinutes($rows['timeoutMinutes'] ?? null),
+            'enabled' => ($rows['sessionTimeoutEnabled'] ?? 'true') === 'true',
+            'minutes' => (int) ($rows['timeoutMinutes'] ?? 30),
         ];
-    }
-
-    /** The idle timeout lengths the administrator can choose (minutes). */
-    public const TIMEOUT_CHOICES = [15, 30, 60];
-
-    /** A saved timeout length as one of TIMEOUT_CHOICES: the next allowed length at or above it, 60 at most (30 if unset). */
-    public static function timeoutMinutes(mixed $stored): int
-    {
-        if ($stored === null || $stored === '' || !is_numeric($stored)) {
-            return 30;
-        }
-        foreach (self::TIMEOUT_CHOICES as $choice) {
-            if ((int) $stored <= $choice) {
-                return $choice;
-            }
-        }
-        return max(self::TIMEOUT_CHOICES);
     }
 
     private static function isIdleTimedOut(): bool

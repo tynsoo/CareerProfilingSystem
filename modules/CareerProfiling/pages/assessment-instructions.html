@@ -7,7 +7,6 @@
 <title>Assessment Instructions — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -43,6 +42,10 @@
         <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M120-160q-33 0-56.5-23.5T40-240q0-33 23.5-56.5T120-320h10.5q4.5 0 9.5 2l182-182q-2-5-2-9.5V-520q0-33 23.5-56.5T400-600q33 0 56.5 23.5T480-520q0 2-2 20l102 102q5-2 9.5-2h21q4.5 0 9.5 2l142-142q-2-5-2-9.5V-560q0-33 23.5-56.5T840-640q33 0 56.5 23.5T920-560q0 33-23.5 56.5T840-480h-10.5q-4.5 0-9.5-2L678-340q2 5 2 9.5v10.5q0 33-23.5 56.5T600-240q-33 0-56.5-23.5T520-320v-10.5q0-4.5 2-9.5L420-442q-5 2-9.5 2H400q-2 0-20-2L198-260q2 5 2 9.5v10.5q0 33-23.5 56.5T120-160Zm40-401-25-54-54-25 54-25 25-54 25 54 54 25-54 25-25 54Zm440-39-38-82-82-38 82-38 38-82 38 82 82 38-82 38-38 82Z"/></svg>
         Career Results
       </a>
+      <a href="saved-careers" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
+        <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>
+        Saved Careers
+      </a>
       <a href="student-settings" class="flex items-center gap-3.5 h-[50px] pl-6 border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z"/></svg>
         Settings
@@ -55,7 +58,7 @@
       </a>
       <a href="#" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 text-white/85 text-sm hover:bg-white/5">
         <svg class="w-[15px] h-[15px] shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -204,10 +207,10 @@
 
       </div>
 
-      <p class="text-xs text-gray-500 text-center mt-6 max-w-2xl mx-auto">This site incorporates information from <a href="https://services.onetcenter.org/" target="_blank" rel="noopener noreferrer" class="underline hover:text-gray-600">O*NET Web Services</a> by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA).</p>
+      <p class="text-xs text-gray-400 text-center mt-6 max-w-2xl mx-auto">This site incorporates information from <a href="https://services.onetcenter.org/" target="_blank" rel="noopener noreferrer" class="underline hover:text-gray-600">O*NET Web Services</a> by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA).</p>
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -219,21 +222,27 @@
 
 <!-- Access code gate -->
 <div id="accessCodeModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog">
-    <div class="pp-dialog-head">
-      <h2 class="pp-dialog-title">Enter the access code</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="pp-dialog-form">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Enter Assessment Access Code</h3>
     <p class="text-sm text-gray-500">Your Guidance Office provides this code for the current assessment period.</p>
     <div>
       <input type="text" id="accessCodeInput" maxlength="12" autocomplete="off" class="w-full border border-gray-300 rounded-md px-4 py-3 text-sm tracking-[3px] text-center uppercase focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent" placeholder="ACCESS CODE">
       <p id="accessCodeError" class="hidden text-sm text-[#ed1c24] mt-2" aria-live="polite"></p>
     </div>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="accessCodeCancel" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="accessCodeSubmit" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Continue</button>
     </div>
-    <div class="pp-dialog-foot">
-      <button type="button" id="accessCodeCancel" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="accessCodeSubmit" class="pp-btn pp-btn-primary">Continue</button>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
     </div>
   </div>
 </div>
@@ -266,7 +275,25 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
   })();
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('student-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'student-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   const notifBtn = document.getElementById('notifBtn');
   const notifPanel = document.getElementById('notifPanel');
@@ -318,12 +345,18 @@
   const errorEl = document.getElementById('accessCodeError');
   const submitBtn = document.getElementById('accessCodeSubmit');
 
-  // The shared pop-up behaviour (PP.dialog in js/ui-state.js): Escape and Cancel close it, Tab stays inside.
-  const codeDialog = PP.dialog(modal);
   function openModal() {
     errorEl.classList.add('hidden');
     input.value = '';
-    codeDialog.open(input);
+    modal.classList.remove('hidden');
+    setTimeout(function() {
+      modal.classList.add('is-open');
+      input.focus();
+    }, 16);
+  }
+  function closeModal() {
+    modal.classList.remove('is-open');
+    setTimeout(function() { modal.classList.add('hidden'); }, 260);
   }
 
   document.getElementById('beginBtn').addEventListener('click', async function() {
@@ -342,6 +375,9 @@
       btn.disabled = false;
     }
   });
+  document.getElementById('accessCodeCancel').addEventListener('click', closeModal);
+  modal.addEventListener('click', function(e) { if (e.target.id === 'accessCodeModal') closeModal(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
 
   const submitBtnLabel = submitBtn.textContent;
   let cooldownTimer = null;

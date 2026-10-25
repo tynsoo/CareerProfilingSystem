@@ -112,12 +112,31 @@ class QuestionBank
         return $code;
     }
 
-    /** A student's raw total for one type, put on the 10-50 scale every stored result uses. */
+    /**
+     * A student's raw total for one type, put on the 10-50 scale every stored result uses.
+     *
+     * The values involved, kept distinct (see docs/methodology-notes.md):
+     *   item response   one answer, an integer 1 (dislike) to 5 (enjoy)
+     *   raw total       sum of a type's responses: n to 5n for n questions (5-25 for the
+     *                   30-question O*NET Mini-IP set, 5 per type)
+     *   stored score    this function: raw x 50 / (5n) = 10 x raw / n, rounded half up to a
+     *                   whole number; 10-50 for any n. For n = 5 it is exactly raw x 2; for
+     *                   n = 10 exactly raw. For other n it is rounded (e.g. n = 3: raw 4 -> 13.33 -> 13;
+     *                   n = 4: raw 5 -> 12.5 -> 13).
+     *   student vector  stored score / 10 (1.0-5.0), built by CBFEngine::studentVector()
+     *   O*NET website scores (the external Interest Profiler) are a different instrument coding
+     *                   and are never converted into or mixed with these values.
+     *
+     * Whole-number arithmetic, so a .5 always rounds up. (The earlier floating-point version
+     * rounded 14.5 and 28.5 down for n = 20; every other n from 3 to 20 gave the same results.)
+     */
     public static function scaleScore(int $rawTotal, int $questionsInType): int
     {
         if ($questionsInType <= 0) {
             return 0;
         }
-        return (int) round($rawTotal / ($questionsInType * self::MAX_ANSWER) * self::SCORE_SCALE);
+        // round(10 x raw / n) with halves up = floor((20 x raw + n) / (2n))
+        $scale = intdiv(self::SCORE_SCALE, self::MAX_ANSWER);   // 10
+        return intdiv(2 * $scale * $rawTotal + $questionsInType, 2 * $questionsInType);
     }
 }

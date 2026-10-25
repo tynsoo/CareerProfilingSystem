@@ -7,7 +7,6 @@
 <title>Student Profile — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -34,6 +33,9 @@
   .sp-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
   .sp-title{ display:flex; align-items:center; gap:8px; font-size:16px; font-weight:600; color:#111827; }
   .sp-title i{ width:8px; height:8px; border-radius:9999px; background:#19427b; display:inline-block; }
+  .sp-badge{ display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; padding:4px 12px; border-radius:9999px; border:1px solid; white-space:nowrap; }
+  .sp-badge.done{ background:#f0fdf4; border-color:#bbf7d0; color:#16a34a; }
+  .sp-badge.wait{ background:#fffbeb; border-color:#fde68a; color:#b45309; }
   .sp-tiles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
   .sp-tile{ background:#f8fafc; border:1px solid #eef2f7; border-radius:10px; padding:12px 14px; min-width:0; }
   .sp-label{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:#6b7280; }
@@ -83,7 +85,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -172,7 +174,7 @@
             <div class="sp-card sp-section">
               <div class="sp-head">
                 <h2 class="sp-title"><i></i>Assessment &amp; Academic Details</h2>
-                <span id="statusBadge" class="pp-badge pp-badge-gray">—</span>
+                <span id="statusBadge" class="sp-badge wait">—</span>
               </div>
 
               <div class="sp-tiles">
@@ -217,7 +219,7 @@
               <div class="sp-status" id="counselingBox">
                 <div class="sp-sub">
                   <p class="sp-label" id="counselingLabel" style="color:#b45309">Counseling Status</p>
-                  <span id="counselingBadge" class="pp-badge pp-badge-amber hidden">Pending Request</span>
+                  <span id="counselingBadge" class="sp-badge wait hidden">Pending Request</span>
                 </div>
                 <p class="sp-value" id="counselingField">—</p>
               </div>
@@ -236,7 +238,11 @@
             <div id="recommendationCard" class="hidden sp-card sp-section">
               <div class="sp-head" style="flex-wrap:wrap;gap:8px;">
                 <h2 class="sp-title">Recommendation</h2>
-                <span id="recStatus" class="pp-badge pp-badge-gray"></span>
+                <span id="recStatus" class="sp-badge wait"></span>
+              </div>
+              <div>
+                <p class="sp-label">Student's RIASEC Code</p>
+                <p id="recCode" class="text-sm text-gray-800 mt-1">—</p>
               </div>
               <div>
                 <p class="sp-label">Preferred Course</p>
@@ -247,21 +253,29 @@
                 <p id="recBest" class="text-sm text-gray-800 mt-1"></p>
               </div>
               <div>
-                <p class="sp-label">Alternative Courses</p>
+                <p class="sp-label">Alternatives</p>
                 <p id="recAlternatives" class="text-sm text-gray-800 mt-1"></p>
               </div>
               <div>
                 <p class="sp-label">WEKA Prediction</p>
-                <p id="recPrediction" class="text-sm text-gray-800 mt-1"></p>
+                <p id="recPrediction" class="text-sm text-gray-800 mt-1">—</p>
+                <ol id="recPredTop3" class="hidden text-sm text-gray-800 mt-2 list-decimal pl-5 space-y-0.5"></ol>
+                <p class="text-xs text-gray-500 mt-1">Predicts the intended course of past students with the same top 3 types (J48). Probabilities are shares of those past students, not suitability scores.</p>
+                <details id="recPredDetails" class="hidden mt-2">
+                  <summary class="text-xs font-medium text-gray-600 cursor-pointer">All course probabilities</summary>
+                  <p id="recPredInputs" class="text-xs text-gray-500 mt-2"></p>
+                  <table class="text-xs mt-2 w-full"><tbody id="recPredDist"></tbody></table>
+                  <p id="recPredModel" class="text-xs text-gray-500 mt-2"></p>
+                </details>
               </div>
               <details class="border-t border-gray-100 pt-3">
-                <summary class="text-xs font-medium text-gray-600 cursor-pointer">Recommendation sources</summary>
-                <dl class="mt-3 grid text-sm" style="grid-template-columns:minmax(120px,200px) 1fr;column-gap:16px;row-gap:8px;">
-                  <dt class="text-gray-500">1. CBF (cosine similarity)</dt><dd class="text-gray-800">Best RIASEC Match and Alternative Courses above</dd>
-                  <dt class="text-gray-500">2. Worksheet</dt><dd class="text-gray-800">Preferred Course above (shown separately; never changes the CBF result)</dd>
-                  <dt class="text-gray-500">3. Prediction model</dt><dd class="text-gray-800" id="recModelVersion">WEKA Prediction above (J48; shown separately; never changes the CBF result)</dd>
-                  <dt class="text-gray-500">Final Best Match</dt><dd class="text-gray-800">Not computed: needs an approved combination rule.</dd>
+                <summary class="text-xs font-medium text-gray-600 cursor-pointer">About these results</summary>
+                <dl class="mt-3 grid text-sm" style="grid-template-columns:auto 1fr;column-gap:16px;row-gap:6px;">
+                  <dt class="text-gray-500">Best Match, Alternatives</dt><dd class="text-gray-800">RIASEC fit (CBF, cosine similarity)</dd>
+                  <dt class="text-gray-500">Preferred Course</dt><dd class="text-gray-800">Student's choice (Career Worksheet)</dd>
+                  <dt class="text-gray-500">WEKA Prediction</dt><dd class="text-gray-800" id="recModelVersion">Past students' choice (J48)</dd>
                 </dl>
+                <p class="text-xs text-gray-500 mt-2">Each source is separate; none changes another.</p>
               </details>
             </div>
 
@@ -290,16 +304,13 @@
         <p id="notFoundState" class="hidden text-sm text-gray-500 bg-white border border-gray-200 rounded-xl shadow-sm p-8 text-center">Student not found.</p>
 
         <div id="toggleActiveModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div class="modal-card pp-dialog">
-            <div class="pp-dialog-head">
-              <h2 class="pp-dialog-title" id="toggleActiveModalTitle">Deactivate this account?</h2>
-              <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
-            </div>
-            <p class="pp-dialog-body" id="toggleActiveModalBody">This student will no longer be able to sign in. You can reactivate the account at any time.</p>
-            <p id="toggleActiveModalError" class="hidden pp-dialog-body text-[#ed1c24]"></p>
-            <div class="pp-dialog-foot">
-              <button type="button" id="toggleActiveCancelBtn" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-              <button type="button" id="toggleActiveConfirmBtn" class="pp-btn pp-btn-danger btn-danger"></button>
+          <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+            <h3 class="text-lg font-semibold text-black" id="toggleActiveModalTitle">Deactivate Account?</h3>
+            <p class="text-sm text-gray-500" id="toggleActiveModalBody">This student will no longer be able to sign in. You can reactivate the account at any time.</p>
+            <p id="toggleActiveModalError" class="hidden text-sm text-[#ed1c24]"></p>
+            <div class="flex justify-end gap-2 pt-1">
+              <button type="button" id="toggleActiveCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+              <button type="button" id="toggleActiveConfirmBtn" class="px-4 py-2 text-sm font-medium text-white rounded-md hover:opacity-90"></button>
             </div>
           </div>
         </div>
@@ -307,13 +318,24 @@
       </div>
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
         <span>&middot;</span>
         <a href="accessibility" class="hover:text-gray-600 hover:underline">Accessibility</a>
       </footer>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
   </div>
 </div>
 
@@ -325,11 +347,6 @@
     window.location.replace('staff-login');
     return;
   }
-  // What this person may do here (the permission table on Security Configuration). The server checks every request; this
-  // only hides what they cannot use.
-  const canManageAccounts = PP.may(currentUser, 'studentAccounts', 'full'); // deactivate, unlock
-  const canEditStudent = PP.may(currentUser, 'studentInfo', 'full');        // change the section
-  const canWriteNotes = PP.may(currentUser, 'notesCreate', 'full');         // add a counseling note
 
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
   if (currentUser.avatarUrl) {
@@ -339,7 +356,25 @@
   document.getElementById('headerUserName').textContent = currentUser.displayName || currentUser.username;
   document.getElementById('headerUserRole').textContent = currentUser.positionLabel || roleLabels[currentUser.role] || currentUser.role;
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -361,7 +396,6 @@
   let toggleActiveCurrent = true;
   function renderToggleActiveButton(isActive) {
     toggleActiveCurrent = isActive;
-    if (!canManageAccounts) return; // the button stays hidden
     const btn = document.getElementById('toggleActiveBtn');
     btn.classList.remove('hidden');
     if (isActive) {
@@ -376,20 +410,23 @@
   function openToggleActiveModal() {
     const willDeactivate = toggleActiveCurrent;
     document.getElementById('toggleActiveModalError').classList.add('hidden');
-    document.getElementById('toggleActiveModalTitle').textContent = willDeactivate ? 'Deactivate this account?' : 'Reactivate this account?';
+    document.getElementById('toggleActiveModalTitle').textContent = willDeactivate ? 'Deactivate Account?' : 'Activate Account?';
     document.getElementById('toggleActiveModalBody').textContent = willDeactivate
       ? 'This student will no longer be able to sign in. You can reactivate the account at any time.'
       : 'This restores the student\'s ability to sign in.';
     const confirmBtn = document.getElementById('toggleActiveConfirmBtn');
-    confirmBtn.textContent = willDeactivate ? 'Deactivate' : 'Reactivate';
-    // Red only for deactivating (and focus starts on Cancel then), navy for reactivating, as in every pop-up.
-    confirmBtn.className = 'pp-btn ' + (willDeactivate ? 'pp-btn-danger btn-danger' : 'pp-btn-primary');
-    toggleActiveDialog.open(document.getElementById(willDeactivate ? 'toggleActiveCancelBtn' : 'toggleActiveConfirmBtn'));
+    confirmBtn.textContent = willDeactivate ? 'Deactivate' : 'Activate';
+    confirmBtn.className = 'px-4 py-2 text-sm font-medium text-white rounded-md hover:opacity-90 ' + (willDeactivate ? 'bg-[#ed1c24]' : 'bg-green-600');
+    toggleActiveModal.classList.remove('hidden');
+    setTimeout(function() { toggleActiveModal.classList.add('is-open'); }, 16);
   }
-  // The shared pop-up behaviour (PP.dialog in js/ui-state.js): x, Cancel and Escape close it.
-  const toggleActiveDialog = PP.dialog(toggleActiveModal);
-  function closeToggleActiveModal() { toggleActiveDialog.close(); }
+  function closeToggleActiveModal() {
+    toggleActiveModal.classList.remove('is-open');
+    setTimeout(function() { toggleActiveModal.classList.add('hidden'); }, 260);
+  }
   document.getElementById('toggleActiveBtn').addEventListener('click', openToggleActiveModal);
+  document.getElementById('toggleActiveCancelBtn').addEventListener('click', closeToggleActiveModal);
+  toggleActiveModal.addEventListener('click', function(e) { if (e.target.id === 'toggleActiveModal') closeToggleActiveModal(); });
   document.getElementById('toggleActiveConfirmBtn').addEventListener('click', async function() {
     const btn = this;
     btn.disabled = true;
@@ -413,7 +450,7 @@
   // Locked by too many wrong passwords (for example a classmate typing this Student Number): staff
   // who can see the student unlock it, so they can sign in right away instead of waiting.
   document.getElementById('unlockAccountBtn').addEventListener('click', async function() {
-    if (!(await PP.confirm('It was locked after too many wrong passwords. The student can sign in again right away.', { title: 'Unlock this student\'s account?', okLabel: 'Unlock' }))) return;
+    if (!(await PP.confirm('Unlock this student\'s account?\n\nIt was locked after too many wrong passwords. The student can sign in again right away.', { okLabel: 'Unlock' }))) return;
     const btn = this;
     btn.disabled = true;
     try {
@@ -436,7 +473,7 @@
   // Admin only: delete a student's answers so they can retake the assessment (rare, and only when
   // the Guidance Office allows it). Shown only for a student who has finished it.
   document.getElementById('resetAssessmentBtn').addEventListener('click', async function() {
-    if (!(await PP.confirm('This removes their RIASEC assessment, Career Worksheet and recommendations so they can take the assessment again once a session is open. It cannot be undone.', { title: 'Delete this student\'s answers?', okLabel: 'Delete answers', danger: true }))) return;
+    if (!(await PP.confirm('Delete this student\'s answers?\n\nThis removes their RIASEC assessment, Career Worksheet and recommendations so they can take the assessment again once a session is open. It cannot be undone.', { okLabel: 'Delete answers', danger: true }))) return;
     const btn = this;
     btn.disabled = true;
     try {
@@ -452,10 +489,15 @@
       btn.disabled = false;
     }
   });
-  // Counseling Notes (permission table): reading follows View counseling history (Full: every note; View Only: the date
-  // and author, plus the text of one's own notes) and writing follows Create counseling notes (Full shows the composer).
-  // Declared here, before the student lookup below calls loadCounselingNotes(), since that call happens well before this
-  // script reaches its bottom.
+  // Counseling Notes — gated by the 'counselingNotes' RBAC module
+  // (Security Configuration). Loading the list only needs 'limited';
+  // adding a note needs 'full' — rather than pre-checking which level the
+  // current user has, the composer is always shown to anyone who can see
+  // this page at all (admin/counselor), and a 'limited' counselor simply
+  // gets the server's 403 back as an inline error if they try to add one,
+  // matching how the rest of the app surfaces RBAC restrictions. Declared
+  // here, before the student lookup below calls loadCounselingNotes(),
+  // since that call happens well before this script reaches its bottom.
   let counselingNotesStudentId = null;
   function renderCounselingNotes(notes) {
     const list = document.getElementById('counselingNotesList');
@@ -468,13 +510,10 @@
     empty.classList.add('hidden');
     list.innerHTML = notes.map(function(n) {
       const date = new Date(n.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      // View Only on counseling history: the server sends who wrote a note and when, but not what (note is null).
-      const text = n.note === null
-        ? '<p class="text-sm text-gray-500 italic">Only the date and author are shown to you.</p>'
-        : '<p class="text-sm text-gray-800 whitespace-pre-wrap">' + n.note.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>';
+      const safeNote = n.note.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return '<div class="border border-gray-200 rounded-md px-3.5 py-2.5">' +
         '<p class="text-xs text-gray-500 mb-1">' + date + ' &middot; ' + String(n.author).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</p>' +
-        text +
+        '<p class="text-sm text-gray-800 whitespace-pre-wrap">' + safeNote + '</p>' +
       '</div>';
     }).join('');
   }
@@ -484,26 +523,65 @@
     const r = await res.json();
     if (!r.hasRecommendation) return;
     const withCosine = function(p) {
-      return p.title; // course names only: the CGC does not record scores
+      return p.title + (p.hollandCode ? ' (' + p.hollandCode + ')' : ''); // approved program code; no cosine values
     };
+    // Ordered code from the shared implementation (modules/CareerProfiling/lib/RiasecProfile.php), with what limits it.
+    const prof = r.riasecProfile || { valid: false };
+    document.getElementById('recCode').textContent = !prof.valid ? 'Not available' + (prof.reason ? ': ' + prof.reason : '')
+      : prof.code + (prof.allMinimum ? ' · All answers "Dislike": profile does not separate interests'
+        : prof.flat ? ' · All six scores equal: profile does not separate interests'
+        : prof.codeProvisional ? ' · Provisional: tied scores (' + prof.ties.map(function(t) { return t.letters.join('='); }).join(', ') + ') ordered R,I,A,S,E,C by convention'
+        : '');
     const list = function(items) { return items && items.length ? items.join(', ') : 'None'; };
     const status = document.getElementById('recStatus');
-    status.textContent = r.matchStatus === 'mismatch' ? 'Differs from RIASEC match' : r.matchStatus === 'match' ? 'Matches RIASEC' : 'Not compared yet';
-    status.className = 'pp-badge pp-badge-' + (r.matchStatus === 'match' ? 'green' : r.matchStatus === 'mismatch' ? 'amber' : 'gray');
-    document.getElementById('recPreferred').textContent = r.preferredCourse
-      ? withCosine(r.preferredCourse) + (r.preferredCourse.inBestRiasecMatch ? ', also a Best RIASEC Match' : ', differs from the Best RIASEC Match')
-      : 'No worksheet result';
+    // The badge carries the Preferred Course status, so the Preferred Course line shows only the course.
+    status.textContent = r.mismatchReason === 'no_worksheet' ? 'No worksheet'
+      : r.matchStatus === 'mismatch' ? 'Preferred differs from RIASEC' : r.matchStatus === 'match' ? 'Preferred matches RIASEC' : '—';
+    status.className = 'sp-badge ' + (r.matchStatus === 'match' ? 'done' : 'wait');
+    document.getElementById('recPreferred').textContent = r.preferredCourse ? withCosine(r.preferredCourse) : 'None';
     document.getElementById('recBest').textContent = list(r.bestRiasecMatch.map(withCosine)) +
-      (r.bestRiasecMatch.length > 1 ? ' (tied: same RIASEC letters)' : '') + (r.needsRecompute ? ' (saved before the CBF revision; recompute to update)' : '');
+      (r.bestRiasecMatch.length > 1 ? ' · ' + r.bestRiasecMatch.length + ' tied, listed in 1-2-3 letter order' : '') + (r.needsRecompute ? ' · Outdated: run recompute' : '');
     document.getElementById('recAlternatives').textContent = list(r.alternatives.map(withCosine));
-    // Source 3, the WEKA J48 prediction (api/recommendations.php `prediction`), shown on its own.
-    const pred = r.prediction || { status: 'unavailable' };
-    document.getElementById('recPrediction').textContent = pred.course
-      ? pred.course.title + (pred.course.inBestRiasecMatch ? ', also a Best RIASEC Match'
-          : pred.course.inAlternatives ? ', one of the Alternative Courses' : ', outside the RIASEC matches')
-      : pred.status === 'no_prediction' ? 'No prediction for this profile'
-      : 'Not computed yet';
-    if (pred.modelVersion) document.getElementById('recModelVersion').textContent = 'WEKA Prediction above (' + pred.modelVersion + '; shown separately; never changes the CBF result)';
+    // Prediction Module (modules/ContentBasedFiltering/api/recommendations.php predictionDetail): staff only, separate from the CBF.
+    const pd = r.predictionDetail || { status: 'unavailable', reason: 'Not available.' };
+    const where = function(c) {
+      return c.inBestRiasecMatch ? ' · In Best Match' : c.inAlternatives ? ' · In Alternatives' : ' · Outside RIASEC matches';
+    };
+    const courseName = function(c) { return c.title || (c.label + ' (not in the program list)'); };
+    const prob = function(p) { return p.toFixed(3); };
+    const predEl = document.getElementById('recPrediction');
+    if (pd.status === 'available') {
+      predEl.textContent = courseName(pd.predicted) + where(pd.predicted) + (pd.savedPredictionDiffers ? ' · Saved result is from an older model: run recompute' : '');
+      const top3 = document.getElementById('recPredTop3');
+      top3.innerHTML = '';
+      pd.top3.forEach(function(c) {
+        const li = document.createElement('li');
+        li.textContent = courseName(c) + ', probability ' + prob(c.probability) + (c.tied ? ' (tied)' : '');
+        top3.appendChild(li);
+      });
+      top3.classList.remove('hidden');
+      document.getElementById('recPredInputs').textContent = 'Inputs (1 = one of the top 3 types): ' +
+        Object.keys(pd.inputs).map(function(k) { return k + ' ' + pd.inputs[k]; }).join(', ');
+      const dist = document.getElementById('recPredDist');
+      dist.innerHTML = '';
+      pd.distribution.slice().sort(function(a, b) { return b.probability - a.probability; }).forEach(function(c) {
+        const tr = document.createElement('tr');
+        const name = document.createElement('td'); name.textContent = courseName(c);
+        const val = document.createElement('td'); val.textContent = prob(c.probability); val.style.textAlign = 'right';
+        tr.appendChild(name); tr.appendChild(val); dist.appendChild(tr);
+      });
+      const unknown = function(v) { return v === null || v === undefined || v === '' ? 'unknown' : v; };
+      document.getElementById('recPredModel').textContent = 'Model: ' + unknown(pd.model.version) + ' · ' + pd.model.classifier +
+        ' · Weka ' + pd.model.wekaVersion + ' · ' + pd.model.classes + ' classes. Inputs: ' + unknown(pd.model.featureEncoding) +
+        '. Target: ' + unknown(pd.model.targetDefinition) + '. Training records: ' + unknown(pd.model.trainingRecords) +
+        ' (data version: ' + unknown(pd.model.trainingDataVersion) + '). Evaluation: ' + unknown(pd.model.evaluationProtocol) +
+        '. Equal probabilities are listed in the model\'s class order.';
+      document.getElementById('recPredDetails').classList.remove('hidden');
+      document.getElementById('recModelVersion').textContent = "Past students' intended course (" + (pd.model.version || 'J48') + ')';
+    } else {
+      // Unavailable: say why; the RIASEC recommendations above are unaffected.
+      predEl.textContent = 'Unavailable: ' + (pd.reason || 'the Prediction Module could not run.');
+    }
     document.getElementById('recommendationCard').classList.remove('hidden');
   }
 
@@ -525,10 +603,8 @@
       return;
     }
     document.getElementById('counselingNotesCard').classList.remove('hidden');
-    if (canWriteNotes) {
-      document.getElementById('counselingNoteComposer').classList.remove('hidden');
-      document.getElementById('counselingNoteComposer').classList.add('flex');
-    }
+    document.getElementById('counselingNoteComposer').classList.remove('hidden');
+    document.getElementById('counselingNoteComposer').classList.add('flex');
     renderCounselingNotes(data.notes || []);
   }
   document.getElementById('addCounselingNoteBtn').addEventListener('click', async () => {
@@ -590,16 +666,14 @@
       const s = data.student;
       toggleActiveUserId = s.userId;
       renderToggleActiveButton(s.isActive);
-      if (s.lockedUntil && canManageAccounts) document.getElementById('unlockAccountBtn').classList.remove('hidden');
+      if (s.lockedUntil) document.getElementById('unlockAccountBtn').classList.remove('hidden');
       if (currentUser.role === 'admin' && s.status === 'Completed') document.getElementById('resetAssessmentBtn').classList.remove('hidden');
       document.getElementById('studentName').textContent = s.name;
       PP.renderAvatar(document.getElementById('studentAvatar'), { first: s.firstName, last: s.lastName, name: s.name, size: 24 });
       document.getElementById('studentId').textContent = 'Grade ' + s.gradeLevel + ' · ' + s.strand + ' ' + s.section;
       document.getElementById('strandChip').textContent = s.strand + ' Track';
       document.getElementById('ayChip').textContent = s.academicYear ? 'AY ' + s.academicYear : 'AY —';
-      // No Access on Student account management: the server sends no account state, so the active dot is left out.
-      if (s.isActive === null) document.getElementById('statusDot').remove();
-      else document.getElementById('statusDot').classList.toggle('off', !s.isActive);
+      document.getElementById('statusDot').classList.toggle('off', !s.isActive);
       document.getElementById('gradeLevelField').textContent = 'Grade ' + s.gradeLevel;
       document.getElementById('strandField').textContent = s.strand;
       document.getElementById('sectionField').textContent = s.section;
@@ -619,7 +693,7 @@
         editSectionBtn.classList.remove('hidden');
         sectionError.classList.add('hidden');
       }
-      if (canEditStudent) editSectionBtn.classList.remove('hidden');
+      editSectionBtn.classList.remove('hidden');
       editSectionBtn.addEventListener('click', function() {
         sectionSelect.innerHTML = '<option value="">Select section</option>' +
           (s.allowedSections || []).map(function(sec) {
@@ -659,9 +733,8 @@
 
       document.getElementById('academicYearField').textContent = s.academicYear || 'Not set';
       const badge = document.getElementById('statusBadge');
-      // Same colors as Student Information (PP.badge in js/ui-state.js).
-      badge.textContent = s.status;
-      badge.className = 'pp-badge pp-badge-' + ({ Completed: 'green', Pending: 'amber', 'Not Registered': 'blue' }[s.status] || 'gray');
+      badge.textContent = s.status === 'Completed' ? '✓ Completed' : s.status;
+      badge.className = 'sp-badge ' + (s.status === 'Completed' ? 'done' : 'wait');
       document.getElementById('registeredField').textContent = s.registeredAt
         ? new Date(s.registeredAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
         : 'Not recorded';
@@ -680,9 +753,7 @@
       const themes = document.getElementById('riasecThemes');
       themes.innerHTML = topLetters.length
         ? topLetters.map(function(l) { return '<span class="sp-theme"><i style="background:' + types[l].color + '"></i>' + types[l].name + '</span>'; }).join('')
-        : (s.seesResults === false
-          ? '<p class="text-sm text-gray-500">Not shown: assessment results are not part of your access.</p>'
-          : '<p class="text-sm text-gray-500">Not available — assessment not yet completed.</p>');
+        : '<p class="text-sm text-gray-500">Not available — assessment not yet completed.</p>';
       document.getElementById('dominantLabel').classList.toggle('hidden', !topLetters.length);
 
 

@@ -12,7 +12,7 @@ require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
 // Office for everyone whose Preferred Course isn't one of their Best RIASEC Match programs (Mismatched).
 // A student is emailed at most once a day per kind, and students on the roster who
 // haven't registered have no email, so they are skipped.
-$user = Rbac::requireAccess('studentAccounts', 'full'); // Student account management (permission table)
+$user = Rbac::requireRole('admin', 'counselor');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);

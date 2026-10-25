@@ -15,18 +15,18 @@ require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
 //                       same PDF attached, to an address the staff member types in (the principal, say; no account needed)
 // Strand, section and academic year follow the page's filters, so the report matches what is on screen.
 //
-// Who may do what (permission table): previewing needs Analytics and reports; the PDF (totals and shares only, no names)
-// also needs View Only on Export student results; sending it by email needs Full on Send analytics report.
+// Previewing and exporting: anyone who can see the whole analytics page (Full on Student Monitoring).
+// Sending: the administrator (Head of Guidance) and Guidance Counselors, not Guidance Facilitators.
 if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
 }
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $user = Rbac::requireAccess('analytics', 'limited');
-    if (($_GET['format'] ?? '') === 'pdf') {
-        Rbac::requireAccess('exportResults', 'limited');
-    }
+    $user = Rbac::requireAccess('monitoring', 'full');
 } else {
-    $user = Rbac::requireAccess('analyticsEmail', 'full');
+    $user = Auth::requireLogin();
+    if (!in_array(Rbac::roleKey($user), ['admin', 'counselor'], true)) {
+        jsonResponse(['success' => false, 'error' => 'Only the administrator and Guidance Counselors can send the analytics report.'], 403);
+    }
 }
 $pdo = Database::get();
 $input = $_SERVER['REQUEST_METHOD'] === 'POST' ? readJsonBody() : $_GET;

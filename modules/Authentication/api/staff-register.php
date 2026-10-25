@@ -103,10 +103,8 @@ $bodyHtml = EmailTemplate::render(
     'We received your sign-up',
     "<p style=\"margin:0 0 12px 0;\">Hi $safeName,</p>"
         . '<p style="margin:0;">Thanks for signing up for ProfilePath. The Head of Guidance will review your request. Once it is approved, we will email you a temporary access code so you can create your password and sign in.</p>',
-    // No button: there is no password yet, so a sign-in link would only lead to a failed sign-in. The approval
-    // email brings the access code and the "Set Your Password" link (modules/Authentication/lib/StaffSetupCode.php).
-    '',
-    '',
+    'Go to ProfilePath',
+    rtrim((string) getenv('APP_URL'), '/') . '/staff-login',
     ''
 );
 $bodyText = "Hi $fullName,\n\nThanks for signing up for ProfilePath. The Head of Guidance will review your request. Once it is approved, we will email you a temporary access code so you can create your password and sign in.";

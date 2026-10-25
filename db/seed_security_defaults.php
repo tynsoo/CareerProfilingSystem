@@ -4,20 +4,32 @@ require_once __DIR__ . '/../modules/Authentication/lib/Rbac.php';
 
 $pdo = Database::get();
 
-// The permission table's defaults (Rbac::DEFAULTS: one row per feature, grouped by sidebar page). The administrator always
-// has Full; a Student holds only Rbac::STUDENT_MODULES. The administrator can change the staff columns in Security Configuration.
+// Matches security-configuration.html's current DEFAULT_STATE.rbac exactly.
+$rbac = [
+    // Programs and their RIASEC codes (Career Dataset): Guidance Counselors edit them; Facilitators view only.
+    'career'          => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
+    'rac'             => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
+    'recommendations' => ['admin' => 'full', 'counselor' => 'full',    'student' => 'full'],
+    'counselor'       => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
+    'monitoring'      => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
+    'announcements'   => ['admin' => 'full', 'counselor' => 'limited', 'student' => 'none'],
+    'examinations'    => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
+    'counselingNotes' => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
+    // limited = add sections; full = add and deactivate/reactivate them.
+    'sections'        => ['admin' => 'full', 'counselor' => 'limited', 'student' => 'none'],
+    // Approve staff sign-ups and send access codes: the administrator and the Guidance Counselors (never Facilitators).
+    'staffAccounts'   => ['admin' => 'full', 'counselor' => 'full',    'student' => 'none'],
+];
+
 $rbacStmt = $pdo->prepare(
     'INSERT INTO security_rbac (module, role, access_level) VALUES (?, ?, ?)
      ON CONFLICT (module, role) DO NOTHING'
 );
 $rbacCount = 0;
-foreach (Rbac::DEFAULTS as $module => $defaults) {
-    $roles = [
-        'admin' => 'full',
-        'counselor' => $defaults['counselor'],
-        'facilitator' => $defaults['facilitator'],
-        'student' => in_array($module, Rbac::STUDENT_MODULES, true) ? 'full' : 'none',
-    ];
+foreach ($rbac as $module => $roles) {
+    // A Guidance Facilitator starts where the Guidance Counselor is, except Sections (View Only) and Staff Accounts
+    // (No Access); the administrator can change any of it in Security Configuration.
+    $roles['facilitator'] = Rbac::facilitatorDefault($module, $roles['counselor']);
     foreach ($roles as $role => $level) {
         $rbacStmt->execute([$module, $role, $level]);
         $rbacCount++;

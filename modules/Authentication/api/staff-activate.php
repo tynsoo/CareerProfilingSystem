@@ -43,9 +43,7 @@ $stmt = $pdo->prepare(
 $stmt->execute([$identifier, $identifier]);
 $account = $stmt->fetch();
 if (!$account || !StaffSetupCode::isValid($pdo, (int) $account['id'], $code)) {
-    // The 5th wrong try cancels the code (StaffSetupCode::MAX_WRONG_TRIES). The answer stays the same, so it does not show whether the account exists.
-    $cancelled = $account && StaffSetupCode::recordWrongTry($pdo, (int) $account['id']);
-    AuditLogger::log($account ? (int) $account['id'] : null, $account ? 'counselor' : null, 'staff_activation_failed', 'user', $identifier, $cancelled ? 'Wrong access code; code cancelled after ' . StaffSetupCode::MAX_WRONG_TRIES . ' wrong tries' : 'Wrong or expired access code');
+    AuditLogger::log($account ? (int) $account['id'] : null, $account ? 'counselor' : null, 'staff_activation_failed', 'user', $identifier, 'Wrong or expired access code');
     jsonResponse($generic, 400);
 }
 

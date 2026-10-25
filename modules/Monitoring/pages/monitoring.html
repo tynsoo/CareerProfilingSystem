@@ -7,7 +7,6 @@
 <title>Monitoring — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +38,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -201,7 +200,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50" id="flaggedTableBody">
-              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">Loading…</td></tr>
+              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -213,7 +212,7 @@
 
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
@@ -224,52 +223,59 @@
 </div>
 
 <!-- Review Modal -->
-<!-- Review recommendation: the shared pop-up frame (css/components.css .pp-dialog, PP.dialog in js/ui-state.js).
-     The three decisions are choices that say what will happen; the main button follows the choice. -->
-<div id="reviewModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-lg">
-    <div class="pp-dialog-head">
-      <h2 id="reviewTitle" class="pp-dialog-title">Review recommendation</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
+<div id="reviewModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <h3 class="text-lg font-bold text-slate-900">Review Recommendation</h3>
+      <button type="button" id="reviewModalClose" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
     </div>
-    <div class="pp-dialog-form">
-      <div class="pp-dialog-summary">
-        <div>
-          <p id="reviewStudentName" class="text-sm font-semibold text-slate-900"></p>
-          <p id="reviewStudentMeta" class="text-xs text-slate-500"></p>
-        </div>
-        <button type="button" id="reviewInviteBtn" class="hidden text-sm font-medium text-[#0f2a6b] underline underline-offset-2 whitespace-nowrap">Invite to counseling</button>
+    <div class="px-6 py-5 space-y-4">
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Student</p>
+        <p id="reviewStudentName" class="text-sm font-medium text-slate-900"></p>
+        <p id="reviewFlaggedAt" class="text-xs text-slate-500"></p>
       </div>
-      <p id="reviewInviteMsg" class="hidden text-sm"></p>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <p class="text-xs font-medium text-slate-500">Preferred vs RIASEC</p>
-          <p id="reviewMatch" class="text-sm text-slate-900"></p>
+          <p class="text-xs font-semibold text-slate-500 uppercase">Strand</p>
+          <p id="reviewStrand" class="text-sm text-slate-800"></p>
         </div>
         <div>
-          <p class="text-xs font-medium text-slate-500">Flag reason</p>
-          <p id="reviewReason" class="text-sm text-slate-900"></p>
+          <p class="text-xs font-semibold text-slate-500 uppercase">Preferred vs RIASEC</p>
+          <p id="reviewMatch" class="text-sm text-slate-800"></p>
         </div>
       </div>
       <div>
-        <p class="text-xs font-medium text-slate-500">Best RIASEC match</p>
-        <p id="reviewCareer" class="text-sm text-slate-900"></p>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Best RIASEC Match</p>
+        <p id="reviewCareer" class="text-sm text-slate-800"></p>
       </div>
-      <fieldset id="reviewDecision">
-        <legend class="text-xs font-medium text-slate-600 mb-2">Your decision</legend>
-        <label class="pp-choice"><input type="radio" name="reviewAction" value="approve"><span><span class="pp-choice-title">Approve the recommendation</span><span class="pp-choice-text" id="reviewApproveText"></span></span></label>
-        <label class="pp-choice" id="reviewEscalateChoice"><input type="radio" name="reviewAction" value="escalate"><span><span class="pp-choice-title">Escalate to a counselor</span><span class="pp-choice-text">Moves to the Counseling Queue; staff with Monitoring access are notified.</span></span></label>
-        <label class="pp-choice"><input type="radio" name="reviewAction" value="dismiss"><span><span class="pp-choice-title">Dismiss the flag</span><span class="pp-choice-text" id="reviewDismissText"></span></span></label>
-      </fieldset>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Flag Reason</p>
+        <p id="reviewReason" class="text-sm text-slate-800"></p>
+      </div>
       <div id="reviewNoteWrap">
-        <label for="reviewNote" class="block text-xs font-medium text-slate-600 mb-1">Note (optional)</label>
-        <textarea id="reviewNote" rows="2" maxlength="500" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700" placeholder="Why this decision? Kept private in the audit log."></textarea>
+        <label for="reviewNote" class="text-xs font-semibold text-slate-500 uppercase">Note (optional)</label>
+        <textarea id="reviewNote" rows="2" maxlength="500" class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-700" placeholder="Why this decision? Kept private in the audit log."></textarea>
       </div>
       <p id="reviewActionError" class="hidden text-sm text-[#ed1c24]" role="alert"></p>
     </div>
-    <div class="pp-dialog-foot">
-      <button type="button" id="reviewCancelBtn" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="reviewSubmitBtn" class="pp-btn pp-btn-primary" disabled>Choose a decision</button>
+    <p id="reviewInviteMsg" class="hidden px-6 pb-3 text-sm"></p>
+    <div id="reviewActions" class="px-6 py-4 border-t border-slate-100" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button type="button" id="reviewInviteBtn" class="hidden px-3.5 py-2.5 text-sm font-medium text-center text-[#0f2a6b] border border-[#0f2a6b] rounded-md hover:bg-slate-50" style="grid-column:1/-1">Invite to Counseling</button>
+      <button type="button" data-action="dismiss" class="review-action-btn px-3.5 py-2.5 text-sm font-medium text-center text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50">Dismiss Flag</button>
+      <button type="button" data-action="escalate" class="review-action-btn px-3.5 py-2.5 text-sm font-medium text-center text-orange-600 border border-orange-200 bg-orange-50 rounded-md hover:bg-orange-100">Escalate to Counselor</button>
+      <button type="button" data-action="approve" class="review-action-btn px-3.5 py-2.5 text-sm font-medium text-center text-white bg-[#ed1c24] rounded-md hover:opacity-90" style="grid-column:1/-1">Approve Recommendation</button>
+    </div>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
     </div>
   </div>
 </div>
@@ -291,7 +297,25 @@
   document.getElementById('headerUserName').textContent = currentUser.displayName || currentUser.username;
   document.getElementById('headerUserRole').textContent = currentUser.positionLabel || roleLabels[currentUser.role] || currentUser.role;
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -335,8 +359,11 @@
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // Badge colors by meaning (PP.badge in js/ui-state.js).
-  const PRIORITY_TONE = { High: 'red', Medium: 'amber', Low: 'gray' };
+  const priorityClass = {
+    High: 'bg-red-50 border-red-100 text-[#ed1c24]',
+    Medium: 'bg-orange-50 border-orange-100 text-orange-600',
+    Low: 'bg-slate-50 border-slate-200 text-slate-600',
+  };
   const matchClass = (matchStr) => {
     // Match / Mismatch (RecommendationPipeline): mismatch -> refer to a Guidance Counselor.
     return matchStr === 'Mismatch' ? 'text-orange-600' : matchStr === 'Match' ? 'text-green-600' : 'text-slate-500';
@@ -351,7 +378,7 @@
   try {
     const inviteCfg = await (await fetch('api/security-config.php')).json();
     const levelFor = (module) => ((inviteCfg.rbac && inviteCfg.rbac[module] && inviteCfg.rbac[module][currentUser.rbacRole || currentUser.role]) || 'none');
-    canInvite = levelFor('counselingStatus') === 'full' && (currentUser.rbacRole || currentUser.role) !== 'facilitator'; // Facilitators never invite (DFD process 4.0)
+    canInvite = levelFor('counselingNotes') === 'full';
     canAct = levelFor('monitoring') === 'full';
   } catch (e) {}
   async function sendCounselingInvite(studentId) {
@@ -375,8 +402,8 @@
       '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
       '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
       '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
-      '<td class="px-6 py-3">' + PP.badge(r.priority, PRIORITY_TONE[r.priority] || 'gray') + '</td>' +
-      '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">' + (canAct ? 'Review' : 'View') +
+      '<td class="px-6 py-3"><span class="border text-xs font-bold px-2.5 py-1 rounded-md ' + (priorityClass[r.priority] || priorityClass.Low) + '">' + escapeHtml(r.priority) + '</span></td>' +
+      '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">Review' +
         '<img src="images/monitoring/icon-chevron-right3.svg" alt="" class="w-1.5 h-2.5"></a></td>' +
     '</tr>';
   }
@@ -410,7 +437,7 @@
 
     flaggedTableBody.innerHTML = data.rows.length
       ? data.rows.map(renderRow).join('')
-      : '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">No flagged recommendations right now.</td></tr>';
+      : '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">No flagged recommendations right now.</td></tr>';
     document.getElementById('flaggedSummary').textContent =
       'Showing ' + data.rows.length + ' of ' + data.summary.needsReview + ' flagged recommendations';
 
@@ -428,94 +455,88 @@
 
   document.getElementById('reviewInviteBtn').addEventListener('click', async function() {
     const btn = this, msg = document.getElementById('reviewInviteMsg');
-    if (!(await PP.confirm('The student will be sent the CGC booking link by email and in their notifications.', { title: 'Invite to a counseling session?', okLabel: 'Send invitation' }))) return;
+    if (!(await PP.confirm('Invite this student to a counseling session? They will be sent the CGC booking link by email and in their notifications.'))) return;
     btn.disabled = true;
     try {
       const result = await sendCounselingInvite(btn.dataset.studentId);
       msg.textContent = result.text;
-      msg.className = 'text-sm ' + (result.ok ? 'text-green-600' : 'text-[#ed1c24]');
+      msg.className = 'px-6 pb-3 text-sm ' + (result.ok ? 'text-green-600' : 'text-[#ed1c24]');
     } catch (e) {
       msg.textContent = 'Unable to reach the server. Please try again.';
-      msg.className = 'text-sm text-[#ed1c24]';
+      msg.className = 'px-6 pb-3 text-sm text-[#ed1c24]';
     } finally {
       btn.disabled = false;
     }
   });
-
-  // ---- Review recommendation: the three decisions are choices that say what will happen, and the main button follows
-  // the choice (Approve, Escalate, Dismiss). The shared pop-up behaviour comes from PP.dialog (js/ui-state.js).
   let currentFlag = null;
-  const reviewDialog = PP.dialog('reviewModal', { onClose: function() { currentFlag = null; } });
-  const reviewSubmit = document.getElementById('reviewSubmitBtn');
-  const REVIEW_BUTTON = { approve: 'Approve', escalate: 'Escalate', dismiss: 'Dismiss' };
-  function pickedAction() {
-    const picked = document.querySelector('input[name="reviewAction"]:checked');
-    return picked ? picked.value : null;
-  }
-  function updateReviewSubmit() {
-    const action = pickedAction();
-    reviewSubmit.disabled = !action;
-    reviewSubmit.textContent = action ? REVIEW_BUTTON[action] : 'Choose a decision';
-  }
-  document.querySelectorAll('input[name="reviewAction"]').forEach(function(input) { input.addEventListener('change', updateReviewSubmit); });
   function openReviewModal(r) {
     currentFlag = r;
     document.getElementById('reviewStudentName').textContent = r.name;
     // Postgres sends "2026-10-18 14:35:00.12+08"; Date needs a "T" and a "+08:00" offset.
-    const flagged = r.createdAt
-      ? new Date(r.createdAt.replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00')).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+    document.getElementById('reviewFlaggedAt').textContent = r.createdAt
+      ? 'Flagged ' + new Date(r.createdAt.replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00')).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
       : '';
-    document.getElementById('reviewStudentMeta').textContent = r.strand + (flagged ? ' · Flagged ' + flagged : '');
+    document.getElementById('reviewStrand').textContent = r.strand;
     document.getElementById('reviewMatch').textContent = r.match;
     document.getElementById('reviewCareer').textContent = r.career;
     document.getElementById('reviewReason').textContent = r.reason +
       (r.topScore !== null && r.topScore !== undefined ? ' (Cosine Similarity: ' + Number(r.topScore).toFixed(3) + ')' : '');
-    document.getElementById('reviewApproveText').textContent = 'It stands as it is. The flag leaves the review list.';
-    document.getElementById('reviewDismissText').textContent = 'Nothing needs to be done. The flag leaves the review list.';
-    document.querySelectorAll('input[name="reviewAction"]').forEach(function(input) { input.checked = false; });
-    // View Only staff see the details without the decision part (the link and the title say View, not Review).
-    document.getElementById('reviewTitle').textContent = canAct ? 'Review recommendation' : 'Recommendation details';
-    document.getElementById('reviewDecision').classList.toggle('hidden', !canAct);
-    document.getElementById('reviewNoteWrap').classList.toggle('hidden', !canAct);
-    reviewSubmit.classList.toggle('hidden', !canAct);
-    document.getElementById('reviewCancelBtn').textContent = canAct ? 'Cancel' : 'Close';
     document.getElementById('reviewNote').value = '';
+    document.getElementById('reviewNoteWrap').classList.toggle('hidden', !canAct);
+    document.getElementById('reviewActions').classList.toggle('hidden', !canAct && !canInvite);
+    document.querySelectorAll('.review-action-btn').forEach(b => { b.classList.toggle('hidden', !canAct); b.disabled = false; });
     document.getElementById('reviewActionError').classList.add('hidden');
     const inviteBtn = document.getElementById('reviewInviteBtn');
     inviteBtn.classList.toggle('hidden', !canInvite);
     inviteBtn.dataset.studentId = r.userId;
     document.getElementById('reviewInviteMsg').classList.add('hidden');
-    updateReviewSubmit();
-    reviewDialog.open(canAct ? document.querySelector('input[name="reviewAction"]') : document.getElementById('reviewCancelBtn'));
+    document.getElementById('reviewModal').classList.remove('hidden');
   }
-  function closeReviewModal() { reviewDialog.close(); }
+  function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+    currentFlag = null;
+  }
+  document.getElementById('reviewModalClose').addEventListener('click', closeReviewModal);
+  document.getElementById('reviewModal').addEventListener('click', function(e) {
+    if (e.target.id === 'reviewModal') closeReviewModal();
+  });
 
-  // One decision, saved at once: the choice already says what will happen, so there is no second "Are you sure?".
-  // The server's message shows if it could not be saved (for example someone else handled the flag a moment earlier).
-  reviewSubmit.addEventListener('click', async function() {
-    const action = pickedAction();
-    if (!currentFlag || !action) return;
-    const flag = currentFlag;
-    const errorEl = document.getElementById('reviewActionError');
-    errorEl.classList.add('hidden');
-    reviewSubmit.disabled = true;
-    let data = null;
-    try {
-      const res = await fetch('api/monitoring-action.php', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flagId: flag.flagId, action: action, note: document.getElementById('reviewNote').value })
-      });
-      data = await res.json();
-    } catch (e) {}
-    if (!data || !data.success) {
-      reviewSubmit.disabled = false;
-      errorEl.textContent = (data && data.error) || 'Could not save the decision. Please try again.';
-      errorEl.classList.remove('hidden');
-      return;
-    }
-    closeReviewModal();
-    PP.toast(action === 'approve' ? 'Recommendation approved.' : action === 'escalate' ? 'Flag escalated to the Counseling Queue.' : 'Flag dismissed.');
-    await load();
+  // Each decision asks first, then shows the server's message if it could not be saved
+  // (for example someone else handled the flag a moment earlier).
+  const actionConfirm = {
+    approve: { q: 'Approve this recommendation?', ok: 'Approve' },
+    escalate: { q: 'Escalate to a counselor?', ok: 'Escalate' },
+    dismiss: { q: 'Dismiss this flag?', ok: 'Dismiss' },
+  };
+  document.querySelectorAll('.review-action-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!currentFlag) return;
+      const flag = currentFlag, action = btn.dataset.action, c = actionConfirm[action];
+      const after = action === 'escalate'
+        ? ' moves to the Counseling Queue, and staff with Monitoring access are notified.'
+        : ' leaves the review list.';
+      if (!(await PP.confirm(c.q + '\n\n' + flag.name + after + ' The decision and your note are kept in the audit log.', { okLabel: c.ok }))) return;
+      const errorEl = document.getElementById('reviewActionError');
+      errorEl.classList.add('hidden');
+      document.querySelectorAll('.review-action-btn').forEach(b => { b.disabled = true; });
+      let data = null;
+      try {
+        const res = await fetch('api/monitoring-action.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ flagId: flag.flagId, action: action, note: document.getElementById('reviewNote').value })
+        });
+        data = await res.json();
+      } catch (e) {}
+      document.querySelectorAll('.review-action-btn').forEach(b => { b.disabled = false; });
+      if (!data || !data.success) {
+        errorEl.textContent = (data && data.error) || 'Could not save the decision. Please try again.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      closeReviewModal();
+      PP.toast(action === 'approve' ? 'Recommendation approved.' : action === 'escalate' ? 'Flag escalated to the Counseling Queue.' : 'Flag dismissed.');
+      await load();
+    });
   });
 
 

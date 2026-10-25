@@ -64,17 +64,20 @@ $steps = [
     'migrate_add_recommendation_sets.php',
     'migrate_add_faqs.php',
     'migrate_add_roster_email.php',
+    'migrate_counselor_write_access.php',
     'migrate_add_announcement_templates.php',
     'migrate_add_password_reset_codes.php',
     'migrate_student_announcements_no_access.php',
     'migrate_question_bank_flexible.php',
     'migrate_add_counseling_invites.php',
     'migrate_add_facilitator_role.php',
+    'migrate_counselor_career_access.php',
     'migrate_add_staff_accounts_rbac.php',
     'migrate_add_retake_requests.php',
     'migrate_add_assessment_progress.php',
     'migrate_add_consent_records.php',
     'migrate_add_session_user.php',
+    'migrate_add_assessment_versions.php',
     // Reference data.
     'seed_colleges.php',
     'seed_programs.php',
@@ -85,13 +88,11 @@ $steps = [
     'seed_security_defaults.php',
     // Permission rows that depend on the defaults above (safe to run again).
     'migrate_add_sections_rbac.php',
-    // migrate_counselor_write_access.php is left out on purpose: it would raise the counselor to Full for
-    // announcements and sections, against the defaults in seed_security_defaults.php (View Only).
+    'migrate_counselor_write_access.php',
     'migrate_student_announcements_no_access.php',
     'migrate_add_facilitator_role.php',
+    'migrate_counselor_career_access.php',
     'migrate_add_staff_accounts_rbac.php',
-    // The permission table by feature and page: replaces the older rows the migrations above added.
-    'migrate_rbac_by_page.php',
     // Last: the default admin account.
     'seed_admin.php',
     // The audit log's tamper seal over everything written so far.

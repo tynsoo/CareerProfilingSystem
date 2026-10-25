@@ -4,16 +4,13 @@ require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/Faq.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditChange.php';
 
-// The Help Center FAQs. Students read the student FAQs. Staff with View Only or Full on Help Center (permission table)
-// read both, so they can see what students are told; Full adds, edits, reorders and deletes them.
+// The Help Center FAQs. Anyone signed in can read the list meant for them (students read the student FAQs;
+// staff read both, so they can see what students are told). The administrator and Guidance Counselors add,
+// edit, reorder and delete them; a Guidance Facilitator, like everywhere else, can only look.
 $user = Auth::requireLogin();
 $pdo = Database::get();
 $isStudent = $user['role'] === 'student';
-$helpLevel = $isStudent ? 'none' : Rbac::accessLevel('helpCenter', Rbac::roleKey($user));
-if (!$isStudent && $helpLevel === 'none') {
-    jsonResponse(['error' => 'Insufficient permissions for this action.'], 403);
-}
-$canEdit = $helpLevel === 'full';
+$canEdit = !$isStudent && !Rbac::isFacilitator($user);
 
 function faqRow(array $r): array
 {
@@ -45,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['error' => 'Method not allowed'], 405);
 }
 if (!$canEdit) {
-    jsonResponse(['success' => false, 'error' => $isStudent ? 'Forbidden' : 'You have view-only access to the Help Center.'], 403);
+    jsonResponse(['success' => false, 'error' => $isStudent ? 'Forbidden' : 'Guidance Facilitators have view-only access to this.'], 403);
 }
 
 $body = readJsonBody();

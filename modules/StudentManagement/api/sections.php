@@ -9,10 +9,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Public by default — registration.html needs this before a student has
     // an account, and a section code isn't sensitive. ?all=1 is the
     // Section Management staff view: every section (including inactive) with
-    // its id, for anyone with at least View Only on Student roster management
-    // (see Security Configuration's permission table).
+    // its id, for anyone with at least Limited access to the 'sections'
+    // module (see Security Configuration's permission table).
     if (($_GET['all'] ?? '') === '1') {
-        Rbac::requireAccess('roster', 'limited');
+        Rbac::requireAccess('sections', 'limited');
         $rows = $pdo->query('SELECT id, strand, code, is_active FROM sections ORDER BY strand, code')->fetchAll();
         jsonResponse(['sections' => array_map(fn($r) => [
             'id' => (int) $r['id'],
@@ -29,10 +29,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = readJsonBody();
     $type = $body['type'] ?? '';
 
-    // Adding, deleting, deactivating or reactivating a section needs Full on Student roster management
-    // (the administrator by default; the permission table can give it to staff).
+    // Adding, deleting, deactivating or reactivating a section needs Full access to the 'sections' module
+    // (administrator and Guidance Counselor by default; a Guidance Facilitator is view-only).
     if ($type === 'create') {
-        $user = Rbac::requireAccess('roster', 'full');
+        $user = Rbac::requireAccess('sections', 'full');
         $strand = (string) ($body['strand'] ?? '');
         $code = trim((string) ($body['code'] ?? ''));
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($type === 'toggleActive') {
-        $user = Rbac::requireAccess('roster', 'full');
+        $user = Rbac::requireAccess('sections', 'full');
         $id = (int) ($body['id'] ?? 0);
         $stmt = $pdo->prepare('SELECT id, strand, code, is_active FROM sections WHERE id = ?');
         $stmt->execute([$id]);
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Deleting a section is only allowed while nothing refers to it: no registered student, no class roster entry and no
     // assessment schedule. Otherwise it should be deactivated (it stays in the records, but can no longer be picked).
     if ($type === 'delete') {
-        $user = Rbac::requireAccess('roster', 'full');
+        $user = Rbac::requireAccess('sections', 'full');
         $id = (int) ($body['id'] ?? 0);
         $stmt = $pdo->prepare('SELECT id, strand, code FROM sections WHERE id = ?');
         $stmt->execute([$id]);

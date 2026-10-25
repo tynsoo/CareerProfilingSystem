@@ -134,6 +134,17 @@ CREATE TABLE assessment_questions (
     UNIQUE (dimension, order_index)
 );
 
+-- Immutable snapshots of the questions a student was shown (lib/AssessmentVersion.php).
+CREATE TABLE assessment_question_sets (
+    id              SERIAL PRIMARY KEY,
+    fingerprint     CHAR(64) NOT NULL UNIQUE,
+    question_count  INT NOT NULL,
+    items_per_type  INT NOT NULL,
+    scoring_version VARCHAR(40) NOT NULL,
+    snapshot_enc    TEXT NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE assessments (
     id              SERIAL PRIMARY KEY,
     student_id      INT NOT NULL REFERENCES students(user_id) ON DELETE CASCADE,
@@ -147,6 +158,10 @@ CREATE TABLE assessments (
     score_c         INT NOT NULL CHECK (score_c BETWEEN 0 AND 50),
     top_types       JSONB NOT NULL,
     completed_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- Reproducibility (lib/AssessmentVersion.php). NULL = legacy attempt saved before versioning.
+    question_set_id INT REFERENCES assessment_question_sets(id),
+    answers_enc     TEXT,           -- [{questionId, answer}] in the order shown, encrypted
+    scoring_version VARCHAR(40),
     UNIQUE (student_id, attempt_number)
 );
 
@@ -162,6 +177,13 @@ CREATE TABLE worksheets (
     top_types           JSONB NOT NULL,
     submitted_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (student_id, attempt_number)
+);
+
+CREATE TABLE saved_programs (
+    student_id  INT NOT NULL REFERENCES students(user_id) ON DELETE CASCADE,
+    program_id  INT NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+    saved_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (student_id, program_id)
 );
 
 CREATE TABLE recommendations (
@@ -212,8 +234,6 @@ CREATE TABLE audit_log (
     row_hash        CHAR(64)
 );
 
--- One row per feature and role (module = a key of Rbac::DEFAULTS in modules/Authentication/lib/Rbac.php, grouped by
--- sidebar page in Rbac::PAGES). Filled by db/seed_security_defaults.php and db/migrate_rbac_by_page.php.
 CREATE TABLE security_rbac (
     module          VARCHAR(50) NOT NULL,
     role            VARCHAR(20) NOT NULL,

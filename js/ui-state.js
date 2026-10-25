@@ -97,26 +97,19 @@
     else setTimeout(apply, 0);
   }
 
-  // The server's answer about who is signed in, for parts of the page that draw before the page's own script asks
-  // (the staff sidebar grays out the pages closed to this person: js/admin-nav.js).
-  function announceSession(data) {
-    if (!data || !data.user) return;
-    try { window.dispatchEvent(new CustomEvent('pp:session', { detail: data.user })); } catch (e) {}
-  }
-
   function sessionCall(input, init) {
     var cached = cacheServed ? null : readProfile();
     cacheServed = true;
     var network = patchedFetch(input, init);
     if (!cached) {
       return network.then(function (res) {
-        res.clone().json().then(function (data) { writeProfile(data); fillStaffHeader(data && data.user); announceSession(data); }).catch(function () {});
+        res.clone().json().then(function (data) { writeProfile(data); fillStaffHeader(data && data.user); }).catch(function () {});
         return res;
       });
     }
     fillStaffHeader(cached.user);
     network.then(function (res) { return res.clone().json(); })
-      .then(function (fresh) { announceSession(fresh); reconcile(cached, fresh); })
+      .then(function (fresh) { reconcile(cached, fresh); })
       .catch(function () { /* offline or a server error: keep what is on screen */ });
     return Promise.resolve(new Response(JSON.stringify({ user: cached.user, sessionTimeout: cached.sessionTimeout, csrfToken: null, fromCache: true }), {
       status: 200, headers: { 'Content-Type': 'application/json' }
@@ -243,19 +236,11 @@
   };
 
   // fetch + JSON that rejects on a network failure, a timeout, a non-2xx answer or a body that is not JSON.
-  // options.signal (optional) cancels the request; the timeout still applies. A cancelled request rejects with
-  // an error whose `cancelled` is true, so the caller can ignore it.
   PP.fetchJson = function (url, options, timeoutMs) {
     options = options || {};
-    var outer = options.signal || null;
     var controller = typeof AbortController === 'function' ? new AbortController() : null;
-    var timer = null, onOuterAbort = null;
-    if (controller) {
-      if (outer) {
-        onOuterAbort = function () { controller.abort(); };
-        if (outer.aborted) controller.abort();
-        else outer.addEventListener('abort', onOuterAbort);
-      }
+    var timer = null;
+    if (controller && !options.signal) {
       options = Object.assign({}, options, { signal: controller.signal });
       timer = setTimeout(function () { controller.abort(); }, timeoutMs || 25000);
     }
@@ -270,166 +255,10 @@
         return data;
       });
     }).catch(function (e) {
-      if (outer && outer.aborted) {
-        var cancelled = new Error('Cancelled');
-        cancelled.cancelled = true;
-        throw cancelled;
-      }
       if (e && e.name === 'AbortError') throw new Error('This is taking too long. Try again.');
       if (e instanceof TypeError) throw new Error(DEFAULT_ERROR);
       throw e;
-    }).finally(function () {
-      if (timer) clearTimeout(timer);
-      if (onOuterAbort) outer.removeEventListener('abort', onOuterAbort);
-    });
-  };
-
-  // ---------- Lists: the same behavior on every page ----------
-  // Filters apply the moment they change (no Apply button), the server sends one page at a time, and a new
-  // request cancels the one still on its way, so a slow old answer can never replace a newer one.
-
-  // Returns a function that loads JSON like PP.fetchJson but first cancels the previous call it made.
-  // A cancelled call rejects with e.cancelled === true: return quietly in that case. .cancel() drops the
-  // call still on its way without starting a new one (for a page that can decide not to load at all,
-  // such as an invalid date range).
-  PP.latestJson = function () {
-    var current = null;
-    function run(url, options, timeoutMs) {
-      if (current) current.abort();
-      current = typeof AbortController === 'function' ? new AbortController() : null;
-      return PP.fetchJson(url, Object.assign({}, options || {}, current ? { signal: current.signal } : {}), timeoutMs);
-    }
-    run.cancel = function () { if (current) { current.abort(); current = null; } };
-    return run;
-  };
-
-  // Calls fn after the user stops typing for `ms` (default 300). .cancel() drops a call still waiting.
-  PP.debounce = function (fn, ms) {
-    var timer = null;
-    function run() {
-      var args = arguments, self = this;
-      clearTimeout(timer);
-      timer = setTimeout(function () { fn.apply(self, args); }, ms || 300);
-    }
-    run.cancel = function () { clearTimeout(timer); };
-    return run;
-  };
-
-  // Keeps a list's filters in the page address (?strand=STEM&page=2), so Reload, Back and a shared link show the
-  // same list. Only values that differ from `defaults` are written. Keys in `privateKeys` (a search, which can be
-  // a student's name) never go in the address: they are kept in this tab's sessionStorage instead, which ends
-  // with the tab.
-  PP.listState = function (defaults, privateKeys) {
-    privateKeys = privateKeys || [];
-    var storeKey = 'pp.list.' + window.location.pathname;
-    function isPrivate(k) { return privateKeys.indexOf(k) !== -1; }
-    return {
-      read: function () {
-        var out = Object.assign({}, defaults);
-        var params = new URLSearchParams(window.location.search);
-        var saved = {};
-        try { saved = JSON.parse((storage() && storage().getItem(storeKey)) || '{}') || {}; } catch (e) {}
-        Object.keys(defaults).forEach(function (k) {
-          var v = isPrivate(k) ? saved[k] : params.get(k);
-          if (v == null) return;
-          out[k] = typeof defaults[k] === 'number' ? (Number(v) || defaults[k]) : String(v);
-        });
-        return out;
-      },
-      save: function (state) {
-        var params = new URLSearchParams(window.location.search);
-        var priv = {};
-        Object.keys(defaults).forEach(function (k) {
-          if (isPrivate(k)) { if (state[k]) priv[k] = state[k]; return; }
-          if (state[k] === defaults[k] || state[k] === '' || state[k] == null) params.delete(k);
-          else params.set(k, state[k]);
-        });
-        var query = params.toString();
-        try { window.history.replaceState(window.history.state, '', window.location.pathname + (query ? '?' + query : '') + window.location.hash); } catch (e) {}
-        try { if (storage()) storage().setItem(storeKey, JSON.stringify(priv)); } catch (e) {}
-      }
-    };
-  };
-
-  // The footer under a list: "Showing 1 to 50 of 308 students", Rows per page (25, 50, 100) and page buttons.
-  // el: the footer element (it is filled here). opts: { noun: ['student', 'students'], label: 'Student list pages',
-  // pageSize: 50, emptyText: 'No students to show', onChange: function (page, pageSize, focusRole) }.
-  // The summary keeps the id "paginationSummary", so a page can still write a short message there.
-  PP.pager = function (el, opts) {
-    if (typeof el === 'string') el = document.getElementById(el);
-    opts = opts || {};
-    var sizes = [25, 50, 100];
-    var noun = opts.noun || ['item', 'items'];
-    var cur = { page: 1, pageSize: sizes.indexOf(opts.pageSize) !== -1 ? opts.pageSize : 50, totalPages: 1 };
-    el.classList.add('pp-pager-bar');
-    el.innerHTML = '<p class="pp-pager-summary" id="paginationSummary" aria-live="polite"></p>' +
-      '<div class="pp-pager-right"><label class="pp-pager-size">Rows per page <select class="pp-filter-select">' +
-      sizes.map(function (n) { return '<option value="' + n + '">' + n + '</option>'; }).join('') +
-      '</select></label><nav class="pp-pager" aria-label="' + esc(opts.label || 'Pages') + '"></nav></div>';
-    var summary = el.querySelector('.pp-pager-summary');
-    var select = el.querySelector('select');
-    var nav = el.querySelector('nav');
-    select.value = String(cur.pageSize);
-
-    function change(page, focusRole) { if (opts.onChange) opts.onChange(page, cur.pageSize, focusRole); }
-    // A new page size keeps the first row you were looking at on screen.
-    select.addEventListener('change', function () {
-      var size = Number(select.value);
-      var page = Math.floor((cur.page - 1) * cur.pageSize / size) + 1;
-      cur.pageSize = size;
-      change(page, null);
-    });
-    nav.addEventListener('click', function (e) {
-      var btn = e.target.closest('button[data-page]');
-      if (!btn || btn.disabled || Number(btn.dataset.page) === cur.page) return;
-      change(Number(btn.dataset.page), btn.dataset.role);
-    });
-
-    // First, last, and up to two pages either side of the current one, with "..." for the gaps. Hidden for one page.
-    function buttons(page, totalPages) {
-      if (totalPages <= 1) return '';
-      var html = '<button type="button" class="pp-page-btn" data-role="prev" data-page="' + (page - 1) + '" aria-label="Previous page"' + (page <= 1 ? ' disabled' : '') + '>' +
-        '<img src="images/audit/icon-page-prev.svg" alt="" class="pp-page-arrow"></button>';
-      var previous = 0;
-      for (var p = 1; p <= totalPages; p++) {
-        if (p !== 1 && p !== totalPages && Math.abs(p - page) > 2) continue;
-        if (previous && p - previous > 1) html += '<span class="pp-page-gap" aria-hidden="true">...</span>';
-        html += '<button type="button" class="pp-page-btn pp-page-num" data-role="page" data-page="' + p + '" aria-label="Page ' + p + '"' + (p === page ? ' aria-current="page"' : '') + '>' + p + '</button>';
-        previous = p;
-      }
-      html += '<button type="button" class="pp-page-btn" data-role="next" data-page="' + (page + 1) + '" aria-label="Next page"' + (page >= totalPages ? ' disabled' : '') + '>' +
-        '<img src="images/audit/icon-page-next.svg" alt="" class="pp-page-arrow"></button>';
-      return html + '<span class="pp-page-of">Page ' + page + ' of ' + totalPages + '</span>';
-    }
-
-    return {
-      // data: the list answer's { page, pageSize, total, totalPages, startIndex } and `shown` (rows on this page).
-      render: function (data) {
-        cur.page = data.page;
-        cur.totalPages = data.totalPages;
-        if (data.pageSize && sizes.indexOf(data.pageSize) !== -1) { cur.pageSize = data.pageSize; select.value = String(data.pageSize); }
-        if (!data.total) {
-          summary.textContent = opts.emptyText || 'No ' + noun[1] + ' to show';
-        } else {
-          var first = data.startIndex, last = data.startIndex + data.shown - 1;
-          summary.innerHTML = 'Showing <b>' + first.toLocaleString() + ' to ' + last.toLocaleString() + '</b> of <b>' +
-            Number(data.total).toLocaleString() + '</b> ' + (data.total === 1 ? noun[0] : noun[1]);
-        }
-        nav.innerHTML = buttons(data.page, data.totalPages);
-      },
-      loading: function () { summary.innerHTML = PP.skeleton.line('220px'); },
-      clear: function () { summary.textContent = ''; nav.innerHTML = ''; },
-      // The pager is redrawn on every page turn, which drops keyboard focus: put it back on the same kind of button.
-      focus: function (role) {
-        if (!role) return;
-        var preferred = role === 'page' ? nav.querySelector('[aria-current="page"]') : nav.querySelector('[data-role="' + role + '"]');
-        var all = [preferred].concat(Array.prototype.slice.call(nav.querySelectorAll('button')));
-        for (var i = 0; i < all.length; i++) {
-          if (all[i] && !all[i].disabled && all[i].offsetParent !== null) { all[i].focus(); return; }
-        }
-      },
-      pageSize: function () { return cur.pageSize; }
-    };
+    }).finally(function () { if (timer) clearTimeout(timer); });
   };
 
   // A whole-page placeholder (heading, a chart and a text card) for pages that stay blank until their data arrives.
@@ -549,57 +378,6 @@
   // Stale-while-revalidate for data that rarely changes: render(data, fromCache) runs with the saved copy at once
   // (if any), then again with the fresh copy. Resolves with the fresh data; rejects if the server could not be reached
   // and nothing was cached.
-  // College colors are defined once, in css/components.css (--college-<code>). Badges and legends use them
-  // through data-college; charts read the same variables here. A college not listed there gets its grey.
-  PP.college = {
-    key: function (code) { return String(code == null ? '' : code).toLowerCase().replace(/[^a-z0-9]/g, ''); },
-    color: function (code) {
-      var css = getComputedStyle(document.documentElement);
-      return css.getPropertyValue('--college-' + PP.college.key(code)).trim() || css.getPropertyValue('--college-other').trim() || '#94a3b8';
-    },
-    badge: function (code) {
-      var span = document.createElement('span');
-      span.className = 'college-badge';
-      span.dataset.college = String(code == null ? '' : code);
-      span.textContent = String(code == null ? '' : code);
-      return span.outerHTML;
-    },
-    // colleges: codes, or { code, name } objects (the name shows on hover).
-    legend: function (el, colleges) {
-      if (!el) return;
-      el.replaceChildren.apply(el, colleges.map(function (c) {
-        var item = document.createElement('span');
-        item.className = 'college-legend-item';
-        item.dataset.college = typeof c === 'string' ? c : c.code;
-        item.textContent = item.dataset.college;
-        if (typeof c !== 'string' && c.name) item.title = c.name;
-        return item;
-      }));
-    }
-  };
-
-  // The signed-in person as this tab last saw them (the profile cache), or null: lets the sidebar draw the right state at
-  // once. The fresh answer follows as the 'pp:session' event.
-  PP.cachedUser = function () {
-    var p = readProfile();
-    return p ? p.user : null;
-  };
-
-  // Whether the signed-in staff member holds at least `level` ('limited' = View Only, 'full') on `feature` in the
-  // permission table (user.access from api/session.php). Only for showing or hiding buttons: the server checks every request.
-  PP.may = function (user, feature, level) {
-    var rank = { none: 0, limited: 1, full: 2 };
-    var have = user && user.access ? user.access[feature] : null;
-    return (rank[have] || 0) >= (rank[level || 'limited'] || 1);
-  };
-
-  // One status badge on every page (css/components.css .pp-badge). The color says what kind of status it is, so the
-  // same word is never two colors: green done or OK, amber waiting or needs a look, blue not started or next step,
-  // red a problem, gray off, closed or none. Returns HTML; the label is escaped. opts.large: the bigger student size.
-  PP.badge = function (label, tone, opts) {
-    return '<span class="pp-badge pp-badge-' + (tone || 'gray') + (opts && opts.large ? ' pp-badge-lg' : '') + '">' + esc(label) + '</span>';
-  };
-
   PP.swr = function (url, render, ttlMs) {
     var s = storage(), key = SWR_PREFIX + url, shown = false;
     try {
@@ -635,51 +413,25 @@
     setTimeout(function () { toast.remove(); }, 5000);
   };
 
-  // The one pop-up for confirming an action (css/components.css .pp-dialog). Resolves true for the action, false
-  // for Cancel, the x or Escape. opts: { title, okLabel, danger }. title is the short question ("Delete this
-  // question?"), message the details under it, okLabel what the button does ("Delete", never "Confirm").
-  // danger: a red button for delete, deactivate and remove, with keyboard focus starting on Cancel.
-  // A click on the dark background does nothing (same rule as the Filters panel). Tab stays inside the pop-up,
-  // and focus goes back to whatever opened it.
-  var dialogSeq = 0;
-  // Keeps Tab inside a pop-up: from the last control back to the first, and the other way round.
-  function keepTabInside(e, box) {
-    var items = Array.prototype.filter.call(
-      box.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
-      function (el) { return !el.disabled && el.offsetParent !== null; });
-    if (!items.length) return;
-    var first = items[0], last = items[items.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-    else if (!box.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
-  }
-  var X_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>';
   PP.confirm = function (message, opts) {
     opts = opts || {};
     return new Promise(function (resolve) {
-      var opener = document.activeElement;
-      var id = 'ppDialog' + (++dialogSeq);
       var modal = document.createElement('div');
       modal.className = 'modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4';
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
       modal.innerHTML =
-        '<div class="modal-card pp-dialog" role="' + (opts.danger ? 'alertdialog' : 'dialog') + '" aria-modal="true" aria-labelledby="' + id + '-t" aria-describedby="' + id + '-b">' +
-          '<div class="pp-dialog-head"><h2 class="pp-dialog-title" id="' + id + '-t"></h2>' +
-            '<button type="button" data-cancel class="pp-dialog-x" aria-label="Close">' + X_ICON + '</button></div>' +
-          '<p class="pp-dialog-body" id="' + id + '-b"></p>' +
-          '<div class="pp-dialog-foot">' +
-            '<button type="button" data-cancel class="pp-btn pp-btn-secondary">Cancel</button>' +
-            '<button type="button" data-ok class="pp-btn ' + (opts.danger ? 'pp-btn-danger btn-danger' : 'pp-btn-primary') + '"></button>' +
+        '<div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">' +
+          '<p class="text-sm text-gray-700" style="white-space:pre-line"></p>' +
+          '<div class="flex justify-end gap-2 pt-1">' +
+            '<button type="button" data-cancel class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>' +
+            '<button type="button" data-ok class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90' + (opts.danger ? ' btn-danger' : '') + '"></button>' +
           '</div>' +
         '</div>';
-      var title = modal.querySelector('.pp-dialog-title');
-      var body = modal.querySelector('.pp-dialog-body');
-      // Without a title (older calls), the message is the question itself and is shown as the title.
-      title.textContent = opts.title || message;
-      if (opts.title && message) body.textContent = message;
-      else { body.remove(); modal.querySelector('.pp-dialog').removeAttribute('aria-describedby'); }
+      modal.querySelector('p').textContent = message;
       var okBtn = modal.querySelector('[data-ok]');
-      var cancelBtn = modal.querySelector('.pp-dialog-foot [data-cancel]');
-      okBtn.textContent = opts.okLabel || 'OK';
+      var cancelBtn = modal.querySelector('[data-cancel]');
+      okBtn.textContent = opts.okLabel || 'Confirm';
       document.body.appendChild(modal);
       modal.classList.remove('hidden');
       setTimeout(function () { modal.classList.add('is-open'); (opts.danger ? cancelBtn : okBtn).focus(); }, 16);
@@ -688,72 +440,13 @@
         document.removeEventListener('keydown', onKey, true);
         modal.classList.remove('is-open');
         setTimeout(function () { modal.remove(); }, 260);
-        if (opener && opener.focus && document.contains(opener)) opener.focus();
         resolve(result);
       }
-      function onKey(e) {
-        if (e.key === 'Escape') { e.stopPropagation(); done(false); return; }
-        if (e.key === 'Tab') keepTabInside(e, modal);
-      }
+      function onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); done(false); } }
       document.addEventListener('keydown', onKey, true);
       okBtn.addEventListener('click', function () { done(true); });
-      modal.querySelectorAll('[data-cancel]').forEach(function (b) { b.addEventListener('click', function () { done(false); }); });
-    });
-  };
-
-  // A page's own pop-up (a form) with the same behaviour as PP.confirm. el: the .modal-backdrop element, holding a
-  // .pp-dialog card with a .pp-dialog-title. Buttons marked data-dialog-close (the x, Cancel) close it, so does
-  // Escape; a click on the dark background does nothing. Tab stays inside, and focus goes back to whatever opened it.
-  // opts.onClose: runs after it closes (any way). open(focusEl): focus that element, else the first field.
-  PP.dialog = function (el, opts) {
-    if (typeof el === 'string') el = document.getElementById(el);
-    opts = opts || {};
-    var card = el.querySelector('.pp-dialog');
-    var title = el.querySelector('.pp-dialog-title');
-    if (title && !title.id) title.id = el.id + 'Title';
-    card.setAttribute('role', 'dialog');
-    card.setAttribute('aria-modal', 'true');
-    if (title) card.setAttribute('aria-labelledby', title.id);
-    var opener = null, openNow = false;
-    function onKey(e) {
-      if (e.key === 'Escape') { e.stopPropagation(); api.close(); return; }
-      if (e.key === 'Tab') keepTabInside(e, card);
-    }
-    var api = {
-      open: function (focusEl) {
-        opener = document.activeElement;
-        openNow = true;
-        el.classList.remove('hidden');
-        document.addEventListener('keydown', onKey, true);
-        setTimeout(function () {
-          el.classList.add('is-open');
-          var target = focusEl || card.querySelector('input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])') ||
-            card.querySelector('.pp-dialog-foot button:not([disabled])');
-          if (target) target.focus();
-        }, 16);
-      },
-      close: function () {
-        if (!openNow) return;
-        openNow = false;
-        document.removeEventListener('keydown', onKey, true);
-        el.classList.remove('is-open');
-        setTimeout(function () { el.classList.add('hidden'); }, 260);
-        if (opener && opener.focus && document.contains(opener)) opener.focus();
-        if (opts.onClose) opts.onClose();
-      },
-      isOpen: function () { return openNow; }
-    };
-    el.querySelectorAll('[data-dialog-close]').forEach(function (b) { b.addEventListener('click', api.close); });
-    return api;
-  };
-
-  // Log out, the same on every page: asks first, then signs out and goes to the page's sign-in page.
-  // beforeSignOut (optional) runs once the user says yes, before signing out (e.g. clearing a tab-only copy).
-  PP.logout = function (signInPage, beforeSignOut) {
-    PP.confirm('You will need to sign in again to continue.', { title: 'Log out?', okLabel: 'Log out' }).then(function (ok) {
-      if (!ok) return;
-      if (beforeSignOut) beforeSignOut();
-      fetch('api/logout.php', { method: 'POST' }).finally(function () { window.location.href = signInPage; });
+      cancelBtn.addEventListener('click', function () { done(false); });
+      modal.addEventListener('click', function (e) { if (e.target === modal) done(false); });
     });
   };
 
@@ -812,16 +505,7 @@
       if (f.placeholder) f.setAttribute('aria-label', f.placeholder.replace(/…|\.\.\.$/, '').trim());
     }
   }
-  // router.php sent this person here from a page closed to them (?denied=1): say so once, then drop it from the address.
-  function noteDenied() {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('denied') !== '1') return;
-    params.delete('denied');
-    var query = params.toString();
-    try { window.history.replaceState(window.history.state, '', window.location.pathname + (query ? '?' + query : '') + window.location.hash); } catch (e) {}
-    PP.toast('You do not have access to that page. Ask the Head of Guidance if you need it.', true);
-  }
-  function onReady() { upgradePlaceholders(); markCurrentNavLink(); nameIconButtons(); linkLabels(); noteDenied(); }
+  function onReady() { upgradePlaceholders(); markCurrentNavLink(); nameIconButtons(); linkLabels(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
   else onReady();
 })();

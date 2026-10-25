@@ -21,28 +21,6 @@ class LoginLock
     /** Minutes for the first and second lock in a day; later ones use the admin's lockout length. */
     private const STEPS = [1, 5];
 
-    /** The limits the administrator can set (Security Configuration): wrong passwords before a lock, and the lock length. */
-    public const ATTEMPTS_MIN = 3;
-    public const ATTEMPTS_MAX = 10;
-    public const MINUTES_MIN = 15;
-    public const MINUTES_MAX = 1440;
-
-    /**
-     * The lockout policy from the saved settings (security_policies lockout.*), inside the limits above. Always on (secure
-     * by default): the old lockout.enabled setting is no longer read. Defaults: 5 wrong passwords, 15 minutes.
-     *
-     * @param array<string,string> $rows key => value
-     * @return array{enabled:bool, maxAttempts:int, lockoutMinutes:int}
-     */
-    public static function policy(array $rows): array
-    {
-        return [
-            'enabled' => true,
-            'maxAttempts' => max(self::ATTEMPTS_MIN, min(self::ATTEMPTS_MAX, (int) ($rows['lockout.maxAttempts'] ?? 5))),
-            'lockoutMinutes' => max(self::MINUTES_MIN, min(self::MINUTES_MAX, (int) ($rows['lockout.lockoutMinutes'] ?? 15))),
-        ];
-    }
-
     /** Lock length for the $nth lock (1-based) within a day, never above the admin's $ceiling. */
     public static function minutesFor(int $nth, int $ceiling): int
     {

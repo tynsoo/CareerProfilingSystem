@@ -7,7 +7,7 @@ require_once __DIR__ . '/../lib/AuditRetention.php';
 // than the retention period are deleted, at most once a day (modules/AuditLog/lib/AuditRetention.php). The person only
 // starts the check; the setting decides what goes. A POST, so the CSRF check in _bootstrap.php applies.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user = Rbac::requireRole('admin'); // the Audit Log is the Head of Guidance's (Rbac::ADMIN_PAGES)
+    $user = Rbac::requireAccess('rac', 'full');
     $name = trim((string) ($user['displayName'] ?? '')) !== '' ? $user['displayName'] : 'user #' . (int) $user['id'];
     jsonResponse(['success' => true, 'deleted' => AuditRetention::runIfDue(Database::get(), $name)]);
 }

@@ -7,7 +7,6 @@
 <title>Counseling Requests — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
-<link rel="stylesheet" href="css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +38,7 @@
     <div class="border-t border-white/5 pt-[25px] pb-6">
       <a href="staff-login" id="sidebarLogout" class="flex items-center gap-3.5 h-[50px] pl-6 rounded-r-lg border-l-[3px] border-transparent text-white/85 text-sm hover:bg-white/5">
         <svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        Log out
+        Logout
       </a>
     </div>
 
@@ -110,24 +109,35 @@
       </div>
 
       <div class="flex items-center gap-2 mb-4" id="viewTabs">
-        <button type="button" data-view="counseling" aria-pressed="false" class="view-tab pp-filter-tab">Counseling Requests</button>
-        <button type="button" data-view="retakes" aria-pressed="false" class="view-tab pp-filter-tab">Retake Requests <span id="retakeCount"></span></button>
+        <button type="button" data-view="counseling" class="view-tab px-4 py-2 rounded-md text-sm font-medium border">Counseling Requests</button>
+        <button type="button" data-view="retakes" class="view-tab px-4 py-2 rounded-md text-sm font-medium border">Retake Requests <span id="retakeCount"></span></button>
       </div>
 
       <div class="flex flex-col gap-4" id="requestsList">
-        <p class="text-sm text-slate-500 text-center py-8">Loading…</p>
+        <p class="text-sm text-slate-400 text-center py-8">Loading…</p>
       </div>
 
 
     </main>
 
-      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-400">
         <a href="terms" class="hover:text-gray-600 hover:underline">Terms of Use</a>
         <span>&middot;</span>
         <a href="privacy" class="hover:text-gray-600 hover:underline">Data Privacy</a>
         <span>&middot;</span>
         <a href="accessibility" class="hover:text-gray-600 hover:underline">Accessibility</a>
       </footer>
+  </div>
+</div>
+
+<div id="logoutConfirmModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card bg-white rounded-xl shadow-lg w-full max-w-sm p-6 flex flex-col gap-4">
+    <h3 class="text-lg font-semibold text-black">Log Out?</h3>
+    <p class="text-sm text-gray-500">Are you sure you want to log out?</p>
+    <div class="flex justify-end gap-2 pt-1">
+      <button type="button" id="logoutCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+      <button type="button" id="logoutConfirmBtn" class="px-4 py-2 text-sm font-medium text-white bg-[#ed1c24] rounded-md hover:opacity-90">Log Out</button>
+    </div>
   </div>
 </div>
 
@@ -148,7 +158,25 @@
   document.getElementById('headerUserName').textContent = currentUser.displayName || currentUser.username;
   document.getElementById('headerUserRole').textContent = currentUser.positionLabel || roleLabels[currentUser.role] || currentUser.role;
 
-  document.getElementById('sidebarLogout').addEventListener('click', function(e) { e.preventDefault(); PP.logout('staff-login'); });
+  const logoutModal = document.getElementById('logoutConfirmModal');
+  function openLogoutModal(e) {
+    e.preventDefault();
+    logoutModal.classList.remove('hidden');
+    setTimeout(function() { logoutModal.classList.add('is-open'); }, 16);
+  }
+  function closeLogoutModal() {
+    logoutModal.classList.remove('is-open');
+    setTimeout(function() { logoutModal.classList.add('hidden'); }, 260);
+  }
+  function performLogout() {
+    fetch('api/logout.php', { method: 'POST' }).finally(function() {
+      window.location.href = 'staff-login';
+    });
+  }
+  document.getElementById('sidebarLogout').addEventListener('click', openLogoutModal);
+  document.getElementById('logoutCancelBtn').addEventListener('click', closeLogoutModal);
+  document.getElementById('logoutConfirmBtn').addEventListener('click', performLogout);
+  logoutModal.addEventListener('click', function(e) { if (e.target.id === 'logoutConfirmModal') closeLogoutModal(); });
 
   (function() {
     const sidebar = document.getElementById('sidebar');
@@ -183,7 +211,7 @@
   let canInvite = currentUser.role === 'admin';
   try {
     const inviteCfg = await (await fetch('api/security-config.php')).json();
-    canInvite = ((inviteCfg.rbac && inviteCfg.rbac.counselingStatus && inviteCfg.rbac.counselingStatus[currentUser.rbacRole || currentUser.role]) || 'none') === 'full' && (currentUser.rbacRole || currentUser.role) !== 'facilitator'; // Facilitators never invite or decide retakes (DFD process 4.0)
+    canInvite = ((inviteCfg.rbac && inviteCfg.rbac.counselingNotes && inviteCfg.rbac.counselingNotes[currentUser.rbacRole || currentUser.role]) || 'none') === 'full';
   } catch (e) {}
   async function sendCounselingInvite(studentId) {
     const res = await fetch('api/counseling-invite.php', {
@@ -204,23 +232,13 @@
     setTimeout(function() { el.remove(); }, 6000);
   }
 
-  // The view (?tab=retakes) and each view's status tab live in the page address, so Reload and Back show the same
-  // list (PP.listState in js/ui-state.js). ?tab=retakes keeps working for links from other pages.
-  const listState = PP.listState({ tab: 'counseling', status: 'open', retake: 'pending' }, []);
-  const saved = listState.read();
-  let view = saved.tab === 'retakes' ? 'retakes' : 'counseling';
-  let activeStatus = ['open', 'resolved', 'all'].includes(saved.status) ? saved.status : 'open';
-  let retakeStatus = ['pending', 'approved', 'declined', 'completed', 'all'].includes(saved.retake) ? saved.retake : 'pending';
-  function saveState() { listState.save({ tab: view, status: activeStatus, retake: retakeStatus }); }
-  const getList = PP.latestJson(); // a new tab click cancels the list still on its way
+  let activeStatus = 'open';
 
   function renderCard(r) {
-    // Badge colors by meaning (PP.badge in js/ui-state.js): an open request is waiting (amber), not an error.
     const statusBadge = r.status === 'open'
-      ? PP.badge('Open — #' + r.queueNumber + ' in queue', 'amber')
-      : PP.badge('Resolved', 'green');
-    // Resolving needs Full on Update counseling status (canInvite holds that level, see above).
-    const resolveBtn = r.status === 'open' && canInvite
+      ? '<span class="bg-red-50 border border-red-100 text-[#ed1c24] text-xs font-semibold px-2.5 py-1 rounded-full">Open &mdash; #' + r.queueNumber + ' in queue</span>'
+      : '<span class="bg-green-50 border border-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">Resolved</span>';
+    const resolveBtn = r.status === 'open'
       ? '<button type="button" class="resolve-btn shrink-0 bg-[#ed1c24] text-white text-sm font-semibold rounded-md px-4 py-2 hover:opacity-90" data-id="' + r.id + '">Mark Resolved</button>'
       : '';
     const inviteBtn = canInvite && r.studentId
@@ -232,23 +250,26 @@
         '<p class="text-xs text-slate-500 mt-0.5">' + escapeHtml(r.name) + (r.strand ? ' (' + escapeHtml(r.strand) + (r.section ? ' ' + escapeHtml(r.section) : '') + ')' : '') + ' &middot; ' + formatDate(r.sentAt) + '</p></div>' +
         statusBadge +
       '</div>' +
-      (r.message === null ? '<p class="text-sm text-slate-500 italic">Not shown to you: your access to counseling history is View Only.</p>' : '<p class="text-sm text-slate-700 leading-relaxed">' + escapeHtml(r.message) + '</p>') +
+      '<p class="text-sm text-slate-700 leading-relaxed">' + escapeHtml(r.message) + '</p>' +
       ((inviteBtn || resolveBtn) ? '<div class="flex justify-end gap-2">' + inviteBtn + resolveBtn + '</div>' : '') +
     '</div>';
   }
 
   // ---- Two views: students' messages to the Guidance Office, and requests to retake the assessment.
-  // Tabs use the shared filter-tab style (css/components.css); aria-pressed marks the chosen one.
+  let view = new URLSearchParams(window.location.search).get('tab') === 'retakes' ? 'retakes' : 'counseling';
+  let retakeStatus = 'pending';
+  const TAB_ON = 'bg-[#ed1c24] border-[#ed1c24] text-white';
+  const TAB_OFF = 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50';
   function renderTabs(counts) {
     document.querySelectorAll('.view-tab').forEach(btn => {
-      btn.setAttribute('aria-pressed', btn.dataset.view === view ? 'true' : 'false');
+      btn.className = 'view-tab px-4 py-2 rounded-md text-sm font-medium border ' + (btn.dataset.view === view ? TAB_ON : TAB_OFF);
     });
     const tabs = view === 'retakes'
       ? [['pending', 'Pending' + (counts && counts.pending !== undefined ? ' (' + counts.pending + ')' : '')], ['approved', 'Approved'], ['declined', 'Declined'], ['completed', 'Retaken'], ['all', 'All']]
       : [['open', 'Open' + (counts && counts.open !== undefined ? ' (' + counts.open + ')' : '')], ['resolved', 'Resolved'], ['all', 'All']];
     const active = view === 'retakes' ? retakeStatus : activeStatus;
     document.getElementById('statusTabs').innerHTML = tabs.map(function(tb) {
-      return '<button type="button" data-status="' + tb[0] + '" aria-pressed="' + (tb[0] === active ? 'true' : 'false') + '" class="status-tab pp-filter-tab">' + tb[1] + '</button>';
+      return '<button type="button" data-status="' + tb[0] + '" class="status-tab px-4 py-2 rounded-md text-sm font-medium border ' + (tb[0] === active ? TAB_ON : TAB_OFF) + '">' + tb[1] + '</button>';
     }).join('');
     document.querySelectorAll('.status-tab').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -263,10 +284,10 @@
 
   function renderRetakeCard(r) {
     const badge = {
-      pending: PP.badge('Waiting for an answer', 'amber'),
-      approved: PP.badge('Approved', 'green'),
-      declined: PP.badge('Declined', 'gray'),
-      completed: PP.badge('Retaken', 'green')
+      pending: '<span class="bg-amber-50 border border-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full">Waiting for an answer</span>',
+      approved: '<span class="bg-green-50 border border-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">Approved</span>',
+      declined: '<span class="bg-slate-100 border border-slate-200 text-slate-600 text-xs font-semibold px-2.5 py-1 rounded-full">Declined</span>',
+      completed: '<span class="bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full">Retaken</span>'
     }[r.status] || '';
     const answered = r.status !== 'pending' && r.decidedAt
       ? '<p class="text-xs text-slate-500">Answered ' + formatDate(r.decidedAt) + (r.note ? ' &middot; Note: ' + escapeHtml(r.note) : '') + '</p>'
@@ -285,7 +306,7 @@
         '<p class="text-xs text-slate-500 mt-0.5">' + escapeHtml(r.strand) + (r.section ? ' ' + escapeHtml(r.section) : '') + ' &middot; Asked ' + formatDate(r.requestedAt) + ' &middot; Result on record: attempt #' + r.attemptNumber + '</p></div>' +
         badge +
       '</div>' +
-      (r.reason === null ? '<p class="text-sm text-slate-500 italic">Not shown to you: your access to counseling history is View Only.</p>' : '<p class="text-sm text-slate-700 leading-relaxed">' + escapeHtml(r.reason) + '</p>') +
+      '<p class="text-sm text-slate-700 leading-relaxed">' + escapeHtml(r.reason) + '</p>' +
       answered + actions +
     '</div>';
   }
@@ -295,11 +316,10 @@
     PP.showSkeleton(list, PP.skeleton.cards(3));
     let data;
     try {
-      data = await getList('api/retake-requests.php?status=' + encodeURIComponent(retakeStatus));
+      data = await PP.fetchJson('api/retake-requests.php?status=' + encodeURIComponent(retakeStatus));
     } catch (e) {
-      if (e.cancelled) return; // a newer tab click replaced this one
       if (e.status === 403) {
-        list.innerHTML = '<p class="text-sm text-slate-500 text-center py-8">You do not have access to retake requests.</p>';
+        list.innerHTML = '<p class="text-sm text-slate-400 text-center py-8">You do not have access to retake requests.</p>';
         renderTabs({});
       } else {
         PP.showError(list, e.message, loadRetakes);
@@ -311,11 +331,11 @@
     renderTabs({ pending: data.pendingCount });
     list.innerHTML = data.requests.length
       ? data.requests.map(renderRetakeCard).join('')
-      : '<p class="text-sm text-slate-500 text-center py-8">No requests in this view.</p>';
+      : '<p class="text-sm text-slate-400 text-center py-8">No requests in this view.</p>';
     list.querySelectorAll('.retake-decide').forEach(btn => {
       btn.addEventListener('click', async function() {
         const approve = btn.dataset.decision === 'approve';
-        if (!(await PP.confirm(approve ? 'The student can retake the assessment once. Their earlier result stays on record.' : '', { title: approve ? 'Approve this retake?' : 'Decline this retake request?', okLabel: approve ? 'Approve' : 'Decline' }))) return;
+        if (!(await PP.confirm(approve ? 'Approve this retake? The student can retake the assessment once. Their earlier result stays on record.' : 'Decline this retake request?', { okLabel: approve ? 'Approve' : 'Decline' }))) return;
         const note = (list.querySelector('.retake-note[data-id="' + btn.dataset.id + '"]') || {}).value || '';
         btn.disabled = true;
         try {
@@ -336,16 +356,14 @@
   }
 
   async function load() {
-    saveState();
     if (view === 'retakes') { await loadRetakes(); return; }
     const list = document.getElementById('requestsList');
     PP.showSkeleton(list, PP.skeleton.cards(3));
 
     let data;
     try {
-      data = await getList('api/help-requests.php?status=' + encodeURIComponent(activeStatus));
+      data = await PP.fetchJson('api/help-requests.php?status=' + encodeURIComponent(activeStatus));
     } catch (e) {
-      if (e.cancelled) return; // a newer tab click replaced this one
       PP.showError(list, e.message, load);
       return;
     }
@@ -355,11 +373,11 @@
 
     list.innerHTML = data.requests.length
       ? data.requests.map(renderCard).join('')
-      : '<p class="text-sm text-slate-500 text-center py-8">No requests in this view.</p>';
+      : '<p class="text-sm text-slate-400 text-center py-8">No requests in this view.</p>';
 
     list.querySelectorAll('.invite-btn').forEach(btn => {
       btn.addEventListener('click', async function() {
-        if (!(await PP.confirm(btn.dataset.name + ' will be sent the CGC booking link by email and in their notifications.', { title: 'Invite to a counseling session?', okLabel: 'Send invitation' }))) return;
+        if (!(await PP.confirm('Invite ' + btn.dataset.name + ' to a counseling session? They will be sent the CGC booking link by email and in their notifications.'))) return;
         btn.disabled = true;
         try {
           const result = await sendCounselingInvite(btn.dataset.studentId);

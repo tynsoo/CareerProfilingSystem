@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../CareerProfiling/lib/QuestionBank.php';
 require_once __DIR__ . '/../lib/AuditChange.php';
 require_once __DIR__ . '/../lib/AuditRetention.php';
 
-$user = Rbac::requireRole('admin'); // the Audit Log is the Head of Guidance's (Rbac::ADMIN_PAGES)
+$user = Rbac::requireAccess('rac', 'full'); // audit visibility lives alongside the other security/system admin tools
 // Full IP addresses are for the administrator (security incidents); other staff see them masked (maskIp()).
 $seeFullIp = $user['role'] === 'admin';
 $showIp = fn(?string $ip): ?string => $seeFullIp ? $ip : maskIp($ip);
@@ -93,9 +93,7 @@ $actionLabels = [
     'update_student_section' => 'Changed student section',
     'reset_student_assessment' => 'Reset student assessment',
     'unlock_account' => 'Unlocked account',
-    'export_student_list' => 'Exported student list (CSV)',
-    'export_student_list_pdf' => 'Exported student list (PDF)',
-    'export_student_list_pdf_failed' => 'Student list PDF export failed',
+    'export_student_list' => 'Exported student list',
     'export_student_roster' => 'Exported student roster',
     'upload_roster' => 'Uploaded class roster',
     'create_section' => 'Added section',
@@ -106,6 +104,7 @@ $actionLabels = [
     'update_program' => 'Edited program',
     'activate_program' => 'Activated program',
     'deactivate_program' => 'Deactivated program',
+    'recompute_recommendations' => 'Recomputed recommendations',
     // Assessment
     'submit_assessment' => 'Submitted RIASEC assessment',
     'assessment_resubmit_denied' => 'Tried to resubmit assessment',
@@ -142,7 +141,6 @@ $actionLabels = [
     'add_counseling_note' => 'Added counseling note',
     'invite_to_counseling' => 'Invited to counseling',
     'send_counseling_link' => 'Sent counseling booking link to self',
-    'rotate_encryption_key' => 'Changed the encryption key',
     'send_counseling_link_failed' => 'Counseling booking link not sent',
     'invite_unregistered_students' => 'Invited unregistered students',
     'send_student_reminders' => 'Sent student reminders',
@@ -293,7 +291,7 @@ function readableDetail(string $detail): string
         'enabled' => 'Status', 'minLength' => 'Minimum password length', 'requireUpper' => 'Needs an uppercase letter',
         'requireLower' => 'Needs a lowercase letter', 'requireNumber' => 'Needs a number', 'requireSymbol' => 'Needs a symbol',
         'maxAttempts' => 'Failed attempts before lockout', 'lockoutMinutes' => 'Lockout length', 'retentionDays' => 'Log retention',
-        'twoFactor' => 'Email verification for password changes', 'sessionTimeoutEnabled' => 'Session timeout', 'timeoutMinutes' => 'Timeout length',
+        'twoFactor' => 'Two-step sign-in', 'sessionTimeoutEnabled' => 'Session timeout', 'timeoutMinutes' => 'Timeout length',
     ];
     $units = ['lockoutMinutes' => 'minute', 'timeoutMinutes' => 'minute', 'retentionDays' => 'day'];
     $switches = ['enabled', 'twoFactor', 'sessionTimeoutEnabled'];   // On/Off; other yes/no settings say Yes/No
