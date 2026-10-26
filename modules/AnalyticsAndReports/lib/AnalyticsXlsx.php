@@ -227,7 +227,7 @@ class AnalyticsXlsx
                 ['Completed the RIASEC assessment', $assessed, (float) $data['completion']['rate']],
                 ['Not yet completed the assessment', $notAssessed, $pct($notAssessed, $expected)],
                 ['Completed the Career Electives Worksheet', (int) $data['worksheet']['count'], (float) $data['worksheet']['rate']],
-                ['Program match at or above the similarity level (cosine similarity ' . number_format((float) $data['confidence']['threshold'], 2) . ' or higher)', (int) $data['confidence']['count'], (float) $data['confidence']['rate']],
+                ['Program match at or above the similarity level (cosine similarity ' . number_format((float) $data['confidence']['threshold'], 3) . ' or higher)', (int) $data['confidence']['count'], (float) $data['confidence']['rate']],
             ],
             'note' => 'Students expected = registered students plus students on the uploaded class roster who have not registered yet. Every percent in this table is out of that number.',
         ];

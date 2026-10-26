@@ -406,7 +406,7 @@
     document.getElementById('cardCounseling').textContent = data.summary.counseling;
     document.getElementById('flaggedCount').textContent = data.summary.needsReview;
     document.getElementById('flaggedHint').textContent =
-      'Students are flagged when their best match is below a Cosine Similarity of ' + Number(data.threshold).toFixed(2) + '.';
+      'Students are flagged when their best match is below a Cosine Similarity of ' + Number(data.threshold).toFixed(3) + '.';
 
     flaggedTableBody.innerHTML = data.rows.length
       ? data.rows.map(renderRow).join('')

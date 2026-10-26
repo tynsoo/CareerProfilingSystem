@@ -82,8 +82,7 @@ function priorityFor(string $reason, ?float $topScore, float $threshold): string
     return 'Low';
 }
 
-$thresholdRow = $pdo->query("SELECT value FROM security_policies WHERE key = 'monitoring.lowConfidenceThreshold'")->fetchColumn();
-$threshold = $thresholdRow !== false ? (float) $thresholdRow : 0.50;
+$threshold = MonitoringLevel::get($pdo);
 
 /** @return array{0: array, 1: array} [rows filtered by search+limit, all rows unfiltered] */
 function applySearchAndLimit(array $rows, ?string $search, ?int $limit): array

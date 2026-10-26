@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../Encryption/lib/Crypto.php';
 require_once __DIR__ . '/CBFEngine.php';
 require_once __DIR__ . '/RecommendationPipeline.php';
+require_once __DIR__ . '/../../Monitoring/lib/MonitoringLevel.php';
 
 /**
  * Loads the inputs of the CBF engine from the existing tables, so that
@@ -150,9 +151,9 @@ class CBFData
         ]);
         $recommendationId = (int) $recInsert->fetchColumn();
 
-        $threshold = $pdo->query("SELECT value FROM security_policies WHERE key = 'monitoring.lowConfidenceThreshold'")->fetchColumn();
-        $threshold = $threshold !== false ? (float) $threshold : 0.50;
-        if ($topScore < $threshold) {
+        // Low similarity only: a mismatch ($result['status']) is saved above and never raises a flag.
+        // Compared at 4 decimals, the value top_score stores and Monitoring shows.
+        if (round($topScore, 4) < MonitoringLevel::get($pdo)) {
             $pendingCheck = $pdo->prepare(
                 "SELECT id, status FROM monitoring_flags WHERE student_id = ? AND reason = 'low_confidence' AND status IN ('pending', 'escalated')"
             );

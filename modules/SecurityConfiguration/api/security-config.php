@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../Authentication/lib/PasswordPolicy.php';
 require_once __DIR__ . '/../../Authentication/lib/LoginLock.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditChange.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditRetention.php';
+require_once __DIR__ . '/../../Monitoring/lib/MonitoringLevel.php';
 
 $user = Rbac::requireRole('admin', 'counselor');
 $pdo = Database::get();
@@ -78,6 +79,11 @@ function loadPolicies(PDO $pdo): array
             // Its switch is "Delete older logs automatically" (modules/AuditLog/lib/AuditRetention.php), off unless turned on.
             'retention' => [
                 'enabled' => $b(AuditRetention::ON_KEY, false), 'retentionDays' => AuditRetention::days($rows[AuditRetention::DAYS_KEY] ?? null),
+            ],
+            // Always on: the Cosine Similarity level below which a student is flagged on Monitoring (MonitoringLevel).
+            'flagging' => [
+                'enabled' => true, 'level' => MonitoringLevel::fromValue($rows[MonitoringLevel::KEY] ?? null),
+                'floor' => MonitoringLevel::FLOOR, 'default' => MonitoringLevel::DEFAULT,
             ],
         ],
         'settings' => [
@@ -279,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($type === 'policy') {
         $key = $body['key'] ?? '';
-        if (!in_array($key, ['password', 'lockout', 'retention'], true)) {
+        if (!in_array($key, ['password', 'lockout', 'retention', 'flagging'], true)) {
             jsonResponse(['success' => false, 'error' => 'Unknown policy.'], 400);
         }
 
@@ -313,6 +319,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $set('lockout.enabled', 'true');
             $set('lockout.maxAttempts', (string) $attempts);
             $set('lockout.lockoutMinutes', (string) $minutes);
+        } elseif ($key === 'flagging') {
+            // Always on; a level at or below the lowest possible score would flag nobody, so it is refused and nothing is saved.
+            $checked = MonitoringLevel::validate($body['level'] ?? null);
+            if ($checked['error'] !== null) {
+                jsonResponse(['success' => false, 'error' => $checked['error']], 400);
+            }
+            $set(MonitoringLevel::KEY, number_format($checked['level'], 3, '.', ''));
         } else {
             $enabled = !empty($body['enabled']) ? 'true' : 'false';
             $set(AuditRetention::ON_KEY, $enabled);
@@ -323,7 +336,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        $policyNames = ['password' => 'Password policy', 'lockout' => 'Account lockout', 'monitoring' => 'Login monitoring', 'retention' => 'Audit log retention'];
+        $policyNames = ['password' => 'Password policy', 'lockout' => 'Account lockout', 'monitoring' => 'Login monitoring', 'retention' => 'Audit log retention', 'flagging' => 'Low-similarity flag level'];
         $policyLabels = [
             'password' => [
                 'enabled' => 'Status', 'minLength' => 'Minimum password length', 'requireUpper' => 'Needs an uppercase letter',
@@ -332,6 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'lockout' => ['enabled' => 'Status', 'maxAttempts' => 'Failed attempts before lockout', 'lockoutMinutes' => 'Lockout length (minutes)'],
             'monitoring' => ['enabled' => 'Status'],
             'retention' => ['enabled' => 'Delete older logs automatically', 'retentionDays' => 'Keep entries for (days)'],
+            'flagging' => ['level' => 'Cosine Similarity level'],
         ];
         $fresh = loadPolicies($pdo);
         AuditLogger::log($user['id'], $user['role'], 'update_policy', 'security_policies', $key, AuditChange::detail(

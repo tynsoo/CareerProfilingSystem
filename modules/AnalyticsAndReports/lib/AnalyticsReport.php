@@ -10,6 +10,7 @@
  * already has.
  */
 require_once __DIR__ . '/../../StudentManagement/lib/Sections.php';
+require_once __DIR__ . '/../../Monitoring/lib/MonitoringLevel.php';
 require_once __DIR__ . '/../../../shared/lib/AcademicYear.php';
 
 class AnalyticsReport
@@ -84,8 +85,7 @@ class AnalyticsReport
             return $stmt->fetchColumn();
         })();
 
-        $thresholdRow = $pdo->query("SELECT value FROM security_policies WHERE key = 'monitoring.lowConfidenceThreshold'")->fetchColumn();
-        $threshold = $thresholdRow !== false ? (float) $thresholdRow : 0.50;
+        $threshold = MonitoringLevel::get($pdo);
 
         $latestRecScores = (function () use ($pdo, $hasFilter, $studentFilterClause) {
             $needsJoin = $hasFilter;

@@ -25,7 +25,9 @@ foreach (Rbac::DEFAULTS as $module => $defaults) {
 }
 
 // Matches DEFAULT_STATE.policies/settings, flattened to dot-notation keys,
-// plus the new monitoring.lowConfidenceThreshold used by the CBF monitoring flag.
+// plus monitoring.lowConfidenceThreshold, the level of the low-similarity monitoring flag (MonitoringLevel::DEFAULT;
+// db/migrate_monitoring_level.php moves an older database off the old 0.50).
+require_once __DIR__ . '/../modules/Monitoring/lib/MonitoringLevel.php';
 $policies = [
     'password.enabled'                   => 'true',
     'password.minLength'                 => '8',
@@ -38,7 +40,7 @@ $policies = [
     'lockout.lockoutMinutes'             => '15',
     'monitoring.enabled'                 => 'true',
     'monitoring.retentionDays'           => '365',
-    'monitoring.lowConfidenceThreshold'  => '0.50',
+    MonitoringLevel::KEY                 => (string) MonitoringLevel::DEFAULT,
     'twoFactor'                          => 'true',
     'sessionTimeoutEnabled'              => 'true',
     'timeoutMinutes'                     => '30',

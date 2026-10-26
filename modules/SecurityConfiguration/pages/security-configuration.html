@@ -708,12 +708,15 @@
       password: { title: 'Password Policy' },
       lockout: { title: 'Account Lockout' },
       // Its switch deletes old audit log entries (modules/AuditLog/lib/AuditRetention.php), so it is named for that.
-      retention: { title: 'Audit Log Retention', toggleLabel: 'Delete older logs automatically' }
+      retention: { title: 'Audit Log Retention', toggleLabel: 'Delete older logs automatically' },
+      // The level of the Monitoring flag (modules/Monitoring/lib/MonitoringLevel.php). A career mismatch never flags a student.
+      flagging: { title: 'Low-Similarity Flag' }
     };
     // Password rules and Account Lockout are always on (no switch; the server ignores an "off"); sign-in logging is
     // always on too, so it has no card. The note in the window says which rule can't be turned off.
-    const ALWAYS_ON = ['password', 'lockout'];
-    const ALWAYS_ON_TEXT = { password: "Password rules can't be turned off.", lockout: "Account lockout can't be turned off." };
+    const ALWAYS_ON = ['password', 'lockout', 'flagging'];
+    const ALWAYS_ON_TEXT = { password: "Password rules can't be turned off.", lockout: "Account lockout can't be turned off.",
+      flagging: "Students below the level are always listed on Monitoring." };
     // "Enforced" with a lock, in a neutral color: a rule that always applies, not a switch that happens to be on
     // (green is kept for real switches, like Audit Log Retention's "Auto-delete on").
     // Same badge as every status (css/components.css .pp-badge), with the lock in place of the dot.
@@ -735,12 +738,15 @@
           ? 'Deletes audit log entries older than ' + p.retentionDays + ' days, once a day when the Audit Log is opened.'
           : 'Keeps all audit log entries. When turned on, deletes entries older than ' + p.retentionDays + ' days.';
       }
+      if (key === 'flagging') {
+        return 'Flag a student on Monitoring when the best match is below a Cosine Similarity of ' + Number(p.level).toFixed(3) + '.';
+      }
       return 'Lock account after ' + p.maxAttempts + ' failed login attempts (' + p.lockoutMinutes + ' min lockout).';
     }
 
     function renderPolicyList() {
       const container = document.getElementById('policyListContainer');
-      const keys = ['password', 'lockout', 'retention'];
+      const keys = ['password', 'lockout', 'retention', 'flagging'];
       container.innerHTML = keys.map(function(key, idx) {
         const p = state.policies[key];
         // "Disabled" on retention could read as "logs not kept", so its badge says what the switch does.
@@ -801,6 +807,15 @@
           '<input type="number" id="fldRetentionDays" min="90" max="365" value="' + p.retentionDays + '" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-20 text-right"></div>' +
           '<p id="fldRetentionWarning" class="hidden text-xs text-red-600" role="alert"></p>';
       }
+      if (key === 'flagging') {
+        // Same rule as the server (MonitoringLevel::validate): above the lowest score any student can get, at most 1.000.
+        const lowest = Number(p.floor).toFixed(4);
+        return '<div class="flex items-center justify-between"><label for="fldFlagLevel" class="text-xs text-slate-600">Cosine Similarity level</label>' +
+          '<input type="number" id="fldFlagLevel" min="0.585" max="1" step="0.001" value="' + Number(p.level).toFixed(3) + '" aria-describedby="fldFlagLevelHint" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700 w-24 text-right"></div>' +
+          '<p id="fldFlagLevelHint" class="text-xs text-slate-500 -mt-3">From 0.585 to 1.000. No student can score below ' + lowest +
+          ', so a lower level would flag nobody. The default, ' + Number(p.default).toFixed(3) + ', flags about 1 in 10 students. ' +
+          'A career mismatch does not flag a student.</p>';
+      }
       return '';
     }
     // The warning shows while "Delete older logs automatically" is on in the window. Turning it on starts
@@ -860,6 +875,8 @@
       } else if (currentPolicyKey === 'retention') {
         body.enabled = draftPolicyEnabled;
         body.retentionDays = parseInt(document.getElementById('fldRetentionDays').value, 10) || 365;
+      } else if (currentPolicyKey === 'flagging') {
+        body.level = document.getElementById('fldFlagLevel').value.trim();
       }
 
       // A failed save keeps the window open and says so (read aloud: role="alert"), instead of closing as if it worked.
