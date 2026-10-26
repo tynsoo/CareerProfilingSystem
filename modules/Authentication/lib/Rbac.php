@@ -57,7 +57,9 @@ class Rbac
         'assessment-scheduling'   => ['examinations'],
         'monitoring'              => ['monitoring'],
         'announcements'           => ['announcements'],
-        'counseling-requests'     => ['counselingHistory', 'counselingStatus'],
+        // Opened by View counseling history only: Update counseling status alone would open an empty list (resolving and
+        // deciding need the requests in view); on its own it still invites from Student Information and Monitoring.
+        'counseling-requests'     => ['counselingHistory'],
         'staff-help-center'       => ['helpCenter'],
         'account-management'      => ['roster', 'staffAccounts'],
         'student-profile'         => ['studentInfo'],
@@ -130,6 +132,68 @@ class Rbac
      */
     public const FACILITATOR_NEVER = ['counselingStatus'];
 
+    /**
+     * A feature that only works together with another one (Tyn, 2026-10-26): it counts only while at least one of these
+     * is View Only or Full for the same role, otherwise it is No Access (effectiveLevels). Each pair is a place the
+     * feature lives: Send analytics report is a button on Analytics; account actions, notes and results are on the
+     * student list and profile; Assessment results also drive the dashboard's Course Match pie; Export student results
+     * also makes the Analytics Report PDF. The defaults already follow every rule.
+     */
+    public const NEEDS = [
+        'analyticsEmail'    => ['analytics'],
+        'studentAccounts'   => ['studentInfo'],
+        'notesCreate'       => ['studentInfo'],
+        'assessmentResults' => ['studentInfo', 'dashboard'],
+        'exportResults'     => ['studentInfo', 'analytics'],
+    ];
+
+    /** Features that are only an action (send, write, decide): No Access or Full, no View Only (it gave nothing). */
+    public const ACTION_ONLY = ['analyticsEmail', 'notesCreate', 'counselingStatus'];
+
+    /**
+     * The levels that really apply, from the saved ones: an action-only feature at View Only is No Access, and a feature
+     * whose NEEDS are all No Access is No Access. No database: the same rules for the server, the page and the tests.
+     *
+     * @param array<string,string> $levels feature => full|limited|none
+     * @return array<string,string>
+     */
+    public static function effectiveLevels(array $levels): array
+    {
+        foreach (self::ACTION_ONLY as $m) {
+            if (($levels[$m] ?? 'none') === 'limited') {
+                $levels[$m] = 'none';
+            }
+        }
+        foreach (array_keys(self::unmetNeeds($levels)) as $m) {
+            $levels[$m] = 'none';
+        }
+        return $levels;
+    }
+
+    /**
+     * The features that are on (View Only or Full) while none of what they need is on.
+     *
+     * @param array<string,string> $levels feature => full|limited|none
+     * @return array<string,array<int,string>> feature => the features it needs (any one of them)
+     */
+    public static function unmetNeeds(array $levels): array
+    {
+        $out = [];
+        foreach (self::NEEDS as $m => $needs) {
+            if (($levels[$m] ?? 'none') === 'none') {
+                continue;
+            }
+            $met = false;
+            foreach ($needs as $n) {
+                $met = $met || self::atLeast($levels[$n] ?? 'none', 'limited');
+            }
+            if (!$met) {
+                $out[$m] = $needs;
+            }
+        }
+        return $out;
+    }
+
     /** Features about accounts: changing who holds them asks for a confirmation before it is saved. */
     public const SENSITIVE_MODULES = ['staffAccounts', 'studentAccounts'];
 
@@ -163,7 +227,8 @@ class Rbac
         if ($targetRole === 'facilitator' && in_array($module, self::FACILITATOR_NEVER, true)) {
             return [];
         }
-        return self::LEVELS;
+        // An action has no "view" part: Full or No Access.
+        return in_array($module, self::ACTION_ONLY, true) ? ['full', 'none'] : self::LEVELS;
     }
 
     /** The matrix column for a signed-in user: 'admin', 'counselor', 'facilitator', 'student', or COADMIN for a co-admin. */
@@ -301,8 +366,23 @@ class Rbac
     /** @var array<string,array<string,string>> role => saved rows, read once per request */
     private static array $saved = [];
 
-    /** Every feature's level for $role: the saved row, else the default. One query per role per request. */
+    /**
+     * Every feature's level that really applies to $role: savedLevelsFor() with the needs rules (NEEDS, ACTION_ONLY) for
+     * Guidance Counselors and Facilitators. Every access check uses this.
+     */
     public static function levelsFor(string $role): array
+    {
+        $levels = self::savedLevelsFor($role);
+        // The administrator, a co-admin (both Full on everything) and a Student (one feature) already follow the rules.
+        return in_array($role, ['counselor', 'facilitator'], true) ? self::effectiveLevels($levels) : $levels;
+    }
+
+    /**
+     * Every feature's level for $role as saved: the saved row, else the default (the administrator always Full, a Student
+     * only STUDENT_MODULES, the facilitator's fixed cells). One query per role per request. Security Configuration shows
+     * these, so the administrator sees what is saved and which cells do not count yet (unmetNeeds).
+     */
+    public static function savedLevelsFor(string $role): array
     {
         if ($role === self::COADMIN) {
             // A co-admin has every feature, like the administrator; the table has no co-admin column to read.

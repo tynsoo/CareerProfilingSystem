@@ -457,7 +457,9 @@
   // only hides what they cannot use: account actions and emails (Student account management, Full) and the downloads with
   // student names (Export student results, Full).
   const canManageAccounts = PP.may(currentUser, 'studentAccounts', 'full');
-  const canExportNames = PP.may(currentUser, 'exportResults', 'full');
+  // The lists with names need Student information too (api/students.php refuses the PDF without it): without it the
+  // buttons are not shown, instead of answering 403.
+  const canExportNames = PP.may(currentUser, 'exportResults', 'full') && PP.may(currentUser, 'studentInfo');
   if (!canExportNames) {
     document.getElementById('downloadListBtn').classList.add('hidden');
     document.querySelectorAll('.pie-dl').forEach(function(b) { b.parentElement.classList.add('hidden'); }); // the pie downloads

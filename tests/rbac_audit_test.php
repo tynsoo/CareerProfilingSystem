@@ -68,7 +68,8 @@ check('even if the table is tampered to Full, the facilitator has No Access to U
     withTable("UPDATE security_rbac SET access_level = 'full' WHERE module = 'counselingStatus' AND role = 'facilitator'",
         fn() => Rbac::accessLevel('counselingStatus', 'facilitator') === 'none'));
 check('the facilitator cell of Update counseling status cannot be changed, the counselor cell can',
-    Rbac::editableLevels('admin', 'counselingStatus', 'facilitator', []) === [] && Rbac::editableLevels('admin', 'counselingStatus', 'counselor', []) === ['full', 'limited', 'none']);
+    // An action (resolve, decide, invite): Full or No Access, no View Only (Rbac::ACTION_ONLY).
+    Rbac::editableLevels('admin', 'counselingStatus', 'facilitator', []) === [] && Rbac::editableLevels('admin', 'counselingStatus', 'counselor', []) === ['full', 'none']);
 
 echo "\n=== a missing row falls back to the default ===\n";
 check('with no counselor row for Analytics, the counselor gets the default (View Only)',

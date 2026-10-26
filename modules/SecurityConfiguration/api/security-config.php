@@ -25,13 +25,16 @@ const RBAC_LABELS = [
     'staffAccounts' => 'Manage staff accounts',
 ];
 
-/** The table as it is enforced (Rbac::levelsFor: saved rows, else the defaults; the administrator always Full). */
+/**
+ * The table as saved (Rbac::savedLevelsFor: saved rows, else the defaults; the administrator always Full). What applies on
+ * top of it (the needs rules) is Rbac::levelsFor; the page marks the cells that do not count yet.
+ */
 function loadRbac(PDO $pdo): array
 {
     Rbac::forgetSaved();
     $byRole = [];
     foreach (RBAC_ROLES as $r) {
-        $byRole[$r] = Rbac::levelsFor($r);
+        $byRole[$r] = Rbac::savedLevelsFor($r);
     }
     $rbac = [];
     foreach (Rbac::modules() as $m) {
@@ -104,11 +107,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $user['role'] !== 'admin') {
     // security policies and settings are not sent to them (need to know).
     $ownRole = Rbac::roleKey($user);
     $policies = loadPolicies($pdo);
-    // A co-admin has no column in the table: their levels (Full on every feature) come from Rbac.
-    $ownLevels = $ownRole === Rbac::COADMIN ? Rbac::levelsFor($ownRole) : null;
+    // The levels that really apply to this person (Rbac::levelsFor: the needs rules, the facilitator's fixed cell; a
+    // co-admin has Full on everything), not the raw saved rows, so their pages offer only what the server allows.
     jsonResponse([
-        'rbac' => array_map(fn($levels) => [$ownRole => $levels[$ownRole] ?? 'none'], $ownLevels === null ? loadRbac($pdo)
-            : array_map(fn($level) => [Rbac::COADMIN => $level], $ownLevels)),
+        'rbac' => array_map(fn($level) => [$ownRole => $level], Rbac::levelsFor($ownRole)),
         'rbacOwnOnly' => $ownRole,
         'canEditRoster' => Rbac::accessLevel('roster', $ownRole) === 'full',
         'academicYear' => $policies['academicYear'],
@@ -148,6 +150,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // what may be changed in the table (empty for a fixed cell), and which changes ask for a confirmation
         'rbacEditable' => editableMatrix($user, $rbacNow),
         'rbacSensitive' => ['modules' => Rbac::SENSITIVE_MODULES, 'roles' => ['counselor']],
+        // The needs rules, so the table can turn on what a feature needs (and off what needs it) before saving.
+        'rbacNeeds' => Rbac::NEEDS,
+        // Actions (Full or No Access only): an older View Only on them counts as No Access, and the table says so.
+        'rbacActionOnly' => Rbac::ACTION_ONLY,
         // Uploading class rosters: Full on Student roster management.
         'canEditRoster' => Rbac::accessLevel('roster', $roleKey) === 'full',
         'lastUpdated' => $lastUpdated,
@@ -209,6 +215,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$toApply) {
             jsonResponse(['success' => true, 'applied' => 0, 'rbac' => $current, 'rbacEditable' => editableMatrix($user, $current)]);
+        }
+
+        // The needs rules (Rbac::NEEDS): a change may not leave a feature on while everything it needs is off. Only the
+        // features this save touches (a changed feature, or one whose need was changed) are checked, so an older wrong
+        // row elsewhere never blocks a save. Nothing is changed for the administrator: the page turns the pair on or off
+        // before saving, and the server only refuses.
+        $problems = [];
+        foreach (array_unique(array_column($toApply, 'role')) as $role) {
+            $final = [];
+            foreach (Rbac::modules() as $m) {
+                $final[$m] = $toApply["$m|$role"]['to'] ?? $current[$m][$role];
+            }
+            // An older View Only on an action counts as No Access already, so it never blocks turning its need off.
+            foreach (Rbac::ACTION_ONLY as $m) {
+                if ($final[$m] === 'limited') {
+                    $final[$m] = 'none';
+                }
+            }
+            foreach (Rbac::unmetNeeds($final) as $m => $needs) {
+                $touched = isset($toApply["$m|$role"]) || array_filter($needs, fn($n) => isset($toApply["$n|$role"]));
+                if ($touched) {
+                    $problems[] = $moduleLabels[$m] . ' needs ' . implode(' or ', array_map(fn($n) => $moduleLabels[$n], $needs))
+                        . ' (View Only or Full) for the ' . $roleLabels[$role] . '.';
+                }
+            }
+        }
+        if ($problems) {
+            jsonResponse(['success' => false, 'error' => implode(' ', $problems)], 400);
         }
 
         // A change to account modules or to the Guidance Counselor column only goes through once it was confirmed.

@@ -20,6 +20,8 @@
   .rbac-tab-count { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; margin-left:6px; padding:0 5px; border-radius:9999px; background:#fffbeb; border:1px solid #f59e0b; color:#b45309; font-size:11px; font-weight:600; }
   /* A permission that can never be changed (Rbac::FACILITATOR_NEVER): its icon with a small lock, and "Always Full" under Administrator. */
   .fixed-cell { position:relative; display:inline-flex; }
+  /* A cell saved on while nothing it needs is on (Rbac::NEEDS): it does not count yet. */
+  .needs-note { display:block; margin-top:3px; font-size:10px; line-height:1.2; color:#b45309; }
   .fixed-lock { position:absolute; right:-7px; bottom:-5px; width:13px; height:13px; border-radius:9999px; background:#fff; border:1px solid #cbd5e1; color:#475569; display:flex; align-items:center; justify-content:center; }
   .fixed-note { font-size:10px; font-weight:500; text-transform:none; letter-spacing:0; color:#64748b; }
   body{ font-family:'Inter', sans-serif; }
@@ -544,7 +546,13 @@
           : '<span class="fixed-cell" title="Fixed: cannot be changed">' + permIcon(lvl) + '<span class="fixed-lock">' + LOCK_SVG + '</span>' +
             '<span class="pp-sr-only">, fixed, cannot be changed</span></span>') + '</td>';
         const changed = (m.id + '|' + r) in pending;
-        return '<td class="px-3 py-3 text-center"><button type="button" class="perm-cell' + (changed ? ' changed' : '') + '" data-module="' + m.id + '" data-role="' + r + '" title="' + LEVEL_LABEL[lvl] + '. Click to change." aria-label="' + ROLE_LABEL[r] + ', ' + name + ': ' + LEVEL_LABEL[lvl] + '. Click to change.">' + permIcon(lvl) + '</button></td>';
+        // Saved on, but nothing it needs is on (an older combination): it does not count until one is (Rbac::NEEDS).
+        // Or an older View Only on an action (Full or No Access only): it counts as No Access.
+        const oldActionView = lvl === 'limited' && (state.rbacActionOnly || []).includes(m.id);
+        const needsText = oldActionView ? 'Counts as No Access: Full or No Access only'
+          : (unmet(m.id, r) ? 'Needs ' + needsOf(m.id).map(moduleLabel).join(' or ') : '');
+        return '<td class="px-3 py-3 text-center"><button type="button" class="perm-cell' + (changed ? ' changed' : '') + '" data-module="' + m.id + '" data-role="' + r + '" title="' + LEVEL_LABEL[lvl] + (needsText ? '. Does not count yet: ' + needsText : '') + '. Click to change." aria-label="' + ROLE_LABEL[r] + ', ' + name + ': ' + LEVEL_LABEL[lvl] + (needsText ? ', does not count yet, ' + needsText : '') + '. Click to change.">' + permIcon(lvl) + '</button>' +
+          (needsText ? '<span class="needs-note" aria-hidden="true">' + needsText + '</span>' : '') + '</td>';
       }).join('');
       const groups = featureGroups();
       rbacTab = Math.min(rbacTab, groups.length - 1);
@@ -585,14 +593,52 @@
       if (!isError) showRbacMessage.timer = setTimeout(() => el.classList.add('hidden'), 3500);
     }
 
+    // ---- Needs rules (Rbac::NEEDS, sent as rbacNeeds): a feature counts only while one of what it needs is View Only or
+    // Full for the same role. The table keeps every edit in that shape: turning a feature on turns its first need on (View
+    // Only), and turning a need off turns off what depends only on it. Nothing is saved until Save Changes; Cancel undoes all.
+    const needsOf = m => (state.rbacNeeds && state.rbacNeeds[m]) || [];
+    const isOn = (m, r) => levelOf(m, r) !== 'none';
+    const unmet = (m, r) => needsOf(m).length > 0 && isOn(m, r) && !needsOf(m).some(n => isOn(n, r));
+    function setPending(m, r, level) {
+      const k = m + '|' + r;
+      if (level === state.rbac[m][r]) delete pending[k]; else pending[k] = level;
+    }
+    function applyNeeds(m, r) {
+      const notes = [];
+      // On: what it needs comes on too (the first one that can be set to View Only).
+      if (unmet(m, r)) {
+        const need = needsOf(m).find(n => allowedFor(n, r).includes('limited'));
+        if (need) {
+          setPending(need, r, 'limited');
+          notes.push(moduleLabel(m) + ' needs ' + moduleLabel(need) + ', so ' + moduleLabel(need) + ' was set to View Only for the ' + ROLE_LABEL[r] + '.');
+        }
+      }
+      // Off: what depends only on it goes off too.
+      if (!isOn(m, r)) {
+        const off = Object.keys(state.rbacNeeds || {}).filter(d => needsOf(d).includes(m) && unmet(d, r) && allowedFor(d, r).includes('none'));
+        off.forEach(d => setPending(d, r, 'none'));
+        if (off.length) notes.push('Without ' + moduleLabel(m) + ', ' + off.map(moduleLabel).join(', ') + (off.length === 1 ? ' does' : ' do') + ' not work, so ' + (off.length === 1 ? 'it was' : 'they were') + ' set to No Access for the ' + ROLE_LABEL[r] + '.');
+      }
+      return notes;
+    }
+    function showRbacNote(text) {
+      const el = document.getElementById('rbacMessage');
+      el.textContent = text + ' Save Changes to keep it, or Cancel.';
+      el.className = 'px-5 pt-3 text-xs text-amber-700';
+      clearTimeout(showRbacMessage.timer);
+    }
+
     document.getElementById('rbacTableBody').addEventListener('click', function(e) {
       const btn = e.target.closest('.perm-cell');
       if (!btn) return;
-      const m = btn.dataset.module, r = btn.dataset.role, k = m + '|' + r;
-      const next = nextLevel(m, r);
-      if (next === state.rbac[m][r]) delete pending[k]; else pending[k] = next;
-      document.getElementById('rbacMessage').classList.add('hidden');
+      const m = btn.dataset.module, r = btn.dataset.role;
+      setPending(m, r, nextLevel(m, r));
+      const notes = applyNeeds(m, r);
+      if (notes.length) showRbacNote(notes.join(' ')); else document.getElementById('rbacMessage').classList.add('hidden');
       renderRbacTable();
+      // The table is drawn again: keep keyboard focus on the cell that was clicked.
+      const again = document.querySelector('.perm-cell[data-module="' + m + '"][data-role="' + r + '"]');
+      if (again) again.focus();
     });
     document.getElementById('rbacCancelBtn').addEventListener('click', function() {
       pending = {};
