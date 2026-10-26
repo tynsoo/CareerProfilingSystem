@@ -79,7 +79,13 @@ if ($email === '') {
     jsonResponse(['success' => false, 'field' => 'email', 'error' => 'Enter the recipient\'s email address.'], 400);
 }
 if (mb_strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    jsonResponse(['success' => false, 'field' => 'email', 'error' => 'Enter a valid email address, like name@school.edu.ph.'], 400);
+    jsonResponse(['success' => false, 'field' => 'email', 'error' => 'Enter a valid email address, like name@mcl.edu.ph.'], 400);
+}
+// The report holds school data: it only goes to an MMCL staff address (RA 10173), never to a personal or student
+// (@live.mcl.edu.ph) mailbox. Exactly @mcl.edu.ph with a plain name before it (no quotes, no second @ or %), checked
+// here whatever the page sends.
+if (!preg_match('/^[A-Za-z0-9._+-]+@mcl\.edu\.ph$/i', $email)) {
+    jsonResponse(['success' => false, 'field' => 'email', 'error' => 'The report can only be sent to an MMCL address ending in @mcl.edu.ph.'], 400);
 }
 
 // A second click, or sending the same report to the same person again within a minute, is almost always a mistake.

@@ -135,6 +135,12 @@
               <option value="">Select a strand first</option>
             </select>
           </div>
+          <!-- Clears Strand and Section (the School Year stays, as on Student Information). Same button as Student Information
+               and the Audit Log (css/components.css .pp-clear-filters): gray when nothing is filtered. -->
+          <button type="button" id="clearFilters" disabled class="pp-clear-filters">
+            <span class="pp-clear-filters-icon" aria-hidden="true"></span>
+            Clear filters
+          </button>
         </div>
       </div>
 
@@ -238,6 +244,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 flex flex-col">
           <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Students by Strand</p>
+          <p id="strandNote" class="hidden text-xs text-slate-500 mb-3" style="margin-top:-8px"></p>
           <!-- Fills whatever height the card gets from its neighbour (the RIASEC card is taller), so no blank space is left under the pie -->
           <div id="strandBox" style="position:relative;flex:1 1 auto;min-height:240px"><canvas id="strandChart"></canvas></div>
           <div class="border-t border-slate-100 pt-4 mt-4">
@@ -256,8 +263,10 @@
       <!-- Section breakdown + Assessment Statistics -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Students by Section</p>
-          <div id="sectionBox" style="position:relative"><canvas id="sectionChart" height="220"></canvas></div>
+          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-1">Students by Section</p>
+          <p id="sectionChartNote" class="text-xs text-slate-500 mb-3"></p>
+          <!-- One row per section (STEM alone has about 30), so the box scrolls instead of squeezing the bars. -->
+          <div style="max-height:460px;overflow-y:auto"><div id="sectionBox" style="position:relative;height:240px"><canvas id="sectionChart"></canvas></div></div>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
           <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-1">Overall Assessment</p>
@@ -314,9 +323,9 @@
             <div id="reportEmailField">
               <label for="reportEmail" class="block text-sm font-medium text-slate-700 mb-1.5">Recipient email address</label>
               <input type="email" id="reportEmail" name="reportEmail" autocomplete="email" maxlength="254" spellcheck="false" autocapitalize="none"
-                placeholder="principal@school.edu.ph" aria-describedby="reportEmailHint reportEmailError"
+                placeholder="name@mcl.edu.ph" aria-describedby="reportEmailHint reportEmailError"
                 class="w-full max-w-md border border-slate-300 rounded-md px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0f2a6b] focus:border-transparent">
-              <p id="reportEmailHint" class="text-xs text-slate-500 mt-1.5">Type the address yourself. The recipient does not need a ProfilePath account.</p>
+              <p id="reportEmailHint" class="text-xs text-slate-500 mt-1.5">MMCL staff addresses only (@mcl.edu.ph). Type the address yourself; the recipient does not need a ProfilePath account.</p>
               <p id="reportEmailError" class="hidden text-xs font-medium text-red-700 mt-1.5" role="alert"></p>
             </div>
             <div class="rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
@@ -509,6 +518,18 @@
     listState.save(state);
     load();
   });
+  // Clear filters: back to All Strands (and so all sections); the School Year stays.
+  const clearFiltersBtn = document.getElementById('clearFilters');
+  function updateClearBtn() { clearFiltersBtn.disabled = !(state.strand || state.section); }
+  clearFiltersBtn.addEventListener('click', () => {
+    strandFilter.value = '';
+    renderSectionOptions();
+    state.strand = '';
+    state.section = '';
+    listState.save(state);
+    load();
+    strandFilter.focus(); // the button turns disabled, so focus moves to the first filter it cleared
+  });
   // Reads the section list fresh, so a section added a moment ago is already there.
   async function refreshSections() {
     try {
@@ -555,6 +576,7 @@
     load();
   });
   async function load() {
+    updateClearBtn();
     const params = new URLSearchParams({ strand: state.strand, section: state.section, academicYear: state.academicYear });
     const statIds = ['metricCompletionRate', 'metricCompletionCount', 'metricCounselingRate', 'metricCounselingCount', 'metricMmclRate', 'metricMmclCount', 'metricTopStrand', 'metricStrandPercent', 'statsCompleted'];
     const chartBoxes = ['strandBox', 'riasecBox', 'sectionBox', 'statsChartBox', 'yearBox', 'topCareersBox'];
@@ -610,6 +632,10 @@
     }
 
     document.getElementById('strandChartTotal').textContent = data.totalStudents;
+    // With a strand picked, the pie is that one strand (100%): say so, and how to compare.
+    const strandNote = document.getElementById('strandNote');
+    strandNote.textContent = state.strand ? 'Showing ' + state.strand + ' only. Pick All Strands at the top to compare the strands.' : '';
+    strandNote.classList.toggle('hidden', !state.strand);
     if (strandChartInstance) strandChartInstance.destroy();
     // Four parts of one whole -> a pie: each slice is that strand's share of the
     // students shown. The share is in the legend text, so it reads without hovering.
@@ -619,7 +645,8 @@
       type: 'pie',
       data: {
         labels: data.strandDistribution.map(s => s.strand + ' — ' + s.count + ' (' + strandShare(s.count) + '%)'),
-        datasets: [{ data: data.strandDistribution.map(s => s.count), backgroundColor: data.strandDistribution.map(s => STRAND_COLORS[s.strand] || '#64748b'), borderColor: '#ffffff', borderWidth: 2 }]
+        datasets: [{ data: data.strandDistribution.map(s => s.count), backgroundColor: data.strandDistribution.map(s => STRAND_COLORS[s.strand] || '#64748b'), borderColor: '#ffffff',
+          borderWidth: data.strandDistribution.filter(s => s.count > 0).length > 1 ? 2 : 0 }] // no white line when one strand is the whole pie
       },
       options: {
         maintainAspectRatio: false,
@@ -676,16 +703,30 @@
     document.getElementById('topCareersSummary').textContent =
       'Showing top ' + data.topCareers.length + ' of ' + data.confidence.total + ' students with a computed recommendation';
 
+    // Students by Section: one horizontal bar per section (every name stays readable with 50 sections), in its strand's
+    // colour, grouped by strand and largest first. A strand picked at the top shows only its sections (the server sends
+    // every section, so this is narrowed here).
     if (sectionChartInstance) sectionChartInstance.destroy();
+    const strandOrder = ['STEM', 'ABM', 'HUMSS', 'ICT'];
+    const strandOfSection = (sec) => Object.keys(data.sectionsByStrand || {}).find(k => data.sectionsByStrand[k].indexOf(sec) !== -1) || '';
+    const rank = (k) => { const i = strandOrder.indexOf(k); return i === -1 ? 99 : i; };
+    let secRows = data.sectionDistribution.map(s => Object.assign({ strand: strandOfSection(s.section) }, s));
+    if (state.strand) secRows = secRows.filter(s => s.strand === state.strand);
+    secRows.sort((a, b) => rank(a.strand) - rank(b.strand) || b.count - a.count || String(a.section).localeCompare(String(b.section)));
+    document.getElementById('sectionChartNote').textContent = secRows.length
+      ? secRows.length + ' section' + (secRows.length === 1 ? '' : 's') + (state.strand ? ' in ' + state.strand : ', grouped by strand') + '.'
+      : 'No sections yet.';
+    document.getElementById('sectionBox').style.height = Math.max(120, secRows.length * 24 + 40) + 'px';
     sectionChartInstance = new Chart(document.getElementById('sectionChart').getContext('2d'), {
       type: 'bar',
       data: {
-        labels: data.sectionDistribution.map(s => s.section),
-        datasets: [{ data: data.sectionDistribution.map(s => s.count), backgroundColor: data.sectionDistribution.map(s => sectionColor(s.section, data.sectionsByStrand)), borderRadius: 4 }]
+        labels: secRows.map(s => s.section + ' · ' + s.count), // the count beside the name: the axis scrolls out of view
+        datasets: [{ data: secRows.map(s => s.count), backgroundColor: secRows.map(s => sectionColor(s.section, data.sectionsByStrand)), barThickness: 14, borderRadius: 3 }]
       },
       options: {
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        indexAxis: 'y', maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ' ' + ctx.parsed.x + ' students (' + secRows[ctx.dataIndex].strand + ')' } } },
+        scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
       }
     });
 
@@ -821,13 +862,15 @@
     function reportParams(extra) {
       return new URLSearchParams(Object.assign({}, lastExportFilter, extra || {})).toString();
     }
-    // Same rule as the server: trimmed, not empty, at most 254 characters, name@domain.tld.
+    // Same rule as the server: trimmed, not empty, at most 254 characters, name@domain.tld, and an MMCL staff address
+    // (exactly @mcl.edu.ph: not a personal or a student @live.mcl.edu.ph mailbox).
     function checkEmail() {
       const value = emailInput.value.trim();
       emailInput.value = value;
       let message = '';
       if (value === '') message = 'Enter the recipient\'s email address.';
-      else if (value.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) message = 'Enter a valid email address, like name@school.edu.ph.';
+      else if (value.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) message = 'Enter a valid email address, like name@mcl.edu.ph.';
+      else if (!value.toLowerCase().endsWith('@mcl.edu.ph')) message = 'The report can only be sent to an MMCL address ending in @mcl.edu.ph.';
       showEmailError(message);
       return message === '' ? value : null;
     }

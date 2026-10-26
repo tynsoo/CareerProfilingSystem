@@ -53,6 +53,8 @@
   .pie-pair { display:grid; grid-template-columns:1fr; gap:24px; }
   @media (min-width:1024px) { .pie-pair { grid-template-columns:1fr 1fr; } .pie-pair:has(> .hidden) { grid-template-columns:1fr; } }
   .pie-pair > .hidden { display:none; }
+  /* A chart with many sections (STEM alone has about 30) scrolls inside its card instead of making the page very long. */
+  .chart-scroll { max-height:540px; overflow-y:auto; }
   /* Same header height on both cards, so the two pies line up side by side. */
   @media (min-width:1024px) { .pie-pair .pie-head { min-height:96px; } }
 </style>
@@ -354,17 +356,18 @@
       <div id="sectionCompletionCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
         <div class="border-b border-gray-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 class="text-lg font-bold text-gray-900">Student Progress by Section</h2>
-            <p class="text-xs text-gray-500 mt-1">Registered, completed and pending (registered, not taken yet) students in each section.</p>
+            <h2 class="text-lg font-bold text-gray-900" id="completionTitle">Student Progress by Strand</h2>
+            <p class="text-xs text-gray-500 mt-1">Completed, pending (registered, not taken yet) and not registered students, as a share of each group.</p>
+            <!-- The same colors as the Student Status pie, so each status has one color on the page. -->
             <div class="text-xs text-gray-600" style="display:flex;flex-wrap:wrap;align-items:center;margin-top:8px;row-gap:4px" aria-label="Chart colors">
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#93c5fd;display:inline-block"></span>Registered</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#0f2a6b;display:inline-block"></span>Completed</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#f59e0b;display:inline-block"></span>Pending</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#059669;display:inline-block"></span>Completed</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#d97706;display:inline-block"></span>Pending</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#3b82f6;display:inline-block"></span>Not registered</span>
             </div>
           </div>
         </div>
         <div class="px-6 pt-4"><p id="completionSummaryLine" class="text-sm text-gray-700"></p></div>
-        <div class="p-6 pt-3"><div id="completionChartBox" style="position:relative;height:260px"><canvas id="sectionCompletionChart" aria-label="Registered, completed and pending students by section"></canvas></div></div>
+        <div class="p-6 pt-3 chart-scroll"><div id="completionChartBox" style="position:relative;height:260px"><canvas id="sectionCompletionChart" aria-label="Completed, pending and not registered students by strand or section"></canvas></div></div>
       </div>
       <!-- Two pies side by side on wide screens. Both follow the School Year, Strand and Section at the top of the page. -->
       <div class="pie-pair mb-8">
@@ -668,45 +671,66 @@
     renderCompletion(rows);
   }
 
-  // ---- Student progress by section: registered, completed and pending (registered, not taken yet), each as a share of the students expected.
+  // ---- Student progress: overview first, then zoom in. All Strands = one bar per strand; a strand picked = one bar per
+  // section, lowest completion first (the sections that need follow-up on top). Each bar is one row split into Completed,
+  // Pending and Not registered (the Student Status pie's colors), so 30+ sections stay readable; the box scrolls.
   let completionChart = null;
+  const STRAND_ORDER = ['STEM', 'ABM', 'HUMSS', 'ICT'];
   function renderCompletion(secRows) {
     const card = document.getElementById('sectionCompletionCard');
     card.classList.toggle('hidden', secRows.length === 0);
-    if (completionChart && !secRows.length) { completionChart.destroy(); completionChart = null; }
+    if (completionChart) { completionChart.destroy(); completionChart = null; }
     if (!secRows.length) return;
 
-    const sum = function(key) { return secRows.reduce(function(n, s) { return n + (s[key] || 0); }, 0); };
-    const pendingOf = function(s) { return s.pending; }; // registered, not taken yet (the same Pending as the Student Status pie)
-    document.getElementById('completionSummaryLine').textContent =
-      sum('completed') + ' of ' + sum('total') + ' student' + (sum('total') === 1 ? '' : 's') + ' completed; ' +
-      sum('pending') + ' pending, ' + sum('notRegistered') + ' not registered, across ' + secRows.length + ' section' + (secRows.length === 1 ? '' : 's') + '.';
+    const byStrand = !state.strand;
+    let rows;
+    if (byStrand) {
+      const groups = {};
+      secRows.forEach(function(s) {
+        const g = groups[s.strand] = groups[s.strand] || { label: s.strand, total: 0, completed: 0, pending: 0, notRegistered: 0, sections: 0 };
+        g.total += s.total; g.completed += s.completed; g.pending += s.pending; g.notRegistered += s.notRegistered; g.sections++;
+      });
+      rows = Object.keys(groups).sort(function(a, b) {
+        const ia = STRAND_ORDER.indexOf(a), ib = STRAND_ORDER.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
+      }).map(function(k) { return groups[k]; });
+    } else {
+      rows = secRows.map(function(s) { return { label: s.section, total: s.total, completed: s.completed, pending: s.pending, notRegistered: s.notRegistered }; })
+        .sort(function(a, b) { return (a.total ? a.completed / a.total : 0) - (b.total ? b.completed / b.total : 0) || String(a.label).localeCompare(String(b.label)); });
+    }
+    document.getElementById('completionTitle').textContent = byStrand ? 'Student Progress by Strand' : 'Student Progress by Section';
 
-    document.getElementById('completionChartBox').style.height = Math.max(260, secRows.length * 84 + 90) + 'px';
-    if (completionChart) { completionChart.destroy(); completionChart = null; }
-    const pctOfExpected = function(n, s) { return s.total > 0 ? Math.round(n / s.total * 1000) / 10 : 0; };
+    const sum = function(key) { return secRows.reduce(function(n, s) { return n + (s[key] || 0); }, 0); };
+    const plural = function(n, word) { return n.toLocaleString() + ' ' + word + (n === 1 ? '' : 's'); };
+    document.getElementById('completionSummaryLine').textContent =
+      sum('completed').toLocaleString() + ' of ' + plural(sum('total'), 'student') + ' completed; ' + sum('pending').toLocaleString() + ' pending, ' +
+      sum('notRegistered').toLocaleString() + ' not registered, across ' + plural(secRows.length, 'section') + '.' +
+      (byStrand ? ' Pick a strand at the top to see its sections.' : (rows.length > 1 ? ' Lowest completion first.' : ''));
+
+    // A strand row is taller than a section row; the card scrolls past about 15 sections (.chart-scroll).
+    document.getElementById('completionChartBox').style.height = (rows.length * (byStrand ? 48 : 30) + 50) + 'px';
+    const pct = function(n, r) { return r.total > 0 ? Math.round(n / r.total * 1000) / 10 : 0; };
+    const done = function(r) { return r.total > 0 ? Math.round(r.completed / r.total * 100) : 0; };
     completionChart = new Chart(document.getElementById('sectionCompletionChart').getContext('2d'), {
       type: 'bar',
       data: {
-        // Two lines per section, so a section with nothing yet (no bar to see) still reads as "0 of 1".
-        labels: secRows.map(function(s) { return [s.strand + ' ' + s.section, s.registered + ' registered, ' + s.completed + ' completed, ' + pendingOf(s) + ' pending of ' + s.total]; }),
+        labels: rows.map(function(r) { return byStrand ? r.label + ' (' + plural(r.sections, 'section') + ')' : r.label + '  ' + done(r) + '%'; }),
         datasets: [
-          { label: 'Registered', data: secRows.map(function(s) { return pctOfExpected(s.registered, s); }), backgroundColor: '#93c5fd', borderRadius: 3 },
-          { label: 'Completed', data: secRows.map(function(s) { return pctOfExpected(s.completed, s); }), backgroundColor: '#0f2a6b', borderRadius: 3 },
-          { label: 'Pending', data: secRows.map(function(s) { return pctOfExpected(pendingOf(s), s); }), backgroundColor: '#f59e0b', borderRadius: 3 }
+          { label: 'Completed', data: rows.map(function(r) { return pct(r.completed, r); }), backgroundColor: '#059669' },
+          { label: 'Pending', data: rows.map(function(r) { return pct(r.pending, r); }), backgroundColor: '#d97706' },
+          { label: 'Not registered', data: rows.map(function(r) { return pct(r.notRegistered, r); }), backgroundColor: '#3b82f6' }
         ]
       },
       options: {
-        indexAxis: 'y', maintainAspectRatio: false,
-        layout: { padding: { top: 8, right: 12 } },
-        scales: { x: { min: 0, max: 100, ticks: { callback: function(v) { return v + '%'; } } } },
+        indexAxis: 'y', maintainAspectRatio: false, barThickness: byStrand ? 26 : 16,
+        layout: { padding: { right: 12 } },
+        scales: { x: { stacked: true, min: 0, max: 100, ticks: { callback: function(v) { return v + '%'; } } }, y: { stacked: true } },
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: function(ctx) {
-            const s = secRows[ctx.dataIndex];
-            const count = [s.registered, s.completed, pendingOf(s)][ctx.datasetIndex];
-            const name = ['Registered', 'Completed', 'Pending'][ctx.datasetIndex];
-            return ' ' + name + ': ' + count + ' of ' + s.total + ' (' + ctx.parsed.x + '%)';
+            const r = rows[ctx.dataIndex];
+            const count = [r.completed, r.pending, r.notRegistered][ctx.datasetIndex];
+            return ' ' + ctx.dataset.label + ': ' + count + ' of ' + r.total + ' (' + ctx.parsed.x + '%)';
           } } }
         }
       }
