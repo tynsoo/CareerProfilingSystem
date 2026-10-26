@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="js/csrf.js"></script><script src="js/ui-state.js"></script>
+<script src="js/csrf.js"></script><script src="js/ui-state.js"></script><script src="js/strand-colors.js"></script>
 <title>Analytics &amp; Report — Career Profiling System</title>
 <link rel="icon" type="image/png" href="images/brand/favicon-64.png">
 <link rel="stylesheet" href="css/tailwind.css">
@@ -526,18 +526,12 @@
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // One colour per strand; each section takes its strand's colour (lighter for
-  // later sections of the same strand) so the two charts read together.
-  const STRAND_COLORS = { STEM: '#19427b', ABM: '#db7020', ICT: '#1b8a47', HUMSS: '#673ab7' };
+  // One colour per strand, the SHS office's (js/strand-colors.js, the same on every page); each section takes its
+  // strand's full colour, so the two charts read together. (Not lighter shades: a light red reads as ABM pink.)
+  const STRAND_COLORS = PP.STRAND_COLORS;
   function sectionColor(section, sectionsByStrand) {
     for (const strand of Object.keys(sectionsByStrand || {})) {
-      const idx = sectionsByStrand[strand].indexOf(section);
-      if (idx !== -1) {
-        const hex = STRAND_COLORS[strand] || '#64748b';
-        const alpha = [1, 0.7, 0.5, 0.35][idx] || 0.35;
-        const n = parseInt(hex.slice(1), 16);
-        return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alpha + ')';
-      }
+      if (sectionsByStrand[strand].indexOf(section) !== -1) return PP.strandColor(strand);
     }
     return '#64748b';
   }
@@ -607,6 +601,7 @@
 
     if (data.topStrand) {
       document.getElementById('metricTopStrand').textContent = data.topStrand.strand;
+      document.getElementById('metricTopStrand').style.color = PP.strandColor(data.topStrand.strand); // large bold text: 3:1 is enough
       document.getElementById('metricStrandPercent').textContent = data.topStrand.percent + '%';
       document.getElementById('metricStrandCount').textContent = data.topStrand.count;
     } else {

@@ -33,9 +33,9 @@ class AnalyticsReportPdf
     private const LINE = [0.86, 0.87, 0.89];
     private const BLUE = [0.098, 0.259, 0.482];           // #19427b, the page's chart blue
     private const ORANGE = [0.859, 0.439, 0.125];         // #db7020, the page's RIASEC orange
-    private const STRANDS = [                             // the page's strand colours
-        'STEM' => [0.098, 0.259, 0.482], 'ABM' => [0.859, 0.439, 0.125],
-        'ICT' => [0.106, 0.541, 0.278], 'HUMSS' => [0.404, 0.227, 0.718],
+    private const STRANDS = [                             // the SHS strand colours (js/strand-colors.js), as on the page
+        'STEM' => [0.863, 0.149, 0.149], 'ABM' => [0.859, 0.153, 0.467],     // #DC2626 red, #DB2777 pink
+        'ICT' => [0.086, 0.639, 0.290], 'HUMSS' => [0.145, 0.388, 0.922],    // #16A34A green, #2563EB blue
     ];
 
     private PdfWriter $pdf;
