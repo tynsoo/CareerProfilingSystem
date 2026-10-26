@@ -197,9 +197,9 @@
 
         <div class="card-hover bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative flex flex-col justify-between">
           <div class="absolute top-4 right-4 group">
-            <img src="images/analytics/icon-info.svg" alt="What is the High-Confidence Match Rate?" class="w-4 h-4 cursor-help">
+            <img src="images/analytics/icon-info.svg" alt="What is the Similarity Level Met rate?" class="w-4 h-4 cursor-help">
             <div class="pointer-events-none absolute right-0 top-6 z-20 w-56 rounded-lg bg-[#001c43] text-white text-xs leading-relaxed p-3 shadow-lg opacity-0 invisible scale-95 origin-top-right transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:scale-100">
-              Share of expected students whose highest cosine similarity (CBF) is at or above the confidence threshold (the same Cosine Similarity level that flags a student on Monitoring, 0.50 by default). It is a share of students, not an average score.
+              Share of expected students whose highest cosine similarity (CBF) is at or above the similarity level that flags a student on Monitoring (0.50 by default). It is a share of students, not an average score, and a similarity is not a confidence, a probability or a percentile.
             </div>
           </div>
           <div>
@@ -208,7 +208,7 @@
                 <img src="images/analytics/card-icon-institution.svg" alt="" class="w-5 h-5">
               </span>
               <div>
-                <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">High-Confidence<br>Match Rate</p>
+                <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase leading-tight">Similarity Level<br>Met</p>
                 <p id="metricMmclRate" class="text-[30px] font-bold text-[#db7020] leading-tight mt-1">—</p>
               </div>
             </div>
@@ -255,7 +255,7 @@
           <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Average RIASEC Dimension Scores</p>
           <div id="riasecBox" style="position:relative"><canvas id="riasecChart" height="220"></canvas></div>
           <div class="border-t border-slate-100 pt-4 mt-4 text-center">
-            <p class="text-sm text-slate-500">Scores range from 0 to 50</p>
+            <p class="text-sm text-slate-500">Scores range from 10 to 50</p>
           </div>
         </div>
       </div>
@@ -349,7 +349,7 @@
             <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-3">What the report includes</p>
             <ul class="flex flex-col gap-2.5 text-sm text-slate-700">
               <li class="flex gap-2.5"><span class="report-tick" aria-hidden="true"></span>Assessment participation: students expected, registered, completed and not yet completed</li>
-              <li class="flex gap-2.5"><span class="report-tick" aria-hidden="true"></span>Career Electives Worksheet completion and high-confidence program matches</li>
+              <li class="flex gap-2.5"><span class="report-tick" aria-hidden="true"></span>Career Electives Worksheet completion and program matches at or above the similarity level</li>
               <li class="flex gap-2.5"><span class="report-tick" aria-hidden="true"></span>Assessment completion by section</li>
               <li class="flex gap-2.5"><span class="report-tick" aria-hidden="true"></span>Career interests: average RIASEC scores and the top 5 programs</li>
               <li class="flex gap-2.5"><span class="report-tick" aria-hidden="true"></span>Registered students by strand and completion by academic year</li>

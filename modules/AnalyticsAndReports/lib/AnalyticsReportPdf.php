@@ -82,7 +82,7 @@ class AnalyticsReportPdf
             ['REGISTERED', self::int($p[1][1]), self::pct($p[1][2]) . ' of expected'],
             ['COMPLETED ASSESSMENT', self::int($p[3][1]), self::pct($p[3][2]) . ' of expected'],
             ['COMPLETED WORKSHEET', self::int($p[5][1]), self::pct($p[5][2]) . ' of expected'],
-            ['HIGH-CONFIDENCE MATCH', self::int($p[6][1]), self::pct($p[6][2]) . ' of expected'],
+            ['SIMILARITY LEVEL MET', self::int($p[6][1]), self::pct($p[6][2]) . ' of expected'],
         ];
         $this->place(74 + self::GAP, function (PdfWriter $pdf, float $top) use ($cards) {
             $w = (self::CW - 4 * 12) / 5;

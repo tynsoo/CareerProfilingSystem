@@ -155,9 +155,12 @@ Three recommendation sources are kept separate (`modules/ContentBasedFiltering/l
 
 1. **CBF** (`modules/ContentBasedFiltering/lib/CBFEngine.php`): the student's RIASEC profile (mean item score per type,
    [R, I, A, S, E, C]) is compared with every program's Holland code using cosine
-   similarity, cos(S, C) = (S · C) / (||S|| × ||C||). The guidance counselors rank the three letters of a
-   code (1st = strongest type, 3rd = weakest), so the program vector uses rank weights 3, 2, 1
-   (`holland_rank_weights` in `config/cbf.php`; RIC = [3, 2, 0, 0, 0, 1]). No 70/30 blend with the worksheet.
+   similarity, cos(S, C) = (S · C) / (||S|| × ||C||). The guidance counselors rank the three letters of each
+   program's code 1-2-3: 1 = Primary, 2 = Secondary, 3 = Tertiary. For the cosine, each rank is converted to a
+   matching strength, strength = 4 − rank (Primary 3, Secondary 2, Tertiary 1; a letter not in the code 0), so
+   the Primary letter always counts most (`holland_rank_weights` in `config/cbf.php`; RIC = [3, 2, 0, 0, 0, 1]).
+   The 1-2-3 ranks are the Holland code; the strengths are this system's algorithmic choice, not prescribed by
+   the counselors or by a published study. No 70/30 blend with the worksheet.
 2. **Worksheet**: the Preferred Course from the Career Electives Worksheet.
 3. **Prediction model (WEKA)**: not available yet; excluded and not called. The existing WEKA
    code (`modules/ContentBasedFiltering/lib/PredictionModel.php`, `db/import_weka_tree.php`) is kept for the separate WEKA work.

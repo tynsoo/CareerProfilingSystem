@@ -116,7 +116,7 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
     $titles = programTitles($pdo, array_merge([], ...array_map('topMatchIds', $rows)));
 
     $reasonLabels = [
-        'low_confidence' => 'Below minimum confidence threshold',
+        'low_confidence' => 'Highest similarity below the monitoring level',
         'manual_escalation' => 'Escalated for counselor review',
         'other' => 'Flagged for manual review',
     ];

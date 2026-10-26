@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../Authentication/lib/LoginLock.php';
 require_once __DIR__ . '/../../CareerProfiling/lib/QuestionBank.php';
+require_once __DIR__ . '/../../CareerProfiling/lib/RiasecInterpretation.php';
 require_once __DIR__ . '/../lib/Sections.php';
 require_once __DIR__ . '/../../../shared/lib/AcademicYear.php';
 require_once __DIR__ . '/../../ContentBasedFiltering/lib/Mismatch.php';
@@ -179,14 +180,16 @@ if ($idLookup > 0) {
     );
     $attemptsStmt->execute([(int) $row['user_id']]);
 
+    $scoresOf = fn(array $a) => [
+        'R' => (int) $a['score_r'], 'I' => (int) $a['score_i'], 'A' => (int) $a['score_a'],
+        'S' => (int) $a['score_s'], 'E' => (int) $a['score_e'], 'C' => (int) $a['score_c'],
+    ];
     $attempts = !$seesResults ? [] : array_map(fn($a) => [
         'attemptNumber' => (int) $a['attempt_number'],
         'completedAt' => $a['completed_at'],
         'riasec' => implode(', ', json_decode($a['top_types'], true)),
-        'scores' => [
-            'R' => (int) $a['score_r'], 'I' => (int) $a['score_i'], 'A' => (int) $a['score_a'],
-            'S' => (int) $a['score_s'], 'E' => (int) $a['score_e'], 'C' => (int) $a['score_c'],
-        ],
+        'scores' => $scoresOf($a),
+        'riasecLabel' => RiasecInterpretation::codeLabel(RiasecInterpretation::interpret($scoresOf($a))),
     ], $attemptsStmt->fetchAll());
 
     jsonResponse(['student' => [
@@ -215,10 +218,9 @@ if ($idLookup > 0) {
         // Without Assessment results the profile shows whether the student finished, but no RIASEC code, scores or attempts.
         'seesResults' => $seesResults,
         'riasec' => $hasAssessment && $seesResults ? implode(', ', json_decode($row['top_types'], true)) : '',
-        'scores' => $hasAssessment && $seesResults ? [
-            'R' => (int) $row['score_r'], 'I' => (int) $row['score_i'], 'A' => (int) $row['score_a'],
-            'S' => (int) $row['score_s'], 'E' => (int) $row['score_e'], 'C' => (int) $row['score_c'],
-        ] : null,
+        'scores' => $hasAssessment && $seesResults ? $scoresOf($row) : null,
+        // What the scores establish, ties included (modules/CareerProfiling/lib/RiasecInterpretation.php).
+        'interpretation' => $hasAssessment && $seesResults ? RiasecInterpretation::interpret($scoresOf($row)) : null,
         'counseling' => $hasAssessment ? ($counseled ? 'Availed' : 'Did Not Avail') : '',
         'openRequest' => $openRequest,
         'registeredAt' => $row['registered_at'],
@@ -268,7 +270,8 @@ if (!$seesAccounts) {
 
 $rows = $pdo->query(
     'SELECT s.user_id, s.school_id, s.first_name_enc, s.last_name_enc, s.strand, s.grade_level, s.section, s.registered_at, s.academic_year,
-            u.is_active, u.email, (u.locked_until IS NOT NULL AND u.locked_until > NOW()) AS locked, a.top_types, a.completed_at
+            u.is_active, u.email, (u.locked_until IS NOT NULL AND u.locked_until > NOW()) AS locked, a.top_types, a.completed_at,
+            a.score_r, a.score_i, a.score_a, a.score_s, a.score_e, a.score_c
      FROM students s
      JOIN users u ON u.id = s.user_id
      LEFT JOIN assessments a ON a.student_id = s.user_id AND a.is_latest = TRUE
@@ -318,6 +321,9 @@ $students = array_map(function ($r) use ($counseledIds, $mismatchIds, $recommend
     $hasAssessment = $r['completed_at'] !== null;
     $status = $hasAssessment ? 'Completed' : 'Pending';
     $topTypes = $hasAssessment ? json_decode($r['top_types'], true) : [];
+    $interpretation = $hasAssessment ? RiasecInterpretation::interpret([
+        'R' => $r['score_r'], 'I' => $r['score_i'], 'A' => $r['score_a'], 'S' => $r['score_s'], 'E' => $r['score_e'], 'C' => $r['score_c'],
+    ]) : null;
     $counseling = $hasAssessment ? (isset($counseledIds[(int) $r['user_id']]) ? 'Availed' : 'Did Not Avail') : '';
 
     return [
@@ -333,6 +339,11 @@ $students = array_map(function ($r) use ($counseledIds, $mismatchIds, $recommend
         'locked' => (bool) $r['locked'],   // locked by wrong passwords: the list shows Locked and Unlock
         'status' => $status,
         'riasec' => implode(', ', $topTypes),
+        // Equal scores: no unique code. riasecLabel says so ("CER or CEI (tied)"); riasec keeps the stored order.
+        'riasecTied' => $interpretation !== null && $interpretation['status'] !== 'distinct',
+        'riasecLabel' => $interpretation !== null ? RiasecInterpretation::codeLabel($interpretation) : '',
+        '_riasecShort' => $interpretation !== null ? RiasecInterpretation::shortLabel($interpretation) : '',
+        '_riasecTie' => $interpretation !== null ? RiasecInterpretation::tieLabel($interpretation) : '',
         'counseling' => $counseling,
         'mismatched' => $hasAssessment && isset($mismatchIds[(int) $r['user_id']]),
         // For the Course Match chart only (counted per section below, never sent per student).
@@ -368,6 +379,10 @@ if ($currentAy !== '') {
             'isActive' => null,
             'status' => 'Not Registered',
             'riasec' => '',
+            'riasecTied' => false,
+            'riasecLabel' => '',
+            '_riasecShort' => '',
+            '_riasecTie' => '',
             'counseling' => '',
             'mismatched' => false,
             'matched' => false,
@@ -486,7 +501,7 @@ if ($search !== '') {
 }
 
 if (($asCsv || $asPdf) && !$exportsResults) {
-    $filtered = array_map(fn($s) => ['riasec' => ''] + $s, $filtered); // no RIASEC code in the file
+    $filtered = array_map(fn($s) => ['riasec' => '', 'riasecTied' => false, 'riasecLabel' => '', '_riasecShort' => '', '_riasecTie' => ''] + $s, $filtered); // no RIASEC code in the file
 }
 
 // A downloadable copy of the list as filtered (every row, not just one page), for following up with
@@ -507,7 +522,7 @@ if ($asCsv) {
     header('Content-Disposition: attachment; filename="' . $fileName . '"');
     $out = fopen('php://output', 'w');
     fwrite($out, "\xEF\xBB\xBF"); // so Excel reads names with Ñ and accents correctly
-    fputcsv($out, ['Name', 'Strand', 'Section', 'Registered', 'Assessed', 'Assessment Date', 'Holland Code (Top 3, ranked)', 'Email'], escape: '\\');
+    fputcsv($out, ['Name', 'Strand', 'Section', 'Registered', 'Assessed', 'Assessment Date', 'Holland Code (Top 3, ranked)', 'Top-3 Ties', 'Email'], escape: '\\');
     foreach ($filtered as $s) {
         fputcsv($out, [
             $safe($s['name']), $s['strand'], $s['section'],
@@ -515,6 +530,8 @@ if ($asCsv) {
             $s['status'] === 'Completed' ? 'Yes' : 'No',
             $s['assessmentDate'] ? date('Y-m-d', strtotime((string) $s['assessmentDate'])) : '',
             QuestionBank::hollandCode(array_values(array_filter(explode(', ', (string) ($s['riasec'] ?? ''))))),
+            // "Unique", "Tied: CER or CEI" or "All six equal": equal scores have no unique ranked code.
+            (string) ($s['_riasecTie'] ?? ''),
             $safe((string) ($s['_email'] ?? '')),
         ], escape: '\\');
     }
@@ -557,7 +574,8 @@ if ($asPdf) {
     $counts = 'In this list: ' . $count(fn($s) => $s['status'] === 'Completed') . ' completed, '
         . $count(fn($s) => $s['status'] === 'Pending') . ' pending, '
         . $count(fn($s) => $s['status'] === 'Not Registered') . ' not registered, '
-        . $count(fn($s) => $s['mismatched']) . ' mismatched.';
+        . $count(fn($s) => $s['mismatched']) . ' mismatched.'
+        . (array_filter($filtered, fn($s) => !empty($s['riasecTied'])) ? ' "Tie" / "All equal": equal scores, so there is no unique Top-3 code.' : '');
     try {
         // Inside the try: the student names were decrypted above, but nothing here should break the page with a raw error.
         $rows = array_map(fn($s) => [
@@ -569,7 +587,7 @@ if ($asPdf) {
             // The same words as the page: Completed, Pending, Not registered (a mismatched result is always a completed one).
             $s['mismatched'] ? 'Mismatched' : ($s['status'] === 'Not Registered' ? 'Not registered' : $s['status']),
             $s['assessmentDate'] ? date('M j, Y', strtotime((string) $s['assessmentDate'])) : '-',
-            QuestionBank::hollandCode(array_values(array_filter(explode(', ', (string) ($s['riasec'] ?? ''))))) ?: '-',
+            ($s['_riasecShort'] ?? '') !== '' ? $s['_riasecShort'] : (QuestionBank::hollandCode(array_values(array_filter(explode(', ', (string) ($s['riasec'] ?? ''))))) ?: '-'),
             $s['counseling'] !== '' ? $s['counseling'] : 'No request',
         ], $filtered);
         $position = $user['role'] === 'counselor' ? ($user['positionLabel'] ?? 'Guidance Counselor') : 'Administrator';
@@ -612,7 +630,10 @@ $pageRows = array_map(function ($s) use ($withName, $seesResults, $seesAccounts)
     $s['email'] = $s['userId'] !== null ? $s['_email'] : null;
     if (!$seesResults) {
         $s['riasec'] = ''; // the RIASEC code is an assessment result
+        $s['riasecTied'] = false;
+        $s['riasecLabel'] = '';
     }
+    unset($s['_riasecShort'], $s['_riasecTie']);
     if (!$seesAccounts) {
         $s['isActive'] = null; // the account state belongs to Student account management
         unset($s['locked']);

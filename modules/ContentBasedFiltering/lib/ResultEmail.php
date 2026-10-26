@@ -15,7 +15,7 @@ require_once __DIR__ . '/Mismatch.php';
 class ResultEmail
 {
     /** The text of the email: ['subject','heading','message','cta','ctaPath']. */
-    public static function build(bool $mismatch, array $topTitles): array
+    public static function build(bool $mismatch, array $topTitles, bool $allProgramsTied = false): array
     {
         if ($mismatch) {
             return [
@@ -24,6 +24,15 @@ class ResultEmail
                 'message' => 'Thank you for completing the RIASEC career assessment and the Career Worksheet. Please visit the Guidance Office so a counselor can talk with you about your results and your career options.',
                 'cta' => 'Go to ProfilePath',
                 'ctaPath' => '/student-login',
+            ];
+        }
+        if ($allProgramsTied) {
+            return [
+                'subject' => 'Your career assessment results',
+                'heading' => 'Thank you for completing your assessment',
+                'message' => 'Thank you for completing the RIASEC career assessment and the Career Worksheet. Your interest scores were equal, so every MMCL program was equally similar to your RIASEC profile and ProfilePath cannot put one program ahead of another. Please talk with a Guidance Counselor about your interests and options. You can see your results under Career Results in ProfilePath.',
+                'cta' => 'View My Results',
+                'ctaPath' => '/results',
             ];
         }
         sort($topTitles, SORT_NATURAL | SORT_FLAG_CASE); // no ranking is implied
@@ -37,7 +46,7 @@ class ResultEmail
     }
 
     /** @return bool true if an email went out */
-    public static function send(PDO $pdo, int $studentId, bool $mismatch, array $topTitles): bool
+    public static function send(PDO $pdo, int $studentId, bool $mismatch, array $topTitles, bool $allProgramsTied = false): bool
     {
         try {
             $row = $pdo->prepare(
@@ -54,7 +63,7 @@ class ResultEmail
                 return false; // already emailed in the last day
             }
             $first = (string) Crypto::dec($r['first_name_enc']);
-            $mail = self::build($mismatch, $topTitles);
+            $mail = self::build($mismatch, $topTitles, $allProgramsTied);
             $link = rtrim((string) getenv('APP_URL'), '/') . $mail['ctaPath'];
             $safeFirst = htmlspecialchars($first, ENT_QUOTES, 'UTF-8');
             $safeMsg = htmlspecialchars($mail['message'], ENT_QUOTES, 'UTF-8');

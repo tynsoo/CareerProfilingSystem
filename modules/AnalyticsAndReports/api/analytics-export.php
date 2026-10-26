@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../CareerProfiling/lib/QuestionBank.php';
+require_once __DIR__ . '/../../CareerProfiling/lib/RiasecInterpretation.php';
 require_once __DIR__ . '/../../../shared/lib/AcademicYear.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -52,7 +53,7 @@ header('Content-Disposition: attachment; filename="student-roster-' . $safeAy . 
 $out = fopen('php://output', 'w');
 fputcsv($out, [
     'Last Name', 'First Name', 'Strand', 'Grade Level', 'Section',
-    'Assessment Status', 'Holland Code (Top 3, ranked)', 'R', 'I', 'A', 'S', 'E', 'C',
+    'Assessment Status', 'Holland Code (Top 3, ranked)', 'Top-3 Ties', 'R', 'I', 'A', 'S', 'E', 'C',
 ], escape: '\\');
 
 // Stop a name that starts with = + - @ from running as a formula when the file is opened in Excel.
@@ -68,6 +69,9 @@ foreach ($stmt as $row) {
         $row['section'],
         $completed ? 'Completed' : 'Pending',
         $completed ? QuestionBank::hollandCode(json_decode($row['top_types'], true) ?: []) : '',
+        $completed ? RiasecInterpretation::tieLabel(RiasecInterpretation::interpret([
+            'R' => $row['score_r'], 'I' => $row['score_i'], 'A' => $row['score_a'], 'S' => $row['score_s'], 'E' => $row['score_e'], 'C' => $row['score_c'],
+        ])) : '',
         $completed ? $row['score_r'] : '',
         $completed ? $row['score_i'] : '',
         $completed ? $row['score_a'] : '',

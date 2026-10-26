@@ -99,16 +99,29 @@ student1,,x,,,x,x,bsit
 
 ## 3. Course-vector conversion
 
-> **Update (2026-10-22): rank weights 3-2-1.** The program profiles (the Holland codes) come from the
+> **Update (2026-10-22, wording corrected 2026-10-26): 1-2-3 ranks, converted to matching strengths.** The
+> program profiles (the Holland codes) come from the
 > guidance counselors, Ms. Mylde Loraine L. De Guzman (Guidance Counselor) and Ms. Tricia Pauline S. Lacap
-> (Guidance Facilitator), and they rank the three letters: the 1st letter is the program's strongest type and
-> the 3rd its weakest (RIC: R 1st, I 2nd, C 3rd). The web app (`modules/ContentBasedFiltering/lib/CBFEngine.php`, `courseVector()`) and the
-> toolkit (`cbf_eval.py`, encoding `ranksum`) now give the 1st, 2nd and 3rd letter the weights 3, 2 and 1 (rank-sum
-> weights, Stillwell, Seaver & Edwards, 1981; set in `config/cbf.php` as `holland_rank_weights`). A letter that is
+> (Guidance Facilitator), and they rank the three letters 1-2-3: 1 = Primary, 2 = Secondary, 3 = Tertiary
+> (RIC: R Primary, I Secondary, C Tertiary). These ranks are the Holland code and stay authoritative. For the
+> cosine similarity, the web app (`modules/ContentBasedFiltering/lib/CBFEngine.php`, `courseVector()`) and the
+> toolkit (`cbf_eval.py`, encoding `ranksum`) convert each rank to a matching strength, **strength = 4 − rank**:
+> Primary 3, Secondary 2, Tertiary 1 (set in `config/cbf.php` as `holland_rank_weights`). A letter that is
 > not in the code gets 0. Example: RIC -> [3, 2, 0, 0, 0, 1], IRC -> [2, 3, 0, 0, 0, 1], ICR -> [1, 3, 0, 0, 0, 2].
-> Every course vector has the same size, sqrt(14), so no program is favoured by size, and the 32 programs now have
-> 22 different vectors (the 22 different final codes) instead of 11. The weights are the ratio 3:2:1 of the
-> counselors' rank, not values fitted to data. The binary encoding described below is kept in `cbf_eval.py`
+> The conversion is needed: using the ranks themselves (1, 2, 3) as vector values would make the Tertiary letter
+> count most. Every course vector has the same size, sqrt(14), so no program is favoured by size, and the 32
+> programs now have 22 different vectors (the 22 different final codes) instead of 11.
+>
+> **Status of the conversion.** It is this system's algorithmic choice, not the Holland code itself, and it is not
+> prescribed by the counselors or by a published study. Equal steps between the ranks are assumed, not fitted to
+> data; only the ratio 3:2:1 matters (1, 0.67, 0.33 gives the same cosines). Related literature, as indirect
+> support only: the C index (Brown & Gore, 1994, as restated by Eggerth & Andrew, 2006) weights the comparisons of
+> the 1st, 2nd and 3rd letters of two Holland codes 3, 2 and 1, but it compares two three-letter codes through
+> hexagon distances, not a six-score profile by cosine; rank-sum weighting in decision analysis (Stillwell, Seaver
+> & Edwards, 1981) turns a ranking into weights the same way, but it is not a RIASEC method. Neither validates this
+> representation or the recommendations. Because the cosine sums all three letters, the Best RIASEC Match does not
+> always have the student's highest type as its Primary letter (in 24% of 50,000 random valid profiles it did
+> not, measured 2026-10-26). The binary encoding described below is kept in `cbf_eval.py`
 > (`--encoding binary`) as a sensitivity comparison. Where this section and sections 5, 6, 10, 10a and 13 speak of
 > "binary" or "same letters = same similarity", read them with this update.
 
@@ -373,10 +386,11 @@ test students** at **matching output levels**:
 
 ## 10. Encoding decision, tie handling and counseling referral
 
-- **Encoding (updated 2026-10-22):** the course vector uses the counselors' letter rank with rank-sum
-  weights 3, 2, 1 (§3 update). The student vector is the six mean item scores. The older binary
+- **Encoding (updated 2026-10-22):** the course vector converts the counselors' 1-2-3 letter ranks to
+  matching strengths 3, 2, 1 (strength = 4 − rank; §3 update). The student vector is the six mean item
+  scores. The older binary
   encoding is kept only as a comparison.
-- **Ties between courses.** Courses with the same score keep the same match percentage. When
+- **Ties between courses.** Courses with the same score keep the same cosine similarity. When
   more courses tie than fit in the Top-3, they are listed in course-list order. The evaluation
   counts tied courses as equally likely (§9).
 - **Ties in the student's top 3.** When two RIASEC scores tie for 3rd place, the letter that
@@ -415,8 +429,8 @@ separate; none is given a numeric weight, and the worksheet never enters the cos
 | **3. Prediction model** | What course does the model predict from patterns in the training dataset? | WEKA decision tree | **not available** (no real dataset yet); excluded |
 
 - **Best RIASEC Match (CBF only):** every course tied at the highest cosine similarity. Because
-  course vectors use the rank weights 3-2-1, only courses with the same code (same letters in the same
-  order, e.g. the four IRC programs) always have the same similarity; such ties are shown together and
+  course vectors use the rank-derived strengths 3, 2, 1, only courses with the same code (same letters in
+  the same rank order, e.g. the four IRC programs) always have the same similarity; such ties are shown together and
   never broken.
 - **Alternative Courses (CBF only):** every course at the next-highest cosine similarity.
 - **Preferred Course:** the student's own selection, shown separately on the results page. It
@@ -501,11 +515,11 @@ sample row).
 
 ## 13. Worked examples
 
-### Current method: mean-score student vector vs. rank-weighted course vector (the system)
+### Current method: mean-score student vector vs. course vector of rank-derived strengths (the system)
 
 Development student (made-up scores, not research data): R 15, I 40, A 12, S 18, E 35, C 45.
 - Student vector S = scores / 10 = **[1.5, 4.0, 1.2, 1.8, 3.5, 4.5]**, ||S|| = **7.4451**.
-- Every course vector has ||C|| = sqrt(14) = **3.7417** (weights 3, 2, 1), so cosine = (S · C) / (7.4451 x 3.7417).
+- Every course vector has ||C|| = sqrt(14) = **3.7417** (strengths 3, 2, 1 for ranks 1, 2, 3), so cosine = (S · C) / (7.4451 x 3.7417).
 
 | Course (code) | Course vector C (R I A S E C) | S · C | Cosine |
 |---|---|---|---|
@@ -515,7 +529,8 @@ Development student (made-up scores, not research data): R 15, I 40, A 12, S 18,
 | BS Computer Science (IRC) | [2, 3, 0, 0, 0, 1] | 3.0 + 12.0 + 4.5 = 19.5 | 0.7000 |
 | BS Tourism Management (SEA) | [0, 0, 1, 3, 2, 0] | 1.2 + 5.4 + 7.0 = 13.6 | 0.4882 |
 
-The student's strongest types in order are C, I, E, and the code CIE lists the same types in the same order, so it
+The student's strongest types in order are C, I, E, and the code CIE ranks the same types in the same order (C
+Primary, I Secondary, E Tertiary), so it
 has the highest cosine. The same three letters in another order (CEI, IEC, ECI, EIC) score lower, which the older
 binary encoding could not show (it gave all five programs the same value). Numbers produced by running
 `CBFEngine::compute()`; hand check in `tests/pipeline_test.php`.

@@ -112,12 +112,19 @@ class QuestionBank
         return $code;
     }
 
-    /** A student's raw total for one type, put on the 10-50 scale every stored result uses. */
+    /**
+     * A student's raw total for one type, put on the 10-50 scale every stored result uses:
+     * 10 x raw / n, rounded half up to a whole number (exactly 2 x raw for 5 questions per type).
+     * Whole-number arithmetic, so a .5 always rounds up; the earlier floating-point version
+     * rounded 14.5 and 28.5 down for 20 questions per type.
+     */
     public static function scaleScore(int $rawTotal, int $questionsInType): int
     {
         if ($questionsInType <= 0) {
             return 0;
         }
-        return (int) round($rawTotal / ($questionsInType * self::MAX_ANSWER) * self::SCORE_SCALE);
+        // round(10 x raw / n) with halves up = floor((20 x raw + n) / (2n))
+        $scale = intdiv(self::SCORE_SCALE, self::MAX_ANSWER);   // 10
+        return intdiv(2 * $scale * $rawTotal + $questionsInType, 2 * $questionsInType);
     }
 }

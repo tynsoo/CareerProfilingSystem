@@ -5,6 +5,7 @@ require_once __DIR__ . '/AnalyticsReport.php';
 require_once __DIR__ . '/../../../shared/lib/AcademicYear.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
 require_once __DIR__ . '/../../CareerProfiling/lib/QuestionBank.php';
+require_once __DIR__ . '/../../CareerProfiling/lib/RiasecInterpretation.php';
 
 /**
  * The Excel version of the analytics report: a Summary sheet (key numbers, completion by section and a
@@ -21,7 +22,7 @@ class AnalyticsXlsx
      * who have not registered. Limited to the sections the staff member handles and to the strand/section filter.
      *
      * @param array<int,string>|null $scope see StaffScope
-     * @return array<int,array{name:string,strand:string,section:string,registered:bool,assessed:bool,date:?string,riasec:string}>
+     * @return array<int,array{name:string,strand:string,section:string,registered:bool,assessed:bool,date:?string,riasec:string,ties:string}>
      */
     public static function studentRows(PDO $pdo, ?array $scope, string $strand = '', string $section = '', string $academicYear = ''): array
     {
@@ -30,7 +31,8 @@ class AnalyticsXlsx
         $rows = [];
         $registeredIds = [];
         $stmt = $pdo->query(
-            'SELECT s.school_id, s.first_name_enc, s.last_name_enc, s.strand, s.section, s.academic_year, a.top_types, a.completed_at
+            'SELECT s.school_id, s.first_name_enc, s.last_name_enc, s.strand, s.section, s.academic_year, a.top_types, a.completed_at,
+                    a.score_r, a.score_i, a.score_a, a.score_s, a.score_e, a.score_c
              FROM students s
              JOIN users u ON u.id = s.user_id
              LEFT JOIN assessments a ON a.student_id = s.user_id AND a.is_latest = TRUE'
@@ -48,6 +50,10 @@ class AnalyticsXlsx
                 'registered' => true, 'assessed' => $done,
                 'date' => $done ? date('Y-m-d', strtotime((string) $r['completed_at'])) : null,
                 'riasec' => QuestionBank::hollandCode($types),
+                // "Unique", "Tied: CER or CEI" or "All six equal" (modules/CareerProfiling/lib/RiasecInterpretation.php).
+                'ties' => $done ? RiasecInterpretation::tieLabel(RiasecInterpretation::interpret([
+                    'R' => $r['score_r'], 'I' => $r['score_i'], 'A' => $r['score_a'], 'S' => $r['score_s'], 'E' => $r['score_e'], 'C' => $r['score_c'],
+                ])) : '',
             ];
         }
         if ($ay !== '') {
@@ -59,7 +65,7 @@ class AnalyticsXlsx
                 }
                 $rows[] = [
                     'name' => (string) Crypto::dec($r['name_enc']), 'strand' => $r['strand'], 'section' => $r['section'],
-                    'registered' => false, 'assessed' => false, 'date' => null, 'riasec' => '',
+                    'registered' => false, 'assessed' => false, 'date' => null, 'riasec' => '', 'ties' => '',
                 ];
             }
         }
@@ -159,15 +165,15 @@ class AnalyticsXlsx
         ]);
 
         // ---- Students
-        $list = [array_map(fn($h) => $S($h, XlsxWriter::S_HEADER), ['Name', 'Strand', 'Section', 'Registered', 'Assessed', 'Assessment date', 'Holland code (top 3, ranked)'])];
+        $list = [array_map(fn($h) => $S($h, XlsxWriter::S_HEADER), ['Name', 'Strand', 'Section', 'Registered', 'Assessed', 'Assessment date', 'Holland code (top 3, ranked)', 'Top-3 ties'])];
         foreach ($students as $s) {
             $list[] = [
                 $S($s['name'], XlsxWriter::S_TEXT), $S($s['strand'], XlsxWriter::S_TEXT), $S($s['section'], XlsxWriter::S_TEXT),
                 $S($s['registered'] ? 'Yes' : 'No', XlsxWriter::S_TEXT), $S($s['assessed'] ? 'Yes' : 'No', XlsxWriter::S_TEXT),
-                $S($s['date'] ?? '', XlsxWriter::S_TEXT), $S($s['riasec'], XlsxWriter::S_TEXT),
+                $S($s['date'] ?? '', XlsxWriter::S_TEXT), $S($s['riasec'], XlsxWriter::S_TEXT), $S($s['ties'] ?? '', XlsxWriter::S_TEXT),
             ];
         }
-        $x->addSheet('Students', $list, [34, 10, 12, 12, 12, 16, 28], true);
+        $x->addSheet('Students', $list, [34, 10, 12, 12, 12, 16, 28, 26], true);
 
         $x->protect($password);
         return $x->build();
@@ -221,7 +227,7 @@ class AnalyticsXlsx
                 ['Completed the RIASEC assessment', $assessed, (float) $data['completion']['rate']],
                 ['Not yet completed the assessment', $notAssessed, $pct($notAssessed, $expected)],
                 ['Completed the Career Electives Worksheet', (int) $data['worksheet']['count'], (float) $data['worksheet']['rate']],
-                ['High-confidence program match (cosine similarity ' . number_format((float) $data['confidence']['threshold'], 2) . ' or higher)', (int) $data['confidence']['count'], (float) $data['confidence']['rate']],
+                ['Program match at or above the similarity level (cosine similarity ' . number_format((float) $data['confidence']['threshold'], 2) . ' or higher)', (int) $data['confidence']['count'], (float) $data['confidence']['rate']],
             ],
             'note' => 'Students expected = registered students plus students on the uploaded class roster who have not registered yet. Every percent in this table is out of that number.',
         ];

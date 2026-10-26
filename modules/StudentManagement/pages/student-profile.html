@@ -207,10 +207,11 @@
 
               <div>
                 <div class="sp-sub">
-                  <p class="sp-label">Top 3 RIASEC Themes</p>
+                  <p class="sp-label" id="riasecThemesLabel">Top 3 RIASEC Themes</p>
                   <span class="sp-aside" id="dominantLabel">Dominant Profile</span>
                 </div>
                 <div id="riasecThemes" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="riasecTieText" class="hidden text-xs text-gray-600 mt-2 leading-relaxed"></div>
               </div>
 
 
@@ -487,15 +488,32 @@
       return p.title; // course names only: the CGC does not record scores
     };
     const list = function(items) { return items && items.length ? items.join(', ') : 'None'; };
+    // Every valid program at the same similarity (full precision): the profile does not let the system prioritise one.
+    const allTied = !!(r.tie && r.tie.allProgramsTied);
     const status = document.getElementById('recStatus');
-    status.textContent = r.matchStatus === 'mismatch' ? 'Differs from RIASEC match' : r.matchStatus === 'match' ? 'Matches RIASEC' : 'Not compared yet';
-    status.className = 'pp-badge pp-badge-' + (r.matchStatus === 'match' ? 'green' : r.matchStatus === 'mismatch' ? 'amber' : 'gray');
+    const tiedAll = !!(r.tie && r.tie.allProgramsTied);
+    status.textContent = r.matchStatus === 'mismatch' ? 'Differs from RIASEC match'
+      : r.matchStatus === 'match' ? (tiedAll ? 'All programs tied' : 'Matches RIASEC') : 'Not compared yet';
+    status.className = 'pp-badge pp-badge-' + (r.matchStatus === 'match' && !tiedAll ? 'green' : r.matchStatus === 'mismatch' ? 'amber' : 'gray');
     document.getElementById('recPreferred').textContent = r.preferredCourse
-      ? withCosine(r.preferredCourse) + (r.preferredCourse.inBestRiasecMatch ? ', also a Best RIASEC Match' : ', differs from the Best RIASEC Match')
+      ? withCosine(r.preferredCourse) + (r.preferredCourse.inBestRiasecMatch
+          ? (allTied ? ', among the tied programs (every program is tied)' : ', also a Best RIASEC Match')
+          : ', differs from the Best RIASEC Match')
       : 'No worksheet result';
-    document.getElementById('recBest').textContent = list(r.bestRiasecMatch.map(withCosine)) +
-      (r.bestRiasecMatch.length > 1 ? ' (tied: same RIASEC letters)' : '') + (r.needsRecompute ? ' (saved before the CBF revision; recompute to update)' : '');
-    document.getElementById('recAlternatives').textContent = list(r.alternatives.map(withCosine));
+    const recBest = document.getElementById('recBest');
+    if (allTied) {
+      // All programs tied: said plainly, with the list kept behind a toggle; no lower group is made up.
+      recBest.innerHTML = '<span class="font-medium">All programs tied (' + r.bestRiasecMatch.length + ')</span>: the student\'s profile is equally similar to every program, so the system cannot prioritise one. ' +
+        '<details class="mt-1"><summary class="text-xs text-gray-600 cursor-pointer">Show the ' + r.bestRiasecMatch.length + ' tied programs</summary><p class="mt-1">' +
+        list(r.bestRiasecMatch.map(withCosine)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p></details>';
+    } else {
+      recBest.textContent = list(r.bestRiasecMatch.map(withCosine)) +
+        (r.bestRiasecMatch.length > 1
+          ? (r.bestRiasecMatch.every(function(p) { return (p.hollandCode || '').toUpperCase() === (r.bestRiasecMatch[0].hollandCode || '').toUpperCase(); })
+            ? ' (tied: same RIASEC code)' : ' (tied: equally close, different codes)')
+          : '') + (r.needsRecompute ? ' (saved before the CBF revision; recompute to update)' : '');
+    }
+    document.getElementById('recAlternatives').textContent = allTied ? 'None (every program is in the tie above)' : list(r.alternatives.map(withCosine));
     // Source 3, the WEKA J48 prediction (api/recommendations.php `prediction`), shown on its own.
     const pred = r.prediction || { status: 'unavailable' };
     document.getElementById('recPrediction').textContent = pred.course
@@ -503,6 +521,19 @@
           : pred.course.inAlternatives ? ', one of the Alternative Courses' : ', outside the RIASEC matches')
       : pred.status === 'no_prediction' ? 'No prediction for this profile'
       : 'Not computed yet';
+    // The model reads the student's top three types. When types are tied at the cutoff, the system takes them in
+    // R, I, A, S, E, C order; the input is not changed, but staff see which sets the scores allow and their predictions.
+    if (pred.inputTie) {
+      const t = pred.inputTie;
+      // Up to six sets are listed one by one; more are summarized by predicted program.
+      const counts = {};
+      t.outcomes.forEach(function(o) { const k = o.program || 'no prediction'; counts[k] = (counts[k] || 0) + 1; });
+      document.getElementById('recPrediction').textContent += '. Input tie: the scores allow ' + t.outcomes.length + ' different top-three sets; the model was given ' +
+        t.usedLetters + ' by the R, I, A, S, E, C tie rule, which the scores do not establish. ' + (t.sameForAll ? 'The prediction is the same for every allowed set.'
+          : t.outcomes.length <= 6
+          ? 'Prediction for each allowed set: ' + t.outcomes.map(function(o) { return o.letters + ' → ' + (o.program || 'no prediction'); }).join('; ') + '.'
+          : 'Across the allowed sets the model predicts ' + Object.keys(counts).map(function(k) { return k + ' (' + counts[k] + ')'; }).join(', ') + '.');
+    }
     if (pred.modelVersion) document.getElementById('recModelVersion').textContent = 'WEKA Prediction above (' + pred.modelVersion + '; shown separately; never changes the CBF result)';
     document.getElementById('recommendationCard').classList.remove('hidden');
   }
@@ -666,24 +697,36 @@
         ? new Date(s.registeredAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
         : 'Not recorded';
 
-      // Top 3 themes: the API sends letters or full names; show the name with the colour of its type.
+      // RIASEC themes: each type's name with the colour of its type.
       const types = {
         R: { name: 'Realistic', color: '#f97316' }, I: { name: 'Investigative', color: '#06b6d4' }, A: { name: 'Artistic', color: '#f59e0b' },
         S: { name: 'Social', color: '#22c55e' }, E: { name: 'Enterprising', color: '#ec4899' }, C: { name: 'Conventional', color: '#3b82f6' }
       };
-      const letterOf = function(x) {
-        x = String(x).trim();
-        if (types[x.toUpperCase()] && x.length === 1) return x.toUpperCase();
-        return Object.keys(types).find(function(k) { return types[k].name.toLowerCase() === x.toLowerCase(); }) || '';
-      };
-      const topLetters = (s.riasec || '').split(',').map(letterOf).filter(Boolean);
+      // The shared interpretation (api/students.php -> RiasecInterpretation): the same wording the student sees.
+      // Every type that reaches the top three is shown with its score; equal scores are marked as tied.
+      const interp = s.interpretation;
       const themes = document.getElementById('riasecThemes');
-      themes.innerHTML = topLetters.length
-        ? topLetters.map(function(l) { return '<span class="sp-theme"><i style="background:' + types[l].color + '"></i>' + types[l].name + '</span>'; }).join('')
+      const tieText = document.getElementById('riasecTieText');
+      const shown = !interp ? [] : interp.status === 'all_equal' ? interp.ranked : interp.ranked.filter(function(r) { return r.inTopGroup; });
+      themes.innerHTML = shown.length
+        ? shown.map(function(r) {
+            return '<span class="sp-theme"><i style="background:' + types[r.letter].color + '"></i>' + types[r.letter].name + ' ' + r.score +
+              (r.tiedWith.length ? ' (tied)' : '') + '</span>';
+          }).join('')
         : (s.seesResults === false
           ? '<p class="text-sm text-gray-500">Not shown: assessment results are not part of your access.</p>'
           : '<p class="text-sm text-gray-500">Not available — assessment not yet completed.</p>');
-      document.getElementById('dominantLabel').classList.toggle('hidden', !topLetters.length);
+      const dominant = document.getElementById('dominantLabel');
+      dominant.classList.toggle('hidden', !shown.length);
+      if (interp && interp.status !== 'incomplete') {
+        document.getElementById('riasecThemesLabel').textContent = interp.status === 'all_equal' ? 'RIASEC Themes (all six equal)'
+          : interp.uniqueTopSet ? 'Top 3 RIASEC Themes' : 'Top RIASEC Themes (tied at third place)';
+        dominant.textContent = interp.code ? 'Holland Code ' + interp.code : interp.headline;
+        if (interp.status !== 'distinct') {
+          tieText.textContent = interp.summary + ' Scores run from 10 to 50.';
+          tieText.classList.remove('hidden');
+        }
+      }
 
 
       // Counseling status: amber until the student has asked for advising, green once they have.

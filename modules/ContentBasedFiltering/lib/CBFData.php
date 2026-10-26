@@ -106,7 +106,7 @@ class CBFData
      * configured threshold. The caller manages the transaction.
      *
      * @return array{recommendationId: int, topProgramId: int, topScore: float, status: string, reason: ?string,
-     *               bestRiasecMatchTitles: string[], alternativeTitles: string[]}|null null if there are no active programs
+     *               bestRiasecMatchTitles: string[], alternativeTitles: string[], allProgramsTied: bool}|null null if there are no active programs
      * @throws InvalidArgumentException when the student's RIASEC profile is missing or invalid
      */
     public static function saveRecommendation(PDO $pdo, int $studentId, array $profile, ?int $statedProgramId, int $assessmentId, ?int $worksheetId): ?array
@@ -125,12 +125,13 @@ class CBFData
         }
         // Internal only (monitoring threshold / history); never shown as a percentage.
         $topProgramId = (int) $cbf['results'][0]['id'];
-        $topScore = (float) $cbf['results'][0]['cosine'];
+        $topScore = (float) ($cbf['results'][0]['cosineExact'] ?? $cbf['results'][0]['cosine']);
 
         // Every course's CBF calculation, so the result can be audited later.
         $scoresForStorage = array_map(fn($r) => [
             'programId' => $r['id'], 'hollandCode' => $r['hollandCode'], 'courseVector' => $r['courseVector'],
             'dotProduct' => $r['dotProduct'], 'courseMagnitude' => $r['courseMagnitude'], 'cosine' => $r['cosine'],
+            'cosineExact' => $r['cosineExact'] ?? $r['cosine'],   // ties are decided on this, not on the 4-decimal value
             'studentVector' => $cbf['studentVector'], 'studentMagnitude' => $cbf['studentMagnitude'],
         ], $cbf['results']);
 
@@ -175,7 +176,9 @@ class CBFData
         $named = fn(array $ids) => array_values(array_map(fn($id) => $titles[$id], $ids));
         return ['recommendationId' => $recommendationId, 'topProgramId' => $topProgramId, 'topScore' => $topScore,
             'status' => $result['status'], 'reason' => $result['reason'],
-            'bestRiasecMatchTitles' => $named($result['bestRiasecMatchIds']), 'alternativeTitles' => $named($result['alternativeIds'])];
+            'bestRiasecMatchTitles' => $named($result['bestRiasecMatchIds']), 'alternativeTitles' => $named($result['alternativeIds']),
+            // Every valid program is tied: the profile does not let the system prioritise any program.
+            'allProgramsTied' => count($result['bestRiasecMatchIds']) > 1 && count($result['bestRiasecMatchIds']) === count($cbf['results'])];
     }
 
     /** PostgreSQL INT[] literal, e.g. {3,4,6}. */

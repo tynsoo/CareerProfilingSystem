@@ -20,6 +20,8 @@ require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/CBFData.php';
 require_once __DIR__ . '/../../CareerDataset/lib/Careers.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
+require_once __DIR__ . '/../../CareerProfiling/lib/RiasecInterpretation.php';
+require_once __DIR__ . '/../lib/PredictionModel.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(['error' => 'Method not allowed'], 405);
@@ -52,7 +54,7 @@ $seesScores = $isStaff && Rbac::accessLevel('assessmentResults', Rbac::roleKey($
 
 try {
     $stmt = $pdo->prepare(
-        'SELECT id, computed_at, stated_program_id, scores, source_worksheet_id, match_status, mismatch_reason,
+        'SELECT id, computed_at, stated_program_id, scores, source_assessment_id, source_worksheet_id, match_status, mismatch_reason,
                 cbf_program_ids, final_program_ids, prediction_program_ids, model_version
          FROM recommendations WHERE student_id = ? AND source_assessment_id = (SELECT id FROM assessments WHERE student_id = recommendations.student_id AND is_latest = TRUE)
          ORDER BY computed_at DESC LIMIT 1'
@@ -83,7 +85,13 @@ if ($row['source_worksheet_id'] !== null) {
 }
 
 $scores = json_decode($row['scores'], true) ?: [];
-usort($scores, fn($a, $b) => [$b['cosine'], $a['programId']] <=> [$a['cosine'], $b['programId']]);
+// Ties and groups are decided on the full-precision cosine (cosineExact, CBFEngine::TIE_EPSILON). Results saved before
+// it was stored only have the 4-decimal value; they are grouped on that until recomputed (db/recompute_recommendations.php).
+$hasExact = $scores && isset($scores[0]['cosineExact']);
+$scores = array_map(fn($s) => $s + ['cosineFull' => (float) ($s['cosineExact'] ?? $s['cosine'])], $scores);
+usort($scores, fn($a, $b) => abs($a['cosineFull'] - $b['cosineFull']) < CBFEngine::TIE_EPSILON
+    ? $a['programId'] <=> $b['programId']
+    : $b['cosineFull'] <=> $a['cosineFull']);
 $cosineOf = array_column($scores, 'cosine', 'programId');
 $preferredId = $row['stated_program_id'] !== null ? (int) $row['stated_program_id'] : null;
 
@@ -93,9 +101,28 @@ $isCurrent = isset($scores[0]['dotProduct']);
 // Best RIASEC Match: courses tied at the highest cosine similarity (CBF only).
 $bestIds = $isCurrent && $row['cbf_program_ids'] !== null
     ? CBFData::parseIntArray($row['cbf_program_ids'])
-    : array_map('intval', array_column(CBFEngine::selectCandidates($scores, 'cosine'), 'programId'));
-// Alternative Courses: courses at the next-highest cosine similarity (CBF only).
-$alternativeIds = array_map('intval', array_column(CBFEngine::selectAlternatives($scores, 'cosine'), 'programId'));
+    : array_map('intval', array_column(CBFEngine::selectCandidates($scores, 'cosineFull'), 'programId'));
+// Alternative Courses: courses at the next-highest cosine similarity after the Best RIASEC Match (CBF only). None when
+// every program is in the Best RIASEC Match: no lower group is made up.
+$rest = array_values(array_filter($scores, fn($s) => !in_array((int) $s['programId'], $bestIds, true)));
+$alternativeIds = $bestIds ? array_map('intval', array_column(CBFEngine::selectCandidates($rest, 'cosineFull'), 'programId')) : [];
+// How the Best RIASEC Match is tied: every valid program (the profile cannot put one program ahead of another) or a
+// smaller group at the highest value.
+$tie = [
+    'bestCount' => count($bestIds),
+    'programsCompared' => count($scores),
+    'allProgramsTied' => count($bestIds) > 1 && count($bestIds) === count($scores),
+    'tolerance' => CBFEngine::TIE_EPSILON,
+    'fullPrecision' => $hasExact,
+];
+// The assessment this result was computed from, read here so every page explains the same record.
+$assessmentStmt = $pdo->prepare('SELECT score_r, score_i, score_a, score_s, score_e, score_c FROM assessments WHERE id = ?');
+$assessmentStmt->execute([(int) $row['source_assessment_id']]);
+$sourceAssessment = $assessmentStmt->fetch();
+$interpretation = RiasecInterpretation::interpret($sourceAssessment ? [
+    'R' => $sourceAssessment['score_r'], 'I' => $sourceAssessment['score_i'], 'A' => $sourceAssessment['score_a'],
+    'S' => $sourceAssessment['score_s'], 'E' => $sourceAssessment['score_e'], 'C' => $sourceAssessment['score_c'],
+] : null);
 $candidateIds = array_merge($bestIds, $alternativeIds);
 // Prediction model (WEKA): NULL = did not run; {} = ran but predicted no active program.
 $predictionIds = CBFData::parseIntArray($row['prediction_program_ids'] ?? null);
@@ -158,6 +185,10 @@ $response = [
     'matchStatus' => $row['match_status'],
     'mismatchReason' => $row['mismatch_reason'],
     'needsRecompute' => !$isCurrent,
+    'tie' => $tie,
+    'assessmentId' => (int) $row['source_assessment_id'],
+    // The student's profile from that same assessment (modules/CareerProfiling/lib/RiasecInterpretation.php).
+    'interpretation' => $interpretation,
 ];
 if (!$showPrediction) {
     $response['sources']['prediction'] = 'staff_only';
@@ -169,7 +200,46 @@ if (!$showPrediction) {
         'course' => $predicted ? $predicted + ['inBestRiasecMatch' => in_array($predicted['id'], $bestIds, true),
             'inAlternatives' => in_array($predicted['id'], $alternativeIds, true)] : null,
         'modelVersion' => $row['model_version'],
+        'inputTie' => null,
     ];
+    // The J48 model (features "top3") reads which three types are the student's top three. When types are tied at
+    // the cutoff, CBFEngine::topRiasecLetters takes them in R, I, A, S, E, C order. The input is not changed here;
+    // staff are shown which top-three sets the scores allow and what the model gives for each.
+    $model = $isStaff && !$interpretation['uniqueTopSet'] && $interpretation['status'] !== 'incomplete' ? PredictionModel::load() : null;
+    if ($model !== null && ($model['features'] ?? 'top3') === 'top3') {
+        $s = $interpretation['scores'];
+        $sorted = array_values($s);
+        rsort($sorted);
+        $third = $sorted[2];
+        $required = array_values(array_filter(RiasecInterpretation::DIMENSIONS, fn($d) => $s[$d] > $third));
+        $atCutoff = array_values(array_filter(RiasecInterpretation::DIMENSIONS, fn($d) => $s[$d] === $third));
+        $need = 3 - count($required);
+        $sets = [[]];
+        foreach ($atCutoff as $d) {   // every way to take $need of the types tied at the cutoff
+            foreach ($sets as $set) {
+                if (count($set) < $need) {
+                    $sets[] = array_merge($set, [$d]);
+                }
+            }
+        }
+        $active = CBFData::activePrograms($pdo);
+        $titleOf = array_column($active, 'title', 'id');
+        $used = CBFEngine::topRiasecLetters($s, 3);
+        $displayOrder = array_column($interpretation['ranked'], 'letter');
+        $outcomes = [];
+        foreach (array_filter($sets, fn($set) => count($set) === $need) as $set) {
+            $letters = array_values(array_intersect($displayOrder, array_merge($required, $set)));
+            $ids = PredictionModel::predict($letters, $active, $model) ?? [];
+            $outcomes[] = ['letters' => implode('', $letters), 'program' => $ids ? ($titleOf[$ids[0]] ?? null) : null,
+                'usedBySystem' => count(array_diff($letters, $used)) === 0];
+        }
+        $response['prediction']['inputTie'] = [
+            'rule' => 'Types tied at the top-three cutoff are taken in the order R, I, A, S, E, C (CBFEngine::topRiasecLetters); the scores do not choose between them.',
+            'usedLetters' => implode('', $used),
+            'outcomes' => $outcomes,
+            'sameForAll' => count(array_unique(array_map(fn($o) => (string) $o['program'], $outcomes))) === 1,
+        ];
+    }
 }
 if ($isStaff) {
     $response['cbf'] = [

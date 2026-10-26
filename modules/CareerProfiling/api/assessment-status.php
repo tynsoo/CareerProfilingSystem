@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/ExamSchedule.php';
 require_once __DIR__ . '/../lib/RetakeRequest.php';
 require_once __DIR__ . '/../lib/AssessmentProgress.php';
+require_once __DIR__ . '/../lib/RiasecInterpretation.php';
 
 $user = Auth::requireLogin();
 if ($user['role'] !== 'student') {
@@ -31,19 +32,23 @@ if (!$row) {
 
 $retake = RetakeRequest::stateFor($pdo, (int) $user['id']);
 
+$scores = [
+    'R' => (int) $row['score_r'],
+    'I' => (int) $row['score_i'],
+    'A' => (int) $row['score_a'],
+    'S' => (int) $row['score_s'],
+    'E' => (int) $row['score_e'],
+    'C' => (int) $row['score_c'],
+];
 jsonResponse([
     'completed' => true,
     'completedAt' => $row['completed_at'],
     // 'none', 'pending', 'approved' (the student may retake now) or 'declined'
     'retake' => $retake,
     'retakeApproved' => $retake['status'] === 'approved',
-    'scores' => [
-        'R' => (int) $row['score_r'],
-        'I' => (int) $row['score_i'],
-        'A' => (int) $row['score_a'],
-        'S' => (int) $row['score_s'],
-        'E' => (int) $row['score_e'],
-        'C' => (int) $row['score_c'],
-    ],
+    'scores' => $scores,
+    // The stored code: equal scores in R, I, A, S, E, C order (display order only).
     'topTypes' => json_decode($row['top_types'], true),
+    // What the scores establish, ties included (the same text the staff pages and downloads use).
+    'interpretation' => RiasecInterpretation::interpret($scores),
 ]);

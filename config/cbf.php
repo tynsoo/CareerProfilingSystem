@@ -4,13 +4,17 @@
  *
  * The CBF compares the student's RIASEC profile with each program's Holland (RIASEC)
  * code using cosine similarity. The guidance counselors rank the three letters of a
- * program's code (1st = strongest type, 3rd = weakest), and the course vector uses that
- * rank. There is no 70/30 split with the worksheet and no strand or elective block.
+ * program's code 1-2-3 (1 = Primary, 2 = Secondary, 3 = Tertiary), and the course vector
+ * converts each rank to a matching strength (holland_rank_weights below). There is no 70/30
+ * split with the worksheet and no strand or elective block.
  */
 return [
-    // Weight of the 1st, 2nd and 3rd letter of a program's Holland code (rank-sum weights:
-    // 3, 2, 1; only the ratio matters because cosine ignores the overall size). A letter
-    // that is not in the code gets 0.
+    // Matching strength of the letter at rank 1 (Primary), 2 (Secondary) and 3 (Tertiary) of a
+    // program's Holland code: strength = 4 - rank, so 3, 2, 1 and the Primary letter counts most.
+    // These are not the ranks themselves (using 1, 2, 3 as strengths would make the Tertiary
+    // letter count most) and are not prescribed by the counselors or by a study: equal steps
+    // between ranks are this system's choice. Only the ratio matters, because cosine ignores the
+    // overall size. A letter that is not in the code gets 0.
     'holland_rank_weights' => [3, 2, 1],
 
 

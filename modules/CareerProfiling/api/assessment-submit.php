@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/QuestionBank.php';
+require_once __DIR__ . '/../lib/RiasecInterpretation.php';
 require_once __DIR__ . '/../lib/RetakeRequest.php';
 require_once __DIR__ . '/../lib/AssessmentProgress.php';
 
@@ -117,4 +118,4 @@ try {
 unset($_SESSION['assessmentUnlocked']); // one start, one submission
 AuditLogger::log($studentId, 'student', 'submit_assessment', 'assessment', (string) $assessmentId, "Attempt #$attemptNumber, top: " . implode(', ', $topTypes));
 
-jsonResponse(['success' => true, 'scores' => $totals, 'topTypes' => $topTypes]);
+jsonResponse(['success' => true, 'scores' => $totals, 'topTypes' => $topTypes, 'interpretation' => RiasecInterpretation::interpret($totals)]);

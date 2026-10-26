@@ -14,13 +14,15 @@
  *                      mean item score of that type (raw total ÷ 10 items, so 1.0-5.0).
  *                      Dividing every value by the same number does not change cosine
  *                      values; it only puts the vector on the answer scale (1-5).
- *   2. Course vectors  [R, I, A, S, E, C] = the rank weight of the letter in the program's
- *                      code, 0 if the letter is not in it. The guidance counselors rank the
- *                      letters: the 1st is the program's strongest type and the 3rd its
- *                      weakest, so the 1st letter gets 3, the 2nd 2 and the 3rd 1 (rank-sum
- *                      weights, config/cbf.php holland_rank_weights). Example: AES ->
- *                      [0, 0, 3, 1, 2, 0] (A 3, E 2, S 1). Every code has the same three
- *                      weights, so every course vector has the same magnitude (sqrt(14)).
+ *   2. Course vectors  [R, I, A, S, E, C] = the matching strength of each letter of the
+ *                      program's code, 0 if the letter is not in it. The guidance counselors
+ *                      rank the letters 1-2-3: 1 = Primary, 2 = Secondary, 3 = Tertiary. Each
+ *                      rank is converted to a strength, strength = 4 - rank, so the Primary
+ *                      letter gets 3, the Secondary 2 and the Tertiary 1 (config/cbf.php
+ *                      holland_rank_weights). Example: AES -> [0, 0, 3, 1, 2, 0] (A Primary 3,
+ *                      E Secondary 2, S Tertiary 1). The ranks are the Holland code; the
+ *                      strengths are an algorithmic choice. Every code has the same three
+ *                      strengths, so every course vector has the same magnitude (sqrt(14)).
  *                      A program without a valid code is flagged and skipped.
  *   3. Cosine          computed between the student vector and EVERY valid course vector,
  *                      with the dot product and both magnitudes kept for auditing.
@@ -32,8 +34,9 @@
  *   6. Alternatives    every course at the next-highest cosine similarity.
  *
  * Nothing else enters the calculation: no worksheet answers, no strand, no electives, no
- * prediction model, and no blend with other sources (no 70/30). The only weights are the
- * rank weights of the counselors' letter order inside a program's own code. The worksheet and
+ * prediction model, and no blend with other sources (no 70/30). The only weighting is the
+ * rank-to-strength conversion of the counselors' 1-2-3 letter ranks inside a program's own
+ * code. The worksheet and
  * the prediction model are separate recommendation sources (modules/ContentBasedFiltering/lib/RecommendationPipeline.php).
  *
  * Cosine similarity is a similarity score between 0 and 1. It is not an accuracy and not
@@ -49,7 +52,11 @@ class CBFEngine
         'S' => 'Social', 'E' => 'Enterprising', 'C' => 'Conventional',
     ];
 
-    /** Equal cosine values (within this tolerance) are treated as ties. */
+    /**
+     * Equal cosine values (within this tolerance) are treated as ties. Compared on the full-precision values
+     * (cosineExact), never on the 4-decimal display values; two codes that are mathematically equally close differ
+     * only by floating-point error (far below 1e-9), and different similarities among the 32 codes differ by much more.
+     */
     public const TIE_EPSILON = 1e-9;
 
     private static ?array $config = null;
@@ -83,26 +90,46 @@ class CBFEngine
         $vector = [];
         foreach (self::DIMENSIONS as $d) {
             $v = $scores[$d] ?? null;
-            if ($v === null || !is_numeric($v)) {
+            // is_numeric() accepts NAN and INF, which pass no range check; refuse them too.
+            if ($v === null || !is_numeric($v) || !is_finite((float) $v)) {
                 throw new InvalidArgumentException("The RIASEC score for $d is missing or not a number.");
             }
             if ($v < $min || $v > $max) {
                 throw new InvalidArgumentException("The RIASEC score for $d ($v) is outside the valid range $min-$max.");
             }
-            $vector[] = round($v / $items, 4);
+            $vector[] = (float) $v / $items;   // full precision; rounded only for display
         }
         return $vector;
     }
 
     /**
-     * A program's Holland code -> course vector in [R, I, A, S, E, C] order. The letters are
-     * ranked by the guidance counselors (1st = strongest, 3rd = weakest), so the letter at
-     * position p gets the p-th rank weight (default 3, 2, 1) and the other types get 0.
+     * Refuses anything other than a list of six finite numbers in [R, I, A, S, E, C] order, so a
+     * short, keyed or non-numeric vector can never give a silently wrong similarity.
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function assertVector(array $v): void
+    {
+        if (!array_is_list($v) || count($v) !== count(self::DIMENSIONS)) {
+            throw new InvalidArgumentException('A vector must list exactly ' . count(self::DIMENSIONS) . ' values in R, I, A, S, E, C order.');
+        }
+        foreach ($v as $x) {
+            if ((!is_int($x) && !is_float($x)) || !is_finite((float) $x)) {
+                throw new InvalidArgumentException('Every vector value must be a finite number.');
+            }
+        }
+    }
+
+    /**
+     * A program's Holland code -> course vector in [R, I, A, S, E, C] order. The guidance
+     * counselors rank the letters 1-2-3 (1 = Primary, 2 = Secondary, 3 = Tertiary); the letter
+     * at rank r gets the r-th matching strength (default strength = 4 - r: 3, 2, 1) and the
+     * other types get 0.
      * Example: RIC -> [3, 2, 0, 0, 0, 1]; IRC -> [2, 3, 0, 0, 0, 1].
      * Returns null for a missing or invalid code (anything other than three different
      * RIASEC letters), so the program is flagged instead of given a made-up vector.
      *
-     * @param float[]|null $weights weights of the 1st, 2nd and 3rd letter; null = config/cbf.php
+     * @param float[]|null $weights matching strengths for rank 1, 2 and 3; null = config/cbf.php
      */
     public static function courseVector(?string $hollandCode, ?array $weights = null): ?array
     {
@@ -119,6 +146,8 @@ class CBFEngine
 
     public static function dotProduct(array $a, array $b): float
     {
+        self::assertVector($a);
+        self::assertVector($b);
         $sum = 0.0;
         foreach ($a as $i => $x) {
             $sum += $x * $b[$i];
@@ -128,6 +157,7 @@ class CBFEngine
 
     public static function magnitude(array $v): float
     {
+        self::assertVector($v);
         return sqrt(array_sum(array_map(fn($x) => $x * $x, $v)));
     }
 
@@ -153,7 +183,7 @@ class CBFEngine
      * @return array{studentScores:array, studentVector:float[], studentMagnitude:float,
      *               results:array, excluded:array, candidates:array}
      *         results: every valid course, highest cosine first, each with
-     *         courseVector, dotProduct, courseMagnitude and cosine.
+     *         courseVector, dotProduct, courseMagnitude, cosine (4 decimals, for display) and cosineExact.
      * @throws InvalidArgumentException for an invalid RIASEC profile
      */
     public static function compute(?array $riasecScores, array $programs, ?array $config = null): array
@@ -165,7 +195,9 @@ class CBFEngine
         $results = [];
         $excluded = [];
         foreach ($programs as $p) {
-            $course = self::courseVector($p['hollandCode'] ?? null, $config['holland_rank_weights'] ?? null);
+            // The code as courseVector() reads it, so the stored code uses the same letters as the vector.
+            $code = strtoupper(trim((string) ($p['hollandCode'] ?? '')));
+            $course = self::courseVector($code, $config['holland_rank_weights'] ?? null);
             if ($course === null) {
                 $excluded[] = ['id' => $p['id'], 'title' => $p['title'] ?? null, 'hollandCode' => $p['hollandCode'] ?? null,
                     'reason' => 'Missing or invalid RIASEC mapping (needs three different letters from R, I, A, S, E, C).'];
@@ -180,7 +212,7 @@ class CBFEngine
             $results[] = [
                 'id' => (int) $p['id'],
                 'title' => $p['title'] ?? null,
-                'hollandCode' => strtoupper($p['hollandCode']),
+                'hollandCode' => $code,
                 'courseVector' => $course,
                 'dotProduct' => round(self::dotProduct($student, $course), 4),
                 'courseMagnitude' => round(self::magnitude($course), 4),
@@ -196,7 +228,8 @@ class CBFEngine
         $candidates = self::selectCandidates($results, 'cosine');
         $alternatives = self::selectAlternatives($results, 'cosine');
         foreach ($results as &$r) {
-            $r['cosine'] = round($r['cosine'], 4);
+            $r['cosineExact'] = $r['cosine'];          // full precision: ties and groups are decided on this
+            $r['cosine'] = round($r['cosine'], 4);     // display value
         }
         unset($r);
 

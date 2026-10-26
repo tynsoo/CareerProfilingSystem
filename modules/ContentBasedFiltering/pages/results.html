@@ -773,7 +773,13 @@ document.addEventListener('click', function (e) {
     };
     if (best.length > 1) {
       const tie = document.getElementById('cr-tieNote');
-      tie.textContent = 'These ' + best.length + ' courses have the same RIASEC letters, so they match your profile equally. They are listed in no particular order.';
+      // Courses tie when they have the same code, or when the student's scores make different codes equally close
+      // (e.g. equal scores in every type), so only say "same code" when that is true.
+      const tiedCodes = best.map(function(p) { return (p.hollandCode || '').toUpperCase(); })
+        .filter(function(c, i, all) { return all.indexOf(c) === i; });
+      tie.textContent = tiedCodes.length === 1
+        ? 'These ' + best.length + ' courses have the same RIASEC code (' + tiedCodes[0] + '), so they match your profile equally. They are listed in no particular order.'
+        : 'These ' + best.length + ' courses are equally close to your RIASEC profile, although their codes differ. They are listed in no particular order.';
       tie.classList.remove('hidden');
     }
     document.getElementById('cr-bestRiasec').innerHTML = best.length

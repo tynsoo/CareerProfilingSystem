@@ -90,6 +90,6 @@ AuditLogger::log($studentId, 'student', 'submit_worksheet', 'worksheet', (string
 
 // Automatic result email, no staff action: a thank-you with the Best RIASEC Match, or a request to see the
 // Guidance Office when the Preferred Course differs from it (status from modules/ContentBasedFiltering/lib/RecommendationPipeline.php).
-ResultEmail::send($pdo, $studentId, $saved['status'] === 'mismatch', $saved['bestRiasecMatchTitles']);
+ResultEmail::send($pdo, $studentId, $saved['status'] === 'mismatch', $saved['bestRiasecMatchTitles'], $saved['allProgramsTied'] ?? false);
 
 jsonResponse(['success' => true, 'worksheetId' => $worksheetId, 'recommendationId' => $recommendationId]);
