@@ -1,113 +1,97 @@
 {
-    "version": "J48 top3 C0.1 M10 2026-10-20",
+    "version": "J48 top3 C0.1 M10 393 records 2026-10-27",
     "source": "j48_final.txt",
-    "imported_at": "2026-10-20T17:53:24+00:00",
+    "imported_at": "2026-10-27T07:30:22+00:00",
     "features": "top3",
     "tree": {
         "attribute": "R",
         "branches": [
             {
-                "op": "=",
-                "value": "x",
+                "op": "<=",
+                "value": "0",
                 "node": {
-                    "attribute": "A",
+                    "attribute": "C",
                     "branches": [
                         {
-                            "op": "=",
-                            "value": "x",
+                            "op": "<=",
+                            "value": "0",
                             "node": {
-                                "attribute": "E",
+                                "attribute": "I",
                                 "branches": [
                                     {
-                                        "op": "=",
-                                        "value": "x",
+                                        "op": "<=",
+                                        "value": "0",
                                         "node": {
                                             "class": "B Multimedia Arts"
                                         }
                                     },
                                     {
-                                        "op": "=",
-                                        "value": "blank",
+                                        "op": ">",
+                                        "value": "0",
                                         "node": {
-                                            "class": "BS Mechanical Engineering"
-                                        }
-                                    }
-                                ]
-                            }
-                        },
-                        {
-                            "op": "=",
-                            "value": "blank",
-                            "node": {
-                                "class": "BS Civil Engineering"
-                            }
-                        }
-                    ]
-                }
-            },
-            {
-                "op": "=",
-                "value": "blank",
-                "node": {
-                    "attribute": "C",
-                    "branches": [
-                        {
-                            "op": "=",
-                            "value": "x",
-                            "node": {
-                                "attribute": "I",
-                                "branches": [
-                                    {
-                                        "op": "=",
-                                        "value": "x",
-                                        "node": {
-                                            "class": "BS Computer Science"
-                                        }
-                                    },
-                                    {
-                                        "op": "=",
-                                        "value": "blank",
-                                        "node": {
-                                            "class": "BS Computer Engineering"
-                                        }
-                                    }
-                                ]
-                            }
-                        },
-                        {
-                            "op": "=",
-                            "value": "blank",
-                            "node": {
-                                "attribute": "A",
-                                "branches": [
-                                    {
-                                        "op": "=",
-                                        "value": "x",
-                                        "node": {
-                                            "attribute": "S",
+                                            "attribute": "A",
                                             "branches": [
                                                 {
-                                                    "op": "=",
-                                                    "value": "x",
+                                                    "op": "<=",
+                                                    "value": "0",
                                                     "node": {
-                                                        "class": "BS Psychology"
+                                                        "class": "BS Nursing"
                                                     }
                                                 },
                                                 {
-                                                    "op": "=",
-                                                    "value": "blank",
+                                                    "op": ">",
+                                                    "value": "0",
                                                     "node": {
                                                         "class": "BS Medical Technology"
                                                     }
                                                 }
                                             ]
                                         }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "op": ">",
+                            "value": "0",
+                            "node": {
+                                "class": "BS Computer Science"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "op": ">",
+                "value": "0",
+                "node": {
+                    "attribute": "A",
+                    "branches": [
+                        {
+                            "op": "<=",
+                            "value": "0",
+                            "node": {
+                                "class": "BS Civil Engineering"
+                            }
+                        },
+                        {
+                            "op": ">",
+                            "value": "0",
+                            "node": {
+                                "attribute": "E",
+                                "branches": [
+                                    {
+                                        "op": "<=",
+                                        "value": "0",
+                                        "node": {
+                                            "class": "BS Mechanical Engineering"
+                                        }
                                     },
                                     {
-                                        "op": "=",
-                                        "value": "blank",
+                                        "op": ">",
+                                        "value": "0",
                                         "node": {
-                                            "class": "BS Nursing"
+                                            "class": "BS Architecture"
                                         }
                                     }
                                 ]
