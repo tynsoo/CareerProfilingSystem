@@ -1,6 +1,6 @@
 <?php
 // Moves the level of the low-similarity monitoring flag (security_policies monitoring.lowConfidenceThreshold) from the
-// old 0.50 to MonitoringLevel::DEFAULT (0.767). No valid assessment can score below 0.5844, so 0.50 never flagged anyone.
+// old 0.50 to MonitoringLevel::DEFAULT (0.793). No valid assessment can score below 0.5844, so 0.50 never flagged anyone.
 // Only the old value (or a missing row) is changed: a level the Administrator chose in Security Configuration stays.
 // Students already assessed are not flagged by this script; see db/flag_existing_low_similarity.php. Safe to run twice.
 //   php db/migrate_monitoring_level.php

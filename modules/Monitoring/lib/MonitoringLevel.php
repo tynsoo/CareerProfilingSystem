@@ -5,17 +5,16 @@
  * flagged when the highest cosine similarity of the latest result is below it (CBFData::saveRecommendation). This is
  * separate from a career mismatch (Preferred Course not a Best RIASEC Match), which never flags a student.
  *
- * DEFAULT is the 10th percentile, rounded down, of the highest similarity of the 314 study students with their counts
- * (0-10) converted to ProfilePath's mean item scores (1 + 0.4 x count) and scored by CBFEngine against the 32 programs
- * of the program list (22 Holland codes): 31 of 314 students (9.9%) are below it, 95% bootstrap interval of the
- * percentile 0.7592 to 0.7765. FLOOR is the lowest highest similarity any valid set of scores can
+ * DEFAULT is the 10th percentile, rounded down, of the highest similarity of the 314 study students with their RIASEC
+ * counts (0-10) as given in the study file (Table 24: 0.7932). It was not computed from ProfilePath's own results, so it
+ * should be rechecked on them. FLOOR is the lowest highest similarity any valid set of scores can
  * give (raw R17 I5 A17 S21 E5 C25), so a level at or below it can never flag anyone. The Administrator sets the level
  * in Security Configuration; it should be recomputed from ProfilePath's own results each school year.
  */
 class MonitoringLevel
 {
     public const KEY = 'monitoring.lowConfidenceThreshold';
-    public const DEFAULT = 0.767;
+    public const DEFAULT = 0.793;
     public const FLOOR = 0.5844;
     public const MAX = 1.0;
 
