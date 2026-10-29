@@ -340,7 +340,7 @@
   const PRIORITY_TONE = { High: 'red', Medium: 'amber', Low: 'gray' };
   const matchClass = (matchStr) => {
     // Match / Mismatch (RecommendationPipeline): mismatch -> refer to a Guidance Counselor.
-    return matchStr === 'Mismatch' ? 'text-orange-600' : matchStr === 'Match' ? 'text-green-600' : 'text-slate-500';
+    return matchStr === 'Mismatch' ? 'text-red-600' : matchStr === 'Match' ? 'text-green-600' : 'text-slate-500';
   };
 
   // Invite to counseling: sends the student the CGC booking link by email and as a notification. Counseling belongs to the

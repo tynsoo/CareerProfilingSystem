@@ -292,6 +292,9 @@
       return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Flag Reason', 'Action'];
     }
 
+    // Match green, Mismatch red (same colors as the Monitoring table).
+    const matchClass = (m) => m === 'Mismatch' ? 'text-red-600' : m === 'Match' ? 'text-green-600' : 'text-slate-500';
+
     function rowHtml(tab, r) {
       if (tab === 'needs-review' || tab === 'counseling') {
         const priorityCell = tab === 'needs-review'
@@ -301,7 +304,7 @@
           '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
           '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
-          '<td class="px-6 py-3 text-sm font-bold text-slate-700">' + escapeHtml(r.match) + '</td>' +
+          '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
           priorityCell +
           '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">' + (canAct ? 'Review' : 'View') + '</a></td>' +
@@ -312,7 +315,7 @@
           '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
           '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
-          '<td class="px-6 py-3 text-sm font-bold text-green-600">' + escapeHtml(r.match) + '</td>' +
+          '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.time) + '</td>' +
         '</tr>';
       }
