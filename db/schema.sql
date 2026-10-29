@@ -354,11 +354,21 @@ CREATE TABLE exam_schedules (
     section         VARCHAR(20),
     access_code     VARCHAR(20) NOT NULL,
     notes_enc       TEXT,
-    schedule_type   VARCHAR(10) NOT NULL DEFAULT 'initial' CHECK (schedule_type IN ('initial', 'retake')),
+    schedule_type   VARCHAR(10) NOT NULL DEFAULT 'initial' CHECK (schedule_type IN ('initial', 'retake', 'makeup')),
     created_by      INT REFERENCES users(id),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- The students a make-up session (schedule_type 'makeup') is for: absent on the day, or needing another date. A make-up
+-- row keeps grade_level, strand and section NULL and is matched only through this table, never by the group rule
+-- (ExamSchedule::matchSql). Added by db/migrate_add_makeup_sessions.php.
+CREATE TABLE exam_schedule_students (
+    schedule_id     INT NOT NULL REFERENCES exam_schedules(id) ON DELETE CASCADE,
+    student_id      INT NOT NULL REFERENCES students(user_id) ON DELETE CASCADE,
+    PRIMARY KEY (schedule_id, student_id)
+);
+CREATE INDEX idx_exam_schedule_students_student_id ON exam_schedule_students(student_id);
 
 -- A student's RIASEC answers in progress, saved as they go (modules/CareerProfiling/lib/AssessmentProgress.php), and the
 -- exam session that unlocked the assessment (NULL with is_retake for an approved retake). Lets a
