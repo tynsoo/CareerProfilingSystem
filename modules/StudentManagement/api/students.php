@@ -184,11 +184,23 @@ if ($idLookup > 0) {
         'R' => (int) $a['score_r'], 'I' => (int) $a['score_i'], 'A' => (int) $a['score_a'],
         'S' => (int) $a['score_s'], 'E' => (int) $a['score_e'], 'C' => (int) $a['score_c'],
     ];
+    // The staff profile names the interest areas and marks ties but never shows a score (Chapter 4, Table 7 and Figure 23).
+    $withoutScores = function (?array $i): ?array {
+        if ($i === null) {
+            return null;
+        }
+        $i['summary'] = preg_replace(['/ \(\d+(?:, \d+)*(?: each)?\)/', '/scored \d+\./'], ['', 'scored the same.'], $i['summary']);
+        unset($i['scores'], $i['lines']);
+        $i['ranked'] = array_map(function ($r) {
+            unset($r['score']);
+            return $r;
+        }, $i['ranked']);
+        return $i;
+    };
     $attempts = !$seesResults ? [] : array_map(fn($a) => [
         'attemptNumber' => (int) $a['attempt_number'],
         'completedAt' => $a['completed_at'],
         'riasec' => implode(', ', json_decode($a['top_types'], true)),
-        'scores' => $scoresOf($a),
         'riasecLabel' => RiasecInterpretation::codeLabel(RiasecInterpretation::interpret($scoresOf($a))),
     ], $attemptsStmt->fetchAll());
 
@@ -218,9 +230,8 @@ if ($idLookup > 0) {
         // Without Assessment results the profile shows whether the student finished, but no RIASEC code, scores or attempts.
         'seesResults' => $seesResults,
         'riasec' => $hasAssessment && $seesResults ? implode(', ', json_decode($row['top_types'], true)) : '',
-        'scores' => $hasAssessment && $seesResults ? $scoresOf($row) : null,
-        // What the scores establish, ties included (modules/CareerProfiling/lib/RiasecInterpretation.php).
-        'interpretation' => $hasAssessment && $seesResults ? RiasecInterpretation::interpret($scoresOf($row)) : null,
+        // What the scores establish, ties included (modules/CareerProfiling/lib/RiasecInterpretation.php), without the scores.
+        'interpretation' => $hasAssessment && $seesResults ? $withoutScores(RiasecInterpretation::interpret($scoresOf($row))) : null,
         'counseling' => $hasAssessment ? ($counseled ? 'Availed' : 'Did Not Avail') : '',
         'openRequest' => $openRequest,
         'registeredAt' => $row['registered_at'],

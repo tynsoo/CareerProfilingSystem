@@ -10,7 +10,7 @@
     dashboard: { label: 'Dashboard', desc: 'The summary cards and progress charts.' },
     studentInfo: { label: 'Student information', desc: 'The student list and profiles. Full: also change a student\'s section.' },
     studentAccounts: { label: 'Student account management', desc: 'See if an account is active or locked. Full: deactivate, unlock, invite to register, send reminders. Needs Student information.' },
-    assessmentResults: { label: 'Assessment results', desc: 'RIASEC code, scores and past attempts on the profile, and the Course Match chart. Needs Student information or Dashboard.' },
+    assessmentResults: { label: 'Assessment results', desc: 'The RIASEC code and top interest areas on the profile (no scores), and the Course Match chart. Needs Student information or Dashboard.' },
     recommendations: { label: 'Career recommendations', desc: 'Recommended programs on the profile and CBF Candidate Programs.' },
     notesCreate: { label: 'Create notes', desc: 'Write notes on a student profile (Full or No Access). Needs Student information.' },
     exportResults: { label: 'Export student results', desc: 'View Only: summary downloads (totals and percentages). Full: lists with student names. Needs Student information or Analytics and reports.' },

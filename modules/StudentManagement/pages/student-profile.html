@@ -703,14 +703,14 @@
         S: { name: 'Social', color: '#22c55e' }, E: { name: 'Enterprising', color: '#ec4899' }, C: { name: 'Conventional', color: '#3b82f6' }
       };
       // The shared interpretation (api/students.php -> RiasecInterpretation): the same wording the student sees.
-      // Every type that reaches the top three is shown with its score; equal scores are marked as tied.
+      // Every type that reaches the top three is shown by name (no scores); equal scores are marked as tied.
       const interp = s.interpretation;
       const themes = document.getElementById('riasecThemes');
       const tieText = document.getElementById('riasecTieText');
       const shown = !interp ? [] : interp.status === 'all_equal' ? interp.ranked : interp.ranked.filter(function(r) { return r.inTopGroup; });
       themes.innerHTML = shown.length
         ? shown.map(function(r) {
-            return '<span class="sp-theme"><i style="background:' + types[r.letter].color + '"></i>' + types[r.letter].name + ' ' + r.score +
+            return '<span class="sp-theme"><i style="background:' + types[r.letter].color + '"></i>' + types[r.letter].name +
               (r.tiedWith.length ? ' (tied)' : '') + '</span>';
           }).join('')
         : (s.seesResults === false
@@ -723,7 +723,7 @@
           : interp.uniqueTopSet ? 'Top 3 RIASEC Themes' : 'Top RIASEC Themes (tied at third place)';
         dominant.textContent = interp.code ? 'Holland Code ' + interp.code : interp.headline;
         if (interp.status !== 'distinct') {
-          tieText.textContent = interp.summary + ' Scores run from 10 to 50.';
+          tieText.textContent = interp.summary;
           tieText.classList.remove('hidden');
         }
       }
