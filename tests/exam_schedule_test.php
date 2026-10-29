@@ -47,6 +47,32 @@ $clash = ExamSchedule::findConflicts([
 check('one clash found (same room, same day, overlapping, spelled differently)', count($clash) === 1);
 check('it names both sessions', $clash[0]['a']['id'] === 1 && $clash[0]['b']['id'] === 2);
 
+echo "\n=== make-up sessions in the CGC Office ===\n";
+check('CGC Office is recognized however it is typed', ExamSchedule::isCgcOffice(' cgc   OFFICE ') && ExamSchedule::isCgcOffice(ExamSchedule::CGC_OFFICE));
+check('another room is not the CGC Office', !ExamSchedule::isCgcOffice('Room 301') && !ExamSchedule::isCgcOffice('CGC'));
+check('two make-ups may share the CGC Office', ExamSchedule::mayShareRoom('makeup', 'makeup', 'CGC Office'));
+check('a make-up may not share the CGC Office with a group session', !ExamSchedule::mayShareRoom('makeup', 'initial', 'CGC Office') && !ExamSchedule::mayShareRoom('initial', 'makeup', 'CGC Office'));
+check('two group sessions may not share the CGC Office', !ExamSchedule::mayShareRoom('initial', 'initial', 'CGC Office'));
+check('two make-ups may not share any other room', !ExamSchedule::mayShareRoom('makeup', 'makeup', 'Room 301'));
+$m = fn($id, $start, $end, $room, $type) => $s($id, '2026-10-20', $start, $end, $room) + ['scheduleType' => $type];
+check('overlapping make-ups in the CGC Office are not a conflict', ExamSchedule::findConflicts([
+    $m(1, '09:00', '10:00', 'CGC Office', 'makeup'),
+    $m(2, '09:30', '10:30', 'cgc office', 'makeup'),
+]) === []);
+$mixed = ExamSchedule::findConflicts([
+    $m(1, '09:00', '10:00', 'CGC Office', 'makeup'),
+    $m(2, '09:30', '10:30', 'CGC Office', 'initial'),
+]);
+check('a make-up overlapping a group session in the CGC Office is a conflict', count($mixed) === 1);
+check('overlapping make-ups in another room are a conflict', count(ExamSchedule::findConflicts([
+    $m(1, '09:00', '10:00', 'Room 301', 'makeup'),
+    $m(2, '09:30', '10:30', 'Room 301', 'makeup'),
+])) === 1);
+check('sessions without a type are treated as group sessions (still a conflict)', count(ExamSchedule::findConflicts([
+    $s(1, '2026-10-20', '09:00', '10:00', 'CGC Office'),
+    $s(2, '2026-10-20', '09:30', '10:30', 'CGC Office'),
+])) === 1);
+
 echo "\n=== activation window: when the assessment is open for a group ===\n";
 $tzM = new DateTimeZone('Asia/Manila');
 $at = fn(string $s) => new DateTimeImmutable($s, $tzM);

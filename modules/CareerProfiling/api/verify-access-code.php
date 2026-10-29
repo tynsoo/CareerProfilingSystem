@@ -55,25 +55,17 @@ if ($submitted === '') {
 $pdo = Database::get();
 
 // The code must come from an Exam Schedule that matches this student's
-// group (strand/section/grade/AY, NULL columns = wildcard). There is no
-// global fallback code any more: a group with no exam scheduled simply
-// cannot start the assessment until a counselor schedules one.
-$studentStmt = $pdo->prepare('SELECT strand, section, grade_level, academic_year FROM students WHERE user_id = ?');
-$studentStmt->execute([$user['id']]);
-$student = $studentStmt->fetch();
-
-$candidates = [];
-if ($student && $student['academic_year']) {
-    $stmt = $pdo->prepare(
-        'SELECT id, access_code, exam_date, start_time, end_time FROM exam_schedules
-         WHERE academic_year = ?
-           AND (grade_level IS NULL OR grade_level = ?)
-           AND (strand IS NULL OR strand = ?)
-           AND (section IS NULL OR section = ?)'
-    );
-    $stmt->execute([$student['academic_year'], $student['grade_level'], $student['strand'], $student['section']]);
-    $candidates = $stmt->fetchAll();
-}
+// group (strand/section/grade/AY, NULL columns = wildcard), or from a
+// make-up session the student was chosen for (ExamSchedule::matchSql).
+// There is no global fallback code any more: a group with no exam scheduled
+// simply cannot start the assessment until a counselor schedules one.
+$stmt = $pdo->prepare(
+    'SELECT es.id, es.access_code, es.exam_date, es.start_time, es.end_time
+     FROM exam_schedules es JOIN students s ON s.user_id = ?
+     WHERE ' . ExamSchedule::matchSql($pdo)
+);
+$stmt->execute([$user['id']]);
+$candidates = $stmt->fetchAll();
 
 $matchedScheduleId = null;
 if (!$candidates) {

@@ -13,6 +13,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   body{ font-family:'Inter', sans-serif; }
+  /* Make-up sessions: "Who takes it" switch, student search, chosen students, CGC Office button, list tag. */
+  .target-switch{ display:flex; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; }
+  .target-switch button{ flex:1; padding:8px 6px; font-size:13px; font-weight:500; color:#475569; background:#fff; }
+  .target-switch button[aria-pressed="true"]{ background:#0f2a6b; color:#fff; }
+  .target-switch button:focus-visible{ outline:2px solid #ed1c24; outline-offset:-2px; }
+  .form-fields{ display:flex; flex-direction:column; gap:1rem; }
+  .form-fields.hidden{ display:none; }
+  .student-results{ border:1px solid #e2e8f0; border-radius:8px; margin-top:4px; box-shadow:0 4px 10px rgba(0,0,0,.06); overflow:hidden; }
+  .student-results.hidden{ display:none; }
+  .student-result{ display:flex; width:100%; justify-content:space-between; gap:8px; padding:8px 10px; font-size:13px; color:#0f172a; text-align:left; background:#fff; }
+  .student-result + .student-result{ border-top:1px solid #f1f5f9; }
+  .student-result:hover:not(:disabled), .student-result:focus-visible{ background:#f8fafc; outline:none; }
+  .student-result small{ color:#64748b; white-space:nowrap; }
+  .student-result:disabled{ color:#94a3b8; cursor:default; }
+  .chosen-chip{ display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid #e2e8f0; background:#f8fafc; border-radius:8px; padding:6px 10px; font-size:13px; color:#0f172a; }
+  .chosen-chip small{ color:#64748b; font-size:11px; }
+  .chosen-chip button{ color:#64748b; font-size:18px; line-height:1; padding:0 4px; border-radius:4px; }
+  .chosen-chip button:hover, .chosen-chip button:focus-visible{ color:#ed1c24; outline:2px solid #ed1c24; outline-offset:1px; }
+  .cgc-quick{ font-size:12px; font-weight:500; color:#19427b; border:1px solid #c7d2fe; background:#eef2ff; border-radius:999px; padding:3px 10px; }
+  .cgc-quick:hover, .cgc-quick:focus-visible{ background:#e0e7ff; outline:2px solid #19427b; outline-offset:1px; }
+  .makeup-tag{ display:inline-flex; align-items:center; border-radius:999px; padding:2px 8px; font-size:12px; font-weight:500; background:#f3e8ff; color:#7e22ce; }
 </style>
 <link rel="stylesheet" href="css/motion.css">
 </head>
@@ -170,6 +191,15 @@
         <div id="createCard" class="lg:col-span-1 bg-white border border-slate-200 rounded-xl shadow-sm p-6">
           <h2 class="text-base font-semibold text-slate-900 mb-4">Create Assessment Schedule</h2>
           <form id="createForm" class="flex flex-col gap-4">
+            <!-- A group (grade level, strand, section) or a make-up session for chosen students. Shown only to staff who
+                 may also see students (Student information); the server checks the same. -->
+            <div id="targetBox" class="hidden">
+              <span class="block text-xs font-medium text-slate-600 mb-1" id="targetLabel">Who takes it</span>
+              <div class="target-switch" role="group" aria-labelledby="targetLabel">
+                <button type="button" id="targetGroupBtn" aria-pressed="true">A group</button>
+                <button type="button" id="targetStudentsBtn" aria-pressed="false">Chosen students (make-up)</button>
+              </div>
+            </div>
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1" for="fExamDate">Assessment Date</label>
               <input type="date" id="fExamDate" required class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
@@ -190,8 +220,10 @@
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1" for="fRoom">Room</label>
               <input type="text" id="fRoom" required maxlength="50" placeholder="e.g. Room 301" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+              <div id="cgcQuick" class="hidden mt-2"><button type="button" id="cgcOfficeBtn" class="cgc-quick">CGC Office</button></div>
               <p id="roomConflictHint" class="hidden text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2 mt-2" aria-live="polite"></p>
             </div>
+            <div id="groupFields" class="form-fields">
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1" for="fGradeLevel">Grade Level</label>
@@ -218,13 +250,23 @@
                 <option value="">All Sections</option>
               </select>
             </div>
+            </div>
+            <div id="studentFields" class="form-fields hidden">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1" for="fStudentSearch">Students</label>
+                <input type="search" id="fStudentSearch" autocomplete="off" maxlength="60" placeholder="Search by Student Number or name" aria-describedby="chosenCount" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
+                <div id="studentResults" class="student-results hidden" aria-live="polite"></div>
+                <ul id="chosenList" class="flex flex-col gap-2 mt-2"></ul>
+                <p id="chosenCount" class="text-xs text-slate-500 mt-1">Type at least 3 characters. Only registered students of this school year can be chosen.</p>
+              </div>
+            </div>
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1" for="fNotes">Instructions / special notes (optional)</label>
               <textarea id="fNotes" rows="3" maxlength="500" placeholder="e.g. Bring a pencil and your school ID." class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent"></textarea>
             </div>
             <p id="createError" class="hidden text-sm text-[#ed1c24] bg-red-50 border border-red-100 rounded-md px-3.5 py-2.5"></p>
             <p id="createSuccess" class="hidden text-sm text-green-700 bg-green-50 border border-green-100 rounded-md px-3.5 py-2.5"></p>
-            <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Create Schedule</button>
+            <button type="submit" id="createSubmitBtn" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Create Schedule</button>
           </form>
         </div>
 
@@ -316,6 +358,15 @@
     return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
   function scopeLabel(s) {
+    // A make-up session: its chosen students (names only for staff who may see them, in their own sections).
+    if (s.scheduleType === 'makeup') {
+      const names = (s.students || []).map(function(st) { return st.name + ' (' + st.strand + ' ' + st.section + ')'; });
+      const total = names.length + (s.otherStudents || 0);
+      const head = total + ' student' + (total === 1 ? '' : 's');
+      if (!names.length) return head;
+      const others = s.otherStudents ? ', and ' + s.otherStudents + ' other' + (s.otherStudents === 1 ? '' : 's') : '';
+      return head + ': ' + names.join(', ') + others;
+    }
     const parts = [];
     parts.push(s.gradeLevel ? 'Grade ' + s.gradeLevel : 'All Grades');
     parts.push(s.strand || 'All Strands');
@@ -364,6 +415,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <p class="text-sm font-semibold text-slate-900">${escapeHtml(TimeFmt.format(s.startTime))}–${escapeHtml(TimeFmt.format(s.endTime))} · ${escapeHtml(s.room)}</p>
+                ${s.scheduleType === 'makeup' ? '<span class="makeup-tag">Make-up</span>' : ''}
                 ${statusChip(s)}
               </div>
               <p class="text-xs text-slate-500 mt-0.5">${escapeHtml(scopeLabel(s))}</p>
@@ -374,7 +426,7 @@
           <div class="w-full h-1.5 rounded-full bg-slate-100">
             <div class="h-1.5 rounded-full bg-[#19427b]" style="width:${pct}%"></div>
           </div>
-          <p class="text-xs text-slate-500">${s.completedCount} of ${s.expectedCount} expected students completed</p>
+          <p class="text-xs text-slate-500">${s.completedCount} of ${s.expectedCount} ${s.scheduleType === 'makeup' ? 'students' : 'expected students'} completed</p>
           <div class="flex items-center gap-2 mt-1">
             <span class="text-xs text-slate-500">Access code:</span>
             <span class="font-mono text-xs tracking-[2px] bg-slate-50 border ${s.isArchived ? 'border-slate-200 text-slate-400 line-through' : 'border-slate-200'} rounded px-2 py-1">${escapeHtml(s.accessCode)}</span>
@@ -418,13 +470,20 @@
 
   // The same rule the server enforces on create, shown early while the form is filled in.
   function roomKey(room) { return room.trim().replace(/\s+/g, ' ').toLowerCase(); }
+  // Make-up sessions in the CGC Office may overlap each other, never a group session (ExamSchedule::mayShareRoom).
+  const CGC_OFFICE = 'CGC Office';
+  let makeupMode = false;
+  function mayShareRoom(typeA, typeB, room) {
+    return typeA === 'makeup' && typeB === 'makeup' && roomKey(room) === roomKey(CGC_OFFICE);
+  }
   function updateRoomConflictHint() {
     const hint = document.getElementById('roomConflictHint');
     const date = fExamDateEl.value, start = fStartTimeEl.value, end = fEndTimeEl.value;
     const room = document.getElementById('fRoom').value;
     if (!date || !start || !end || !room.trim() || end <= start) { hint.classList.add('hidden'); return; }
     const clash = bookings.find(function(b) {
-      return b.examDate === date && roomKey(b.room) === roomKey(room) && start < b.endTime && b.startTime < end;
+      return b.examDate === date && roomKey(b.room) === roomKey(room) && start < b.endTime && b.startTime < end
+        && !mayShareRoom(makeupMode ? 'makeup' : 'initial', b.scheduleType, room);
     });
     if (clash) {
       hint.textContent = room.trim().replace(/\s+/g, ' ') + ' is already booked ' + TimeFmt.format(clash.startTime) + '–' + TimeFmt.format(clash.endTime) + ' on that date.';
@@ -476,6 +535,10 @@
     }
     archiveToggle.classList.toggle('hidden', viewingPast);
     if (canWrite) document.getElementById('createCard').classList.toggle('hidden', viewingPast);
+    // "Chosen students (make-up)" only for staff the server lets create one (Full here and Student information).
+    canChooseStudents = canWrite && !!data.canChooseStudents;
+    document.getElementById('targetBox').classList.toggle('hidden', !canChooseStudents);
+    if (!canChooseStudents && makeupMode) setMakeupMode(false);
     listAyLabel.textContent = data.academicYear ? '— School Year ' + data.academicYear : '';
     document.getElementById('listTitle').textContent = showArchived ? 'Archived Sessions' : 'Scheduled Sessions';
     archiveToggle.textContent = showArchived ? 'Back to active sessions' : 'Show archived (' + (data.archivedCount || 0) + ')';
@@ -594,6 +657,92 @@
   });
   fStrandEl.addEventListener('change', updateSectionOptions);
 
+  // ---- Make-up session: for chosen students (absent on the day, or needing another date) ----
+  const MAKEUP_MAX = 50; // the same limit as the server (MAKEUP_MAX_STUDENTS)
+  let canChooseStudents = false;
+  const chosen = new Map(); // userId -> { name, schoolId, strand, section }
+  const targetGroupBtn = document.getElementById('targetGroupBtn');
+  const targetStudentsBtn = document.getElementById('targetStudentsBtn');
+  const studentSearchEl = document.getElementById('fStudentSearch');
+  const studentResultsEl = document.getElementById('studentResults');
+  const chosenListEl = document.getElementById('chosenList');
+  const chosenCountEl = document.getElementById('chosenCount');
+  const getPicks = PP.latestJson(); // typing on cancels the search still on its way
+
+  function setMakeupMode(on) {
+    makeupMode = on;
+    targetGroupBtn.setAttribute('aria-pressed', on ? 'false' : 'true');
+    targetStudentsBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    document.getElementById('groupFields').classList.toggle('hidden', on);
+    document.getElementById('studentFields').classList.toggle('hidden', !on);
+    document.getElementById('cgcQuick').classList.toggle('hidden', !on);
+    document.getElementById('createSubmitBtn').textContent = on ? 'Create Make-up Session' : 'Create Schedule';
+    updateRoomConflictHint();
+  }
+  targetGroupBtn.addEventListener('click', function() { setMakeupMode(false); });
+  targetStudentsBtn.addEventListener('click', function() { setMakeupMode(true); studentSearchEl.focus(); });
+
+  document.getElementById('cgcOfficeBtn').addEventListener('click', function() {
+    const roomEl = document.getElementById('fRoom');
+    roomEl.value = CGC_OFFICE;
+    updateRoomConflictHint();
+    roomEl.focus();
+  });
+
+  function renderChosen() {
+    chosenListEl.innerHTML = Array.from(chosen.entries()).map(function([id, st]) {
+      return '<li class="chosen-chip"><span><b>' + escapeHtml(st.name) + '</b><br><small>' + escapeHtml(st.schoolId) + ' · ' +
+        escapeHtml(st.strand + ' ' + st.section) + '</small></span><button type="button" class="remove-chosen-btn" data-id="' + id +
+        '" aria-label="Remove ' + escapeHtml(st.name) + '">&times;</button></li>';
+    }).join('');
+    chosenListEl.querySelectorAll('.remove-chosen-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { chosen.delete(Number(btn.dataset.id)); renderChosen(); studentSearchEl.focus(); });
+    });
+    chosenCountEl.textContent = chosen.size
+      ? chosen.size + ' student' + (chosen.size === 1 ? '' : 's') + ' chosen. Only ' + (chosen.size === 1 ? 'this student' : 'these students') + ' can use this session\'s code.'
+      : 'Type at least 3 characters. Only registered students of this school year can be chosen.';
+  }
+
+  function hideResults() { studentResultsEl.classList.add('hidden'); studentResultsEl.innerHTML = ''; }
+  const searchStudents = PP.debounce(async function() {
+    const q = studentSearchEl.value.trim();
+    if (q.length < 3) { getPicks.cancel(); hideResults(); return; }
+    let data;
+    try {
+      data = await getPicks('api/exam-schedules.php?pickStudents=1&q=' + encodeURIComponent(q));
+    } catch (err) {
+      if (err.cancelled) return;
+      studentResultsEl.innerHTML = '<p class="px-3 py-2 text-xs text-[#ed1c24]" role="alert">The search did not work. Please try again.</p>';
+      studentResultsEl.classList.remove('hidden');
+      return;
+    }
+    const found = data.students || [];
+    studentResultsEl.innerHTML = found.length ? found.map(function(st) {
+      const added = chosen.has(st.userId);
+      const note = st.completed ? 'Completed' : (added ? 'Added' : st.strand + ' ' + st.section);
+      return '<button type="button" class="student-result" data-id="' + st.userId + '"' + (st.completed || added ? ' disabled' : '') + '><span><b>' +
+        escapeHtml(st.name) + '</b> · ' + escapeHtml(st.schoolId) + '</span><small>' + escapeHtml(note) + '</small></button>';
+    }).join('') : '<p class="px-3 py-2 text-xs text-slate-500">No student found.</p>';
+    studentResultsEl.classList.remove('hidden');
+    studentResultsEl.querySelectorAll('.student-result:not(:disabled)').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const st = found.find(function(x) { return x.userId === Number(btn.dataset.id); });
+        if (!st) return;
+        if (chosen.size >= MAKEUP_MAX) { showToast('One make-up session can have at most ' + MAKEUP_MAX + ' students.', true); return; }
+        chosen.set(st.userId, { name: st.name, schoolId: st.schoolId, strand: st.strand, section: st.section });
+        renderChosen();
+        studentSearchEl.value = '';
+        hideResults();
+        studentSearchEl.focus();
+      });
+    });
+  }, 300);
+  studentSearchEl.addEventListener('input', searchStudents);
+  studentSearchEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { hideResults(); }
+    if (e.key === 'Enter') { e.preventDefault(); } // Enter in the search box must not create the session
+  });
+
   document.getElementById('createForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const errorEl = document.getElementById('createError');
@@ -627,11 +776,23 @@
       startTime: startTime,
       endTime: document.getElementById('fEndTime').value,
       room: document.getElementById('fRoom').value.trim(),
-      gradeLevel: document.getElementById('fGradeLevel').value,
-      strand: document.getElementById('fStrand').value,
-      section: document.getElementById('fSection').value,
       notes: document.getElementById('fNotes').value.trim(),
     };
+    const isMakeup = makeupMode;
+    if (isMakeup) {
+      if (!chosen.size) {
+        errorEl.textContent = 'Choose at least one student.';
+        errorEl.classList.remove('hidden');
+        studentSearchEl.focus();
+        return;
+      }
+      body.target = 'students';
+      body.studentIds = Array.from(chosen.keys());
+    } else {
+      body.gradeLevel = document.getElementById('fGradeLevel').value;
+      body.strand = document.getElementById('fStrand').value;
+      body.section = document.getElementById('fSection').value;
+    }
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
 
@@ -647,9 +808,12 @@
       errorEl.classList.remove('hidden');
       return;
     }
-    successEl.textContent = 'Schedule created. Access code: ' + data.accessCode;
+    successEl.textContent = (isMakeup ? 'Make-up session created. Access code: ' : 'Schedule created. Access code: ') + data.accessCode;
     successEl.classList.remove('hidden');
     e.target.reset();
+    chosen.clear();
+    renderChosen();
+    hideResults();
     updateSectionOptions(); // form.reset() doesn't restore the disabled attribute JS set
     setTimeout(applyTimeLimits, 0); // after the pickers have followed the reset
     await loadSchedules();
