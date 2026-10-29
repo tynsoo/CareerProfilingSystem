@@ -1,7 +1,8 @@
 <?php
 /**
  * The low-similarity monitoring flag (CBFData::saveRecommendation, Figure 14, Table 21 last row): a flag is raised as
- * Pending when the highest similarity is below the level in security_policies, never twice while one is open, and an
+ * Pending when the highest similarity is below the level in security_policies (0.793 by default; the level itself is
+ * tested in monitoring_level_test.php), never twice while one is open, and an
  * Escalated flag follows the newest result. Everything runs inside one transaction that is rolled back.
  *   DB_NAME=profilepath_test php tests/monitoring_flag_test.php
  */
@@ -46,16 +47,11 @@ try {
     $flat = ['R' => 30, 'I' => 30, 'A' => 30, 'S' => 30, 'E' => 30, 'C' => 30];
     $strongIrc = ['R' => 40, 'I' => 50, 'A' => 10, 'S' => 10, 'E' => 10, 'C' => 30];
 
-    echo "=== level 0.50 (the value the system ships with) ===\n";
+    echo "=== level 0.793 (the value the system ships with, MonitoringLevel::DEFAULT) ===\n";
     $current = $pdo->query("SELECT value FROM security_policies WHERE key = 'monitoring.lowConfidenceThreshold'")->fetchColumn();
-    check('the stored level is 0.50', (float) $current === 0.50, (string) $current);
+    check('the stored level is 0.793', (float) $current === 0.793, (string) $current);
     $r = $save($worst);
     check('the lowest possible highest similarity is 0.5844', abs($r['topScore'] - 0.5844) < 0.00005, (string) $r['topScore']);
-    check('at 0.50 even that student is not flagged', $flags() === []);
-
-    echo "\n=== level 0.793 (the level chosen in Table 20) ===\n";
-    $setLevel('0.793');
-    $r = $save($worst);
     $f = $flags();
     check('below the level: one flag is raised', count($f) === 1, json_encode($f));
     check('the new flag is Pending and points at this recommendation', ($f[0]['status'] ?? '') === 'pending' && (int) ($f[0]['recommendation_id'] ?? 0) === $r['recommendationId']);

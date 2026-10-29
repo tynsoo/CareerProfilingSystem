@@ -57,11 +57,29 @@ function thrown(callable $fn): string
     }
 }
 
+/**
+ * The HTTP tests remove their own users' audit entries when they clean up, which leaves gaps in the test database's
+ * chain (a real database never has them). Inside the caller's transaction, which is rolled back, start such a broken
+ * log over with a few sealed entries, so each rotation is tested on a chain that checks out.
+ */
+function cleanChain(PDO $pdo): void
+{
+    if (!AuditChain::enabled($pdo) || AuditChain::verify($pdo)['intact']) {
+        return;
+    }
+    $pdo->exec('DELETE FROM audit_log');
+    $pdo->prepare('DELETE FROM security_policies WHERE key = ?')->execute([AuditChain::ANCHOR_KEY]);
+    for ($i = 0; $i < 6; $i++) {
+        AuditChain::append($pdo, [null, null, 'qa_key_rotation_probe', null, null, null, null]);
+    }
+}
+
 $pdo = Database::get();
 $oldKey = (string) envValue('APP_AES_KEY');
 $newKey = base64_encode(random_bytes(32));
 $before = plainValues($pdo);
 $chained = AuditChain::enabled($pdo);
+$chainAtStart = $chained ? AuditChain::verify($pdo) : null;
 
 echo "=== refused before anything changes ===\n";
 check('outside a transaction', str_contains(thrown(fn() => KeyRotation::rotate($pdo, $oldKey, $newKey)), 'inside a transaction'));
@@ -76,15 +94,17 @@ check('keys are shown only as a fingerprint', KeyRotation::fingerprint($newKey) 
 
 echo "\n=== a rotation ===\n";
 $pdo->beginTransaction();
+cleanChain($pdo);
+$inRotation = plainValues($pdo); // without the entries cleanChain() removed
 $error = thrown(function () use ($pdo, $oldKey, $newKey, &$result) {
     $result = KeyRotation::rotate($pdo, $oldKey, $newKey);
 });
 check('the rotation finishes', $error === '', $error);
 if ($error === '') {
     $after = plainValues($pdo);
-    check('every value reads back the same with the new key (' . count($before) . ' values)',
-        array_diff_key($before, $after) === [] && array_intersect_key($after, $before) == $before);
-    check('the count of re-encrypted values matches', $result['values'] === count($before), $result['values'] . ' vs ' . count($before));
+    check('every value reads back the same with the new key (' . count($inRotation) . ' values)',
+        array_diff_key($inRotation, $after) === [] && array_intersect_key($after, $inRotation) == $inRotation);
+    check('the count of re-encrypted values matches', $result['values'] === count($inRotation), $result['values'] . ' vs ' . count($inRotation));
     check('every *_enc column is listed', count($result['columns']) === count(KeyRotation::encryptedColumns($pdo)));
     if ($chained) {
         check('the audit log checks out with the new key', AuditChain::verify($pdo)['intact']);
@@ -103,13 +123,14 @@ KeyRotation::useKey($oldKey);
 check('after rolling back, every value reads the same with the old key again', plainValues($pdo) == $before);
 if ($chained) {
     $pdo->beginTransaction();
-    check('after rolling back, the audit log checks out with the old key', AuditChain::verify($pdo)['intact']);
+    check('after rolling back, the audit log is as it was', AuditChain::verify($pdo) == $chainAtStart);
     $pdo->rollBack();
 }
 
 if ($chained) {
     echo "\n=== a rotation after the daily cleanup removed old entries (the chain starts at an anchor) ===\n";
     $pdo->beginTransaction();
+    cleanChain($pdo);
     $cut = (int) $pdo->query('SELECT id FROM audit_log ORDER BY id OFFSET 4 LIMIT 1')->fetchColumn();
     AuditChain::removeUpTo($pdo, $cut);
     check('before: the shortened log checks out with the old key', AuditChain::verify($pdo)['intact']);
@@ -125,6 +146,7 @@ $fingerprint = fn() => md5(json_encode(plainValues($pdo)));
 $untouched = $fingerprint();
 
 $pdo->beginTransaction();
+cleanChain($pdo);
 KeyRotation::useKey(base64_encode(random_bytes(32)));
 $foreign = Crypto::enc('written with some other key');
 KeyRotation::useKey($oldKey);
@@ -139,6 +161,7 @@ KeyRotation::useKey($oldKey);
 
 if ($chained) {
     $pdo->beginTransaction();
+    cleanChain($pdo);
     // A fresh test database has an empty audit log; seal one entry of our own (rolled back below) so there is something to tamper with.
     AuditChain::append($pdo, [null, null, 'qa_key_rotation_probe', null, null, null, null]);
     $pdo->exec("UPDATE audit_log SET action = action || '_edited' WHERE id = (SELECT MIN(id) FROM audit_log)");
@@ -149,6 +172,7 @@ if ($chained) {
 }
 
 $pdo->beginTransaction();
+cleanChain($pdo);
 $pdo->prepare("INSERT INTO security_policies (key, value) VALUES ('test.keyRotationStray', ?)")->execute([Crypto::enc('stray')]);
 $msg = thrown(fn() => KeyRotation::rotate($pdo, $oldKey, $newKey));
 check('an encrypted value outside a *_enc column stops the rotation', str_contains($msg, 'security_policies.value'), $msg);
