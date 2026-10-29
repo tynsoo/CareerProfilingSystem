@@ -292,9 +292,10 @@ class AnalyticsReport
      * regardless of the strand/section filter passed to compute(). Each year is
      * counted as the cards are: the students expected that year (registered that
      * year plus its class roster, a student once) against those with a finished
-     * assessment. $selected marks the year being looked at.
+     * assessment. $selected marks the year being looked at. Every selectable year is
+     * listed (AcademicYear::available), the past ones too, even with no students yet.
      *
-     * @return array<int,array{academicYear:string,total:int,completed:int,rate:float,selected:bool}>
+     * @return array<int,array{academicYear:string,total:int,completed:int,rate:?float,selected:bool}>
      */
     public static function completionByYear(PDO $pdo, string $selected = ''): array
     {
@@ -311,9 +312,6 @@ class AnalyticsReport
             $stmt = AcademicYear::isPast($ay) ? $totalStmt : $currentTotalStmt;
             $stmt->execute([$ay, $ay]);
             $total = (int) $stmt->fetchColumn();
-            if ($total === 0) {
-                continue;
-            }
             [$cond, $params] = AcademicYear::studentCondition('s', $ay);
             $completedStmt = $pdo->prepare(
                 'SELECT COUNT(*) FROM assessments a JOIN students s ON s.user_id = a.student_id WHERE a.is_latest = TRUE AND ' . $cond
@@ -324,7 +322,8 @@ class AnalyticsReport
                 'academicYear' => $ay,
                 'total' => $total,
                 'completed' => $completed,
-                'rate' => min(100.0, round($completed / $total * 100, 1)),
+                // A year with no students has no rate (null: a gap in the line), not a misleading 0%.
+                'rate' => $total > 0 ? min(100.0, round($completed / $total * 100, 1)) : null,
                 'selected' => $ay === $selected,
             ];
         }

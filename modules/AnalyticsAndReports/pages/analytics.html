@@ -284,7 +284,9 @@
       <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 mb-6">
         <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Assessment Completion by Academic Year</p>
         <div id="yearBox" style="position:relative"><canvas id="yearChart" height="180"></canvas></div>
-        <p id="yearChartEmpty" class="hidden text-sm text-slate-500 text-center py-6">No Academic Year data yet.</p>      </div>
+        <p id="yearChartEmpty" class="hidden text-sm text-slate-500 text-center py-6">No Academic Year data yet.</p>
+        <p id="yearChartNote" class="hidden text-xs text-slate-500 text-center mt-3">A school year with no students yet has no point on the line.</p>
+      </div>
 
       <!-- Recommended Careers Table -->
       <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
@@ -762,6 +764,7 @@
 
     const byYear = data.completionByYear || [];
     document.getElementById('yearChartEmpty').classList.toggle('hidden', byYear.length > 0);    document.getElementById('yearChart').classList.toggle('hidden', byYear.length === 0);
+    document.getElementById('yearChartNote').classList.toggle('hidden', !byYear.some(y => y.rate === null));
     if (yearChartInstance) yearChartInstance.destroy();
     if (byYear.length) {
       // A rate that changes from one academic year to the next -> a line.

@@ -32,6 +32,9 @@ try {
     check("$y2 is offered and resolved with no data", in_array($y2, $empty['academicYears'], true) && $empty['academicYear'] === $y2);
     check('an empty year shows zeros, not the current year', $empty['totalStudents'] === 0 && $empty['expectedTotal'] === 0 && $empty['completion']['rate'] === 0.0 && $empty['topCareers'] === []);
     check('an empty year has no report rows', AnalyticsXlsx::studentRows($pdo, null, '', 'QA-Y', $y2) === []);
+    $emptyChart = $byYear(AnalyticsReport::completionByYear($pdo, $y2));
+    check("the chart lists $y2 even with no students (no rate, not 0%)", isset($emptyChart[$y2]) && ($emptyChart[$y2]['total'] > 0 || $emptyChart[$y2]['rate'] === null));
+    check('the chart lists every selectable year', array_keys($emptyChart) === array_reverse(AcademicYear::available($pdo)));
     echo "\n";
 
     $before = $byYear(AnalyticsReport::completionByYear($pdo, $cur));
