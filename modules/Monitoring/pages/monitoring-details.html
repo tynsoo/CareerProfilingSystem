@@ -137,9 +137,8 @@
             <tbody id="tableBody" class="divide-y divide-slate-50"></tbody>
           </table>
         </div>
-        <div class="border-t border-slate-100 px-4 py-4">
-          <p id="resultCount" class="text-sm text-slate-500"></p>
-        </div>
+        <!-- Filled by PP.pager: "Showing 1 to 50 of N entries", Rows per page and the page buttons. -->
+        <div id="monitoringPager"></div>
       </div>
 
     </main>
@@ -280,10 +279,22 @@
     let activeTab = 'needs-review';
     let currentFlag = null;
     let rowsById = {};
-    // The tab lives in the page address (?tab=, also used by links from Monitoring); the search (a student name)
-    // stays in this tab only (PP.listState in js/ui-state.js).
-    const listState = PP.listState({ tab: 'needs-review', search: '' }, ['search']);
+    // The tab and page live in the page address (?tab=, also used by links from Monitoring); the search (a student
+    // name) stays in this tab only (PP.listState in js/ui-state.js).
+    const listState = PP.listState({ tab: 'needs-review', search: '', page: 1, pageSize: 50 }, ['search']);
     const getRows = PP.latestJson(); // a new tab click or search cancels the list still on its way
+    // api/monitoring.php sends every row of a tab (after the search), so the pages are cut here.
+    let allRows = [];
+    let page = 1;
+    let pageSize = 50;
+    const pager = PP.pager('monitoringPager', {
+      noun: ['entry', 'entries'], label: 'Monitoring list pages', pageSize: pageSize, emptyText: 'No entries to show',
+      onChange: function(newPage, newSize, focus) {
+        page = newPage;
+        pageSize = newSize;
+        drawPage(focus);
+      }
+    });
 
     function headForTab(tab) {
       if (tab === 'needs-review') return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Flag Reason', 'Priority', 'Action'];
@@ -327,10 +338,25 @@
       '</tr>';
     }
 
+    // One page of the rows; a page past the end (after a search or a decision) moves back to the last one.
+    function drawPage(focus) {
+      const totalPages = Math.max(1, Math.ceil(allRows.length / pageSize));
+      page = Math.min(Math.max(1, page), totalPages);
+      const start = (page - 1) * pageSize;
+      const shown = allRows.slice(start, start + pageSize);
+      document.getElementById('tableBody').innerHTML = shown.length
+        ? shown.map(r => rowHtml(activeTab, r)).join('')
+        : '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">No entries in this category.</td></tr>';
+      pager.render({ page: page, pageSize: pageSize, total: allRows.length, totalPages: totalPages, startIndex: start + 1, shown: shown.length });
+      pager.focus(focus);
+      listState.save({ tab: activeTab, search: document.getElementById('searchInput').value.trim(), page: page, pageSize: pageSize });
+      bindReviewLinks();
+    }
+
     let renderedTab = null;
     async function render() {
       const q = document.getElementById('searchInput').value.trim();
-      listState.save({ tab: activeTab, search: q });
+      listState.save({ tab: activeTab, search: q, page: page, pageSize: pageSize });
       const url = 'api/monitoring.php?tab=' + encodeURIComponent(activeTab) + (q ? '&search=' + encodeURIComponent(q) : '');
       const body = document.getElementById('tableBody');
       const cols = headForTab(activeTab).length;
@@ -339,6 +365,7 @@
         document.getElementById('tableHeadRow').innerHTML = headForTab(activeTab)
           .map(h => '<th class="px-6 py-3 text-sm font-bold text-slate-500">' + h + '</th>').join('');
         PP.showSkeleton(body, PP.skeleton.rows(cols, 6));
+        pager.loading();
       }
       let data;
       try {
@@ -346,7 +373,7 @@
       } catch (e) {
         if (e.cancelled) return; // a newer tab click or search replaced this one
         PP.showError(body, e.message, render, cols);
-        document.getElementById('resultCount').textContent = '';
+        pager.clear();
         renderedTab = null;
         return;
       }
@@ -361,23 +388,19 @@
       document.getElementById('tableTitle').textContent = TAB_META[activeTab].title;
       document.getElementById('tableHeadRow').innerHTML = headForTab(activeTab)
         .map(h => '<th class="px-6 py-3 text-sm font-bold text-slate-500">' + h + '</th>').join('');
-      document.getElementById('tableBody').innerHTML = data.rows.length
-        ? data.rows.map(r => rowHtml(activeTab, r)).join('')
-        : '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">No entries in this category.</td></tr>';
+      allRows = data.rows;
+      drawPage(null);
 
       const tabCounts = {
         'needs-review': data.summary.needsReview, 'completed': data.summary.completedToday,
         'pending': data.summary.pending, 'counseling': data.summary.counseling,
       };
-      document.getElementById('resultCount').textContent = 'Showing ' + data.rows.length + ' of ' + tabCounts[activeTab] + ' entries';
 
       document.querySelectorAll('.tab-btn').forEach(btn => {
         const isActive = btn.dataset.tab === activeTab;
         btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');   // css/components.css .pp-filter-tab shows the chosen one
         btn.querySelector('.tab-count').textContent = '(' + tabCounts[btn.dataset.tab] + ')';
       });
-
-      bindReviewLinks();
     }
 
     function bindReviewLinks() {
@@ -512,17 +535,20 @@
     document.querySelectorAll('.tab-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         activeTab = btn.dataset.tab;
+        page = 1; // another list starts on its first page
         render();
       });
     });
 
-    // The search waits until typing stops for 300 ms.
-    document.getElementById('searchInput').addEventListener('input', PP.debounce(render, 300));
+    // The search waits until typing stops for 300 ms, and starts again from the first page.
+    document.getElementById('searchInput').addEventListener('input', PP.debounce(function() { page = 1; render(); }, 300));
 
-    // Start from the tab in the page address and the search kept in this tab (Reload, Back, a link from Monitoring).
+    // Start from the tab and page in the page address and the search kept in this tab (Reload, Back, a link from Monitoring).
     const saved = listState.read();
     if (TAB_META[saved.tab]) activeTab = saved.tab;
     document.getElementById('searchInput').value = saved.search;
+    page = saved.page;
+    if ([25, 50, 100].includes(saved.pageSize)) pageSize = saved.pageSize;
 
     render();
   })();
