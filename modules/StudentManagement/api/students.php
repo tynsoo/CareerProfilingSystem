@@ -201,7 +201,7 @@ if ($idLookup > 0) {
         'attemptNumber' => (int) $a['attempt_number'],
         'completedAt' => $a['completed_at'],
         'riasec' => implode(', ', json_decode($a['top_types'], true)),
-        'riasecLabel' => RiasecInterpretation::codeLabel(RiasecInterpretation::interpret($scoresOf($a))),
+        'riasecLabel' => QuestionBank::hollandCode(json_decode($a['top_types'], true)),
     ], $attemptsStmt->fetchAll());
 
     jsonResponse(['student' => [
@@ -349,9 +349,9 @@ $students = array_map(function ($r) use ($counseledIds, $mismatchIds, $recommend
         'locked' => (bool) $r['locked'],   // locked by wrong passwords: the list shows Locked and Unlock
         'status' => $status,
         'riasec' => implode(', ', $topTypes),
-        // Equal scores: no unique code. riasecLabel says so ("CER or CEI (tied)"); riasec keeps the stored order.
+        // Equal scores: no unique code (riasecTied); riasecLabel is always the letters in the stored order ("CER").
         'riasecTied' => $interpretation !== null && $interpretation['status'] !== 'distinct',
-        'riasecLabel' => $interpretation !== null ? RiasecInterpretation::codeLabel($interpretation) : '',
+        'riasecLabel' => QuestionBank::hollandCode($topTypes),
         '_riasecShort' => $interpretation !== null ? RiasecInterpretation::shortLabel($interpretation) : '',
         '_riasecTie' => $interpretation !== null ? RiasecInterpretation::tieLabel($interpretation) : '',
         'counseling' => $counseling,
@@ -584,8 +584,7 @@ if ($asPdf) {
     $counts = 'In this list: ' . $count(fn($s) => $s['status'] === 'Completed') . ' completed, '
         . $count(fn($s) => $s['status'] === 'Pending') . ' pending, '
         . $count(fn($s) => $s['status'] === 'Not Registered') . ' not registered, '
-        . $count(fn($s) => $s['mismatched']) . ' mismatched.'
-        . (array_filter($filtered, fn($s) => !empty($s['riasecTied'])) ? ' "Tie" / "All equal": equal scores, so there is no unique Top-3 code.' : '');
+        . $count(fn($s) => $s['mismatched']) . ' mismatched.';
     try {
         // Inside the try: the student names were decrypted above, but nothing here should break the page with a raw error.
         $rows = array_map(fn($s) => [
@@ -597,7 +596,7 @@ if ($asPdf) {
             // The same words as the page: Completed, Pending, Not registered (a mismatched result is always a completed one).
             $s['mismatched'] ? 'Mismatched' : ($s['status'] === 'Not Registered' ? 'Not registered' : $s['status']),
             $s['assessmentDate'] ? date('M j, Y', strtotime((string) $s['assessmentDate'])) : '-',
-            ($s['_riasecShort'] ?? '') !== '' ? $s['_riasecShort'] : (QuestionBank::hollandCode(array_values(array_filter(explode(', ', (string) ($s['riasec'] ?? ''))))) ?: '-'),
+            ($s['riasecLabel'] ?? '') !== '' ? $s['riasecLabel'] : '-',
             $s['counseling'] !== '' ? $s['counseling'] : 'No request',
         ], $filtered);
         $position = $user['role'] === 'counselor' ? ($user['positionLabel'] ?? 'Guidance Counselor') : 'Administrator';

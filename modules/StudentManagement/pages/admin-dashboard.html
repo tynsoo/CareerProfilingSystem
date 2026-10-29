@@ -877,7 +877,7 @@
       '<td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">' + formatDate(s.assessmentDate) + '</td>' +
       '<td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">' + (!s.riasec ? '<span class="text-gray-500">No result yet</span>'
         : s.riasecTied ? '<span title="Equal scores: no unique ranked Top-3 code">' + escapeHtml(s.riasecLabel) + '</span>'
-        : escapeHtml(s.riasec)) + '</td>' +
+        : escapeHtml(s.riasecLabel)) + '</td>' +
       '<td class="px-6 py-4 text-center whitespace-nowrap" style="min-width:170px">' + counselingCell + '</td>' +
       '<td class="px-6 py-4 text-center">' + actionCell + '</td>' +
     '</tr>';
