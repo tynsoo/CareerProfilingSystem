@@ -55,6 +55,35 @@ class AcademicYear
         return $years;
     }
 
+    /**
+     * SQL for "this student belongs to school year $ay": registered in that year, or on that year's class roster (a
+     * student who registered earlier and is still enrolled), or, for the current year only, registered before the year
+     * was recorded. $alias is the students table alias ('' for none).
+     *
+     * @return array{0:string,1:array<int,string>} the condition and its two bind values
+     */
+    public static function studentCondition(string $alias, string $ay, ?DateTimeImmutable $now = null): array
+    {
+        $c = $alias === '' ? '' : $alias . '.';
+        $sql = "({$c}academic_year = ? OR {$c}school_id IN (SELECT school_id FROM assessment_roster WHERE academic_year = ?)"
+            . (self::isPast($ay, $now) ? '' : " OR {$c}academic_year IS NULL") . ')';
+        return [$sql, [$ay, $ay]];
+    }
+
+    /** The school_ids on a year's class roster, as a lookup (id => true), for the PHP side of studentCondition(). */
+    public static function rosterIds(PDO $pdo, string $ay): array
+    {
+        $stmt = $pdo->prepare('SELECT school_id FROM assessment_roster WHERE academic_year = ?');
+        $stmt->execute([$ay]);
+        return array_fill_keys(array_map('strval', $stmt->fetchAll(PDO::FETCH_COLUMN)), true);
+    }
+
+    /** The same rule as studentCondition(), for one student already loaded. */
+    public static function studentBelongs(?string $studentYear, string $schoolId, string $ay, array $rosterIds, ?DateTimeImmutable $now = null): bool
+    {
+        return $studentYear === $ay || isset($rosterIds[$schoolId]) || ($studentYear === null && !self::isPast($ay, $now));
+    }
+
     /** The year asked for when it is one of the available years, otherwise the current year. */
     public static function resolve(PDO $pdo, string $requested, ?DateTimeImmutable $now = null): string
     {

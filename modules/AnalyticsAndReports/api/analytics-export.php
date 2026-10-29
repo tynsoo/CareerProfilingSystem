@@ -25,8 +25,9 @@ if ($academicYear === '') {
 }
 $academicYear = AcademicYear::resolve($pdo, $academicYear);
 
-$conds = ['s.academic_year = ?'];
-$params = [$academicYear];
+// Same students as the Analytics page, XLSX and PDF for this school year (see AcademicYear::studentCondition).
+[$ayCond, $params] = AcademicYear::studentCondition('s', $academicYear);
+$conds = [$ayCond];
 if ($strand !== '') {
     $conds[] = 's.strand = ?';
     $params[] = $strand;

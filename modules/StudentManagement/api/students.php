@@ -314,12 +314,11 @@ foreach ($helpRequestRows as $hr) {
 }
 
 $allRegisteredSchoolIds = array_column($rows, 'school_id'); // before scoping: a student registered elsewhere is not 'Not Registered'
-// ?academicYear= looks back at a past school year: only the students registered in that year and that year's class roster.
-// The current year (the default) keeps showing everyone registered.
+// ?academicYear= picks the school year (the current one by default): the students registered in that year or on that
+// year's class roster, and the roster students who have not registered yet. Same rule as Analytics.
 $viewAy = AcademicYear::resolve($pdo, (string) ($_GET['academicYear'] ?? ''));
-if (AcademicYear::isPast($viewAy)) {
-    $rows = array_values(array_filter($rows, fn($r) => $r['academic_year'] === $viewAy));
-}
+$viewRoster = AcademicYear::rosterIds($pdo, $viewAy);
+$rows = array_values(array_filter($rows, fn($r) => AcademicYear::studentBelongs($r['academic_year'], (string) $r['school_id'], $viewAy, $viewRoster)));
 $rows = array_values(array_filter($rows, fn($r) => StaffScope::allows($scope, $r['strand'], $r['section'])));
 $mismatchIds = Mismatch::studentIds($pdo); // finished students whose Preferred Course isn't a Best RIASEC Match
 // Students with a recommendation for their latest assessment (assessment + worksheet done), the same rule as

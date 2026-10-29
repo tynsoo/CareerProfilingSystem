@@ -27,7 +27,7 @@ class AnalyticsXlsx
     public static function studentRows(PDO $pdo, ?array $scope, string $strand = '', string $section = '', string $academicYear = ''): array
     {
         $ay = AcademicYear::resolve($pdo, $academicYear);
-        $pastAy = AcademicYear::isPast($ay);
+        $yearRoster = AcademicYear::rosterIds($pdo, $ay);
         $rows = [];
         $registeredIds = [];
         $stmt = $pdo->query(
@@ -39,7 +39,7 @@ class AnalyticsXlsx
         );
         foreach ($stmt->fetchAll() as $r) {
             $registeredIds[$r['school_id']] = true;
-            if ($pastAy && $r['academic_year'] !== $ay) {
+            if (!AcademicYear::studentBelongs($r['academic_year'], (string) $r['school_id'], $ay, $yearRoster)) {
                 continue;
             }
             $done = $r['completed_at'] !== null;
@@ -275,7 +275,7 @@ class AnalyticsXlsx
 
         $sections[] = [
             'title' => 'Assessment completion by academic year',
-            'columns' => ['Academic year', 'Registered students', 'Completed', 'Completion (%)'],
+            'columns' => ['Academic year', 'Students expected', 'Completed', 'Completion (%)'],
             'rows' => array_map(fn($y) => [(string) $y['academicYear'], (int) $y['total'], (int) $y['completed'], (float) $y['rate']], $data['completionByYear']),
             'note' => $data['completionByYear'] ? 'All strands and sections.' : 'No academic year data yet.',
         ];

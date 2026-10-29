@@ -24,42 +24,36 @@ class AnalyticsReport
         }
         $hasStrand = $strand !== '';
         $hasSection = $section !== '';
-        // The school year being looked at: the current one unless a past year was picked. A past year narrows every student
-        // figure to the students registered in that year.
+        // The school year being looked at (the current one unless another was picked). Every student figure is narrowed to
+        // the students of that year, the current year included: see AcademicYear::studentCondition().
         $ay = AcademicYear::resolve($pdo, $academicYear);
-        $pastAy = AcademicYear::isPast($ay);
-        $hasFilter = $hasStrand || $hasSection || $pastAy;
 
-        // Builds the "WHERE ... AND ..." (or "" ) clause plus matching bind params
-        // for whichever of the two filters are active, given the students-table
-        // alias in use. Every metric below joins to `students s` one way or
-        // another, so this alias is always 's'.
-        $studentFilterClause = function (string $leadKeyword = 'WHERE') use ($hasStrand, $strand, $hasSection, $section, $pastAy, $ay): array {
+        // Builds the "WHERE ... AND ..." clause plus matching bind params for the
+        // Strand, Section and School Year filters, given the students-table alias
+        // in use. Every metric below joins to `students s` one way or another, so
+        // the alias is 's' (or '' where students is the base table).
+        $studentFilterClause = function (string $leadKeyword = 'WHERE', string $alias = 's') use ($hasStrand, $strand, $hasSection, $section, $ay): array {
+            $c = $alias === '' ? '' : $alias . '.';
             $conds = [];
             $params = [];
             if ($hasStrand) {
-                $conds[] = 's.strand = ?';
+                $conds[] = $c . 'strand = ?';
                 $params[] = $strand;
             }
             if ($hasSection) {
-                $conds[] = 's.section = ?';
+                $conds[] = $c . 'section = ?';
                 $params[] = $section;
             }
-            if ($pastAy) {
-                $conds[] = 's.academic_year = ?';
-                $params[] = $ay;
-            }
-            if (!$conds) {
-                return ['', []];
-            }
+            [$ayCond, $ayParams] = AcademicYear::studentCondition($alias, $ay);
+            $conds[] = $ayCond;
+            array_push($params, ...$ayParams);
             $joiner = $leadKeyword === 'WHERE' ? ' WHERE ' : ' AND ';
             return [$joiner . implode(' AND ', $conds), $params];
         };
 
         $totalStudents = (int) (function () use ($pdo, $studentFilterClause) {
-            [$clause, $params] = $studentFilterClause();
             // No join needed here — students is the base table, so use its own columns directly.
-            $clause = str_replace('s.', '', $clause);
+            [$clause, $params] = $studentFilterClause('WHERE', '');
             $stmt = $pdo->prepare('SELECT COUNT(*) FROM students' . $clause);
             $stmt->execute($params);
             return $stmt->fetchColumn();
@@ -87,11 +81,10 @@ class AnalyticsReport
 
         $threshold = MonitoringLevel::get($pdo);
 
-        $latestRecScores = (function () use ($pdo, $hasFilter, $studentFilterClause) {
-            $needsJoin = $hasFilter;
+        $latestRecScores = (function () use ($pdo, $studentFilterClause) {
             [$clause, $params] = $studentFilterClause();
             $sql = 'SELECT DISTINCT ON (r.student_id) r.top_score FROM recommendations r JOIN assessments la ON la.id = r.source_assessment_id AND la.is_latest = TRUE'
-                . ($needsJoin ? ' JOIN students s ON s.user_id = r.student_id' . $clause : '')
+                . ' JOIN students s ON s.user_id = r.student_id' . $clause
                 . ' ORDER BY r.student_id, r.computed_at DESC';
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -102,8 +95,7 @@ class AnalyticsReport
 
         // The strand and section breakdowns follow the same Strand/Section
         // filter as every other figure, so picking STEM never shows ABM bars.
-        [$distClause, $distParams] = $studentFilterClause();
-        $distClause = str_replace('s.', '', $distClause);
+        [$distClause, $distParams] = $studentFilterClause('WHERE', '');
         $strandStmt = $pdo->prepare('SELECT strand, COUNT(*) AS cnt FROM students' . $distClause . ' GROUP BY strand ORDER BY cnt DESC');
         $strandStmt->execute($distParams);
         $strandRows = $strandStmt->fetchAll();
@@ -122,15 +114,14 @@ class AnalyticsReport
             return $stmt->fetch();
         })();
 
-        $careerCounts = (function () use ($pdo, $hasFilter, $studentFilterClause) {
-            $needsJoin = $hasFilter;
+        $careerCounts = (function () use ($pdo, $studentFilterClause) {
             [$clause, $params] = $studentFilterClause();
             // Students whose CBF candidates (courses most similar to their RIASEC profile)
             // include each program (latest result per student; older results: top CBF program).
             $sql = "SELECT unnest(COALESCE(cbf_program_ids, ARRAY[top_program_id])) AS top_program_id, COUNT(*) AS cnt FROM (
                         SELECT DISTINCT ON (r.student_id) r.student_id, r.top_program_id, r.cbf_program_ids
                         FROM recommendations r JOIN assessments la ON la.id = r.source_assessment_id AND la.is_latest = TRUE"
-                . ($needsJoin ? ' JOIN students s ON s.user_id = r.student_id' . $clause : '')
+                . ' JOIN students s ON s.user_id = r.student_id' . $clause
                 . " ORDER BY r.student_id, r.computed_at DESC
                     ) latest GROUP BY 1 ORDER BY cnt DESC, 1 LIMIT 5";
             $stmt = $pdo->prepare($sql);
@@ -147,8 +138,10 @@ class AnalyticsReport
         // so a small or stale roster could show something like "2 of 1" once
         // more students registered than the roster had ever listed.
         $currentAy = $ay; // the school year being looked at
-        $expectedCount = (int) (function () use ($pdo, $currentAy, $hasStrand, $strand, $hasSection, $section) {
-            $studentConds = ['academic_year = ?'];
+        // A student with no year recorded counts for the current year only (same rule as AcademicYear::studentCondition).
+        $studentAyCond = AcademicYear::isPast($ay) ? 'academic_year = ?' : '(academic_year = ? OR academic_year IS NULL)';
+        $expectedCount = (int) (function () use ($pdo, $currentAy, $studentAyCond, $hasStrand, $strand, $hasSection, $section) {
+            $studentConds = [$studentAyCond];
             $studentParams = [$currentAy];
             $rosterConds = ['academic_year = ?'];
             $rosterParams = [$currentAy];
@@ -181,8 +174,8 @@ class AnalyticsReport
         // registered-plus-roster union (a student on both counts once, under the
         // section of their real account), and "completed" is the same set of
         // students with a latest assessment, just grouped by section.
-        $assessmentBySection = (function () use ($pdo, $currentAy, $hasStrand, $strand, $hasSection, $section, $studentFilterClause) {
-            $conds = ['academic_year = ?'];
+        $assessmentBySection = (function () use ($pdo, $currentAy, $studentAyCond, $hasStrand, $strand, $hasSection, $section, $studentFilterClause) {
+            $conds = [$studentAyCond]; // roster rows always have a year, so the NULL branch only matches students
             $params = [$currentAy];
             if ($hasStrand) { $conds[] = 'strand = ?'; $params[] = $strand; }
             if ($hasSection) { $conds[] = 'section = ?'; $params[] = $section; }
@@ -289,40 +282,52 @@ class AnalyticsReport
                 'expectedSections' => $expectedSections,
                 'bySection' => $assessmentBySection,
             ],
-            'completionByYear' => self::completionByYear($pdo),
+            'completionByYear' => self::completionByYear($pdo, $ay),
         ];
     }
 
     /**
      * Assessment completion rate per Academic Year, oldest first — always
      * whole-population, like strandDistribution/sectionDistribution above,
-     * regardless of the strand/section filter passed to compute().
+     * regardless of the strand/section filter passed to compute(). Each year is
+     * counted as the cards are: the students expected that year (registered that
+     * year plus its class roster, a student once) against those with a finished
+     * assessment. $selected marks the year being looked at.
      *
-     * @return array<int,array{academicYear:string,total:int,completed:int,rate:float}>
+     * @return array<int,array{academicYear:string,total:int,completed:int,rate:float,selected:bool}>
      */
-    public static function completionByYear(PDO $pdo): array
+    public static function completionByYear(PDO $pdo, string $selected = ''): array
     {
-        $years = $pdo->query(
-            'SELECT DISTINCT academic_year FROM students WHERE academic_year IS NOT NULL ORDER BY academic_year'
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        $totalStmt = $pdo->prepare('SELECT COUNT(*) FROM students WHERE academic_year = ?');
-        $completedStmt = $pdo->prepare(
-            'SELECT COUNT(*) FROM assessments a JOIN students s ON s.user_id = a.student_id
-             WHERE a.is_latest = TRUE AND s.academic_year = ?'
+        $totalStmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM (SELECT school_id FROM students WHERE academic_year = ?
+                                   UNION SELECT school_id FROM assessment_roster WHERE academic_year = ?) expected'
         );
-
-        return array_map(function ($ay) use ($totalStmt, $completedStmt) {
-            $totalStmt->execute([$ay]);
-            $total = (int) $totalStmt->fetchColumn();
-            $completedStmt->execute([$ay]);
+        $currentTotalStmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM (SELECT school_id FROM students WHERE academic_year = ? OR academic_year IS NULL
+                                   UNION SELECT school_id FROM assessment_roster WHERE academic_year = ?) expected'
+        );
+        $rows = [];
+        foreach (array_reverse(AcademicYear::available($pdo)) as $ay) {
+            $stmt = AcademicYear::isPast($ay) ? $totalStmt : $currentTotalStmt;
+            $stmt->execute([$ay, $ay]);
+            $total = (int) $stmt->fetchColumn();
+            if ($total === 0) {
+                continue;
+            }
+            [$cond, $params] = AcademicYear::studentCondition('s', $ay);
+            $completedStmt = $pdo->prepare(
+                'SELECT COUNT(*) FROM assessments a JOIN students s ON s.user_id = a.student_id WHERE a.is_latest = TRUE AND ' . $cond
+            );
+            $completedStmt->execute($params);
             $completed = (int) $completedStmt->fetchColumn();
-            return [
+            $rows[] = [
                 'academicYear' => $ay,
                 'total' => $total,
                 'completed' => $completed,
-                'rate' => $total > 0 ? round($completed / $total * 100, 1) : 0.0,
+                'rate' => min(100.0, round($completed / $total * 100, 1)),
+                'selected' => $ay === $selected,
             ];
-        }, $years);
+        }
+        return $rows;
     }
 }

@@ -777,9 +777,10 @@
             fill: true,
             tension: 0.25,
             borderWidth: 3,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            pointBackgroundColor: '#1b8a47',
+            // The school year picked at the top of the page gets the bigger, darker point.
+            pointRadius: byYear.map(y => y.selected ? 8 : 5),
+            pointHoverRadius: 9,
+            pointBackgroundColor: byYear.map(y => y.selected ? '#0b4f26' : '#1b8a47'),
           }]
         },
         options: {
