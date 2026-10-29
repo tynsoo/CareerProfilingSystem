@@ -282,6 +282,38 @@
       }
     }).catch(showTimeout);
 
+    // Remember me keeps only the username or email on this browser for 14 days, never the password, and never keeps
+    // anyone signed in (the idle timeout still ends the session). Saved after a successful sign-in; unticking forgets it
+    // at once. Its own key, so a student's number never shows up here.
+    const REMEMBER_KEY = 'pp_remember_staff';
+    const REMEMBER_DAYS = 14;
+    const rememberBox = document.querySelector('input[name="remember"]');
+    try {
+      const saved = JSON.parse(localStorage.getItem(REMEMBER_KEY) || 'null');
+      if (saved && typeof saved.u === 'string' && saved.exp > Date.now()) {
+        document.querySelector('input[name="username"]').value = saved.u;
+        rememberBox.checked = true;
+      } else if (saved) {
+        localStorage.removeItem(REMEMBER_KEY);   // older than 14 days
+      }
+    } catch (e) {
+      try { localStorage.removeItem(REMEMBER_KEY); } catch (e2) {}
+    }
+    rememberBox.addEventListener('change', function() {
+      if (!rememberBox.checked) {
+        try { localStorage.removeItem(REMEMBER_KEY); } catch (e) {}
+      }
+    });
+    function rememberLogin(username) {
+      try {
+        if (rememberBox.checked) {
+          localStorage.setItem(REMEMBER_KEY, JSON.stringify({ u: username, exp: Date.now() + REMEMBER_DAYS * 86400000 }));
+        } else {
+          localStorage.removeItem(REMEMBER_KEY);
+        }
+      } catch (e) {}
+    }
+
     // A staff sign-up arrives here from verify-email after confirming the email address.
     if (new URLSearchParams(window.location.search).get('verified') === '2') {
       const banner = document.getElementById('verifiedBanner');
@@ -309,6 +341,7 @@
 
         if (data.success) {
           try { localStorage.setItem('pp_portal', 'staff'); } catch (e) {}
+          rememberLogin(username);
           redirecting = true; // keep the spinner up until the next page loads
           window.location.href = data.redirect;
           return;
