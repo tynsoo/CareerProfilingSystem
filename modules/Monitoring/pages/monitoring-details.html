@@ -176,6 +176,7 @@
         <div>
           <p class="text-xs font-medium text-slate-500">Preferred vs RIASEC</p>
           <p id="reviewMatch" class="text-sm text-slate-900"></p>
+          <p id="reviewMatchNote" class="hidden text-xs text-slate-500 mt-1">A Match can still be flagged: no course fits this student strongly.</p>
         </div>
         <div>
           <p class="text-xs font-medium text-slate-500">Flag reason</p>
@@ -434,6 +435,8 @@
         : '';
       document.getElementById('reviewStudentMeta').textContent = r.strand + (flagged ? ' · Flagged ' + flagged : '');
       document.getElementById('reviewMatch').textContent = r.match;
+      // Low similarity flags a student whatever the match, so say why a Match is here.
+      document.getElementById('reviewMatchNote').classList.toggle('hidden', !(r.match === 'Match' && r.reason === 'Highest similarity below the monitoring level'));
       document.getElementById('reviewCareer').textContent = r.career;
       document.getElementById('reviewReason').textContent = r.reason +
         (r.topScore !== null && r.topScore !== undefined ? ' (Cosine Similarity: ' + Number(r.topScore).toFixed(3) + ')' : '');
