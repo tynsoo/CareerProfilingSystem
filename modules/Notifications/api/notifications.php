@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
+require_once __DIR__ . '/../../CareerProfiling/lib/ExamSchedule.php';
 
 $user = Auth::requireLogin();
 $pdo = Database::get();
@@ -235,19 +236,17 @@ if ($isStaff) {
         ];
     }
 
-    // Newly created exam schedules matching this student's own
-    // strand/section/grade level/AY (same matching rule as
-    // api/exam-schedules.php?mine=1). NULL on any of those three columns
+    // Newly created exam schedules for this student: their own
+    // strand/section/grade level/AY, or a make-up session they were chosen
+    // for (same matching rule as api/exam-schedules.php?mine=1,
+    // ExamSchedule::matchSql). NULL on any of the three group columns
     // means the schedule applies to everyone in that dimension.
     $stmt = $pdo->prepare(
         "SELECT es.id, es.exam_date, es.room, es.created_at FROM exam_schedules es
          JOIN students s ON s.user_id = ?
          WHERE es.created_at > NOW() - INTERVAL '$days days'
            AND es.created_at >= ?
-           AND es.academic_year = s.academic_year
-           AND (es.grade_level IS NULL OR es.grade_level = s.grade_level)
-           AND (es.strand IS NULL OR es.strand = s.strand)
-           AND (es.section IS NULL OR es.section = s.section)
+           AND " . ExamSchedule::matchSql($pdo) . "
          ORDER BY es.created_at DESC LIMIT $each"
     );
     $stmt->execute([$user['id'], $since]);

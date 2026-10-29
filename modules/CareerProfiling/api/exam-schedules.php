@@ -4,10 +4,66 @@ require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../StudentManagement/lib/Sections.php';
 require_once __DIR__ . '/../lib/ExamSchedule.php';
 require_once __DIR__ . '/../../../shared/lib/AcademicYear.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
 
 $pdo = Database::get();
 $validStrands = ['STEM', 'ABM', 'ICT', 'HUMSS'];
 $validGrades = ['11', '12'];
+const MAKEUP_MAX_STUDENTS = 50;
+
+/**
+ * Choosing the students of a make-up session shows their names, so it needs View Only or Full on Student information
+ * as well as Full on Assessment Scheduling (checked by the caller).
+ */
+function maySeeStudents(array $user): bool
+{
+    return Rbac::atLeast(Rbac::levelsFor(Rbac::roleKey($user))['studentInfo'] ?? 'none', 'limited');
+}
+
+/** ", make-up for 2 students: 2026000003 / 2026000004" for the audit detail (Student Numbers only). */
+function makeupDetail(array $schoolIds): string
+{
+    $n = count($schoolIds);
+    return ', make-up for ' . $n . ' student' . ($n === 1 ? '' : 's') . ': ' . implode(' / ', $schoolIds);
+}
+
+/** SQL (no placeholders): student s has finished the assessment (the same test as api/verify-access-code.php). */
+function finishedSql(): string
+{
+    return 'EXISTS (SELECT 1 FROM assessments a WHERE a.student_id = s.user_id AND a.is_latest = TRUE AND a.completed_at IS NOT NULL)';
+}
+
+/**
+ * The chosen students of a make-up session, for the list. Names only for someone with Student information access and
+ * only for students in their sections (StaffScope); everyone else is counted in 'others'.
+ *
+ * @return array{students: array<int,array>, others: int}
+ */
+function makeupStudents(PDO $pdo, int $scheduleId, bool $withNames, ?array $scope): array
+{
+    $stmt = $pdo->prepare(
+        'SELECT s.school_id, s.first_name_enc, s.last_name_enc, s.strand, s.section, ' . finishedSql() . ' AS finished
+         FROM exam_schedule_students ess JOIN students s ON s.user_id = ess.student_id
+         WHERE ess.schedule_id = ? ORDER BY s.school_id'
+    );
+    $stmt->execute([$scheduleId]);
+    $students = [];
+    $others = 0;
+    foreach ($stmt->fetchAll() as $r) {
+        if (!$withNames || !StaffScope::allows($scope, $r['strand'], $r['section'])) {
+            $others++;
+            continue;
+        }
+        $students[] = [
+            'name' => Crypto::dec($r['last_name_enc']) . ', ' . Crypto::dec($r['first_name_enc']),
+            'schoolId' => $r['school_id'],
+            'strand' => $r['strand'],
+            'section' => $r['section'],
+            'completed' => (bool) $r['finished'],
+        ];
+    }
+    return ['students' => $students, 'others' => $others];
+}
 
 /**
  * Expected/completed counts for one schedule row. assessment_roster has no
@@ -21,6 +77,17 @@ $validGrades = ['11', '12'];
  */
 function scheduleCounts(PDO $pdo, array $s): array
 {
+    // A make-up session expects exactly its chosen students.
+    if ($s['schedule_type'] === 'makeup') {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) AS expected, COUNT(*) FILTER (WHERE ' . finishedSql() . ') AS completed
+             FROM exam_schedule_students ess JOIN students s ON s.user_id = ess.student_id WHERE ess.schedule_id = ?'
+        );
+        $stmt->execute([$s['id']]);
+        $row = $stmt->fetch();
+        return ['expected' => (int) $row['expected'], 'completed' => (int) $row['completed']];
+    }
+
     $rConds = ['academic_year = ?'];
     $rParams = [$s['academic_year']];
     if ($s['strand'] !== null) { $rConds[] = 'strand = ?'; $rParams[] = $s['strand']; }
@@ -60,6 +127,11 @@ function scheduleCounts(PDO $pdo, array $s): array
 /** school_ids a session is expected to cover (same matching rules as scheduleCounts above). */
 function scheduleStudentIds(PDO $pdo, array $s): array
 {
+    if ($s['schedule_type'] === 'makeup') {
+        $stmt = $pdo->prepare('SELECT s.school_id FROM exam_schedule_students ess JOIN students s ON s.user_id = ess.student_id WHERE ess.schedule_id = ?');
+        $stmt->execute([$s['id']]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
     $ids = [];
     $rConds = ['academic_year = ?'];
     $rParams = [$s['academic_year']];
@@ -87,7 +159,7 @@ function scheduleStudentIds(PDO $pdo, array $s): array
 function scheduleSummary(PDO $pdo, string $academicYear, int $archivedCount): array
 {
     $stmt = $pdo->prepare(
-        'SELECT id, academic_year, exam_date, start_time, end_time, room, grade_level, strand, section
+        'SELECT id, academic_year, exam_date, start_time, end_time, room, grade_level, strand, section, schedule_type
          FROM exam_schedules WHERE academic_year = ? AND NOT ' . ExamSchedule::endedSql() . ' ORDER BY exam_date, start_time'
     );
     $stmt->execute([$academicYear]);
@@ -114,8 +186,9 @@ function scheduleSummary(PDO $pdo, string $academicYear, int $archivedCount): ar
         'startTime' => substr($r['start_time'], 0, 5),
         'endTime' => substr($r['end_time'], 0, 5),
         'room' => $r['room'],
+        'scheduleType' => $r['schedule_type'], // make-ups may share the CGC Office (ExamSchedule::mayShareRoom)
     ], $pdo->query(
-        'SELECT id, exam_date, start_time, end_time, room FROM exam_schedules WHERE NOT ' . ExamSchedule::endedSql() . ' ORDER BY exam_date, start_time'
+        'SELECT id, exam_date, start_time, end_time, room, schedule_type FROM exam_schedules WHERE NOT ' . ExamSchedule::endedSql() . ' ORDER BY exam_date, start_time'
     )->fetchAll());
 
     return [
@@ -161,23 +234,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['mine'])) {
     if ($user['role'] !== 'student') {
         jsonResponse(['error' => 'Forbidden'], 403);
     }
-    $stmt = $pdo->prepare('SELECT strand, section, grade_level, academic_year FROM students WHERE user_id = ?');
-    $stmt->execute([$user['id']]);
-    $student = $stmt->fetch();
-    if (!$student || !$student['academic_year']) {
-        jsonResponse(['schedules' => []]);
-    }
+    // Their group's sessions and their own make-up sessions (ExamSchedule::matchSql).
     $stmt = $pdo->prepare(
-        "SELECT id, academic_year, exam_date, start_time, end_time, room, grade_level, strand, section, access_code, notes_enc, schedule_type
-         FROM exam_schedules
-         WHERE academic_year = ?
-           AND NOT " . ExamSchedule::endedSql() . "
-           AND (grade_level IS NULL OR grade_level = ?)
-           AND (strand IS NULL OR strand = ?)
-           AND (section IS NULL OR section = ?)
-         ORDER BY exam_date, start_time"
+        'SELECT es.exam_date, es.start_time, es.end_time, es.room, es.schedule_type
+         FROM exam_schedules es JOIN students s ON s.user_id = ?
+         WHERE NOT ' . ExamSchedule::endedSql('es') . ' AND ' . ExamSchedule::matchSql($pdo) . '
+         ORDER BY es.exam_date, es.start_time'
     );
-    $stmt->execute([$student['academic_year'], $student['grade_level'], $student['strand'], $student['section']]);
+    $stmt->execute([$user['id']]);
     // Students only need date/time/room — never expose the access code
     // (that's for staff) or internal notes through this endpoint.
     $schedules = array_map(fn($s) => [
@@ -188,6 +252,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['mine'])) {
         'scheduleType' => $s['schedule_type'],
     ], $stmt->fetchAll());
     jsonResponse(['schedules' => $schedules]);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['pickStudents'])) {
+    // The student search on the Create form (make-up session): registered, active students of the current school
+    // year in this staff member's sections, at most 10. A Student Number (digits) is searched in SQL; a name is
+    // matched only after the scope filter, so only those rows are decrypted.
+    $user = Rbac::requireAccess('examinations', 'full');
+    if (!maySeeStudents($user)) {
+        jsonResponse(['error' => 'Insufficient permissions for this action.'], 403);
+    }
+    $q = trim(preg_replace('/\s+/', ' ', (string) ($_GET['q'] ?? '')));
+    if (!ExamSchedule::makeupAvailable($pdo) || mb_strlen($q) < 3 || mb_strlen($q) > 60) {
+        jsonResponse(['students' => []]);
+    }
+    $byNumber = preg_match('/^\d+$/', $q) === 1;
+    $stmt = $pdo->prepare(
+        'SELECT s.user_id, s.school_id, s.first_name_enc, s.last_name_enc, s.strand, s.grade_level, s.section, ' . finishedSql() . ' AS finished
+         FROM students s JOIN users u ON u.id = s.user_id
+         WHERE s.academic_year = ? AND u.is_active = TRUE' . ($byNumber ? ' AND s.school_id LIKE ?' : '') . '
+         ORDER BY finished, s.school_id' // students who can still take it come first
+    );
+    $stmt->execute($byNumber ? [AcademicYear::current(), '%' . $q . '%'] : [AcademicYear::current()]);
+    $scope = StaffScope::forUser($pdo, $user);
+    $needle = mb_strtolower($q);
+    $found = [];
+    foreach ($stmt->fetchAll() as $r) {
+        if (!StaffScope::allows($scope, $r['strand'], $r['section'])) {
+            continue;
+        }
+        $first = Crypto::dec($r['first_name_enc']);
+        $last = Crypto::dec($r['last_name_enc']);
+        $name = "$last, $first";
+        if (!$byNumber && !str_contains(mb_strtolower($name), $needle) && !str_contains(mb_strtolower("$first $last"), $needle)) {
+            continue;
+        }
+        $found[] = [
+            'userId' => (int) $r['user_id'],
+            'name' => $name,
+            'schoolId' => $r['school_id'],
+            'gradeLevel' => $r['grade_level'],
+            'strand' => $r['strand'],
+            'section' => $r['section'],
+            'completed' => (bool) $r['finished'],
+        ];
+        if (count($found) === 10) {
+            break;
+        }
+    }
+    jsonResponse(['students' => $found]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -210,11 +323,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $archivedStmt->execute([$academicYear]);
     $archivedCount = (int) $archivedStmt->fetchColumn();
 
-    $schedules = array_map(function ($s) use ($pdo) {
+    $withNames = maySeeStudents($user);
+    $scope = StaffScope::forUser($pdo, $user);
+    $schedules = array_map(function ($s) use ($pdo, $withNames, $scope) {
         $row = scheduleRow($s);
         $counts = scheduleCounts($pdo, $s);
         $row['expectedCount'] = $counts['expected'];
         $row['completedCount'] = $counts['completed'];
+        if ($s['schedule_type'] === 'makeup') {
+            $chosen = makeupStudents($pdo, (int) $s['id'], $withNames, $scope);
+            $row['students'] = $chosen['students'];
+            $row['otherStudents'] = $chosen['others'];
+        }
         return $row;
     }, $rows);
 
@@ -226,6 +346,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'archivedCount' => $archivedCount,
         'showingArchived' => $showArchived,
         'summary' => scheduleSummary($pdo, $academicYear, $archivedCount),
+        // The page shows "Chosen students (make-up)" only when the create below would accept it.
+        'canChooseStudents' => ExamSchedule::makeupAvailable($pdo) && $withNames
+            && Rbac::atLeast(Rbac::levelsFor(Rbac::roleKey($user))['examinations'], 'full'),
     ]);
 }
 
@@ -271,52 +394,116 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             jsonResponse(['success' => false, 'error' => 'Room must be 1-50 characters.'], 400);
         }
 
-        $gradeLevel = trim((string) ($body['gradeLevel'] ?? ''));
-        $gradeLevel = in_array($gradeLevel, $validGrades, true) ? $gradeLevel : null;
-        $strand = strtoupper(trim((string) ($body['strand'] ?? '')));
-        $strand = in_array($strand, $validStrands, true) ? $strand : null;
-        // Never trust the client-side cascading dropdown alone: a section
-        // must belong to the chosen strand's fixed list, and "All strands"
-        // can't be paired with one specific section (every section belongs
-        // to exactly one strand).
-        $section = trim((string) ($body['section'] ?? ''));
-        if ($section !== '') {
-            if ($strand === null || !Sections::isValid($pdo, $strand, $section)) {
-                jsonResponse(['success' => false, 'error' => 'Invalid section for the selected strand.'], 400);
+        $gradeLevel = null;
+        $strand = null;
+        $section = null;
+        $chosen = []; // a make-up session's students, by user id
+        if (($body['target'] ?? '') === 'students') {
+            // Make-up session: for chosen students only (absent on the day, or needing another date). The group
+            // columns stay empty; the students are listed in exam_schedule_students (ExamSchedule::matchSql).
+            if (!maySeeStudents($user)) {
+                jsonResponse(['success' => false, 'error' => 'Insufficient permissions for this action.'], 403);
             }
+            if (!ExamSchedule::makeupAvailable($pdo)) {
+                jsonResponse(['success' => false, 'error' => 'Make-up sessions are not set up yet. Please ask the administrator.'], 409);
+            }
+            $ids = is_array($body['studentIds'] ?? null) ? $body['studentIds'] : [];
+            $ids = array_values(array_unique(array_filter(array_map('intval', $ids), fn($id) => $id > 0)));
+            if (!$ids) {
+                jsonResponse(['success' => false, 'error' => 'Choose at least one student.'], 400);
+            }
+            if (count($ids) > MAKEUP_MAX_STUDENTS) {
+                jsonResponse(['success' => false, 'error' => 'Choose at most ' . MAKEUP_MAX_STUDENTS . ' students for one make-up session.'], 400);
+            }
+            $stmt = $pdo->prepare(
+                'SELECT s.user_id, s.school_id, s.strand, s.section, ' . finishedSql() . ' AS finished
+                 FROM students s JOIN users u ON u.id = s.user_id
+                 WHERE s.user_id IN (' . implode(', ', array_fill(0, count($ids), '?')) . ') AND s.academic_year = ? AND u.is_active = TRUE'
+            );
+            $stmt->execute([...$ids, $academicYear]);
+            $scope = StaffScope::forUser($pdo, $user);
+            foreach ($stmt->fetchAll() as $r) {
+                if (StaffScope::allows($scope, $r['strand'], $r['section'])) {
+                    $chosen[(int) $r['user_id']] = $r;
+                }
+            }
+            // Missing, another school year, deactivated, or outside this staff member's sections: the same answer.
+            if (count($chosen) !== count($ids)) {
+                jsonResponse(['success' => false, 'error' => 'Student not found.'], 404);
+            }
+            foreach ($chosen as $r) {
+                if ($r['finished']) {
+                    jsonResponse(['success' => false, 'error' => "Student {$r['school_id']} has already taken the assessment. Taking it again needs an approved retake request."], 409);
+                }
+            }
+            $scheduleType = 'makeup';
         } else {
-            $section = null;
+            $gradeLevel = trim((string) ($body['gradeLevel'] ?? ''));
+            $gradeLevel = in_array($gradeLevel, $validGrades, true) ? $gradeLevel : null;
+            $strand = strtoupper(trim((string) ($body['strand'] ?? '')));
+            $strand = in_array($strand, $validStrands, true) ? $strand : null;
+            // Never trust the client-side cascading dropdown alone: a section
+            // must belong to the chosen strand's fixed list, and "All strands"
+            // can't be paired with one specific section (every section belongs
+            // to exactly one strand).
+            $section = trim((string) ($body['section'] ?? ''));
+            if ($section !== '') {
+                if ($strand === null || !Sections::isValid($pdo, $strand, $section)) {
+                    jsonResponse(['success' => false, 'error' => 'Invalid section for the selected strand.'], 400);
+                }
+            } else {
+                $section = null;
+            }
+            // Retakes were removed, so every group schedule is a regular exam session.
+            $scheduleType = 'initial';
         }
         $notes = trim((string) ($body['notes'] ?? ''));
-        // Retakes were removed, so every schedule is a regular exam session.
-        $scheduleType = 'initial';
 
         // One room can't hold two sessions at the same time. Compared ignoring
         // case/extra spaces, and across every academic year (it's a real room).
+        // Only make-up sessions in the CGC Office may overlap each other (ExamSchedule::mayShareRoom).
         $clash = $pdo->prepare(
-            "SELECT start_time, end_time FROM exam_schedules
+            "SELECT start_time, end_time, schedule_type FROM exam_schedules
              WHERE exam_date = ? AND LOWER(REGEXP_REPLACE(TRIM(room), '\\s+', ' ', 'g')) = ?
-               AND start_time < ? AND end_time > ? LIMIT 1"
+               AND start_time < ? AND end_time > ? ORDER BY start_time"
         );
         $clash->execute([$examDate, ExamSchedule::roomKey($room), $endTime, $startTime]);
-        if ($existingBooking = $clash->fetch()) {
-            jsonResponse(['success' => false, 'error' => trim(preg_replace('/\s+/', ' ', $room)) . ' is already booked from ' . substr($existingBooking['start_time'], 0, 5) . ' to ' . substr($existingBooking['end_time'], 0, 5) . ' on that date. Pick another room or time.'], 409);
+        foreach ($clash->fetchAll() as $existingBooking) {
+            if (!ExamSchedule::mayShareRoom($scheduleType, $existingBooking['schedule_type'], $room)) {
+                jsonResponse(['success' => false, 'error' => trim(preg_replace('/\s+/', ' ', $room)) . ' is already booked from ' . substr($existingBooking['start_time'], 0, 5) . ' to ' . substr($existingBooking['end_time'], 0, 5) . ' on that date. Pick another room or time.'], 409);
+            }
         }
 
         $accessCode = strtoupper(bin2hex(random_bytes(3)));
 
-        $stmt = $pdo->prepare(
-            'INSERT INTO exam_schedules (academic_year, exam_date, start_time, end_time, room, grade_level, strand, section, access_code, notes_enc, schedule_type, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id'
-        );
-        $stmt->execute([
-            $academicYear, $examDate, $startTime, $endTime, $room, $gradeLevel, $strand, $section,
-            $accessCode, $notes !== '' ? Crypto::enc($notes) : null, $scheduleType, $user['id'],
-        ]);
-        $newId = (int) $stmt->fetchColumn();
+        // The session and its students are saved together, or not at all.
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare(
+                'INSERT INTO exam_schedules (academic_year, exam_date, start_time, end_time, room, grade_level, strand, section, access_code, notes_enc, schedule_type, created_by)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id'
+            );
+            $stmt->execute([
+                $academicYear, $examDate, $startTime, $endTime, $room, $gradeLevel, $strand, $section,
+                $accessCode, $notes !== '' ? Crypto::enc($notes) : null, $scheduleType, $user['id'],
+            ]);
+            $newId = (int) $stmt->fetchColumn();
+            $addStudent = $pdo->prepare('INSERT INTO exam_schedule_students (schedule_id, student_id) VALUES (?, ?)');
+            foreach (array_keys($chosen) as $studentId) {
+                $addStudent->execute([$newId, $studentId]);
+            }
+            $pdo->commit();
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+            error_log('[exam-schedules] create failed: ' . $e->getMessage());
+            jsonResponse(['success' => false, 'error' => 'The schedule could not be saved. Please try again.'], 500);
+        }
 
+        // Student Numbers, never names (the detail is encrypted, but a number is enough to trace who it was for).
+        // Joined with " / ": the Audit Log shows each comma-separated part of a schedule detail on its own line.
+        $makeupDetail = $chosen ? makeupDetail(array_column(array_values($chosen), 'school_id')) : '';
         AuditLogger::log($user['id'], $user['role'], 'create_exam_schedule', 'exam_schedule', (string) $newId,
-            "$examDate $startTime-$endTime, room $room, AY $academicYear" . ($strand ? ", strand $strand" : '') . ($section ? ", section $section" : ''));
+            "$examDate $startTime-$endTime, room $room, AY $academicYear" . ($strand ? ", strand $strand" : '') . ($section ? ", section $section" : '') . $makeupDetail);
 
         jsonResponse(['success' => true, 'id' => $newId, 'accessCode' => $accessCode]);
     }
@@ -343,8 +530,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($type === 'delete') {
         $id = (int) ($body['id'] ?? 0);
+        // A make-up's student list goes with it (ON DELETE CASCADE), so read the Student Numbers first for the log.
+        $wasFor = [];
+        if (ExamSchedule::makeupAvailable($pdo)) {
+            $forStmt = $pdo->prepare('SELECT s.school_id FROM exam_schedule_students ess JOIN students s ON s.user_id = ess.student_id WHERE ess.schedule_id = ? ORDER BY s.school_id');
+            $forStmt->execute([$id]);
+            $wasFor = $forStmt->fetchAll(PDO::FETCH_COLUMN);
+        }
         try {
-            $stmt = $pdo->prepare('DELETE FROM exam_schedules WHERE id = ? RETURNING exam_date, start_time, end_time, room, academic_year, strand, section');
+            $stmt = $pdo->prepare('DELETE FROM exam_schedules WHERE id = ? RETURNING exam_date, start_time, end_time, room, academic_year, strand, section, schedule_type');
             $stmt->execute([$id]);
         } catch (Throwable $e) {
             jsonResponse(['success' => false, 'error' => 'Cannot delete this schedule — it still has retake grants referencing it.'], 409);
@@ -357,7 +551,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         AuditLogger::log($user['id'], $user['role'], 'delete_exam_schedule', 'exam_schedule', (string) $id,
             "{$gone['exam_date']} " . substr((string) $gone['start_time'], 0, 5) . '-' . substr((string) $gone['end_time'], 0, 5)
                 . ", room {$gone['room']}, AY {$gone['academic_year']}"
-                . ($gone['strand'] ? ", strand {$gone['strand']}" : '') . ($gone['section'] ? ", section {$gone['section']}" : ''));
+                . ($gone['strand'] ? ", strand {$gone['strand']}" : '') . ($gone['section'] ? ", section {$gone['section']}" : '')
+                . ($gone['schedule_type'] === 'makeup' ? ($wasFor ? makeupDetail($wasFor) : ', make-up session') : ''));
         jsonResponse(['success' => true]);
     }
 

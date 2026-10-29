@@ -11,6 +11,58 @@
  */
 class ExamSchedule
 {
+    /** The Guidance Office room: make-up sessions there may overlap each other (walk-ins), see mayShareRoom(). */
+    public const CGC_OFFICE = 'CGC Office';
+
+    private static ?bool $makeupAvailable = null;
+
+    /** True once db/migrate_add_makeup_sessions.php has run (the list of a make-up session's students exists). */
+    public static function makeupAvailable(PDO $pdo): bool
+    {
+        if (self::$makeupAvailable === null) {
+            self::$makeupAvailable = $pdo->query("SELECT to_regclass('exam_schedule_students') IS NOT NULL")->fetchColumn() === true;
+        }
+        return self::$makeupAvailable;
+    }
+
+    /**
+     * SQL condition (no placeholders): exam session $es is for student $s (a joined students row). A group session
+     * matches on school year, grade level, strand and section (an empty column means everyone). A make-up session
+     * (schedule_type 'makeup', group columns empty) matches ONLY the students listed for it in exam_schedule_students,
+     * never the group rule, so it can never open for everyone. Before the migration, make-ups match nobody.
+     * Every query that matches sessions to a student goes through here.
+     */
+    public static function matchSql(PDO $pdo, string $es = 'es', string $s = 's'): string
+    {
+        if (!preg_match('/^[a-z_]+$/', $es) || !preg_match('/^[a-z_]+$/', $s)) {
+            throw new InvalidArgumentException('Bad table alias');
+        }
+        $group = "($es.schedule_type <> 'makeup' AND $es.academic_year = $s.academic_year"
+            . " AND ($es.grade_level IS NULL OR $es.grade_level = $s.grade_level)"
+            . " AND ($es.strand IS NULL OR $es.strand = $s.strand)"
+            . " AND ($es.section IS NULL OR $es.section = $s.section))";
+        if (!self::makeupAvailable($pdo)) {
+            return $group;
+        }
+        return "($group OR ($es.schedule_type = 'makeup' AND $es.academic_year = $s.academic_year AND EXISTS ("
+            . "SELECT 1 FROM exam_schedule_students ess WHERE ess.schedule_id = $es.id AND ess.student_id = $s.user_id)))";
+    }
+
+    /** The CGC Office, however it is typed ("cgc office", " CGC  Office "). */
+    public static function isCgcOffice(string $room): bool
+    {
+        return self::roomKey($room) === self::roomKey(self::CGC_OFFICE);
+    }
+
+    /**
+     * Two sessions booked in the same room at overlapping times are allowed only when both are make-up sessions in the
+     * CGC Office (the office takes walk-ins). A make-up there still cannot overlap a regular group session.
+     */
+    public static function mayShareRoom(string $typeA, string $typeB, string $room): bool
+    {
+        return $typeA === 'makeup' && $typeB === 'makeup' && self::isCgcOffice($room);
+    }
+
     /**
      * SQL condition (no placeholders) true for schedules whose exam has ended.
      * Assumes the exam_schedules columns are unqualified; pass an alias to qualify them.
@@ -36,9 +88,10 @@ class ExamSchedule
     }
 
     /**
-     * Pairs of sessions booked into the same room at overlapping times on the same date.
+     * Pairs of sessions booked into the same room at overlapping times on the same date (make-ups sharing the CGC
+     * Office are not a conflict, see mayShareRoom()).
      *
-     * @param array<int,array{id:int,examDate:string,startTime:string,endTime:string,room:string}> $sessions
+     * @param array<int,array{id:int,examDate:string,startTime:string,endTime:string,room:string,scheduleType?:string}> $sessions
      * @return array<int,array{room:string,examDate:string,a:array,b:array}>
      */
     public static function findConflicts(array $sessions): array
@@ -51,7 +104,8 @@ class ExamSchedule
                 $b = $sessions[$j];
                 if ($a['examDate'] === $b['examDate']
                     && self::roomKey($a['room']) === self::roomKey($b['room'])
-                    && self::timesOverlap($a['startTime'], $a['endTime'], $b['startTime'], $b['endTime'])) {
+                    && self::timesOverlap($a['startTime'], $a['endTime'], $b['startTime'], $b['endTime'])
+                    && !self::mayShareRoom($a['scheduleType'] ?? '', $b['scheduleType'] ?? '', $a['room'])) {
                     $conflicts[] = ['room' => $a['room'], 'examDate' => $a['examDate'], 'a' => $a, 'b' => $b];
                 }
             }
@@ -130,28 +184,19 @@ class ExamSchedule
     }
 
     /**
-     * The sessions scheduled for this student's group (same matching rule as the access-code
-     * check: grade level, strand and section, where an empty column means everyone).
+     * The sessions scheduled for this student: their group's sessions and their own make-up sessions (same matching
+     * rule as the access-code check, matchSql()).
      *
      * @return array<int,array{examDate:string,startTime:string,endTime:string,room:string}>
      */
     public static function sessionsForStudent(PDO $pdo, int $studentUserId): array
     {
-        $studentStmt = $pdo->prepare('SELECT strand, section, grade_level, academic_year FROM students WHERE user_id = ?');
-        $studentStmt->execute([$studentUserId]);
-        $student = $studentStmt->fetch();
-        if (!$student || !$student['academic_year']) {
-            return [];
-        }
         $stmt = $pdo->prepare(
-            'SELECT exam_date::text AS exam_date, start_time::text AS start_time, end_time::text AS end_time, room
-             FROM exam_schedules
-             WHERE academic_year = ?
-               AND (grade_level IS NULL OR grade_level = ?)
-               AND (strand IS NULL OR strand = ?)
-               AND (section IS NULL OR section = ?)'
+            'SELECT es.exam_date::text AS exam_date, es.start_time::text AS start_time, es.end_time::text AS end_time, es.room
+             FROM exam_schedules es JOIN students s ON s.user_id = ?
+             WHERE ' . self::matchSql($pdo)
         );
-        $stmt->execute([$student['academic_year'], $student['grade_level'], $student['strand'], $student['section']]);
+        $stmt->execute([$studentUserId]);
         return array_map(fn($r) => [
             'examDate' => $r['exam_date'], 'startTime' => $r['start_time'], 'endTime' => $r['end_time'], 'room' => $r['room'],
         ], $stmt->fetchAll());
