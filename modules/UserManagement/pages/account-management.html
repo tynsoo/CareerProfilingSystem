@@ -168,6 +168,7 @@
         <section id="sectionsSection" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div class="border-b border-gray-200 px-5 py-5">
             <h2 class="text-base font-semibold text-gray-900">Sections</h2>
+            <p class="text-xs text-gray-500 mt-1">Sections are added automatically when you upload a class roster below.</p>
           </div>
           <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4" id="sectionsContainer">
             <p class="text-xs text-gray-500">Loading…</p>
@@ -501,7 +502,7 @@
             const key = o.strand + '|' + o.section;
             return '<label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" class="assign-check accent-[#0f2a6b]" data-strand="' + escapeHtml(o.strand) + '" data-section="' + escapeHtml(o.section) + '"' + (mine.indexOf(key) !== -1 ? ' checked' : '') + '>' + escapeHtml(o.section) + '</label>';
           }).join('') + '</div></div>';
-      }).join('') : '<p class="text-sm text-gray-500 py-4">No sections yet. Add sections or upload a class roster first.</p>';
+      }).join('') : '<p class="text-sm text-gray-500 py-4">No sections yet. Upload a class roster first.</p>';
       assignDialog.open();
     });
     document.getElementById('assignSaveBtn').addEventListener('click', async function() {
@@ -619,7 +620,6 @@
 
   // ---------- Sections ----------
   const SECTION_STRANDS = ['STEM', 'ABM', 'ICT', 'HUMSS'];
-  const SECTION_LETTER = { STEM: 'S', ABM: 'A', ICT: 'I', HUMSS: 'H' };
   let sectionsData = [];
   let rbac = null;
   let canEditRoster = false;
@@ -632,27 +632,11 @@
     // An error is a sentence to read, so it stays up longer than a confirmation.
     showSectionsStatus.timer = setTimeout(() => el.classList.add('hidden'), isError ? 9000 : 3000);
   }
-  // Full = can add and deactivate/reactivate sections; View Only = look at them.
+  // Full = can deactivate/reactivate and delete sections; View Only = look at them. Sections are added by the
+  // roster upload (api/roster-upload.php), not typed in here.
   // Comes from the Student roster management row of Security Configuration's permission table.
   function sectionsLevel() {
     return (rbac && rbac.roster && rbac.roster[currentUser.rbacRole || currentUser.role]) || 'none'; // Student roster management
-  }
-  // The same rules the server applies (modules/StudentManagement/lib/Sections.php), so a mistake is caught while typing. Returns '' when fine.
-  function sectionCodeProblem(strand, code) {
-    const letter = SECTION_LETTER[strand];
-    if (code.charAt(0) !== letter) {
-      return strand + ' sections start with ' + letter + ', like ' + letter + '1114. "' + code + '" starts with ' + code.charAt(0) + '.';
-    }
-    if (!/^[A-Z](1[12])[0-9]{2}$/.test(code)) {
-      return '"' + code + '" is not a valid section code. Use one letter and four digits, like ' + letter + '1114 (the first two digits are the grade level, 11 or 12).';
-    }
-    if (code.slice(3) === '00') {
-      return 'The last two digits are the section number, from 01 to 99. "' + code + '" has 00.';
-    }
-    if (sectionsData.some(function(s) { return s.strand === strand && s.code.toUpperCase() === code; })) {
-      return strand + ' already has section ' + code + '.';
-    }
-    return '';
   }
   async function loadSections() {
     const container = document.getElementById('sectionsContainer');
@@ -671,10 +655,9 @@
   function renderSections() {
     const container = document.getElementById('sectionsContainer');
     const level = sectionsLevel();
-    const canAdd = level === 'full';
     const canToggle = level === 'full';
-    // View Only: the sections are plain labels (an inactive one crossed out, with the word for screen readers) and there is
-    // no Add box, instead of dimmed buttons that cannot be used.
+    // View Only: the sections are plain labels (an inactive one crossed out, with the word for screen readers),
+    // instead of dimmed buttons that cannot be used.
     container.innerHTML = SECTION_STRANDS.map(function(strand) {
       const items = sectionsData.filter(s => s.strand === strand);
       const pills = items.length ? items.map(function(s) {
@@ -688,17 +671,10 @@
         const pill = '<button type="button" class="section-pill border rounded-full px-3 py-1.5 text-xs font-medium ' + styleCls + '" data-id="' + s.id + '" title="' + (s.isActive ? 'Click to deactivate' : 'Click to reactivate') + '">' + escapeHtml(s.code) + '</button>';
         return '<span style="display:inline-flex;align-items:center;gap:2px">' + pill +
           '<button type="button" class="btn-danger delete-section-btn" data-id="' + s.id + '" data-code="' + escapeHtml(s.code) + '" title="Delete section" aria-label="Delete section ' + escapeHtml(s.code) + '" style="width:20px;height:20px;border-radius:9999px;line-height:1;font-size:14px;color:#ed1c24;display:inline-flex;align-items:center;justify-content:center">&times;</button></span>';
-      }).join('') : '<p class="text-xs text-gray-500">No sections yet.</p>';
+      }).join('') : '<p class="text-xs text-gray-500">No sections yet. Upload a ' + strand + ' roster to add one.</p>';
       return '<div class="border border-gray-200 rounded-lg p-[17px] flex flex-col gap-3">' +
         '<p class="text-sm font-semibold text-gray-800">' + strand + '</p>' +
         '<div class="flex flex-wrap gap-2">' + pills + '</div>' +
-        (canAdd
-          ? '<div class="flex items-center gap-2">' +
-              '<input type="text" maxlength="5" autocapitalize="characters" spellcheck="false" class="add-section-input flex-1 min-w-0 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ed1c24]" placeholder="New section, e.g. S1115" aria-label="New ' + strand + ' section code" data-strand="' + strand + '">' +
-              '<button type="button" class="add-section-btn px-4 py-2 text-xs font-semibold text-white bg-[#0f2a6b] rounded-md hover:opacity-90 shrink-0" data-strand="' + strand + '">Add</button>' +
-            '</div>' +
-            '<p class="add-section-hint text-xs text-[#ed1c24] hidden" data-strand="' + strand + '"></p>'
-          : '') +
       '</div>';
     }).join('');
 
@@ -747,49 +723,6 @@
           btn.disabled = false;
         }
       });
-    });
-    container.querySelectorAll('.add-section-btn').forEach(function(btn) {
-      const strand = btn.dataset.strand;
-      const input = container.querySelector('.add-section-input[data-strand="' + strand + '"]');
-      async function add() {
-        const code = input.value.replace(/\s+/g, '').toUpperCase();
-        input.value = code;
-        if (!code) return;
-        // The same rule the server applies (modules/StudentManagement/lib/Sections.php), so a typo is caught before it is sent.
-        const letter = SECTION_LETTER[strand];
-        const problem = sectionCodeProblem(strand, code);
-        if (problem) {
-          showSectionsStatus(problem, true);
-          return;
-        }
-        btn.disabled = true;
-        const res = await fetch('api/sections.php', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'create', strand: strand, code: code })
-        });
-        const data = await res.json();
-        btn.disabled = false;
-        if (data.success) {
-          showSectionsStatus('Section added.', false);
-          await loadSections();
-        } else {
-          showSectionsStatus(data.error || 'Failed to add section.', true);
-        }
-      }
-      const hint = container.querySelector('.add-section-hint[data-strand="' + strand + '"]');
-      // While typing: show what is wrong and keep Add off until the code is acceptable (nothing is shown for an empty box).
-      input.addEventListener('input', function() {
-        const code = input.value.replace(/\s+/g, '').toUpperCase();
-        const problem = code && canAdd ? sectionCodeProblem(strand, code) : '';
-        // A half-typed code is not an error yet: only say so once all five characters are in, or the letter is already wrong.
-        const showIt = problem && (code.length >= 5 || code.charAt(0) !== SECTION_LETTER[strand]);
-        hint.textContent = showIt ? problem : '';
-        hint.classList.toggle('hidden', !showIt);
-        btn.disabled = !canAdd || !!problem || !code;
-        btn.classList.toggle('opacity-60', btn.disabled);
-      });
-      btn.addEventListener('click', add);
-      input.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); add(); } });
     });
   }
 
@@ -863,6 +796,7 @@
         showRosterResult((data.error || 'Upload failed.') + (data.details ? '\n\n' + data.details.join('\n') : ''), true);
       } else {
         loadRosterSections();
+        loadSections(); // the upload adds its section to the list (api/roster-upload.php)
         const lines = ['Roster uploaded: ' + data.count + ' student(s) in ' + data.strand + ' ' + data.section + ' for Academic Year ' + data.academicYear + '.'];
         lines.push(data.added + ' new, ' + (data.count - data.added - data.moved) + ' already on this section, ' + data.moved + ' moved here from another section, ' + data.removed + ' removed from this section.');
         if (data.moved && data.movedFrom) {
