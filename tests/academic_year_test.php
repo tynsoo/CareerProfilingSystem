@@ -52,6 +52,8 @@ foreach (['2024-2025', '2099-2100', 'nonsense'] as $i => $y) {
 $years = AcademicYear::available($pdoAy, $now);
 check('a past year that has data is offered', in_array('2024-2025', $years, true));
 check('the current year is always offered', in_array('2026-2027', $years, true));
+check('the year before the current one is offered even with no data', in_array('2025-2026', $years, true));
+check('only the current and the previous year are added without data', !in_array('2023-2024', $years, true));
 check('a future year is never offered', !in_array('2099-2100', $years, true));
 check('text that is not a year is never offered', !in_array('nonsense', $years, true));
 check('years are listed newest first', $years === array_values(array_unique(array_merge(array_filter($years, fn($y) => true)))) && $years === (function ($a) { rsort($a); return $a; })($years));

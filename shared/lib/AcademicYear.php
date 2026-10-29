@@ -33,7 +33,8 @@ class AcademicYear
 
     /**
      * The school years staff can look back at, newest first: every year that has students, a class roster or a schedule,
-     * plus the current one. A year after the current one is never offered.
+     * plus the current one and the one before it (shown empty until it has data, so the filter can be seen working in a
+     * system's first year). A year after the current one is never offered.
      *
      * @return array<int,string>
      */
@@ -47,6 +48,7 @@ class AcademicYear
              UNION SELECT academic_year FROM exam_schedules'
         )->fetchAll(PDO::FETCH_COLUMN);
         $years[] = $current;
+        $years[] = ($currentStart - 1) . '-' . $currentStart;
         $years = array_values(array_unique(array_filter($years, function ($y) use ($currentStart) {
             $start = self::startYear((string) $y);
             return $start !== null && $start <= $currentStart;

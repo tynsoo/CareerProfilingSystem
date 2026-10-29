@@ -27,6 +27,13 @@ $y2 = ($curStart - 1) . '-' . $curStart;         // last year
 $byYear = fn(array $list) => array_column($list, null, 'academicYear');
 $pdo->beginTransaction();
 try {
+    echo "=== The year before the current one is selectable and empty ===\n";
+    $empty = AnalyticsReport::compute($pdo, '', 'QA-Y', $y2);
+    check("$y2 is offered and resolved with no data", in_array($y2, $empty['academicYears'], true) && $empty['academicYear'] === $y2);
+    check('an empty year shows zeros, not the current year', $empty['totalStudents'] === 0 && $empty['expectedTotal'] === 0 && $empty['completion']['rate'] === 0.0 && $empty['topCareers'] === []);
+    check('an empty year has no report rows', AnalyticsXlsx::studentRows($pdo, null, '', 'QA-Y', $y2) === []);
+    echo "\n";
+
     $before = $byYear(AnalyticsReport::completionByYear($pdo, $cur));
 
     $n = 0;
