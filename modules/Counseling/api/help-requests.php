@@ -7,6 +7,16 @@ require_once __DIR__ . '/../../UserManagement/lib/StaffPosition.php';
 $user = Auth::requireLogin();
 $pdo = Database::get();
 
+/** "Lopez, Carla R. (Guidance Counselor)" for a staff account; null when there is none (no role). */
+function staffLabel(?string $role, ?string $fullName, ?string $username, ?string $position): ?string
+{
+    if ($role === null) {
+        return null;
+    }
+    $name = trim((string) $fullName) !== '' ? $fullName : $username;
+    return $name . ' (' . ($role === 'admin' ? 'Administrator' : StaffPosition::label($position)) . ')';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = readJsonBody();
 
@@ -111,6 +121,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     )->fetchAll();
     $queuePositions = array_flip(array_map(fn($r) => (int) $r['id'], $openByAge));
 
+    // The latest counseling invite of each listed student (from this page or Student Information). An invite in the last
+    // 24 hours blocks another one (counseling-invite.php: RateLimiter 1 per 1440 minutes), so the page shows when it frees up.
+    // Only for staff who can invite (the same rule as counseling-invite.php): View Only staff do not need who invited whom.
+    $canInvite = Rbac::accessLevel('counselingStatus', Rbac::roleKey($user)) === 'full' && !Rbac::isFacilitator($user);
+    $lastInvites = [];
+    $studentIds = array_values(array_unique(array_filter(array_map(fn($r) => $r['student_id'] !== null ? (int) $r['student_id'] : null, $fetchedRows))));
+    if ($canInvite && $studentIds) {
+        $inviteStmt = $pdo->prepare(
+            "SELECT DISTINCT ON (ci.student_id) ci.student_id, ci.created_at, ci.created_at > NOW() - INTERVAL '1440 minutes' AS recent,
+                    ci.created_at + INTERVAL '1440 minutes' AS again_at,
+                    u.role, u.full_name, u.username, u.staff_position
+             FROM counseling_invites ci LEFT JOIN users u ON u.id = ci.invited_by
+             WHERE ci.student_id IN (" . implode(',', array_fill(0, count($studentIds), '?')) . ')
+             ORDER BY ci.student_id, ci.id DESC'
+        );
+        $inviteStmt->execute($studentIds);
+        foreach ($inviteStmt->fetchAll() as $inv) {
+            $lastInvites[(int) $inv['student_id']] = [
+                'at' => $inv['created_at'],
+                'by' => staffLabel($inv['role'], $inv['full_name'], $inv['username'], $inv['staff_position']),
+                'recent' => (bool) $inv['recent'],
+                'againAt' => $inv['again_at'],
+            ];
+        }
+    }
+
     $rows = array_map(fn($r) => [
         'id' => (int) $r['id'],
         'studentId' => $r['student_id'] !== null ? (int) $r['student_id'] : null,
@@ -122,10 +158,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'sentAt' => $r['sent_at'],
         'status' => $r['status'],
         'resolvedAt' => $r['resolved_at'],
-        'resolvedBy' => $r['resolver_role'] === null ? null
-            : (trim((string) $r['resolver_name']) !== '' ? $r['resolver_name'] : $r['resolver_username'])
-              . ' (' . ($r['resolver_role'] === 'admin' ? 'Administrator' : StaffPosition::label($r['resolver_position'])) . ')',
+        'resolvedBy' => staffLabel($r['resolver_role'], $r['resolver_name'], $r['resolver_username'], $r['resolver_position']),
         'queueNumber' => $r['status'] === 'open' ? $queuePositions[(int) $r['id']] + 1 : null,
+        'lastInvite' => $r['student_id'] !== null ? ($lastInvites[(int) $r['student_id']] ?? null) : null,
     ], $fetchedRows);
 
     // Open requests this person can see (not the other sections' count), whatever the status filter.

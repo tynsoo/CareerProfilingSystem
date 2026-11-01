@@ -177,6 +177,19 @@
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' +
       new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   }
+  // Office days from the day it was sent until today: each later day counts, except Sundays.
+  function officeDaysSince(iso) {
+    const day = new Date(iso);
+    day.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let count = 0;
+    while (day < today) {
+      day.setDate(day.getDate() + 1);
+      if (day.getDay() !== 0) count++;
+    }
+    return count;
+  }
 
   // Invite to counseling: sends the student the CGC booking link by email and as a notification. Counseling belongs to the
   // Guidance Counselors and the Head of Guidance (the Counseling Notes permission), so the button only shows for them.
@@ -223,21 +236,33 @@
     const resolveBtn = r.status === 'open' && canInvite
       ? '<button type="button" class="resolve-btn shrink-0 bg-[#ed1c24] text-white text-sm font-semibold rounded-md px-4 py-2 hover:opacity-90" data-id="' + r.id + '">Mark Resolved</button>'
       : '';
-    const inviteBtn = canInvite && r.studentId
-      ? '<button type="button" class="invite-btn shrink-0 border border-[#0f2a6b] text-[#0f2a6b] text-sm font-semibold rounded-md px-4 py-2 hover:bg-slate-50" data-student-id="' + r.studentId + '" data-name="' + escapeHtml(r.name) + '">Invite to Counseling</button>'
+    // The student's latest invite (any page). Within 24 hours the server refuses another one, so the button is off until then.
+    const inv = r.lastInvite;
+    const inviteBtn = !(canInvite && r.studentId) ? ''
+      : inv && inv.recent
+        ? '<button type="button" disabled class="shrink-0 border border-[#0f2a6b] text-[#0f2a6b] text-sm font-semibold rounded-md px-4 py-2 opacity-60 cursor-not-allowed" title="Can invite again after ' + formatDate(inv.againAt) + '">Invited</button>'
+        : '<button type="button" class="invite-btn shrink-0 border border-[#0f2a6b] text-[#0f2a6b] text-sm font-semibold rounded-md px-4 py-2 hover:bg-slate-50" data-student-id="' + r.studentId + '" data-name="' + escapeHtml(r.name) + '">' + (inv ? 'Invite Again' : 'Invite to Counseling') + '</button>';
+    const inviteLine = r.status === 'open' && inv
+      ? '<p class="flex items-center gap-2 text-xs text-slate-500"><svg class="w-4 h-4 shrink-0 text-slate-400" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>' +
+          '<span>' + (inv.recent ? 'Invited ' : 'Last invited ') + formatDate(inv.at) + (inv.by ? ' by <span class="font-medium text-slate-700">' + escapeHtml(inv.by) + '</span>' : '') +
+          (inv.recent ? ' &middot; can invite again after ' + formatDate(inv.againAt) : '') + '</span></p>'
       : '';
+    // Overdue: shown only from 3 office days of waiting (Monday to Saturday; the office never opens on Sunday).
+    const waited = r.status === 'open' ? officeDaysSince(r.sentAt) : 0;
+    const waiting = waited >= 3 ? ' &middot; <span class="text-red-700 font-semibold">Waiting ' + waited + ' office days</span>' : '';
     // A resolved request says who resolved it and when, in a line at the bottom beside the buttons.
     const resolvedLine = r.status === 'resolved' && r.resolvedAt
       ? '<p class="flex items-center gap-2 text-xs text-slate-500"><svg class="w-4 h-4 shrink-0 text-green-700" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>' +
           '<span>Resolved' + (r.resolvedBy ? ' by <span class="font-medium text-slate-700">' + escapeHtml(r.resolvedBy) + '</span>' : '') + ' &middot; ' + formatDate(r.resolvedAt) + '</span></p>'
       : '';
-    const footer = resolvedLine
-      ? '<div class="flex items-center justify-between gap-4 flex-wrap border-t border-slate-100 pt-3">' + resolvedLine + (inviteBtn ? '<div class="flex gap-2">' + inviteBtn + '</div>' : '') + '</div>'
+    const footLine = resolvedLine || inviteLine;
+    const footer = footLine
+      ? '<div class="flex items-center justify-between gap-4 flex-wrap border-t border-slate-100 pt-3">' + footLine + ((inviteBtn || resolveBtn) ? '<div class="flex gap-2">' + inviteBtn + resolveBtn + '</div>' : '') + '</div>'
       : ((inviteBtn || resolveBtn) ? '<div class="flex justify-end gap-2">' + inviteBtn + resolveBtn + '</div>' : '');
     return '<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 flex flex-col gap-3">' +
       '<div class="flex items-start justify-between gap-4 flex-wrap">' +
         '<div><h3 class="text-base font-semibold text-slate-900">' + escapeHtml(r.subject) + '</h3>' +
-        '<p class="text-xs text-slate-500 mt-0.5">' + escapeHtml(r.name) + (r.strand ? ' (' + escapeHtml(r.strand) + (r.section ? ' ' + escapeHtml(r.section) : '') + ')' : '') + ' &middot; ' + (r.status === 'resolved' ? 'Sent ' : '') + formatDate(r.sentAt) + '</p></div>' +
+        '<p class="text-xs text-slate-500 mt-0.5">' + escapeHtml(r.name) + (r.strand ? ' (' + escapeHtml(r.strand) + (r.section ? ' ' + escapeHtml(r.section) : '') + ')' : '') + ' &middot; ' + (r.status === 'resolved' ? 'Sent ' : '') + formatDate(r.sentAt) + waiting + '</p></div>' +
         statusBadge +
       '</div>' +
       (r.message === null ? '<p class="text-sm text-slate-500 italic">Not shown to you: your access to counseling history is View Only.</p>' : '<p class="text-sm text-slate-700 leading-relaxed">' + escapeHtml(r.message) + '</p>') +
@@ -377,10 +402,13 @@
         } finally {
           btn.disabled = false;
         }
+        await load(); // the card now shows the invite and turns the button off for 24 hours
       });
     });
     list.querySelectorAll('.resolve-btn').forEach(btn => {
       btn.addEventListener('click', async function() {
+        // There is no way to reopen a request, so ask first.
+        if (!(await PP.confirm('The student gets a notification that it is resolved. It cannot be reopened.', { title: 'Mark this request as resolved?', okLabel: 'Mark Resolved' }))) return;
         btn.disabled = true;
         let res;
         try {
