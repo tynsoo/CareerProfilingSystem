@@ -114,6 +114,7 @@
         </div>
         <div class="p-5" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start">              <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
                 <p class="text-sm font-semibold text-slate-800">Guidance Office Hours</p>
+                <p id="officeHoursAdjusted" class="hidden text-xs text-amber-700">The saved hours had times outside Monday to Saturday, 8:00 AM to 5:00 PM. They are shown moved inside those hours: check them and press Save so students see the same.</p>
                 <div id="officeHoursGrid" class="flex flex-col gap-1.5"></div>
                 <p class="text-xs text-slate-500">Students will see: <span id="officeHoursPreview" class="font-medium text-slate-700">—</span></p>
                 <p id="officeHoursError" class="hidden text-xs text-[#ed1c24]" aria-live="polite"></p>
@@ -224,12 +225,13 @@
       renderBookingLink();
     }
     // ---- Guidance Office Hours: pick the days and times instead of typing them ----
-    const OH_DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
-    const OH_SHORT = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
-    // 6:00 AM to 9:30 PM in 30-minute steps, as 24-hour "HH:MM" values
+    // No Sunday: the office never opens then (the server refuses it too, OfficeHours::CLOSED_DAYS).
+    const OH_DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday']];
+    const OH_SHORT = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat' };
+    // 8:00 AM to 5:00 PM in 30-minute steps, as 24-hour "HH:MM" values (OfficeHours::EARLIEST and LATEST)
     const OH_TIMES = (function() {
       const out = [];
-      for (let m = 6 * 60; m <= 21 * 60 + 30; m += 30) {
+      for (let m = 8 * 60; m <= 17 * 60; m += 30) {
         out.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
       }
       return out;
@@ -284,6 +286,18 @@
     function renderSystemCustomization() {
       const byDay = {};
       (state.officeHours.schedule || []).forEach(r => { byDay[r.day] = r; });
+      // Hours saved before the Mon to Sat, 8 AM to 5 PM rule: times move to the nearest allowed one, Sunday is left out,
+      // and a note asks to save so students see the same hours.
+      let adjusted = !!byDay.sun;
+      OH_DAYS.forEach(function(d) {
+        const r = byDay[d[0]];
+        if (!r) return;
+        const open = r.open < OH_TIMES[0] ? OH_TIMES[0] : r.open;
+        const close = r.close > OH_TIMES[OH_TIMES.length - 1] ? OH_TIMES[OH_TIMES.length - 1] : r.close;
+        if (open !== r.open || close !== r.close || !OH_TIMES.includes(open) || !OH_TIMES.includes(close)) adjusted = true;
+        byDay[d[0]] = { day: r.day, open: open, close: close };
+      });
+      document.getElementById('officeHoursAdjusted').classList.toggle('hidden', !adjusted);
       document.getElementById('officeHoursGrid').innerHTML = OH_DAYS.map(function(d) {
         const r = byDay[d[0]];
         const sel = 'class="border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700 disabled:opacity-40 disabled:bg-slate-50"';
