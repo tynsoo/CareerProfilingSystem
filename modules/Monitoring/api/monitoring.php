@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../ContentBasedFiltering/lib/CBFData.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffPosition.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(['error' => 'Method not allowed'], 405);
@@ -100,14 +101,15 @@ function applySearchAndLimit(array $rows, ?string $search, ?int $limit): array
 
 function buildFlagRows(PDO $pdo, string $status, float $threshold): array
 {
-    $sql = "SELECT mf.id AS flag_id, mf.reason, mf.status, mf.created_at,
+    // Open flags have no resolved_at, so they keep the newest-flagged-first order; dismissed ones are newest-dismissed first.
+    $sql = "SELECT mf.id AS flag_id, mf.reason, mf.status, mf.created_at, mf.resolved_at, mf.note,
                    s.user_id, s.school_id, s.strand, s.section, s.first_name_enc, s.last_name_enc,
                    r.top_program_id, r.top_score, r.cbf_program_ids, r.match_status
             FROM monitoring_flags mf
             JOIN students s ON s.user_id = mf.student_id
             LEFT JOIN recommendations r ON r.id = mf.recommendation_id
             WHERE mf.status = ?
-            ORDER BY mf.created_at DESC";
+            ORDER BY COALESCE(mf.resolved_at, mf.created_at) DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$status]);
     $rows = $stmt->fetchAll();
@@ -120,7 +122,7 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
         'other' => 'Flagged for manual review',
     ];
 
-    $result = array_map(function ($r) use ($titles, $reasonLabels, $threshold) {
+    $result = array_map(function ($r) use ($titles, $reasonLabels, $threshold, $status) {
         $student = decryptStudent($r);
         $topScore = $r['top_score'] !== null ? (float) $r['top_score'] : null;
         return $student + [
@@ -131,10 +133,46 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
             'priority' => priorityFor($r['reason'], $topScore, $threshold),
             'topScore' => $topScore,
             'createdAt' => $r['created_at'],
-        ];
+            'resolvedAt' => $r['resolved_at'] !== null ? (new DateTime($r['resolved_at']))->format('M j, Y g:i A') : null,
+        ] + ($status === 'dismissed' ? ['note' => $r['note']] : []); // read by buildDismissedRows, never sent
     }, $rows);
 
     return $result;
+}
+
+/**
+ * Dismissed flags with who dismissed them. The flag row does not keep that, so it comes from the latest
+ * monitoring_dismiss entry in the audit log (api/monitoring-action.php writes it). A retake dismisses open flags by
+ * itself (api/assessment-submit.php, note 'Replaced by a retake', no audit entry). An entry removed by the audit log
+ * retention leaves only the date.
+ */
+function buildDismissedRows(PDO $pdo, float $threshold): array
+{
+    $rows = buildFlagRows($pdo, 'dismissed', $threshold);
+    $ids = array_map(fn($r) => (string) $r['flagId'], $rows);
+    $who = [];
+    if ($ids) {
+        $stmt = $pdo->prepare(
+            "SELECT DISTINCT ON (al.target_id) al.target_id, u.role, u.full_name, u.username, u.staff_position
+             FROM audit_log al LEFT JOIN users u ON u.id = al.actor_user_id
+             WHERE al.action = 'monitoring_dismiss' AND al.target_type = 'monitoring_flag'
+               AND al.target_id = ANY(?::text[])
+             ORDER BY al.target_id, al.id DESC"
+        );
+        $stmt->execute(['{' . implode(',', $ids) . '}']); // one array parameter: the ids are whole numbers, any count
+        foreach ($stmt->fetchAll() as $a) {
+            if ($a['role'] !== null) {
+                $name = trim((string) $a['full_name']) !== '' ? $a['full_name'] : $a['username'];
+                $who[$a['target_id']] = $name . ' (' . ($a['role'] === 'admin' ? 'Administrator' : StaffPosition::label($a['staff_position'])) . ')';
+            }
+        }
+    }
+    return array_map(function ($r) use ($who) {
+        $by = $who[(string) $r['flagId']] ?? null;
+        $note = $r['note'];
+        unset($r['note']);
+        return $r + ['dismissedBy' => $by, 'dismissedAuto' => $by === null && $note === 'Replaced by a retake'];
+    }, $rows);
 }
 
 function buildCompletedRows(PDO $pdo): array
@@ -195,6 +233,11 @@ $rowsByTab = [
     'pending' => $allPending,
     'counseling' => $allCounseling,
 ];
+// Dismissed flags keep growing, so their names are decrypted only when that tab is open; the tab count is a plain count.
+$dismissedCount = (int) $pdo->query("SELECT COUNT(*) FROM monitoring_flags mf JOIN students s ON s.user_id = mf.student_id WHERE mf.status = 'dismissed'")->fetchColumn();
+if ($tab === 'dismissed') {
+    $rowsByTab['dismissed'] = buildDismissedRows($pdo, $threshold);
+}
 
 [$filteredRows] = applySearchAndLimit($rowsByTab[$tab] ?? [], $search, $limit);
 
@@ -206,5 +249,6 @@ jsonResponse([
         'completedToday' => count($allCompleted),
         'pending' => count($allPending),
         'counseling' => count($allCounseling),
+        'dismissed' => $dismissedCount,
     ],
 ]);
