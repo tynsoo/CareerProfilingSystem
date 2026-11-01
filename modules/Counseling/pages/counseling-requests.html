@@ -226,14 +226,22 @@
     const inviteBtn = canInvite && r.studentId
       ? '<button type="button" class="invite-btn shrink-0 border border-[#0f2a6b] text-[#0f2a6b] text-sm font-semibold rounded-md px-4 py-2 hover:bg-slate-50" data-student-id="' + r.studentId + '" data-name="' + escapeHtml(r.name) + '">Invite to Counseling</button>'
       : '';
+    // A resolved request says who resolved it and when, in a line at the bottom beside the buttons.
+    const resolvedLine = r.status === 'resolved' && r.resolvedAt
+      ? '<p class="flex items-center gap-2 text-xs text-slate-500"><svg class="w-4 h-4 shrink-0 text-green-700" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>' +
+          '<span>Resolved' + (r.resolvedBy ? ' by <span class="font-medium text-slate-700">' + escapeHtml(r.resolvedBy) + '</span>' : '') + ' &middot; ' + formatDate(r.resolvedAt) + '</span></p>'
+      : '';
+    const footer = resolvedLine
+      ? '<div class="flex items-center justify-between gap-4 flex-wrap border-t border-slate-100 pt-3">' + resolvedLine + (inviteBtn ? '<div class="flex gap-2">' + inviteBtn + '</div>' : '') + '</div>'
+      : ((inviteBtn || resolveBtn) ? '<div class="flex justify-end gap-2">' + inviteBtn + resolveBtn + '</div>' : '');
     return '<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 flex flex-col gap-3">' +
       '<div class="flex items-start justify-between gap-4 flex-wrap">' +
         '<div><h3 class="text-base font-semibold text-slate-900">' + escapeHtml(r.subject) + '</h3>' +
-        '<p class="text-xs text-slate-500 mt-0.5">' + escapeHtml(r.name) + (r.strand ? ' (' + escapeHtml(r.strand) + (r.section ? ' ' + escapeHtml(r.section) : '') + ')' : '') + ' &middot; ' + formatDate(r.sentAt) + '</p></div>' +
+        '<p class="text-xs text-slate-500 mt-0.5">' + escapeHtml(r.name) + (r.strand ? ' (' + escapeHtml(r.strand) + (r.section ? ' ' + escapeHtml(r.section) : '') + ')' : '') + ' &middot; ' + (r.status === 'resolved' ? 'Sent ' : '') + formatDate(r.sentAt) + '</p></div>' +
         statusBadge +
       '</div>' +
       (r.message === null ? '<p class="text-sm text-slate-500 italic">Not shown to you: your access to counseling history is View Only.</p>' : '<p class="text-sm text-slate-700 leading-relaxed">' + escapeHtml(r.message) + '</p>') +
-      ((inviteBtn || resolveBtn) ? '<div class="flex justify-end gap-2">' + inviteBtn + resolveBtn + '</div>' : '') +
+      footer +
     '</div>';
   }
 
@@ -389,6 +397,7 @@
         // message only says the list was out of date.
         if (res.ok) PP.toast('Request marked as resolved.', false);
         else if (res.status === 404) PP.toast('This request is no longer in your list. The list was refreshed.', true);
+        else if (res.status === 409) PP.toast('Someone already resolved this request. The list was refreshed.', true);
         else if (res.status === 403) PP.toast('You do not have permission to resolve requests.', true);
         else PP.toast('Could not resolve this request. Please try again.', true);
         await load();

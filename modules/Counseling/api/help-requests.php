@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffPosition.php';
 
 $user = Auth::requireLogin();
 $pdo = Database::get();
@@ -24,9 +25,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$request || !StaffScope::allows(StaffScope::forUser($pdo, $user), $request['strand'], $request['section'])) {
             jsonResponse(['success' => false, 'error' => 'Request not found.'], 404);
         }
-        $pdo->prepare("UPDATE help_requests SET status = 'resolved', resolved_by = ?, resolved_at = NOW() WHERE id = ?")
-            ->execute([$user['id'], $id]);
-        AuditLogger::log($user['id'], $user['role'], 'resolve_help_request', 'help_request', (string) $id);
+        // Its place in the queue before it leaves it, for the audit log (the same count as the POST branch below).
+        $queueStmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM help_requests
+             WHERE status = 'open' AND sent_at <= (SELECT sent_at FROM help_requests WHERE id = ?)"
+        );
+        $queueStmt->execute([$id]);
+        $queueNumber = (int) $queueStmt->fetchColumn();
+        // Only an open request: a second click (or a list that was out of date) must not replace who resolved it and when.
+        $update = $pdo->prepare("UPDATE help_requests SET status = 'resolved', resolved_by = ?, resolved_at = NOW() WHERE id = ? AND status = 'open'");
+        $update->execute([$user['id'], $id]);
+        if ($update->rowCount() === 0) {
+            jsonResponse(['success' => false, 'error' => 'This request was already resolved.'], 409);
+        }
+        AuditLogger::log($user['id'], $user['role'], 'resolve_help_request', 'help_request', (string) $id, "Request #$id, #$queueNumber in queue");
         jsonResponse(['success' => true]);
     }
 
@@ -70,14 +82,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $seesMessages = Rbac::accessLevel('counselingHistory', Rbac::roleKey($user)) === 'full';
 
     $status = $_GET['status'] ?? 'All';
-    $sql = 'SELECT hr.id, hr.student_id, hr.name_enc, hr.subject_enc, hr.message_enc, hr.sent_at, hr.status, hr.resolved_at, s.strand, s.section
-            FROM help_requests hr LEFT JOIN students s ON s.user_id = hr.student_id';
+    // Who resolved it comes from users (staff full_name is plain text, "Last, First M.").
+    $sql = 'SELECT hr.id, hr.student_id, hr.name_enc, hr.subject_enc, hr.message_enc, hr.sent_at, hr.status, hr.resolved_at, s.strand, s.section,
+                   ru.role AS resolver_role, ru.full_name AS resolver_name, ru.username AS resolver_username, ru.staff_position AS resolver_position
+            FROM help_requests hr LEFT JOIN students s ON s.user_id = hr.student_id LEFT JOIN users ru ON ru.id = hr.resolved_by';
     $params = [];
     if (in_array($status, ['open', 'resolved'], true)) {
         $sql .= ' WHERE hr.status = ?';
         $params[] = $status;
     }
-    $sql .= ' ORDER BY hr.sent_at DESC';
+    // Open requests first in queue order (#1 on top), then resolved ones, the most recently resolved first.
+    $sql .= " ORDER BY CASE WHEN hr.status = 'open' THEN 0 ELSE 1 END,
+                       CASE WHEN hr.status = 'open' THEN hr.sent_at END ASC,
+                       hr.resolved_at DESC NULLS LAST, hr.sent_at DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
 
@@ -105,6 +122,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'sentAt' => $r['sent_at'],
         'status' => $r['status'],
         'resolvedAt' => $r['resolved_at'],
+        'resolvedBy' => $r['resolver_role'] === null ? null
+            : (trim((string) $r['resolver_name']) !== '' ? $r['resolver_name'] : $r['resolver_username'])
+              . ' (' . ($r['resolver_role'] === 'admin' ? 'Administrator' : StaffPosition::label($r['resolver_position'])) . ')',
         'queueNumber' => $r['status'] === 'open' ? $queuePositions[(int) $r['id']] + 1 : null,
     ], $fetchedRows);
 
