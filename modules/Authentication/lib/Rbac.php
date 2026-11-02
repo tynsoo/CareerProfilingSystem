@@ -31,7 +31,7 @@ class Rbac
         'analyticsEmail'    => ['counselor' => 'none',    'facilitator' => 'none'],
         // Assessment
         'programs'          => ['counselor' => 'limited', 'facilitator' => 'limited'],
-        'questionBank'      => ['counselor' => 'full',    'facilitator' => 'full'],
+        'questionBank'      => ['counselor' => 'limited', 'facilitator' => 'limited'], // at most View Only: ADMIN_EDIT_ONLY
         'examinations'      => ['counselor' => 'full',    'facilitator' => 'full'],
         'monitoring'        => ['counselor' => 'full',    'facilitator' => 'limited'],
         // Student Support
@@ -133,6 +133,14 @@ class Rbac
     public const FACILITATOR_NEVER = ['counselingStatus'];
 
     /**
+     * Features only the administrator and co-admins change (panel revision S15, Tyn 2026-11-03). The Question Bank is the
+     * assessment itself, so Guidance Counselors and Facilitators hold it at most View Only, whatever the table says (an
+     * older saved Full counts as View Only). The administrator can still choose View Only or No Access for them. Every
+     * change to a question is in the Audit Log and in the Change history on the Question Bank page.
+     */
+    public const ADMIN_EDIT_ONLY = ['questionBank'];
+
+    /**
      * A feature that only works together with another one (Tyn, 2026-10-26): it counts only while at least one of these
      * is View Only or Full for the same role, otherwise it is No Access (effectiveLevels). Each pair is a place the
      * feature lives: Send analytics report is a button on Analytics; account actions, notes and results are on the
@@ -226,6 +234,10 @@ class Rbac
         }
         if ($targetRole === 'facilitator' && in_array($module, self::FACILITATOR_NEVER, true)) {
             return [];
+        }
+        // Changing it stays with the administrator and co-admins: staff can be given View Only or No Access, never Full.
+        if (in_array($module, self::ADMIN_EDIT_ONLY, true)) {
+            return ['limited', 'none'];
         }
         // An action has no "view" part: Full or No Access.
         return in_array($module, self::ACTION_ONLY, true) ? ['full', 'none'] : self::LEVELS;
@@ -408,7 +420,12 @@ class Rbac
                 $levels[$module] = 'none';
             } else {
                 $level = self::$saved[$role][$module] ?? ($defaults[$role] ?? 'none');
-                $levels[$module] = in_array($level, self::LEVELS, true) ? $level : 'none';
+                $level = in_array($level, self::LEVELS, true) ? $level : 'none';
+                // Never Full for Guidance Counselors and Facilitators (ADMIN_EDIT_ONLY), even if an older saved row says so.
+                if ($level === 'full' && in_array($module, self::ADMIN_EDIT_ONLY, true)) {
+                    $level = 'limited';
+                }
+                $levels[$module] = $level;
             }
         }
         return $levels;
