@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/QuestionBank.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditChange.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffPosition.php';
 
 $pdo = Database::get();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -30,6 +31,58 @@ function readText(array $body): string
         jsonResponse(['success' => false, 'error' => 'Question text must be ' . QuestionBank::MAX_TEXT_LENGTH . ' characters or fewer.'], 400);
     }
     return $text;
+}
+
+/**
+ * Change history of the question bank (panel revision S15): the question entries already in the Audit Log, newest first,
+ * for staff who can see the Question Bank. Only question text and staff names: no student data is in these entries.
+ * An entry the Audit Log retention removed is gone from here too.
+ */
+function questionHistory(PDO $pdo, int $limit): array
+{
+    $coAdminCol = Rbac::hasCoAdminColumn() ? 'u.is_co_admin' : 'FALSE AS is_co_admin'; // until db/migrate_add_co_admin.php runs
+    $stmt = $pdo->prepare(
+        "SELECT a.id, a.action, a.actor_role, a.detail_enc, a.created_at, u.full_name, u.staff_position, $coAdminCol
+         FROM audit_log a LEFT JOIN users u ON u.id = a.actor_user_id
+         WHERE a.target_type = 'assessment_question'
+           AND a.action IN ('add_question', 'update_question', 'delete_question', 'load_question_set')
+         ORDER BY a.id DESC LIMIT ?"
+    );
+    $stmt->execute([$limit]);
+    $out = [];
+    foreach ($stmt->fetchAll() as $r) {
+        try {
+            $detail = $r['detail_enc'] !== null ? (string) Crypto::dec($r['detail_enc']) : '';
+        } catch (Throwable $e) {
+            $detail = '(details could not be read)';
+        }
+        $change = AuditChange::parse($detail);
+        $what = ['add_question' => 'Added', 'update_question' => 'Edited', 'delete_question' => 'Deleted', 'load_question_set' => 'Loaded the O*NET set'][$r['action']];
+        // An edit that only switched "Shown in the assessment" reads as Hidden or Shown.
+        if ($change && count($change['changes']) === 1 && $change['changes'][0]['field'] === 'Shown in the assessment') {
+            $what = $change['changes'][0]['after'] === 'Yes' ? 'Shown again' : 'Hidden';
+        }
+        // The person's name and their position now (a co-admin is named so). No login name: an account without a full
+        // name shows the position only.
+        $role = $r['actor_role'] === 'admin' ? 'Administrator'
+            : (!empty($r['is_co_admin']) ? 'Guidance Counselor, co-admin' : StaffPosition::label($r['staff_position'] ?? null));
+        $name = trim((string) ($r['full_name'] ?? ''));
+        $out[] = [
+            'id' => (int) $r['id'],
+            'when' => (new DateTime((string) $r['created_at']))->format(DATE_ATOM),
+            'who' => $name !== '' ? $name . ' (' . $role . ')' : $role,
+            'what' => $what,
+            'summary' => $change ? $change['summary'] : $detail,
+            'changes' => $change ? $change['changes'] : [],
+        ];
+    }
+    return $out;
+}
+
+if ($method === 'GET' && isset($_GET['history'])) {
+    Rbac::requireAccess('questionBank', 'limited');
+    $limit = 100;
+    jsonResponse(['history' => questionHistory($pdo, $limit), 'limit' => $limit]);
 }
 
 if ($method === 'GET') {

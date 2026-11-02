@@ -50,7 +50,7 @@ $mkUser('counselor', 'qa_rbac_fac', 'facilitator');
 $mkUser('counselor', 'qa_rbac_cou', 'counselor');
 $mkUser('admin', 'qa_rbac_adm');
 
-// Table 5 of Chapter 4, updated to the permission table agreed on 2026-10-24 (Rbac::DEFAULTS, Rbac::ADMIN_PAGES, Rbac::FACILITATOR_NEVER). Y = allowed, N = refused, V = "View only" (the page opens, a change is refused).
+// Table 5 of Chapter 4, updated to the permission table agreed on 2026-10-24 (Rbac::DEFAULTS, Rbac::ADMIN_PAGES, Rbac::FACILITATOR_NEVER, Rbac::ADMIN_EDIT_ONLY). Y = allowed, N = refused, V = "View only" (the page opens, a change is refused).
 // Columns: Student, Guidance Facilitator, Guidance Counselor, Administrator.
 // Each probe: [method, path, body, which columns it tests ('view' or 'change' for V cells)].
 $rows = [
@@ -76,8 +76,11 @@ $rows = [
     ['Upload class rosters', 'NNVY', [
         ['GET', '/api/sections.php?all=1', null, 'view'],
         ['POST', '/api/roster-upload.php', '{}', 'change']]],
-    ['Maintain the question bank', 'NYYY', [
-        ['POST', '/api/assessment-questions.php', ['type' => 'none']]]],
+    // Panel revision S15 (Rbac::ADMIN_EDIT_ONLY): staff see the questions and their history, only the administrator changes them.
+    ['Maintain the question bank', 'NVVY', [
+        ['GET', '/api/assessment-questions.php?all=1', null, 'staffview'], // students load the questions to answer them
+        ['GET', '/api/assessment-questions.php?history=1', null, 'view'], // the Change history: staff only, students refused
+        ['POST', '/api/assessment-questions.php', ['type' => 'none'], 'change']]],
     ['View analytics, download student lists, and export the Analytics Report as a PDF', 'NNYY', [
         ['GET', '/api/analytics.php', null]]],
     ['Send the Analytics Report by email', 'NNNY', [
