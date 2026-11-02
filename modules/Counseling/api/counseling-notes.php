@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
+require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
 
 $pdo = Database::get();
 
@@ -23,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $history = Rbac::accessLevel('counselingHistory', $roleKey);
     $writes = Rbac::atLeast(Rbac::accessLevel('notesCreate', $roleKey), 'full');
     if ($history === 'none' && !$writes) {
+        AuditLogger::log($user['id'], $user['role'], 'access_denied', 'student', (string) (int) ($_GET['studentId'] ?? 0), 'Refused: counseling notes');
         jsonResponse(['error' => 'Insufficient permissions for this action.'], 403);
     }
 
@@ -57,6 +59,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'createdAt' => $r['created_at'],
         ];
     }, $rows);
+    // Reading counseling notes is written to the Audit Log (panel revision S14): who read whose notes, and how many
+    // they could read in full. Once per staff member and student per hour, so reopening the page does not flood the log.
+    $readableCount = count(array_filter($notes, fn($n) => $n['note'] !== null));
+    if ($notes && !RateLimiter::tooMany('notes-view-log:' . (int) $user['id'] . ':' . $studentId, 1, 60)) {
+        AuditLogger::log($user['id'], $user['role'], 'view_counseling_notes', 'student', (string) $studentId,
+            count($notes) . ' note(s), ' . $readableCount . ' readable in full');
+    }
 
     jsonResponse(['notes' => $notes, 'history' => $history]);
 }

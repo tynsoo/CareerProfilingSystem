@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../UserManagement/lib/StaffPosition.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffName.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffEmail.php';
 require_once __DIR__ . '/../../UserManagement/lib/Consent.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffSignup.php';
 
 // Public staff (Guidance Counselor / Guidance Facilitator) sign-up. No password is chosen here:
 // the account starts 'pending' with an unusable password, the Head of Guidance (admin) approves it
@@ -15,8 +16,17 @@ require_once __DIR__ . '/../../UserManagement/lib/Consent.php';
 // enters that code on the activation page and creates their own password (api/staff-activate.php),
 // so the approver never sees a password. Admins are never created here.
 
+// The sign-up page asks first whether staff sign-up is open (modules/UserManagement/lib/StaffSignup.php). By default
+// it is not: the Head of Guidance invites staff from Account Management instead (panel revision S1).
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $open = StaffSignup::isOpen(Database::get());
+    jsonResponse(['open' => $open, 'message' => $open ? null : StaffSignup::CLOSED_MESSAGE]);
+}
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
+}
+if (!StaffSignup::isOpen(Database::get())) {
+    jsonResponse(['success' => false, 'closed' => true, 'error' => StaffSignup::CLOSED_MESSAGE], 403);
 }
 
 // A public form: keep one IP from using it to flood the approval list.

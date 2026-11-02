@@ -54,6 +54,14 @@ class Auth
             return null;
         }
 
+        // Guidance staff are checked against their account on every request, not only at sign-in (panel revision S2):
+        // an account that is not approved, not activated (no password created with the emailed code yet) or turned off
+        // gets no page and no data, even if it somehow holds a session.
+        if (($_SESSION['user']['role'] ?? '') === 'counselor' && !self::staffAccountUsable((int) $_SESSION['user']['id'])) {
+            self::logout();
+            return null;
+        }
+
         // Sliding idle timeout — every authenticated request that reaches
         // this point resets the clock, same as most session-timeout
         // implementations (bank sites, admin panels, etc.): it's time
@@ -61,6 +69,39 @@ class Auth
         $_SESSION['lastActivity'] = time();
 
         return $_SESSION['user'];
+    }
+
+    /** Per request: staff account id => whether it may be used (approved, activated and active). */
+    private static array $staffUsable = [];
+
+    /**
+     * Whether a Guidance Counselor or Facilitator account may use the system: approved by the administrator, activated
+     * (the person created a password with the emailed access code, which sets email_verified_at) and active. A pending,
+     * rejected, not yet activated or deactivated account may not. A database hiccup fails open, like the timeout lookup,
+     * so it does not sign everyone out.
+     */
+    public static function staffAccountUsable(int $userId): bool
+    {
+        if (!array_key_exists($userId, self::$staffUsable)) {
+            try {
+                $stmt = Database::get()->prepare('SELECT approval_status, is_active, email_verified_at FROM users WHERE id = ?');
+                $stmt->execute([$userId]);
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                self::$staffUsable[$userId] = $row !== false && self::staffRowUsable($row);
+            } catch (\Throwable $e) {
+                error_log('[auth] staff account check: ' . $e->getMessage());
+                return true;
+            }
+        }
+        return self::$staffUsable[$userId];
+    }
+
+    /** The rule itself, on a users row (approval_status, is_active, email_verified_at). */
+    public static function staffRowUsable(array $row): bool
+    {
+        return ($row['approval_status'] ?? null) === 'approved'
+            && !empty($row['is_active'])
+            && ($row['email_verified_at'] ?? null) !== null;
     }
 
     /** @return array{enabled:bool, minutes:int} */

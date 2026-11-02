@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../ContentBasedFiltering/lib/CBFData.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
+require_once __DIR__ . '/../../Counseling/lib/CounselingTracking.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(['error' => 'Method not allowed'], 405);
@@ -11,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 // View Only (limited) can look; acting on a flag needs Full (api/monitoring-action.php).
 $user = Rbac::requireAccess('monitoring', 'limited');
 $pdo = Database::get();
+CounselingTracking::ensureSchema($pdo);
 
 $tab = $_GET['tab'] ?? 'needs-review';
 $search = trim((string) ($_GET['search'] ?? ''));
@@ -100,16 +102,31 @@ function applySearchAndLimit(array $rows, ?string $search, ?int $limit): array
 
 function buildFlagRows(PDO $pdo, string $status, float $threshold): array
 {
+    // For Counseling rows also carry who escalated it and the newest counseling invitation with its booking status
+    // (panel revision S11). History rows (approved and dismissed, never deleted) carry when, by whom and how it was closed.
+    $isHistory = $status === 'history';
     $sql = "SELECT mf.id AS flag_id, mf.reason, mf.status, mf.created_at,
+                   mf.escalated_at, esc.full_name AS escalated_by_name,
+                   mf.resolved_at, res.full_name AS resolved_by_name, res.username AS resolved_by_username, res.role AS resolved_by_role,
+                   COALESCE(mf.outcome, CASE WHEN mf.note = 'Replaced by a retake' THEN 'replaced_by_retake' END) AS outcome,
+                   mf.resolution_note_enc,
+                   ci.id AS invite_id, ci.status AS invite_status, ci.created_at AS invited_at, ci.session_date, ci.status_updated_at,
                    s.user_id, s.school_id, s.strand, s.section, s.first_name_enc, s.last_name_enc,
                    r.top_program_id, r.top_score, r.cbf_program_ids, r.match_status
             FROM monitoring_flags mf
             JOIN students s ON s.user_id = mf.student_id
             LEFT JOIN recommendations r ON r.id = mf.recommendation_id
-            WHERE mf.status = ?
-            ORDER BY mf.created_at DESC";
+            LEFT JOIN users esc ON esc.id = mf.escalated_by
+            LEFT JOIN users res ON res.id = mf.resolved_by
+            LEFT JOIN LATERAL (
+                SELECT id, status, created_at, session_date, status_updated_at FROM counseling_invites
+                WHERE student_id = mf.student_id AND (flag_id = mf.id OR (flag_id IS NULL AND created_at >= COALESCE(mf.escalated_at, mf.created_at)))
+                ORDER BY id DESC LIMIT 1
+            ) ci ON TRUE
+            WHERE " . ($isHistory ? "mf.status IN ('approved', 'dismissed')" : 'mf.status = ?') . "
+            ORDER BY " . ($isHistory ? 'mf.resolved_at DESC NULLS LAST, mf.id DESC' : 'mf.created_at DESC');
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$status]);
+    $stmt->execute($isHistory ? [] : [$status]);
     $rows = $stmt->fetchAll();
 
     $titles = programTitles($pdo, array_merge([], ...array_map('topMatchIds', $rows)));
@@ -131,6 +148,24 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
             'priority' => priorityFor($r['reason'], $topScore, $threshold),
             'topScore' => $topScore,
             'createdAt' => $r['created_at'],
+            'status' => $r['status'],
+            'escalatedAt' => $r['escalated_at'],
+            'escalatedBy' => $r['escalated_by_name'],
+            'invite' => $r['invite_id'] === null ? null : [
+                'id' => (int) $r['invite_id'],
+                'status' => $r['invite_status'],
+                'statusLabel' => CounselingTracking::bookingLabel($r['invite_status']),
+                'invitedAt' => $r['invited_at'],
+                'sessionDate' => $r['session_date'],
+                'updatedAt' => $r['status_updated_at'],
+            ],
+            'resolvedAt' => $r['resolved_at'],
+            'resolvedBy' => $r['resolved_at'] === null ? null
+                : (trim((string) $r['resolved_by_name']) !== '' ? $r['resolved_by_name'] : ($r['resolved_by_username'] ?? 'System')),
+            'outcome' => $r['outcome'],
+            'outcomeLabel' => CounselingTracking::outcomeLabel($r['outcome'])
+                ?? ($r['status'] === 'dismissed' ? 'Dismissed' : ($r['status'] === 'approved' ? 'Approved' : null)),
+            'resolutionNote' => $r['resolution_note_enc'] !== null ? Crypto::dec($r['resolution_note_enc']) : null,
         ];
     }, $rows);
 
@@ -178,6 +213,8 @@ function buildPendingRows(PDO $pdo): array
 
 $allNeedsReview = buildFlagRows($pdo, 'pending', $threshold);
 $allCounseling = buildFlagRows($pdo, 'escalated', $threshold);
+$allHistory = $tab === 'history' ? buildFlagRows($pdo, 'history', $threshold) : [];
+$historyCount = (int) $pdo->query("SELECT COUNT(*) FROM monitoring_flags WHERE status IN ('approved', 'dismissed')")->fetchColumn();
 $allCompleted = buildCompletedRows($pdo);
 $allPending = buildPendingRows($pdo);
 
@@ -194,6 +231,7 @@ $rowsByTab = [
     'completed' => $allCompleted,
     'pending' => $allPending,
     'counseling' => $allCounseling,
+    'history' => $allHistory,
 ];
 
 [$filteredRows] = applySearchAndLimit($rowsByTab[$tab] ?? [], $search, $limit);
@@ -206,5 +244,10 @@ jsonResponse([
         'completedToday' => count($allCompleted),
         'pending' => count($allPending),
         'counseling' => count($allCounseling),
+        'history' => $historyCount,
     ],
+    // Who may close a flag For Counseling or record a booking status (CounselingTracking): never a Guidance Facilitator.
+    'canCounsel' => Rbac::atLeast(Rbac::accessLevel('counselingStatus', Rbac::roleKey($user)), 'full') && !Rbac::isFacilitator($user),
+    'outcomes' => array_map(fn($k) => ['value' => $k, 'label' => CounselingTracking::OUTCOMES[$k]], CounselingTracking::COUNSELING_OUTCOMES),
+    'bookingStatuses' => array_map(fn($k, $v) => ['value' => $k, 'label' => $v], array_keys(CounselingTracking::BOOKING_STATUSES), CounselingTracking::BOOKING_STATUSES),
 ]);

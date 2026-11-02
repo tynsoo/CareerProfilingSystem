@@ -41,7 +41,7 @@
     '    <div id="pwStepCode" class="hidden flex flex-col gap-4">' +
     '      <div>' +
     '        <h3 class="text-lg font-semibold text-gray-900">Verify It&rsquo;s You</h3>' +
-    '        <p class="text-sm text-gray-500 mt-1">Enter the 6-digit code we emailed you to confirm this change. It expires in 5 minutes.</p>' +
+    '        <p class="text-sm text-gray-500 mt-1">Enter the 6-digit code we emailed you to confirm this change. This code lasts 5 minutes<span id="pwCodeUntil"></span>. It is not the 24-hour access code from your approval email.</p>' +
     '      </div>' +
     '      <div id="pwCodeError" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-md px-4 py-2.5" role="alert"></div>' +
     '      <div id="pwCodeDebug" class="hidden bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-md px-4 py-2.5"></div>' +
@@ -163,6 +163,7 @@
       if (!data.success) { showMsg(err, data.error || 'Could not change the password. Please try again.'); return; }
       if (data.verificationRequired) {
         show('code');
+        codeSent();
         if (data.debugCode) { showMsg($('pwCodeDebug'), 'Local dev (no email provider configured) — your code is: ' + data.debugCode); }
         else { hideMsg($('pwCodeDebug')); }
         $('pwCode').focus();
@@ -177,15 +178,24 @@
     return problems.length ? 'Your new password still needs: ' + problems.map(function (r) { return r.text(policy).toLowerCase(); }).join(', ') + '.' : '';
   }
 
+  // When the newest code stops working, shown as a clock time ("until 10:42 AM") so nobody has to count minutes.
+  function codeSent() {
+    var until = new Date(Date.now() + 5 * 60 * 1000);
+    $('pwCodeUntil').textContent = ' (until ' + until.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ')';
+    $('pwCode').value = '';
+  }
+  if (window.PP && PP.codeInput) PP.codeInput($('pwCode'), { digits: true });
+
   $('pwVerify').addEventListener('click', function () {
     var err = $('pwCodeError'); hideMsg(err);
     var btn = $('pwVerify'); btn.dataset.label = 'Verify & Save';
     setBusy(btn, true, 'Checking…');
-    post('api/verify-password-change.php', { code: $('pwCode').value.trim() }).then(function (data) {
+    post('api/verify-password-change.php', { code: $('pwCode').value.replace(/\D/g, '') }).then(function (data) {
       setBusy(btn, false, 'x');
       if (!data.success) {
         showMsg(err, data.error || 'Incorrect code. Please try again.');
-        if (data.expired) { setTimeout(function () { show('form'); }, 1500); }
+        // Expired: stay here. Resend code sends a fresh one for the same new password, so nothing has to be typed again.
+        if (data.expired) { $('pwResend').focus(); }
         return;
       }
       finished();
@@ -198,6 +208,7 @@
     fetch('api/resend-password-change-code.php', { method: 'POST' }).then(function (r) { return r.json(); }).then(function (data) {
       if (data && data.debugCode) { showMsg($('pwCodeDebug'), 'Local dev (no email provider configured) — your code is: ' + data.debugCode); }
       btn.textContent = 'Sent — check your inbox';
+      if (data && data.success !== false) { codeSent(); hideMsg($('pwCodeError')); }
     }).catch(function () {}).then(function () {
       setTimeout(function () { btn.textContent = 'Resend code'; btn.disabled = false; }, 3000);
     });

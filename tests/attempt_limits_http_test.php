@@ -74,7 +74,7 @@ try {
         $s->execute([$name, "$name@example.test"]);
         return $ids[] = (int) $s->fetchColumn();
     };
-    $activate = fn(Client $k, string $who, string $code) => $k->req('POST', '/api/staff-activate.php', ['identifier' => $who, 'code' => $code, 'password' => 'Qa-New-Pass1!']);
+    $activate = fn(Client $k, string $who, string $code) => $k->req('POST', '/api/staff-activate.php', ['identifier' => $who, 'code' => $code, 'password' => 'Qa-New-Pass1!', 'privacyConsent' => true]);
 
     $a = $mkStaff('qa_lim_staff');
     $real = StaffSetupCode::issue($pdo, $a);
@@ -94,7 +94,7 @@ try {
     check('5 wrong codes are refused with the same answer (400)', $codes === [400, 400, 400, 400, 400], implode(',', $codes));
     $r = $activate($k, 'qa_lim_staff2', $real);
     check('after the 5th wrong try the correct code no longer works (code cancelled)', $r['code'] === 400, $r['code'] . ' ' . $r['body']);
-    check('the answer is the same generic one, so it does not show that the code was cancelled', str_contains($r['body'], 'That code is not valid'), $r['body']);
+    check('the answer is the same generic one, so it does not show that the code was cancelled', str_contains($r['body'], 'That access code is not valid or has expired'), $r['body']);
     $logged = (int) $pdo->query("SELECT COUNT(*) FROM audit_log WHERE actor_user_id = $b AND action = 'staff_activation_failed'")->fetchColumn();
     check('the wrong tries are recorded in the Audit Log', $logged === 6, (string) $logged);
     $fresh = StaffSetupCode::issue($pdo, $b);

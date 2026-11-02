@@ -122,6 +122,7 @@
         <button type="button" data-tab="completed" aria-pressed="false" class="tab-btn pp-filter-tab">Completed Today <span class="tab-count"></span></button>
         <button type="button" data-tab="pending" aria-pressed="false" class="tab-btn pp-filter-tab">Pending Assessments <span class="tab-count"></span></button>
         <button type="button" data-tab="counseling" aria-pressed="false" class="tab-btn pp-filter-tab">Counseling Queue <span class="tab-count"></span></button>
+        <button type="button" data-tab="history" aria-pressed="false" class="tab-btn pp-filter-tab">History <span class="tab-count"></span></button>
       </div>
 
       <!-- Data Table -->
@@ -186,15 +187,36 @@
         <p class="text-xs font-medium text-slate-500">Best RIASEC match</p>
         <p id="reviewCareer" class="text-sm text-slate-900"></p>
       </div>
+      <!-- Counseling Queue only: the booking state of the newest invitation (panel revision S11). The CGC books in its own
+           system, which cannot report back, so the Guidance Counselor or the Administrator records it here. -->
+      <div id="reviewBooking" class="hidden border border-slate-200 rounded-md p-3 flex flex-col gap-2">
+        <p class="text-xs font-medium text-slate-500">Counseling booking</p>
+        <p id="reviewBookingText" class="text-sm text-slate-900"></p>
+        <div id="reviewBookingEdit" class="hidden flex flex-wrap items-end gap-2">
+          <label class="text-xs text-slate-600">Status
+            <select id="reviewBookingStatus" class="block border border-slate-300 rounded-md px-2 py-1.5 text-sm"></select>
+          </label>
+          <label class="text-xs text-slate-600">Session date
+            <input type="date" id="reviewBookingDate" class="block border border-slate-300 rounded-md px-2 py-1 text-sm">
+          </label>
+          <button type="button" id="reviewBookingSave" class="pp-btn pp-btn-secondary">Save status</button>
+        </div>
+        <p id="reviewBookingMsg" class="hidden text-xs"></p>
+      </div>
       <fieldset id="reviewDecision">
         <legend class="text-xs font-medium text-slate-600 mb-2">Your decision</legend>
-        <label class="pp-choice"><input type="radio" name="reviewAction" value="approve"><span><span class="pp-choice-title">Approve the recommendation</span><span class="pp-choice-text" id="reviewApproveText"></span></span></label>
+        <label class="pp-choice" id="reviewApproveChoice"><input type="radio" name="reviewAction" value="approve"><span><span class="pp-choice-title">Approve the recommendation</span><span class="pp-choice-text" id="reviewApproveText"></span></span></label>
+        <label class="pp-choice hidden" id="reviewResolveChoice"><input type="radio" name="reviewAction" value="resolve"><span><span class="pp-choice-title">Record the counseling outcome</span><span class="pp-choice-text">Closes the flag with the outcome below. It moves to History with the date and your name.</span></span></label>
+        <div id="reviewOutcomeWrap" class="hidden pl-7 pb-2">
+          <label for="reviewOutcome" class="block text-xs font-medium text-slate-600 mb-1">Outcome</label>
+          <select id="reviewOutcome" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700"><option value="">Choose the outcome</option></select>
+        </div>
         <label class="pp-choice" id="reviewEscalateChoice"><input type="radio" name="reviewAction" value="escalate"><span><span class="pp-choice-title">Escalate to a counselor</span><span class="pp-choice-text">Moves to the Counseling Queue; staff with Monitoring access are notified.</span></span></label>
         <label class="pp-choice"><input type="radio" name="reviewAction" value="dismiss"><span><span class="pp-choice-title">Dismiss the flag</span><span class="pp-choice-text" id="reviewDismissText"></span></span></label>
       </fieldset>
       <div id="reviewNoteWrap">
-        <label for="reviewNote" class="block text-xs font-medium text-slate-600 mb-1">Note (optional)</label>
-        <textarea id="reviewNote" rows="2" maxlength="500" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700" placeholder="Why this decision? Kept private in the audit log."></textarea>
+        <label for="reviewNote" id="reviewNoteLabel" class="block text-xs font-medium text-slate-600 mb-1">Note (optional)</label>
+        <textarea id="reviewNote" rows="2" maxlength="500" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700" placeholder="Why this decision? Stored encrypted with the flag history and in the audit log."></textarea>
       </div>
       <p id="reviewActionError" class="hidden text-sm text-[#ed1c24]" role="alert"></p>
     </div>
@@ -268,6 +290,7 @@
       'completed': { title: 'Assessments Completed Today', hasAction: false },
       'pending': { title: 'Students with Pending Assessments', hasAction: false },
       'counseling': { title: 'Students Queued for Counseling', hasAction: true },
+      'history': { title: 'Closed Flags (approved and dismissed flags are kept here)', hasAction: false },
     };
 
     function escapeHtml(str) {
@@ -300,14 +323,50 @@
       if (tab === 'needs-review') return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Flag Reason', 'Priority', 'Action'];
       if (tab === 'completed') return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Completed At'];
       if (tab === 'pending') return ['Student', 'Strand', 'Registered', 'Status'];
-      return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Flag Reason', 'Action'];
+      if (tab === 'history') return ['Student', 'Strand', 'Flag Reason', 'Outcome', 'Closed', 'Closed By', 'Note'];
+      return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Escalated', 'Booking', 'Action'];
     }
 
     // Match green, Mismatch red (same colors as the Monitoring table).
     const matchClass = (m) => m === 'Mismatch' ? 'text-red-600' : m === 'Match' ? 'text-green-600' : 'text-slate-500';
 
+    // Postgres sends "2026-10-18 14:35:00.12+08"; Date needs a "T" and a "+08:00" offset.
+    function fmtWhen(iso) {
+      if (!iso) return '';
+      const d = new Date(String(iso).replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00'));
+      return isNaN(d) ? '' : d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+    const BOOKING_TONE = { invited: 'amber', booked: 'blue', attended: 'green', no_show: 'red', declined: 'gray', cancelled: 'gray' };
+    function bookingCell(r) {
+      if (!r.invite) return PP.badge('Not invited yet', 'gray');
+      return PP.badge(r.invite.statusLabel, BOOKING_TONE[r.invite.status] || 'gray') +
+        (r.invite.sessionDate ? '<span class="block text-xs text-slate-500 mt-1">Session ' + escapeHtml(r.invite.sessionDate) + '</span>' : '');
+    }
+
     function rowHtml(tab, r) {
-      if (tab === 'needs-review' || tab === 'counseling') {
+      if (tab === 'history') {
+        return '<tr>' +
+          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
+          '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
+          '<td class="px-6 py-3">' + PP.badge(r.outcomeLabel || r.status, r.status === 'dismissed' ? 'gray' : 'green') + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600 whitespace-nowrap">' + escapeHtml(fmtWhen(r.resolvedAt) || 'Not recorded') + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.resolvedBy || 'Not recorded') + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.resolutionNote || '') + '</td>' +
+        '</tr>';
+      }
+      if (tab === 'counseling') {
+        return '<tr>' +
+          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
+          '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
+          '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(fmtWhen(r.escalatedAt) || 'Earlier') + (r.escalatedBy ? '<span class="block text-xs text-slate-500">by ' + escapeHtml(r.escalatedBy) + '</span>' : '') + '</td>' +
+          '<td class="px-6 py-3">' + bookingCell(r) + '</td>' +
+          '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">' + (canAct ? 'Review' : 'View') + '</a></td>' +
+        '</tr>';
+      }
+      if (tab === 'needs-review') {
         const priorityCell = tab === 'needs-review'
           ? '<td class="px-6 py-3">' + PP.badge(r.priority, { High: 'red', Medium: 'amber' }[r.priority] || 'gray') + '</td>'
           : '';
@@ -393,8 +452,10 @@
 
       const tabCounts = {
         'needs-review': data.summary.needsReview, 'completed': data.summary.completedToday,
-        'pending': data.summary.pending, 'counseling': data.summary.counseling,
+        'pending': data.summary.pending, 'counseling': data.summary.counseling, 'history': data.summary.history,
       };
+      canCounsel = data.canCounsel === true;
+      fillOptions(data);
 
       document.querySelectorAll('.tab-btn').forEach(btn => {
         const isActive = btn.dataset.tab === activeTab;
@@ -418,6 +479,17 @@
     // (api/monitoring-action.php checks this again).
     let canInvite = currentUser.role === 'admin';
     let canAct = currentUser.role === 'admin';
+    // Closing a flag For Counseling and recording a booking: the Guidance Counselor or the Administrator (api/monitoring.php).
+    let canCounsel = currentUser.role === 'admin';
+    let optionsFilled = false;
+    function fillOptions(data) {
+      if (optionsFilled || !data.outcomes) return;
+      optionsFilled = true;
+      const outcome = document.getElementById('reviewOutcome');
+      data.outcomes.forEach(function(o) { outcome.add(new Option(o.label, o.value)); });
+      const booking = document.getElementById('reviewBookingStatus');
+      (data.bookingStatuses || []).forEach(function(o) { booking.add(new Option(o.label, o.value)); });
+    }
     fetch('api/security-config.php').then(function(r) { return r.json(); }).then(function(inviteCfg) {
       const levelFor = (module) => ((inviteCfg.rbac && inviteCfg.rbac[module] && inviteCfg.rbac[module][currentUser.rbacRole || currentUser.role]) || 'none');
       canInvite = levelFor('counselingStatus') === 'full' && (currentUser.rbacRole || currentUser.role) !== 'facilitator'; // Facilitators never invite (DFD process 4.0)
@@ -428,7 +500,7 @@
     async function sendCounselingInvite(studentId) {
       const res = await fetch('api/counseling-invite.php', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: Number(studentId) })
+        body: JSON.stringify({ studentId: Number(studentId), flagId: currentFlag && currentFlag.escalated ? currentFlag.flagId : undefined })
       });
       const data = await res.json();
       if (!data.success) return { ok: false, text: data.error || 'Could not send the invitation.' };
@@ -440,7 +512,7 @@
     // follows the choice (Approve, Escalate, Dismiss). The shared pop-up behaviour comes from PP.dialog (js/ui-state.js).
     const reviewDialog = PP.dialog('reviewModal', { onClose: function() { currentFlag = null; } });
     const reviewSubmit = document.getElementById('reviewSubmitBtn');
-    const REVIEW_BUTTON = { approve: 'Approve', escalate: 'Escalate', dismiss: 'Dismiss' };
+    const REVIEW_BUTTON = { approve: 'Approve', escalate: 'Escalate', dismiss: 'Dismiss', resolve: 'Close with outcome' };
     function pickedAction() {
       const picked = document.querySelector('input[name="reviewAction"]:checked');
       return picked ? picked.value : null;
@@ -449,7 +521,49 @@
       const action = pickedAction();
       reviewSubmit.disabled = !action;
       reviewSubmit.textContent = action ? REVIEW_BUTTON[action] : 'Choose a decision';
+      document.getElementById('reviewOutcomeWrap').classList.toggle('hidden', action !== 'resolve');
+      // A dismissed flag stays in History, so the reason is required (api/monitoring-action.php).
+      document.getElementById('reviewNoteLabel').textContent = action === 'dismiss' ? 'Note (required: why is this flag dismissed?)' : 'Note (optional)';
     }
+    function showBooking(r) {
+      const box = document.getElementById('reviewBooking');
+      box.classList.toggle('hidden', !r.escalated);
+      document.getElementById('reviewBookingMsg').classList.add('hidden');
+      if (!r.escalated) return;
+      document.getElementById('reviewBookingText').textContent = r.invite
+        ? r.invite.statusLabel + ' (invited ' + fmtWhen(r.invite.invitedAt) + (r.invite.updatedAt ? ', updated ' + fmtWhen(r.invite.updatedAt) : '') + ')'
+        : 'Not invited yet. Use Invite to counseling to send the CGC booking link.';
+      document.getElementById('reviewBookingEdit').classList.toggle('hidden', !(r.invite && canCounsel));
+      if (r.invite) {
+        document.getElementById('reviewBookingStatus').value = r.invite.status;
+        document.getElementById('reviewBookingDate').value = r.invite.sessionDate || '';
+      }
+    }
+    document.getElementById('reviewBookingSave').addEventListener('click', async function() {
+      if (!currentFlag || !currentFlag.invite) return;
+      const btn = this, msg = document.getElementById('reviewBookingMsg');
+      btn.disabled = true;
+      let data = null;
+      try {
+        const res = await fetch('api/counseling-invite.php', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'status', inviteId: currentFlag.invite.id, status: document.getElementById('reviewBookingStatus').value, sessionDate: document.getElementById('reviewBookingDate').value })
+        });
+        data = await res.json();
+      } catch (e) {}
+      btn.disabled = false;
+      msg.classList.remove('hidden');
+      if (!data || !data.success) {
+        msg.textContent = (data && data.error) || 'Could not save the booking status.';
+        msg.className = 'text-xs text-[#ed1c24]';
+        return;
+      }
+      currentFlag.invite.status = data.status;
+      currentFlag.invite.statusLabel = data.statusLabel;
+      msg.textContent = 'Saved: ' + data.statusLabel + '.';
+      msg.className = 'text-xs text-green-600';
+      render();
+    });
     document.querySelectorAll('input[name="reviewAction"]').forEach(function(input) { input.addEventListener('change', updateReviewSubmit); });
     function openReviewModal(r) {
       currentFlag = r;
@@ -467,17 +581,23 @@
       document.getElementById('reviewReason').textContent = r.reason +
         (r.topScore !== null && r.topScore !== undefined ? ' (Cosine Similarity: ' + Number(r.topScore).toFixed(3) + ')' : '');
       // An escalated flag is already with the counselors: it can be approved or dismissed, not escalated again.
-      const leaves = currentFlag.escalated ? 'The flag leaves the Counseling Queue.' : 'The flag leaves the review list.';
-      document.getElementById('reviewApproveText').textContent = 'It stands as it is. ' + leaves;
-      document.getElementById('reviewDismissText').textContent = 'Nothing needs to be done. ' + leaves;
+      // In the Counseling Queue it is closed with a counseling outcome (Guidance Counselor or Administrator only).
+      const leaves = currentFlag.escalated ? 'The flag leaves the Counseling Queue and is kept in History.' : 'The flag leaves the review list and is kept in History.';
+      document.getElementById('reviewApproveText').textContent = 'It stands as it is, no counseling needed. ' + leaves;
+      document.getElementById('reviewDismissText').textContent = 'Not a valid flag. ' + leaves;
       document.getElementById('reviewEscalateChoice').classList.toggle('hidden', currentFlag.escalated);
+      document.getElementById('reviewApproveChoice').classList.toggle('hidden', currentFlag.escalated);
+      document.getElementById('reviewResolveChoice').classList.toggle('hidden', !currentFlag.escalated);
+      document.getElementById('reviewOutcome').value = '';
+      showBooking(currentFlag);
       document.querySelectorAll('input[name="reviewAction"]').forEach(function(input) { input.checked = false; });
       // View Only staff see the details without the decision part (the link and the title say View, not Review).
       document.getElementById('reviewTitle').textContent = canAct ? 'Review recommendation' : 'Recommendation details';
-      document.getElementById('reviewDecision').classList.toggle('hidden', !canAct);
-      document.getElementById('reviewNoteWrap').classList.toggle('hidden', !canAct);
-      reviewSubmit.classList.toggle('hidden', !canAct);
-      document.getElementById('reviewCancelBtn').textContent = canAct ? 'Cancel' : 'Close';
+      const mayDecide = canAct && (!currentFlag.escalated || canCounsel);
+      document.getElementById('reviewDecision').classList.toggle('hidden', !mayDecide);
+      document.getElementById('reviewNoteWrap').classList.toggle('hidden', !mayDecide);
+      reviewSubmit.classList.toggle('hidden', !mayDecide);
+      document.getElementById('reviewCancelBtn').textContent = mayDecide ? 'Cancel' : 'Close';
       document.getElementById('reviewNote').value = '';
       document.getElementById('reviewActionError').classList.add('hidden');
       const inviteBtn = document.getElementById('reviewInviteBtn');
@@ -485,7 +605,7 @@
       inviteBtn.dataset.studentId = r.userId;
       document.getElementById('reviewInviteMsg').classList.add('hidden');
       updateReviewSubmit();
-      reviewDialog.open(canAct ? document.querySelector('input[name="reviewAction"]') : document.getElementById('reviewCancelBtn'));
+      reviewDialog.open(mayDecide ? document.querySelector('#reviewDecision label:not(.hidden) input[name="reviewAction"]') : document.getElementById('reviewCancelBtn'));
     }
     function closeReviewModal() { reviewDialog.close(); }
 
@@ -517,7 +637,7 @@
       try {
         const res = await fetch('api/monitoring-action.php', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ flagId: flag.flagId, action: action, note: document.getElementById('reviewNote').value })
+          body: JSON.stringify({ flagId: flag.flagId, action: action, note: document.getElementById('reviewNote').value, outcome: document.getElementById('reviewOutcome').value })
         });
         data = await res.json();
       } catch (e) {}
@@ -528,7 +648,7 @@
         return;
       }
       closeReviewModal();
-      PP.toast(action === 'approve' ? 'Recommendation approved.' : action === 'escalate' ? 'Flag escalated to the Counseling Queue.' : 'Flag dismissed.');
+      PP.toast(action === 'approve' ? 'Recommendation approved.' : action === 'escalate' ? 'Flag escalated to the Counseling Queue.' : action === 'resolve' ? 'Outcome recorded. The flag is in History.' : 'Flag dismissed. It is kept in History.');
       await render();
     });
 

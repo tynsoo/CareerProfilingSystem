@@ -482,12 +482,34 @@ class Rbac
     {
         $user = Auth::requireLogin();
         if (!self::atLeast(self::accessLevel($module, self::roleKey($user)), $minLevel)) {
+            self::logDenied($user, $module, $minLevel);
             http_response_code(403);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Insufficient permissions for this action.']);
             exit;
         }
         return $user;
+    }
+
+    /**
+     * A request the permission table refused, written to the Audit Log (panel revision S14). Pages hide what a role
+     * may not use, so such a request means someone went around the page (or an old page is open); hiding a feature
+     * from the screen is not enough on its own, the attempt is kept as well. At most one entry per person and feature
+     * every 10 minutes, so a page left open does not flood the log. A logging failure never changes the answer.
+     */
+    private static function logDenied(array $user, string $module, string $minLevel): void
+    {
+        try {
+            require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
+            require_once __DIR__ . '/../../AuditLog/lib/AuditLogger.php';
+            if (RateLimiter::tooMany('denied-log:' . (int) $user['id'] . ':' . $module, 1, 10)) {
+                return;
+            }
+            AuditLogger::log((int) $user['id'], (string) $user['role'], 'access_denied', 'rbac', mb_substr($module, 0, 50),
+                'Refused: needs ' . ($minLevel === 'full' ? 'Full' : 'View Only') . ' on ' . $module . ', has ' . self::accessLevel($module, self::roleKey($user)));
+        } catch (\Throwable $e) {
+            error_log('[rbac] could not log a refused request: ' . $e->getMessage());
+        }
     }
 
     /**

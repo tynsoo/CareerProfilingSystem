@@ -254,6 +254,23 @@
                   <img src="images/security/icon-clock-small.svg" alt="" class="w-3.5 h-3">
                   <p id="timeoutDescText" class="text-xs text-slate-500">Users will be logged out after 30 minutes of inactivity.</p>
                 </div>
+                <p class="text-xs text-slate-500">Only the administrator can change this, here. The default is 30 minutes; 15 minutes suits shared computers.</p>
+              </div>
+
+              <!-- Who can create a staff account (panel revision S1; modules/UserManagement/lib/StaffSignup.php) -->
+              <div class="border border-slate-200 rounded-lg p-[17px] flex flex-col gap-3">
+                <div class="flex flex-col gap-1.5">
+                  <p class="text-sm font-semibold text-slate-800">Staff Account Creation</p>
+                  <p class="text-xs text-slate-500">Who can create a Guidance Counselor or Guidance Facilitator account.</p>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <label for="staffSignupMode" class="text-xs text-slate-600">Staff accounts</label>
+                  <select id="staffSignupMode" class="border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-700">
+                    <option value="invite">Invite only (recommended)</option>
+                    <option value="open">Open sign-up, approval required</option>
+                  </select>
+                </div>
+                <p id="staffSignupDesc" class="text-xs text-slate-500"></p>
               </div>
 
             </div>
@@ -912,10 +929,21 @@
       const select = document.getElementById('timeoutDuration');
       select.value = String(state.settings.timeoutMinutes);
       updateTimeoutDesc();
+      renderStaffSignup();
       if (!isAdmin) {
         select.disabled = true;
         select.classList.add('opacity-60', 'cursor-not-allowed');
       }
+    }
+    const STAFF_SIGNUP_DESC = {
+      invite: 'Nobody can sign up on their own. You or a co-admin invite staff in Account Management and choose their position; they only get an emailed access code to set their password.',
+      open: 'Anyone with a school email can fill in the staff sign-up form, but the account has no access until you approve it and the person sets a password with the emailed code.'
+    };
+    function renderStaffSignup() {
+      const select = document.getElementById('staffSignupMode');
+      select.value = state.settings.staffSignup || 'invite';
+      document.getElementById('staffSignupDesc').textContent = STAFF_SIGNUP_DESC[select.value];
+      if (!isAdmin) { select.disabled = true; select.classList.add('opacity-60', 'cursor-not-allowed'); }
     }
     function updateTimeoutDesc() {
       document.getElementById('timeoutDescText').textContent =
@@ -949,6 +977,27 @@
         state.settings.timeoutMinutes = parseInt(this.value, 10);
         updateTimeoutDesc();
         saveSettings();
+      });
+    }
+
+    if (isAdmin) {
+      document.getElementById('staffSignupMode').addEventListener('change', async function() {
+        const select = this;
+        const mode = select.value;
+        select.disabled = true;
+        try {
+          const res = await fetch('api/security-config.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'staffSignup', mode: mode })
+          });
+          const data = await res.json();
+          if (data.success) { await loadState(); PP.toast('Staff account creation saved.'); }
+          else { PP.toast(data.error || 'Could not save.', true); renderStaffSignup(); }
+        } catch (e) {
+          PP.toast('Unable to reach the server. The change was not saved.', true); renderStaffSignup();
+        } finally {
+          select.disabled = false;
+        }
       });
     }
 

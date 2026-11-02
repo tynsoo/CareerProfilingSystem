@@ -174,6 +174,13 @@ if ($user['role'] === 'counselor' && $user['approval_status'] === 'rejected') {
     jsonResponse(['success' => false, 'error' => 'Your sign-up was not approved. Please contact your system administrator.'], 403);
 }
 
+// Approved but not activated yet: no password has been created with the emailed access code, so no dashboard
+// (panel revision S2; the same rule is checked on every request in Auth::currentUser).
+if ($user['role'] === 'counselor' && !Auth::staffRowUsable($user)) {
+    AuditLogger::log((int) $user['id'], $user['role'], 'login_failed', 'user', $typed, 'Staff account not activated');
+    jsonResponse(['success' => false, 'error' => 'Your account is approved but not activated yet. Open the approval email, click Set Your Password and enter the access code first.'], 403);
+}
+
 // Success — reset lockout state.
 $reset = $pdo->prepare('UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE id = ?');
 $reset->execute([$user['id']]);

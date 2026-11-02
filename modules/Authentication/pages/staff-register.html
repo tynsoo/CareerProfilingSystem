@@ -55,6 +55,13 @@
           </p>
         </div>
 
+        <!-- Shown instead of the form while staff sign-up is invite-only (the default; modules/UserManagement/lib/StaffSignup.php). -->
+        <div id="signupClosed" class="hidden flex flex-col gap-4" role="status">
+          <p id="signupClosedText" class="text-sm text-[#19427b] bg-slate-50 border border-slate-200 rounded-md px-3.5 py-3"></p>
+          <p class="text-sm text-gray-500">Already invited? Open the approval email and click <strong>Set Your Password</strong>, or go to <a href="staff-activate" class="text-[#ed1c24] font-semibold hover:underline">Activate your account</a>.</p>
+          <a href="staff-login" class="w-full py-3.5 rounded-md bg-[#ed1c24] text-white text-sm font-medium shadow hover:opacity-90 transition text-center">Back to Sign In</a>
+        </div>
+
         <form id="staffForm" class="flex flex-col gap-5">
 
           <p id="formMessage" class="hidden text-sm rounded-md px-3.5 py-2.5"></p>
@@ -169,6 +176,16 @@
       msg.classList.add('alert-anim');
     }
 
+    // Invite-only (the default): the form is not offered at all, and the server refuses a sign-up too.
+    function showClosed(text) {
+      document.getElementById('staffForm').classList.add('hidden');
+      document.getElementById('signupClosedText').textContent = text;
+      document.getElementById('signupClosed').classList.remove('hidden');
+    }
+    fetch('api/staff-register.php').then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.open === false) showClosed(d.message);
+    }).catch(function () {});
+
     var successModal = document.getElementById('successModal');
     function openSuccessModal(email) {
       document.getElementById('successMessage').textContent =
@@ -229,6 +246,7 @@
           body: JSON.stringify({ lastName: lastName, firstName: firstName, middleInitial: middleInitial, position: position, email: email, username: username, privacyConsent: privacyConsent })
         });
         var data = await res.json();
+        if (data.closed) { showClosed(data.error); return; }
         if (!data.success) {
           showMessage(data.error || 'Sign-up failed. Please try again.');
           return;

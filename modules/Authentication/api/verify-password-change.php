@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/SessionEnd.php';
+require_once __DIR__ . '/../../../shared/lib/CodeInput.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
@@ -16,7 +17,8 @@ if (!$pending || (int) $pending['userId'] !== (int) $user['id']) {
 }
 
 $body = readJsonBody();
-$code = trim((string) ($body['code'] ?? ''));
+// A pasted code often brings a space or line break along; only the digits count (shared/lib/CodeInput.php).
+$code = CodeInput::digits((string) ($body['code'] ?? ''));
 if ($code === '') {
     jsonResponse(['success' => false, 'error' => 'Enter the code from your email.'], 400);
 }
@@ -42,7 +44,7 @@ switch ($result) {
 
     case 'expired':
         AuditLogger::log($user['id'], $user['role'], 'change_password_failed', 'user', (string) $user['id'], 'Verification code expired');
-        jsonResponse(['success' => false, 'error' => 'That code has expired. Please request a new one.', 'expired' => true], 400);
+        jsonResponse(['success' => false, 'error' => 'That code has expired. Password-change codes last ' . TwoFactor::EXPIRY_MINUTES . ' minutes. Click Resend code to get a new one.', 'expired' => true], 400);
         break;
 
     case 'none_pending':
@@ -53,6 +55,6 @@ switch ($result) {
     case 'invalid':
     default:
         AuditLogger::log($user['id'], $user['role'], 'change_password_failed', 'user', (string) $user['id'], 'Incorrect verification code');
-        jsonResponse(['success' => false, 'error' => 'Incorrect code. Please try again.'], 401);
+        jsonResponse(['success' => false, 'error' => 'Incorrect code. Use the newest 6-digit code we emailed you; an older code stops working when a new one is sent.'], 401);
         break;
 }

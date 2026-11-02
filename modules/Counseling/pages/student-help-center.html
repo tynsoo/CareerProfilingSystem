@@ -182,6 +182,11 @@
             <p class="text-xs text-gray-500 leading-relaxed">
               Your message is encrypted and shared only with the Guidance Office, consistent with our <a href="privacy" class="text-[#ed1c24] hover:underline">Data Privacy Policy</a>.
             </p>
+            <!-- Consent before counseling data is shared (panel revision S14): checked again by api/help-requests.php. -->
+            <label class="flex items-start gap-2 text-xs text-gray-600">
+              <input type="checkbox" id="helpConsent" required class="mt-0.5 accent-[#ed1c24]">
+              <span>I agree that the Guidance Office may read this message together with my assessment results and career worksheet to help me. Every time staff open counseling records, it is recorded in the audit log.</span>
+            </label>
             <div>
               <button type="submit" class="bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">Send Message</button>
             </div>
@@ -362,6 +367,7 @@
       const subject = document.getElementById('helpSubject').value.trim();
       const message = document.getElementById('helpMessage').value.trim();
       if (!subject || !message) return;
+      if (!document.getElementById('helpConsent').checked) { PP.toast('Please tick the consent box first.', true); return; }
 
       const submitBtn = e.target.querySelector('button[type="submit"]');
       const stopBusy = PP.busy(submitBtn, 'Sending…');
@@ -369,7 +375,7 @@
       try {
         res = await fetch('api/help-requests.php', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subject: subject, message: message })
+          body: JSON.stringify({ subject: subject, message: message, consent: true })
         });
         data = await res.json().catch(function() { return {}; });
       } catch (err) {

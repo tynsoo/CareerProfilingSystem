@@ -18,6 +18,15 @@ academic monitoring, security, and reporting.
 - **Admin** — everything a counselor can do, plus staff account management, security/RBAC
   configuration, analytics, and audit logs.
 
+Staff accounts are **invite only** by default: the admin (or a co-admin) invites a Guidance Counselor or Guidance
+Facilitator from Account Management, and the person sets their own password with the emailed access code. The public
+staff sign-up form can be reopened in Security Configuration, but such accounts still wait for approval. A staff
+account that is not approved, not activated or deactivated is refused on every request, not only at sign-in.
+
+Flagged students follow one escalation process (Needs Review, Counseling Queue, History) with recorded outcomes,
+booking status, and who closed each flag and when; see `modules/Counseling/lib/CounselingTracking.php` and
+[docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) for the panel demo.
+
 ## Project layout
 
 The code is grouped by module. Each module folder holds its own `pages/` (one static page per route),
