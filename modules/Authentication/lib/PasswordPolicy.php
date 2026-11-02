@@ -52,6 +52,12 @@ class PasswordPolicy
         if ($requireSymbol && !preg_match('/[^A-Za-z0-9]/', $password)) {
             $errors[] = 'Password must contain a symbol.';
         }
+        // Always on: a space a phone keyboard adds at the start or end is easy to miss and would make later sign-ins
+        // fail (it also counted as the symbol). Spaces in the middle are fine. \p{Z} also catches non-breaking spaces,
+        // \x{FEFF} the zero-width one, so this matches the pages' JavaScript \s exactly.
+        if (preg_match('/^[\s\p{Z}\x{FEFF}]|[\s\p{Z}\x{FEFF}]$/u', $password) === 1) {
+            $errors[] = 'Password must not start or end with a space.';
+        }
         return $errors;
     }
 }

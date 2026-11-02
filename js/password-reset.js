@@ -181,7 +181,9 @@
     { id: 'upper', text: function () { return 'One uppercase letter'; }, on: function (p) { return p.requireUpper; }, ok: function (v) { return /[A-Z]/.test(v); } },
     { id: 'lower', text: function () { return 'One lowercase letter'; }, on: function (p) { return p.requireLower; }, ok: function (v) { return /[a-z]/.test(v); } },
     { id: 'number', text: function () { return 'One number'; }, on: function (p) { return p.requireNumber; }, ok: function (v) { return /[0-9]/.test(v); } },
-    { id: 'symbol', text: function () { return 'One special character'; }, on: function (p) { return p.requireSymbol; }, ok: function (v) { return /[^A-Za-z0-9]/.test(v); } }
+    { id: 'symbol', text: function () { return 'One special character (like ! @ # ?)'; }, on: function (p) { return p.requireSymbol; }, ok: function (v) { return /[^A-Za-z0-9]/.test(v); } },
+    // Always on, like the server (PasswordPolicy::errors): a space a phone adds at either end is easy to miss.
+    { id: 'edges', text: function () { return 'No space at the start or end'; }, on: function () { return true; }, ok: function (v) { return v !== '' && !/^\s|\s$/.test(v); } }
   ];
   var policy = { minLength: 8, requireUpper: true, requireLower: true, requireNumber: true, requireSymbol: true };
   fetch(API + '?policy=1').then(function (r) { return r.json(); }).then(function (p) { if (p && p.minLength) { policy = p; } renderChecklist(); }).catch(renderChecklist);

@@ -87,6 +87,7 @@
   </div>
 </div>
 
+<script src="js/password-checklist.js"></script>
 <script>
   (function() {
     function showMessage(text) {
@@ -125,6 +126,9 @@
         stopBusy();
       }
     });
+
+    // Live checklist of the password rules and a live "passwords match" note (js/password-checklist.js).
+    if (window.PasswordChecklist) PasswordChecklist.attach(form.password, form.confirm_password);
   })();
 </script>
 
