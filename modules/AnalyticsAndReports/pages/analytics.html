@@ -144,7 +144,9 @@
         </div>
       </div>
 
-      <!-- Metric Cards -->
+      <!-- Metric Cards. Panel revision S16: every count names its base, "expected" or "registered" (the same two words as
+           the emailed report, AnalyticsReportPdf.php), so two different totals are never both called "total students". -->
+      <p class="text-xs text-slate-500 mb-3"><span class="font-semibold text-slate-600">Expected students</span>: registered students plus students on the uploaded class roster who have not registered yet. <span class="font-semibold text-slate-600">Registered students</span>: students with a ProfilePath account.</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
 
         <div class="card-hover bg-white border border-slate-200 rounded-xl shadow-sm p-[21px] relative flex flex-col justify-between">
@@ -164,7 +166,7 @@
                 <p id="metricCompletionRate" class="text-[30px] font-bold text-[#19427b] leading-tight mt-1">—</p>
               </div>
             </div>
-            <p class="text-sm mb-4"><span id="metricCompletionCount" class="font-semibold text-[#19427b]">—</span> <span class="text-slate-500" id="metricCompletionOf">of total students</span></p>
+            <p class="text-sm mb-4"><span id="metricCompletionCount" class="font-semibold text-[#19427b]">—</span> <span class="text-slate-500" id="metricCompletionOf">of expected students</span></p>
             <div class="w-full h-1.5 rounded-full bg-slate-100">
               <div id="metricCompletionBar" class="h-1.5 rounded-full bg-[#19427b]" style="width:0%"></div>
             </div>
@@ -175,7 +177,7 @@
           <div class="absolute top-4 right-4 group">
             <img src="images/analytics/icon-info.svg" alt="What is Career Electives Worksheet Completion Rate?" class="w-4 h-4 cursor-help">
             <div class="pointer-events-none absolute right-0 top-6 z-20 w-56 rounded-lg bg-[#001c43] text-white text-xs leading-relaxed p-3 shadow-lg opacity-0 invisible scale-95 origin-top-right transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:scale-100">
-              Share of all registered students who have filled out their Career Electives Worksheet (their Preferred Course and electives).
+              Share of expected students (from the uploaded roster) who have filled out their Career Electives Worksheet (their Preferred Course and electives).
             </div>
           </div>
           <div>
@@ -188,7 +190,7 @@
                 <p id="metricCounselingRate" class="text-[30px] font-bold text-[#1b8a47] leading-tight mt-1">—</p>
               </div>
             </div>
-            <p class="text-sm mb-4"><span id="metricCounselingCount" class="font-semibold text-[#1b8a47]">—</span> <span class="text-slate-500" id="metricCounselingOf">of total students</span></p>
+            <p class="text-sm mb-4"><span id="metricCounselingCount" class="font-semibold text-[#1b8a47]">—</span> <span class="text-slate-500" id="metricCounselingOf">of expected students</span></p>
             <div class="w-full h-1.5 rounded-full bg-slate-100">
               <div id="metricCounselingBar" class="h-1.5 rounded-full bg-[#1b8a47]" style="width:0%"></div>
             </div>
@@ -212,7 +214,7 @@
                 <p id="metricMmclRate" class="text-[30px] font-bold text-[#db7020] leading-tight mt-1">—</p>
               </div>
             </div>
-            <p class="text-sm mb-4"><span id="metricMmclCount" class="font-semibold text-[#db7020]">—</span> <span class="text-slate-500" id="metricMmclOf">of total students</span></p>
+            <p class="text-sm mb-4"><span id="metricMmclCount" class="font-semibold text-[#db7020]">—</span> <span class="text-slate-500" id="metricMmclOf">of expected students</span></p>
             <div class="w-full h-1.5 rounded-full bg-slate-100">
               <div id="metricMmclBar" class="h-1.5 rounded-full bg-[#db7020]" style="width:0%"></div>
             </div>
@@ -223,7 +225,7 @@
           <div class="absolute top-4 right-4 group">
             <img src="images/analytics/icon-info.svg" alt="What is Top Strand?" class="w-4 h-4 cursor-help">
             <div class="pointer-events-none absolute right-0 top-6 z-20 w-56 rounded-lg bg-[#001c43] text-white text-xs leading-relaxed p-3 shadow-lg opacity-0 invisible scale-95 origin-top-right transition-all duration-150 group-hover:opacity-100 group-hover:visible group-hover:scale-100">
-              The academic strand with the highest number of registered students, out of all students in the system.
+              The academic strand with the most registered students (students with a ProfilePath account), as a share of all registered students.
             </div>
           </div>
           <div class="flex gap-4 items-start mb-2">
@@ -235,7 +237,7 @@
               <p id="metricTopStrand" class="text-[30px] font-bold text-[#673ab7] leading-tight mt-1">—</p>
             </div>
           </div>
-          <p class="text-sm"><span id="metricStrandPercent" class="font-semibold text-[#673ab7]">—</span> <span class="text-slate-500">of total students</span></p>
+          <p class="text-sm"><span id="metricStrandPercent" class="font-semibold text-[#673ab7]">—</span> <span class="text-slate-500">of registered students</span></p>
           <p class="text-xs text-slate-500">(<span id="metricStrandCount">0</span> students)</p>
         </div>
       </div>
@@ -243,12 +245,12 @@
       <!-- Charts Row -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 flex flex-col">
-          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Students by Strand</p>
+          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-4">Registered Students by Strand</p>
           <p id="strandNote" class="hidden text-xs text-slate-500 mb-3" style="margin-top:-8px"></p>
           <!-- Fills whatever height the card gets from its neighbour (the RIASEC card is taller), so no blank space is left under the pie -->
           <div id="strandBox" style="position:relative;flex:1 1 auto;min-height:240px"><canvas id="strandChart"></canvas></div>
           <div class="border-t border-slate-100 pt-4 mt-4">
-            <p class="text-sm text-slate-500">Total Students: <span id="strandChartTotal">0</span></p>
+            <p class="text-sm text-slate-500">Registered students: <span id="strandChartTotal">0</span></p>
           </div>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
@@ -263,14 +265,14 @@
       <!-- Section breakdown + Assessment Statistics -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-1">Students by Section</p>
+          <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-1">Registered Students by Section</p>
           <p id="sectionChartNote" class="text-xs text-slate-500 mb-3"></p>
           <!-- One row per section (STEM alone has about 30), so the box scrolls instead of squeezing the bars. -->
           <div style="max-height:460px;overflow-y:auto"><div id="sectionBox" style="position:relative;height:240px"><canvas id="sectionChart"></canvas></div></div>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
           <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mb-1">Overall Assessment</p>
-          <p class="text-xs text-slate-500 mb-4">Share of all students who have taken the RIASEC assessment, for Academic Year <span id="statsAy">—</span>.</p>
+          <p class="text-xs text-slate-500 mb-4">Share of the expected students who have taken the RIASEC assessment, for Academic Year <span id="statsAy">—</span>.</p>
           <div class="mb-3">
             <p class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Completed Assessments</p>
             <p id="statsCompleted" class="text-3xl font-bold text-[#1b8a47]">—</p>
@@ -610,17 +612,19 @@
 
     document.getElementById('metricCompletionRate').textContent = data.completion.rate + '%';
     document.getElementById('metricCompletionCount').textContent = data.completion.count;
-    document.getElementById('metricCompletionOf').textContent = 'of ' + data.completion.total + ' total students';
+    // Panel revision S16: these three are out of the expected students (AnalyticsReport expectedTotal), Top Strand and the
+    // strand and section charts count registered students only, so each says which one.
+    document.getElementById('metricCompletionOf').textContent = 'of ' + Number(data.completion.total).toLocaleString() + ' expected students';
     document.getElementById('metricCompletionBar').style.width = data.completion.rate + '%';
 
     document.getElementById('metricCounselingRate').textContent = data.worksheet.rate + '%';
     document.getElementById('metricCounselingCount').textContent = data.worksheet.count;
-    document.getElementById('metricCounselingOf').textContent = 'of ' + data.worksheet.total + ' total students';
+    document.getElementById('metricCounselingOf').textContent = 'of ' + Number(data.worksheet.total).toLocaleString() + ' expected students';
     document.getElementById('metricCounselingBar').style.width = data.worksheet.rate + '%';
 
     document.getElementById('metricMmclRate').textContent = data.confidence.rate + '%';
     document.getElementById('metricMmclCount').textContent = data.confidence.count;
-    document.getElementById('metricMmclOf').textContent = 'of ' + data.confidence.total + ' total students';
+    document.getElementById('metricMmclOf').textContent = 'of ' + Number(data.confidence.total).toLocaleString() + ' expected students';
     document.getElementById('metricMmclBar').style.width = data.confidence.rate + '%';
 
     if (data.topStrand) {
@@ -633,7 +637,7 @@
       PP.statFailed('metricStrandPercent');
     }
 
-    document.getElementById('strandChartTotal').textContent = data.totalStudents;
+    document.getElementById('strandChartTotal').textContent = Number(data.totalStudents).toLocaleString();
     // With a strand picked, the pie is that one strand (100%): say so, and how to compare.
     const strandNote = document.getElementById('strandNote');
     strandNote.textContent = state.strand ? 'Showing ' + state.strand + ' only. Pick All Strands at the top to compare the strands.' : '';
@@ -703,7 +707,8 @@
       });
     }
     document.getElementById('topCareersSummary').textContent =
-      'Showing top ' + data.topCareers.length + ' of ' + data.confidence.total + ' students with a computed recommendation';
+      // The number of expected students is not the number with a recommendation, so no total is printed here.
+      'Top ' + data.topCareers.length + ' programs, by how many students they were recommended to';
 
     // Students by Section: one horizontal bar per section (every name stays readable with 50 sections), in its strand's
     // colour, grouped by strand and largest first. A strand picked at the top shows only its sections (the server sends
@@ -791,7 +796,7 @@
             legend: { display: false },
             tooltip: { callbacks: { label: (ctx) => {
               const y = byYear[ctx.dataIndex];
-              return y.completed + ' of ' + y.total + ' students (' + y.rate + '%)';
+              return y.completed + ' of ' + y.total + ' expected students (' + y.rate + '%)';
             } } }
           },
           // offset keeps a lone first point centred instead of jammed against the axis
