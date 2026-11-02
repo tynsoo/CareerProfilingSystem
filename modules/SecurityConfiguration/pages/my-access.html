@@ -20,6 +20,10 @@
     .ma-glance{ grid-column:2; grid-row:1; position:sticky; top:24px; }
     #accessList{ grid-column:1; grid-row:1; }
   }
+  /* Roles card (panel revision S6): one column on phones, two side by side from tablet width. */
+  .ma-roles{ display:grid; gap:12px; }
+  @media (min-width:768px){ .ma-roles{ grid-template-columns:1fr 1fr; } }
+  .ma-role{ border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; }
 </style>
 <link rel="stylesheet" href="css/motion.css">
 </head>
@@ -121,6 +125,32 @@
         </aside>
         <div id="accessList" class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden divide-y divide-slate-100" aria-busy="true"></div>
       </div>
+
+      <!-- Panel revision S6: what each staff role is, for everyone (the same for every person; the defaults are
+           Rbac::DEFAULTS, co-admin rules Rbac::COADMIN*, facilitator limits Rbac::FACILITATOR_NEVER). -->
+      <section class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 mt-6" aria-labelledby="rolesTitle">
+        <h2 id="rolesTitle" class="text-sm font-semibold text-gray-900">Roles in ProfilePath</h2>
+        <p class="text-xs text-gray-500 mt-1">Only the Administrator changes permissions and security settings. The list above is your own access.</p>
+        <dl class="ma-roles mt-4">
+          <div class="ma-role">
+            <dt class="text-sm font-semibold text-slate-800">Administrator <span class="font-normal text-slate-500">(Head of Guidance)</span></dt>
+            <dd class="text-xs text-slate-600 mt-1">Has every feature. The only one who opens Security Configuration: the permission table, password and sign-in rules, session timeout and audit log retention. Makes or removes co-admins and exports the Audit Log.</dd>
+          </div>
+          <div class="ma-role">
+            <dt class="text-sm font-semibold text-slate-800">Co-admin <span class="font-normal text-slate-500">(at most 3)</span></dt>
+            <dd class="text-xs text-slate-600 mt-1">A Guidance Counselor the Administrator chose to share the admin work. Has every feature, including staff accounts, and can read the Audit Log (students are not named and IP addresses are partly hidden). Cannot open Security Configuration, export the Audit Log, or change another co-admin.</dd>
+          </div>
+          <div class="ma-role">
+            <dt class="text-sm font-semibold text-slate-800">Guidance Counselor <span class="font-normal text-slate-500">(licensed)</span></dt>
+            <dd class="text-xs text-slate-600 mt-1">Works directly with students. By default sees student information and results, writes notes, reviews Monitoring flags, handles counseling requests and retakes, and invites students to counseling.</dd>
+          </div>
+          <div class="ma-role">
+            <dt class="text-sm font-semibold text-slate-800">Guidance Facilitator <span class="font-normal text-slate-500">(non-licensed support)</span></dt>
+            <dd class="text-xs text-slate-600 mt-1">Supports the counselors. By default View Only or No Access on most features; writes notes and helps with the Question Bank and Assessment Scheduling. Never resolves counseling requests, decides retakes or invites students to counseling.</dd>
+          </div>
+        </dl>
+        <p class="text-xs text-gray-500 mt-4">"By default": the Administrator can give a Counselor or Facilitator more or less access on Security Configuration.</p>
+      </section>
 
     </main>
       <footer class="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex items-center justify-center gap-3 text-xs text-gray-500">
