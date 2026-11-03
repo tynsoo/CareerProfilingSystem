@@ -107,6 +107,7 @@ $actionLabels = [
     'export_student_list_pdf_failed' => 'Student list PDF export failed',
     'export_student_roster' => 'Exported student roster',
     'upload_roster' => 'Uploaded class roster',
+    'preview_roster' => 'Previewed class roster (not saved)',
     'create_section' => 'Added section',
     'delete_section' => 'Deleted section',
     'activate_section' => 'Activated section',

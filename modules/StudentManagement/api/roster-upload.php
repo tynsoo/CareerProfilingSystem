@@ -5,6 +5,7 @@ require_once __DIR__ . '/../lib/StudentNumber.php';
 require_once __DIR__ . '/../../../shared/lib/AcademicYear.php';
 require_once __DIR__ . '/../lib/RosterCsv.php';
 require_once __DIR__ . '/../../../shared/lib/XlsxReader.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
@@ -80,11 +81,16 @@ if ($inactive->fetchColumn()) {
     jsonResponse(['success' => false, 'error' => "Section $section ($strand) is deactivated. Reactivate it under Sections first, then upload its roster."], 409);
 }
 
-$pdo->beginTransaction();
-try {
-    // What is already on the roster this academic year, so the result can say what changed.
+/**
+ * What saving this file would change on this academic year's roster (read only). Used for the preview and again
+ * inside the save transaction, so the preview and the result always count the same way.
+ * moved: [number, name from the file, section it is in now]; removed: Student Numbers in this section now but not
+ * in the file (only the number: their names are not needed to check the list against the file).
+ */
+function rosterChanges(PDO $pdo, string $ay, string $strand, string $section, array $rows): array
+{
     $existing = $pdo->prepare('SELECT school_id, strand, section FROM assessment_roster WHERE academic_year = ?');
-    $existing->execute([$currentAy]);
+    $existing->execute([$ay]);
     $before = [];
     foreach ($existing->fetchAll() as $e) {
         $before[$e['school_id']] = $e['strand'] . ' ' . $e['section'];
@@ -92,19 +98,64 @@ try {
     $here = $strand . ' ' . $section;
     $moved = [];   // listed under another section until now
     $added = 0;
-    foreach ($parsed['rows'] as $r) {
+    foreach ($rows as $r) {
         if (!isset($before[$r[0]])) {
             $added++;
         } elseif ($before[$r[0]] !== $here) {
-            $moved[] = $before[$r[0]];
+            $moved[] = [$r[0], $r[1], $before[$r[0]]];
         }
     }
-    $removed = 0;  // in this section before, not in this file
+    $removed = [];  // in this section before, not in this file
     foreach ($before as $number => $where) {
-        if ($where === $here && !isset($parsed['rows'][$number])) {
-            $removed++;
+        if ($where === $here && !isset($rows[$number])) {
+            $removed[] = (string) $number;
         }
     }
+    return ['added' => $added, 'moved' => $moved, 'removed' => $removed];
+}
+
+// Preview (panel revision S8): the page first sends the file with preview=1 and shows what would change; nothing is
+// saved. The person then confirms, and the page sends the same file again to save it. The preview names Student
+// Numbers and sections, so it is written to the Audit Log (preview_roster), and a counselor limited to some sections
+// (StaffScope) gets the lists only for sections they handle: elsewhere just the counts and "another section".
+if (($_POST['preview'] ?? '') === '1') {
+    $changes = rosterChanges($pdo, $currentAy, $strand, $section, $parsed['rows']);
+    $known = $pdo->prepare('SELECT 1 FROM sections WHERE strand = ? AND LOWER(code) = LOWER(?)');
+    $known->execute([$strand, $section]);
+    $scope = StaffScope::forUser($pdo, $user);
+    $seesHere = StaffScope::allows($scope, $strand, $section);
+    $fromShown = function (string $where) use ($scope): string {
+        [$fromStrand, $fromSection] = array_pad(explode(' ', $where, 2), 2, '');
+        return StaffScope::allows($scope, $fromStrand, $fromSection) ? $where : 'another section';
+    };
+    $listMax = 50; // a long list is cut; the totals are always complete
+    AuditLogger::log($user['id'], $user['role'], 'preview_roster', 'assessment_roster', $currentAy,
+        'Preview only, nothing saved: ' . count($parsed['rows']) . " student(s) in $strand $section for AY $currentAy ("
+        . $changes['added'] . ' new, ' . count($changes['moved']) . ' would move here, ' . count($changes['removed']) . ' would come off)');
+    jsonResponse([
+        'success' => true,
+        'preview' => true,
+        'count' => count($parsed['rows']),
+        'academicYear' => $currentAy,
+        'strand' => $strand,
+        'section' => $section,
+        'newSection' => !$known->fetchColumn(),
+        'added' => $changes['added'],
+        'moved' => count($changes['moved']),
+        'removed' => count($changes['removed']),
+        'movedList' => array_map(fn($m) => ['number' => $m[0], 'name' => $m[1], 'from' => $fromShown($m[2])], array_slice($changes['moved'], 0, $listMax)),
+        'removedList' => $seesHere ? array_slice($changes['removed'], 0, $listMax) : [],
+        'withoutEmail' => count(array_filter($parsed['rows'], fn($r) => $r[2] === null)),
+    ]);
+}
+
+$pdo->beginTransaction();
+try {
+    // What is already on the roster this academic year, so the result can say what changed.
+    $changes = rosterChanges($pdo, $currentAy, $strand, $section, $parsed['rows']);
+    $added = $changes['added'];
+    $moved = array_map(fn($m) => $m[2], $changes['moved']);
+    $removed = count($changes['removed']);
 
     // A re-upload replaces just this section for the current AY, so the other
     // sections' rosters are left alone.

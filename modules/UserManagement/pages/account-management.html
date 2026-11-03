@@ -184,6 +184,8 @@
         <section id="rosterSection" class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div class="border-b border-gray-200 px-5 py-5">
             <h2 class="text-base font-semibold text-gray-900">Class Roster</h2>
+            <!-- Who decides section moves (panel revision S9): the school's class list, not ProfilePath. -->
+            <p class="text-xs text-gray-500 mt-1">The class list comes from the Senior High School department. Upload it as they give it. Any change of section should follow that list, and every upload and section change is saved in the Audit Log.</p>
           </div>
           <div class="p-5 flex flex-col gap-4">
             <div class="flex items-center gap-3 flex-wrap">
@@ -198,6 +200,8 @@
               <input type="file" id="rosterFileInput" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden">
             </div>
             <pre id="rosterResult" class="hidden text-xs whitespace-pre-wrap rounded-md px-3.5 py-2.5"></pre>
+            <!-- Preview before saving (panel revision S8): filled by the script below, nothing is saved until Save roster. -->
+            <div id="rosterPreview" class="hidden border border-amber-200 bg-amber-50 rounded-lg p-4 flex flex-col gap-3" role="region" aria-labelledby="rosterPreviewTitle"></div>
 
             <div>
               <h3 class="text-sm font-semibold text-gray-900 mb-2">Uploaded Sections <span class="text-xs font-normal text-gray-500" id="rosterAyLabel"></span></h3>
@@ -855,32 +859,124 @@
   document.getElementById('uploadRosterBtn').addEventListener('click', function() {
     document.getElementById('rosterFileInput').click();
   });
+  // Panel revision S8: choosing a file first shows a preview (api/roster-upload.php with preview=1, nothing saved).
+  // Save roster sends the same file again to save it. Only lines with something in them are shown, in plain words.
+  const previewEl = document.getElementById('rosterPreview');
+  let pendingFile = null;
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+  function el(tag, cls, text) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function closePreview() {
+    pendingFile = null;
+    previewEl.replaceChildren();
+    previewEl.classList.add('hidden');
+  }
+  function changeLines(data) {
+    const lines = [];
+    const same = data.count - data.added - data.moved;
+    if (data.added) lines.push(plural(data.added, 'student is', 'students are') + ' new to the roster.');
+    if (same) lines.push(plural(same, 'student is', 'students are') + ' already in this section (no change).');
+    if (data.moved) lines.push(plural(data.moved, 'student moves', 'students move') + ' here from another section.');
+    if (data.removed) lines.push(plural(data.removed, 'student is', 'students are') + ' in this section now but not in the file, so they come off this section. Student accounts are not deleted.');
+    if (!data.moved && !data.removed) lines.push('Nobody moves here from another section, and nobody comes off this section.');
+    if (data.withoutEmail) lines.push(plural(data.withoutEmail, 'student has', 'students have') + ' no email in the file, so announcement emails cannot reach them until the roster is updated.');
+    return lines;
+  }
+  function showPreview(data) {
+    resultEl.classList.add('hidden');
+    previewEl.replaceChildren();
+    previewEl.appendChild(el('h3', 'text-sm font-semibold text-gray-900', 'Check before saving: ' + data.strand + ' ' + data.section + ' (Academic Year ' + data.academicYear + ')')).id = 'rosterPreviewTitle';
+    previewEl.appendChild(el('p', 'text-xs text-gray-700', 'This file has ' + plural(data.count, 'student', 'students') + '. Saving replaces the current list for this section only. Nothing is saved yet.'));
+    if (data.newSection) previewEl.appendChild(el('p', 'text-xs text-gray-700', 'This is a new section. It will be added to the Sections list.'));
+    const ul = el('ul', 'text-xs text-gray-800 list-disc pl-5 flex flex-col gap-1');
+    changeLines(data).forEach(function(line) { ul.appendChild(el('li', '', line)); });
+    previewEl.appendChild(ul);
+    function addList(title, items, total) {
+      if (!items.length) return;
+      const box = el('div', 'bg-white border border-amber-200 rounded-md px-3 py-2');
+      box.appendChild(el('p', 'text-xs font-semibold text-gray-800 mb-1', title));
+      const list = el('ul', 'text-xs text-gray-700 flex flex-col overflow-y-auto');
+      list.style.cssText = 'gap:2px;max-height:10rem';
+      items.forEach(function(text) { list.appendChild(el('li', '', text)); });
+      box.appendChild(list);
+      if (total > items.length) box.appendChild(el('p', 'text-xs text-gray-500 mt-1', 'and ' + (total - items.length) + ' more'));
+      previewEl.appendChild(box);
+    }
+    addList('Moving here from another section:', (data.movedList || []).map(function(m) { return m.number + '  ' + m.name + '  (now in ' + m.from + ')'; }), data.moved);
+    addList('Coming off this section (Student Number):', data.removedList || [], data.removed);
+    const check = el('label', 'flex items-start gap-2 text-xs text-gray-800');
+    const box = el('input');
+    box.style.cssText = 'margin-top:2px;accent-color:#0f2a6b';
+    box.type = 'checkbox';
+    box.id = 'rosterPreviewCheck';
+    check.appendChild(box);
+    check.appendChild(el('span', '', 'I checked this against the class list from the Senior High School department.'));
+    previewEl.appendChild(check);
+    const actions = el('div', 'flex items-center gap-2');
+    const save = el('button', 'inline-flex items-center bg-[#0f2a6b] text-white rounded-md px-4 py-2 text-sm font-medium shadow-sm hover:opacity-90', 'Save roster');
+    save.type = 'button';
+    save.disabled = true;
+    const cancel = el('button', 'inline-flex items-center bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50', 'Cancel');
+    cancel.type = 'button';
+    actions.appendChild(save);
+    actions.appendChild(cancel);
+    previewEl.appendChild(actions);
+    // Off (and looking off) until the box is ticked.
+    function syncSave() { save.disabled = !box.checked; save.style.opacity = box.checked ? '' : '0.5'; save.style.cursor = box.checked ? '' : 'not-allowed'; }
+    box.addEventListener('change', syncSave);
+    syncSave();
+    cancel.addEventListener('click', function() { closePreview(); document.getElementById('uploadRosterBtn').focus(); });
+    save.addEventListener('click', saveRoster);
+    previewEl.classList.remove('hidden');
+    box.focus();
+  }
+  async function sendRoster(file, preview) {
+    const formData = new FormData();
+    formData.append('roster', file);
+    if (preview) formData.append('preview', '1');
+    const res = await fetch('api/roster-upload.php', { method: 'POST', body: formData });
+    return res.json();
+  }
+  function showError(data) {
+    showRosterResult((data.error || 'Upload failed.') + (data.details ? '\n\n' + data.details.join('\n') : ''), true);
+  }
+  async function saveRoster() {
+    if (!pendingFile) return;
+    const save = this;
+    save.disabled = true;
+    save.textContent = 'Saving…';
+    try {
+      const data = await sendRoster(pendingFile, false);
+      closePreview();
+      if (!data.success) { showError(data); return; }
+      loadRosterSections();
+      loadSections(); // the upload adds its section to the list (api/roster-upload.php)
+      const lines = ['Saved. ' + data.strand + ' ' + data.section + ' now has ' + plural(data.count, 'student', 'students') + ' on the roster for Academic Year ' + data.academicYear + '.'];
+      showRosterResult(lines.concat(changeLines(data)).join('\n'), false);
+    } catch (err) {
+      closePreview();
+      showRosterResult('Unable to reach the server. The roster was not saved. Please try again.', true);
+    }
+  }
   document.getElementById('rosterFileInput').addEventListener('change', async function() {
     const file = this.files[0];
     if (!file) return;
+    closePreview();
     const btn = document.getElementById('uploadRosterBtn');
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.textContent = 'Uploading…';
+    btn.textContent = 'Checking file…';
     try {
-      const formData = new FormData();
-      formData.append('roster', file);
-      const res = await fetch('api/roster-upload.php', { method: 'POST', body: formData });
-      const data = await res.json();
+      const data = await sendRoster(file, true);
       if (!data.success) {
-        showRosterResult((data.error || 'Upload failed.') + (data.details ? '\n\n' + data.details.join('\n') : ''), true);
+        showError(data);
       } else {
-        loadRosterSections();
-        loadSections(); // the upload adds its section to the list (api/roster-upload.php)
-        const lines = ['Roster uploaded: ' + data.count + ' student(s) in ' + data.strand + ' ' + data.section + ' for Academic Year ' + data.academicYear + '.'];
-        lines.push(data.added + ' new, ' + (data.count - data.added - data.moved) + ' already on this section, ' + data.moved + ' moved here from another section, ' + data.removed + ' removed from this section.');
-        if (data.moved && data.movedFrom) {
-          lines.push('Moved from: ' + Object.keys(data.movedFrom).map(function(k) { return k + ' (' + data.movedFrom[k] + ')'; }).join(', ') + '.');
-        }
-        if (data.withoutEmail) {
-          lines.push(data.withoutEmail + ' student(s) have no email in the file, so announcement emails cannot reach them until the roster is updated with their emails.');
-        }
-        showRosterResult(lines.join('\n'), false);
+        pendingFile = file;
+        showPreview(data);
       }
     } catch (err) {
       showRosterResult('Unable to reach the server. Please try again.', true);
