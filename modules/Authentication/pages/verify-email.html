@@ -62,7 +62,6 @@
               <label for="confirmPassword" class="text-xs font-medium text-gray-600">Confirm password</label>
               <input id="confirmPassword" type="password" autocomplete="new-password" required class="mt-1 w-full px-3 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent">
             </div>
-            <p id="passwordRules" class="text-xs text-gray-500 w-full text-left"></p>
             <p id="formMessage" class="hidden text-sm text-[#ed1c24] w-full text-left" role="alert"></p>
             <button type="submit" id="savePasswordBtn" class="w-full py-3 rounded-md bg-[#ed1c24] text-white text-sm font-medium shadow hover:opacity-90 transition">Save password and verify</button>
           </form>
@@ -103,6 +102,7 @@
   </div>
 </div>
 
+<script src="js/password-checklist.js"></script>
 <script>
 (function() {
   const token = new URLSearchParams(window.location.search).get('token');
@@ -141,16 +141,11 @@
     stateVerifying.classList.add('flex');
   }
 
-  // Show the same password rules the server enforces.
-  fetch('api/password-reset.php?policy=1').then(function(r) { return r.json(); }).then(function(p) {
-    if (!p || !p.minLength) { return; }
-    const parts = ['at least ' + p.minLength + ' characters'];
-    if (p.requireUpper) { parts.push('an uppercase letter'); }
-    if (p.requireLower) { parts.push('a lowercase letter'); }
-    if (p.requireNumber) { parts.push('a number'); }
-    if (p.requireSymbol) { parts.push('a symbol'); }
-    document.getElementById('passwordRules').textContent = 'Use ' + parts.join(', ') + '.';
-  }).catch(function() {});
+  // Live checklist of the rules the server enforces, and a live "passwords match" note (js/password-checklist.js).
+  // If the helper did not load, the page still works (the server checks the rules).
+  const passwordCheck = window.PasswordChecklist
+    ? PasswordChecklist.attach(document.getElementById('newPassword'), document.getElementById('confirmPassword'))
+    : { missing: function() { return ''; } };
 
   function finish(data) {
     stateVerifying.classList.add('hidden');
@@ -195,6 +190,8 @@
       formMessage.classList.add('hidden');
       const password = document.getElementById('newPassword').value;
       if (!password) { showFormMessage('Enter a password.'); return; }
+      const stillNeeds = passwordCheck.missing();
+      if (stillNeeds) { showFormMessage(stillNeeds); return; }
       if (password !== document.getElementById('confirmPassword').value) { showFormMessage('The two passwords do not match.'); return; }
       showVerifying();
       fetch('api/verify-email.php', {

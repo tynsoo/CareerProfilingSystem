@@ -94,7 +94,9 @@
     { id: 'up', text: function () { return 'An uppercase letter'; }, on: function (p) { return p.requireUpper; }, ok: function (v) { return /[A-Z]/.test(v); } },
     { id: 'low', text: function () { return 'A lowercase letter'; }, on: function (p) { return p.requireLower; }, ok: function (v) { return /[a-z]/.test(v); } },
     { id: 'num', text: function () { return 'A number'; }, on: function (p) { return p.requireNumber; }, ok: function (v) { return /[0-9]/.test(v); } },
-    { id: 'sym', text: function () { return 'A symbol'; }, on: function (p) { return p.requireSymbol; }, ok: function (v) { return /[^A-Za-z0-9]/.test(v); } }
+    { id: 'sym', text: function () { return 'A symbol (like ! @ # ?)'; }, on: function (p) { return p.requireSymbol; }, ok: function (v) { return /[^A-Za-z0-9]/.test(v); } },
+    // Always on, like the server (PasswordPolicy::errors): a space a phone adds at either end is easy to miss.
+    { id: 'edge', text: function () { return 'No space at the start or end'; }, on: function () { return true; }, ok: function (v) { return v !== '' && !/^\s|\s$/.test(v); } }
   ];
 
   function renderRules() {

@@ -1,7 +1,8 @@
 /*
  * Adds a show/hide (eye) button to every password field on the page, using the
  * same eye icons as the login page. Include it with <script src="js/password-toggle.js" defer>.
- * A field is skipped if it opts out with data-no-toggle, or already has a toggle.
+ * A field is skipped if it opts out with data-no-toggle, or already has a toggle. Fields that get a toggle also get
+ * autocapitalize/autocorrect/spellcheck off, so a shown password is not changed by a phone keyboard.
  */
 (function () {
   var EYE = 'images/login/icon-eye.svg';
@@ -10,6 +11,11 @@
   function addToggle(input) {
     if (input.dataset.toggleReady || input.hasAttribute('data-no-toggle')) return;
     input.dataset.toggleReady = '1';
+    // Shown as plain text, a phone keyboard would capitalize the first letter, autocorrect, or add a space after a
+    // suggested word. These keep the typed password exactly as typed (no effect while it is hidden).
+    input.setAttribute('autocapitalize', 'none');
+    input.setAttribute('autocorrect', 'off');
+    input.spellcheck = false;
 
     var wrap = document.createElement('div');
     wrap.style.position = 'relative';
