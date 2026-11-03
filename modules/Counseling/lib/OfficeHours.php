@@ -13,6 +13,12 @@ class OfficeHours
 {
     public const DAYS = ['mon' => 'Mon', 'tue' => 'Tue', 'wed' => 'Wed', 'thu' => 'Thu', 'fri' => 'Fri', 'sat' => 'Sat', 'sun' => 'Sun'];
 
+    // What a new save may hold: the office never opens on Sunday, and hours stay within 8:00 AM to 5:00 PM.
+    // 'sun' stays in DAYS so a schedule saved before this rule still reads (fromJson) instead of falling back.
+    public const CLOSED_DAYS = ['sun'];
+    public const EARLIEST = '08:00';
+    public const LATEST = '17:00';
+
     public const DEFAULT_SCHEDULE = [
         ['day' => 'mon', 'open' => '08:00', 'close' => '17:00'],
         ['day' => 'tue', 'open' => '08:00', 'close' => '17:00'],
@@ -22,12 +28,13 @@ class OfficeHours
     ];
 
     /**
-     * Checks a posted schedule and returns it cleaned up in Mon→Sun order.
+     * Checks a posted schedule and returns it cleaned up in Mon→Sun order. $forSave adds the office's limits
+     * (no Sunday, 8:00 AM to 5:00 PM); reading a stored schedule leaves them out.
      *
      * @param mixed $input
      * @return array{error:?string,schedule:array<int,array{day:string,open:string,close:string}>}
      */
-    public static function validate($input): array
+    public static function validate($input, bool $forSave = true): array
     {
         if (!is_array($input) || $input === []) {
             return ['error' => 'Choose at least one day the Guidance Office is open.', 'schedule' => []];
@@ -49,6 +56,12 @@ class OfficeHours
             }
             if ($close <= $open) { // zero-padded HH:MM strings compare correctly
                 return ['error' => "$label: closing time must be later than opening time.", 'schedule' => []];
+            }
+            if ($forSave && in_array($day, self::CLOSED_DAYS, true)) {
+                return ['error' => 'The Guidance Office is closed on Sundays.', 'schedule' => []];
+            }
+            if ($forSave && ($open < self::EARLIEST || $close > self::LATEST)) {
+                return ['error' => "$label: choose hours between 8:00 AM and 5:00 PM.", 'schedule' => []];
             }
             $byDay[$day] = ['day' => $day, 'open' => $open, 'close' => $close];
         }
@@ -113,7 +126,7 @@ class OfficeHours
     public static function fromJson(?string $json): array
     {
         $decoded = $json !== null && $json !== '' ? json_decode($json, true) : null;
-        $checked = self::validate($decoded);
+        $checked = self::validate($decoded, false);
         return $checked['error'] === null ? $checked['schedule'] : self::DEFAULT_SCHEDULE;
     }
 }

@@ -45,6 +45,15 @@ $v = OfficeHours::validate([['day' => 'funday', 'open' => '08:00', 'close' => '1
 check('an unknown day is rejected', $v['error'] !== null);
 $v = OfficeHours::validate(array_merge(days(['mon']), days(['mon'])));
 check('the same day twice is rejected', $v['error'] !== null);
+$v = OfficeHours::validate(days(['sun']));
+check('Sunday is refused on save', $v['error'] === 'The Guidance Office is closed on Sundays.');
+$v = OfficeHours::validate(days(['mon'], '07:30', '17:00'));
+check('opening before 8:00 AM is refused on save', $v['error'] !== null && str_contains($v['error'], '8:00 AM and 5:00 PM'));
+$v = OfficeHours::validate(days(['sat'], '08:00', '17:30'));
+check('closing after 5:00 PM is refused on save', $v['error'] !== null);
+$v = OfficeHours::validate(days(['mon', 'sat'], '08:00', '17:00'));
+check('8:00 AM to 5:00 PM, Mon and Sat is accepted', $v['error'] === null && count($v['schedule']) === 2);
+check('a schedule saved before the limits still reads (Sunday, 7 AM to 9 PM)', OfficeHours::fromJson(json_encode(days(['sun'], '07:00', '21:00'))) === days(['sun'], '07:00', '21:00'));
 check('no open days is rejected', OfficeHours::validate([])['error'] !== null && OfficeHours::validate('nonsense')['error'] !== null);
 
 echo "\n=== stored schedule ===\n";
