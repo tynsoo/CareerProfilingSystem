@@ -62,8 +62,13 @@ if ($method === 'GET') {
     ], $rows);
 
     $out = ['questions' => $questions];
+    $shuffle = QuestionBank::shuffleOn($pdo);
     if ($isStaff) {
         $out['balance'] = $balance;
+        $out['shuffle'] = $shuffle;
+    } elseif ($shuffle) {
+        // The questions stay in the standard order (answers are sent and scored in that order); this is the order to show them in.
+        $out['displayOrder'] = QuestionBank::displayOrder((int) $user['id'], array_column($questions, 'id'));
     }
     jsonResponse($out);
 }
@@ -114,6 +119,20 @@ if ($method === 'POST') {
     $user = Rbac::requireAccess('questionBank', 'full');
     $body = readJsonBody();
     $action = (string) ($body['action'] ?? 'add');
+
+    // Question order for students: grouped by type (the default) or shuffled for each student. Scoring is the same either way.
+    if ($action === 'setShuffle') {
+        $on = (bool) ($body['on'] ?? false);
+        $before = QuestionBank::shuffleOn($pdo);
+        $pdo->prepare('INSERT INTO security_policies (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()')
+            ->execute([QuestionBank::SHUFFLE_KEY, $on ? 'true' : 'false']);
+        if ($before !== $on) {
+            $label = fn(bool $v) => $v ? 'shuffled for each student' : 'grouped by type';
+            AuditLogger::log($user['id'], $user['role'], 'update_question_order', 'security_policies', QuestionBank::SHUFFLE_KEY,
+                'Question order: ' . $label($before) . ' -> ' . $label($on));
+        }
+        jsonResponse(['success' => true, 'shuffle' => $on]);
+    }
 
     // Put the 30-question O*NET Mini Interest Profiler in place: every other question is hidden (kept, not deleted).
     if ($action === 'loadOnet') {

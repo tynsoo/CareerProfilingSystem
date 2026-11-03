@@ -1,9 +1,9 @@
 <?php
 
 /**
- * The CGC's existing counseling booking page. When the Head of Guidance saves its address in Security Configuration,
- * "Schedule Advising Session" on a student's results opens that page instead of sending a counseling request.
- * Empty means "not set": the button keeps sending a request.
+ * The CGC's existing counseling booking page. The Head of Guidance saves its address on the Staff Help Center
+ * (CGC Counseling Booking Link, saved through api/security-config.php). Avail Counseling on the Student Help Center
+ * emails it to the student, and Invite to counseling sends it with the invitation. Empty means "not set".
  */
 class BookingLink
 {

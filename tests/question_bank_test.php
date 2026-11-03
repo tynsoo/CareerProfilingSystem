@@ -55,5 +55,26 @@ check('nothing gives an empty code', QuestionBank::hollandCode([]) === '');
 check('results stored as letters work too', QuestionBank::hollandCode(['E', 'A', 'R']) === 'EAR');
 check('every type name is understood', QuestionBank::hollandCode(array_values(QuestionBank::NAMES)) === 'RIA');
 
+echo "\n=== shuffled question order (S17) ===\n";
+$ids = range(101, 130);
+$o1 = QuestionBank::displayOrder(7, $ids);
+$sorted = $o1; sort($sorted);
+check('the order holds every question exactly once', $sorted === range(0, 29));
+check('the order is really shuffled', $o1 !== range(0, 29));
+check('the same student gets the same order again (leaving and coming back)', QuestionBank::displayOrder(7, $ids) === $o1);
+check('another student gets a different order', QuestionBank::displayOrder(8, $ids) !== $o1);
+check('a changed question set gives a new order', QuestionBank::displayOrder(7, array_merge(array_slice($ids, 0, 29), [999])) !== $o1);
+// Scoring does not depend on the order shown: the answers go back in the standard order, so the totals are the same.
+$dims = array_merge(...array_map(fn($d) => array_fill(0, 5, $d), QuestionBank::DIMENSIONS));
+$answers = [];
+foreach ($dims as $i => $d) { $answers[$i] = 1 + ($i * 7) % 5; }
+$shown = [];                    // what the student sees, in the shuffled order
+foreach ($o1 as $pos => $i) { $shown[$pos] = $answers[$i]; }
+$back = array_fill(0, 30, null); // what the page sends: each answer put back at its question's place
+foreach ($o1 as $pos => $i) { $back[$i] = $shown[$pos]; }
+$score = function (array $a) use ($dims) { $raw = array_fill_keys(QuestionBank::DIMENSIONS, 0); foreach ($dims as $i => $d) { $raw[$d] += $a[$i]; } return array_map(fn($r) => QuestionBank::scaleScore($r, 5), $raw); };
+check('the answers sent back are the answers given, question by question', $back === $answers);
+check('the scores are the same as without shuffling', $score($back) === $score($answers));
+
 echo "\n=== Summary: $passed passed, $failures failed ===\n";
 exit($failures > 0 ? 1 : 0);

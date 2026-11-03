@@ -86,7 +86,7 @@ $setting = $pdo->prepare('SELECT value FROM security_policies WHERE key = ?');
 $setting->execute([BookingLink::KEY]);
 $bookingUrl = BookingLink::validate((string) ($setting->fetchColumn() ?: ''))['url'];
 if ($bookingUrl === '') {
-    jsonResponse(['success' => false, 'error' => 'The CGC booking link is not set yet. Add it in Security Configuration first.'], 409);
+    jsonResponse(['success' => false, 'error' => 'The CGC booking link is not set yet. The Administrator adds it under CGC Counseling Booking Link on the Staff Help Center.'], 409);
 }
 
 $rateKey = 'counseling-invite:' . $studentId;

@@ -32,6 +32,7 @@ function renumber(PDO $pdo, string $audience): void
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    Faq::addPanelEntries($pdo);   // once: the panel's entries on assessment scheduling and the booking link (S18)
     $audience = (string) ($_GET['audience'] ?? ($isStudent ? 'student' : 'staff'));
     if (!in_array($audience, Faq::AUDIENCES, true) || ($isStudent && $audience !== 'student')) {
         jsonResponse(['error' => 'Forbidden'], 403);
