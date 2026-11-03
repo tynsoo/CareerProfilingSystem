@@ -189,6 +189,12 @@ check('History shows when, by whom, the outcome and the note', ($byId[$flagId]['
     && ($byId[$flagId]['outcomeLabel'] ?? '') === CounselingTracking::OUTCOMES['counseled_changed_choice']
     && ($byId[$flag2]['resolutionNote'] ?? '') === 'Duplicate after a retake.');
 check('the History count is sent', ($hist['summary']['history'] ?? 0) >= 2);
+// The Dismissed tab (master) still works next to History: who dismissed it, the date as text, no note sent.
+$dis = $coun->json($coun->raw('GET', '/api/monitoring.php?tab=dismissed'));
+$d2 = array_values(array_filter($dis['rows'] ?? [], fn($x) => $x['flagId'] === $flag2))[0] ?? null;
+check('Dismissed lists the dismissed flag with who dismissed it', $d2 !== null && str_starts_with((string) ($d2['dismissedBy'] ?? ''), 'Qa, qarevcoun'), json_encode($d2));
+check('Dismissed shows the date as text and never sends the note', $d2 !== null && preg_match('/^[A-Z][a-z]{2} \d{1,2}, \d{4} /', (string) $d2['resolvedAt']) === 1 && !array_key_exists('note', $d2));
+check('both counts are sent', isset($dis['summary']['dismissed'], $dis['summary']['history']));
 
 echo "\n=== S14: refused security changes are logged ===\n";
 $r = $coun->req('POST', '/api/security-config.php', ['type' => 'settings', 'timeoutMinutes' => 60]);

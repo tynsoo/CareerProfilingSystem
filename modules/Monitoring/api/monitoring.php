@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../ContentBasedFiltering/lib/CBFData.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffPosition.php';
 require_once __DIR__ . '/../../Counseling/lib/CounselingTracking.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -105,7 +106,7 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
     // For Counseling rows also carry who escalated it and the newest counseling invitation with its booking status
     // (panel revision S11). History rows (approved and dismissed, never deleted) carry when, by whom and how it was closed.
     $isHistory = $status === 'history';
-    $sql = "SELECT mf.id AS flag_id, mf.reason, mf.status, mf.created_at,
+    $sql = "SELECT mf.id AS flag_id, mf.reason, mf.status, mf.created_at, mf.note,
                    mf.escalated_at, esc.full_name AS escalated_by_name,
                    mf.resolved_at, res.full_name AS resolved_by_name, res.username AS resolved_by_username, res.role AS resolved_by_role,
                    COALESCE(mf.outcome, CASE WHEN mf.note = 'Replaced by a retake' THEN 'replaced_by_retake' END) AS outcome,
@@ -124,7 +125,7 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
                 ORDER BY id DESC LIMIT 1
             ) ci ON TRUE
             WHERE " . ($isHistory ? "mf.status IN ('approved', 'dismissed')" : 'mf.status = ?') . "
-            ORDER BY " . ($isHistory ? 'mf.resolved_at DESC NULLS LAST, mf.id DESC' : 'mf.created_at DESC');
+            ORDER BY " . ($isHistory ? 'mf.resolved_at DESC NULLS LAST, mf.id DESC' : 'COALESCE(mf.resolved_at, mf.created_at) DESC');
     $stmt = $pdo->prepare($sql);
     $stmt->execute($isHistory ? [] : [$status]);
     $rows = $stmt->fetchAll();
@@ -137,7 +138,7 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
         'other' => 'Flagged for manual review',
     ];
 
-    $result = array_map(function ($r) use ($titles, $reasonLabels, $threshold) {
+    $result = array_map(function ($r) use ($titles, $reasonLabels, $threshold, $status) {
         $student = decryptStudent($r);
         $topScore = $r['top_score'] !== null ? (float) $r['top_score'] : null;
         return $student + [
@@ -159,17 +160,54 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
                 'sessionDate' => $r['session_date'],
                 'updatedAt' => $r['status_updated_at'],
             ],
-            'resolvedAt' => $r['resolved_at'],
+            // The Dismissed tab shows the date as text; the History tab formats the raw time itself.
+            'resolvedAt' => $status === 'dismissed' && $r['resolved_at'] !== null
+                ? (new DateTime($r['resolved_at']))->format('M j, Y g:i A') : $r['resolved_at'],
             'resolvedBy' => $r['resolved_at'] === null ? null
                 : (trim((string) $r['resolved_by_name']) !== '' ? $r['resolved_by_name'] : ($r['resolved_by_username'] ?? 'System')),
             'outcome' => $r['outcome'],
             'outcomeLabel' => CounselingTracking::outcomeLabel($r['outcome'])
                 ?? ($r['status'] === 'dismissed' ? 'Dismissed' : ($r['status'] === 'approved' ? 'Approved' : null)),
             'resolutionNote' => $r['resolution_note_enc'] !== null ? Crypto::dec($r['resolution_note_enc']) : null,
-        ];
+        ] + ($status === 'dismissed' ? ['note' => $r['note']] : []); // read by buildDismissedRows, never sent
     }, $rows);
 
     return $result;
+}
+
+/**
+ * Dismissed flags with who dismissed them. The flag row does not keep that, so it comes from the latest
+ * monitoring_dismiss entry in the audit log (api/monitoring-action.php writes it). A retake dismisses open flags by
+ * itself (api/assessment-submit.php, note 'Replaced by a retake', no audit entry). An entry removed by the audit log
+ * retention leaves only the date.
+ */
+function buildDismissedRows(PDO $pdo, float $threshold): array
+{
+    $rows = buildFlagRows($pdo, 'dismissed', $threshold);
+    $ids = array_map(fn($r) => (string) $r['flagId'], $rows);
+    $who = [];
+    if ($ids) {
+        $stmt = $pdo->prepare(
+            "SELECT DISTINCT ON (al.target_id) al.target_id, u.role, u.full_name, u.username, u.staff_position
+             FROM audit_log al LEFT JOIN users u ON u.id = al.actor_user_id
+             WHERE al.action = 'monitoring_dismiss' AND al.target_type = 'monitoring_flag'
+               AND al.target_id = ANY(?::text[])
+             ORDER BY al.target_id, al.id DESC"
+        );
+        $stmt->execute(['{' . implode(',', $ids) . '}']); // one array parameter: the ids are whole numbers, any count
+        foreach ($stmt->fetchAll() as $a) {
+            if ($a['role'] !== null) {
+                $name = trim((string) $a['full_name']) !== '' ? $a['full_name'] : $a['username'];
+                $who[$a['target_id']] = $name . ' (' . ($a['role'] === 'admin' ? 'Administrator' : StaffPosition::label($a['staff_position'])) . ')';
+            }
+        }
+    }
+    return array_map(function ($r) use ($who) {
+        $by = $who[(string) $r['flagId']] ?? null;
+        $note = $r['note'];
+        unset($r['note']);
+        return $r + ['dismissedBy' => $by, 'dismissedAuto' => $by === null && $note === 'Replaced by a retake'];
+    }, $rows);
 }
 
 function buildCompletedRows(PDO $pdo): array
@@ -233,6 +271,11 @@ $rowsByTab = [
     'counseling' => $allCounseling,
     'history' => $allHistory,
 ];
+// Dismissed flags keep growing, so their names are decrypted only when that tab is open; the tab count is a plain count.
+$dismissedCount = (int) $pdo->query("SELECT COUNT(*) FROM monitoring_flags mf JOIN students s ON s.user_id = mf.student_id WHERE mf.status = 'dismissed'")->fetchColumn();
+if ($tab === 'dismissed') {
+    $rowsByTab['dismissed'] = buildDismissedRows($pdo, $threshold);
+}
 
 [$filteredRows] = applySearchAndLimit($rowsByTab[$tab] ?? [], $search, $limit);
 
@@ -244,6 +287,7 @@ jsonResponse([
         'completedToday' => count($allCompleted),
         'pending' => count($allPending),
         'counseling' => count($allCounseling),
+        'dismissed' => $dismissedCount,
         'history' => $historyCount,
     ],
     // Who may close a flag For Counseling or record a booking status (CounselingTracking): never a Guidance Facilitator.

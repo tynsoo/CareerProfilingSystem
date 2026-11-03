@@ -2,9 +2,20 @@
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffPosition.php';
 
 $user = Auth::requireLogin();
 $pdo = Database::get();
+
+/** "Lopez, Carla R. (Guidance Counselor)" for a staff account; null when there is none (no role). */
+function staffLabel(?string $role, ?string $fullName, ?string $username, ?string $position): ?string
+{
+    if ($role === null) {
+        return null;
+    }
+    $name = trim((string) $fullName) !== '' ? $fullName : $username;
+    return $name . ' (' . ($role === 'admin' ? 'Administrator' : StaffPosition::label($position)) . ')';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = readJsonBody();
@@ -24,9 +35,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$request || !StaffScope::allows(StaffScope::forUser($pdo, $user), $request['strand'], $request['section'])) {
             jsonResponse(['success' => false, 'error' => 'Request not found.'], 404);
         }
-        $pdo->prepare("UPDATE help_requests SET status = 'resolved', resolved_by = ?, resolved_at = NOW() WHERE id = ?")
-            ->execute([$user['id'], $id]);
-        AuditLogger::log($user['id'], $user['role'], 'resolve_help_request', 'help_request', (string) $id);
+        // Its place in the queue before it leaves it, for the audit log (the same count as the POST branch below).
+        $queueStmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM help_requests
+             WHERE status = 'open' AND sent_at <= (SELECT sent_at FROM help_requests WHERE id = ?)"
+        );
+        $queueStmt->execute([$id]);
+        $queueNumber = (int) $queueStmt->fetchColumn();
+        // Only an open request: a second click (or a list that was out of date) must not replace who resolved it and when.
+        $update = $pdo->prepare("UPDATE help_requests SET status = 'resolved', resolved_by = ?, resolved_at = NOW() WHERE id = ? AND status = 'open'");
+        $update->execute([$user['id'], $id]);
+        if ($update->rowCount() === 0) {
+            jsonResponse(['success' => false, 'error' => 'This request was already resolved.'], 409);
+        }
+        AuditLogger::log($user['id'], $user['role'], 'resolve_help_request', 'help_request', (string) $id, "Request #$id, #$queueNumber in queue");
         jsonResponse(['success' => true]);
     }
 
@@ -74,14 +96,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $seesMessages = Rbac::accessLevel('counselingHistory', Rbac::roleKey($user)) === 'full';
 
     $status = $_GET['status'] ?? 'All';
-    $sql = 'SELECT hr.id, hr.student_id, hr.name_enc, hr.subject_enc, hr.message_enc, hr.sent_at, hr.status, hr.resolved_at, s.strand, s.section
-            FROM help_requests hr LEFT JOIN students s ON s.user_id = hr.student_id';
+    // Who resolved it comes from users (staff full_name is plain text, "Last, First M.").
+    $sql = 'SELECT hr.id, hr.student_id, hr.name_enc, hr.subject_enc, hr.message_enc, hr.sent_at, hr.status, hr.resolved_at, s.strand, s.section,
+                   ru.role AS resolver_role, ru.full_name AS resolver_name, ru.username AS resolver_username, ru.staff_position AS resolver_position
+            FROM help_requests hr LEFT JOIN students s ON s.user_id = hr.student_id LEFT JOIN users ru ON ru.id = hr.resolved_by';
     $params = [];
     if (in_array($status, ['open', 'resolved'], true)) {
         $sql .= ' WHERE hr.status = ?';
         $params[] = $status;
     }
-    $sql .= ' ORDER BY hr.sent_at DESC';
+    // Open requests first in queue order (#1 on top), then resolved ones, the most recently resolved first.
+    $sql .= " ORDER BY CASE WHEN hr.status = 'open' THEN 0 ELSE 1 END,
+                       CASE WHEN hr.status = 'open' THEN hr.sent_at END ASC,
+                       hr.resolved_at DESC NULLS LAST, hr.sent_at DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
 
@@ -98,6 +125,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     )->fetchAll();
     $queuePositions = array_flip(array_map(fn($r) => (int) $r['id'], $openByAge));
 
+    // The latest counseling invite of each listed student (from this page or Student Information). An invite in the last
+    // 24 hours blocks another one (counseling-invite.php: RateLimiter 1 per 1440 minutes), so the page shows when it frees up.
+    // Only for staff who can invite (the same rule as counseling-invite.php): View Only staff do not need who invited whom.
+    $canInvite = Rbac::accessLevel('counselingStatus', Rbac::roleKey($user)) === 'full' && !Rbac::isFacilitator($user);
+    $lastInvites = [];
+    $studentIds = array_values(array_unique(array_filter(array_map(fn($r) => $r['student_id'] !== null ? (int) $r['student_id'] : null, $fetchedRows))));
+    if ($canInvite && $studentIds) {
+        $inviteStmt = $pdo->prepare(
+            "SELECT DISTINCT ON (ci.student_id) ci.student_id, ci.created_at, ci.created_at > NOW() - INTERVAL '1440 minutes' AS recent,
+                    ci.created_at + INTERVAL '1440 minutes' AS again_at,
+                    u.role, u.full_name, u.username, u.staff_position
+             FROM counseling_invites ci LEFT JOIN users u ON u.id = ci.invited_by
+             WHERE ci.student_id IN (" . implode(',', array_fill(0, count($studentIds), '?')) . ')
+             ORDER BY ci.student_id, ci.id DESC'
+        );
+        $inviteStmt->execute($studentIds);
+        foreach ($inviteStmt->fetchAll() as $inv) {
+            $lastInvites[(int) $inv['student_id']] = [
+                'at' => $inv['created_at'],
+                'by' => staffLabel($inv['role'], $inv['full_name'], $inv['username'], $inv['staff_position']),
+                'recent' => (bool) $inv['recent'],
+                'againAt' => $inv['again_at'],
+            ];
+        }
+    }
+
     $rows = array_map(fn($r) => [
         'id' => (int) $r['id'],
         'studentId' => $r['student_id'] !== null ? (int) $r['student_id'] : null,
@@ -109,7 +162,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'sentAt' => $r['sent_at'],
         'status' => $r['status'],
         'resolvedAt' => $r['resolved_at'],
+        'resolvedBy' => staffLabel($r['resolver_role'], $r['resolver_name'], $r['resolver_username'], $r['resolver_position']),
         'queueNumber' => $r['status'] === 'open' ? $queuePositions[(int) $r['id']] + 1 : null,
+        'lastInvite' => $r['student_id'] !== null ? ($lastInvites[(int) $r['student_id']] ?? null) : null,
     ], $fetchedRows);
 
     // Open requests this person can see (not the other sections' count), whatever the status filter.
