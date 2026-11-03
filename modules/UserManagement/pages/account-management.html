@@ -131,7 +131,11 @@
             <div>
               <h2 class="text-base font-semibold text-gray-900">Staff Accounts</h2>
             </div>
-            <span id="pendingBadge" class="hidden text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-700 rounded-full px-3 py-1"></span>
+            <div class="flex items-center gap-2">
+              <span id="pendingBadge" class="hidden text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-700 rounded-full px-3 py-1"></span>
+              <!-- Pre-register a staff member (panel revision S1): administrator or co-admin only (api/staff-approvals.php type invite). -->
+              <button type="button" id="inviteStaffBtn" class="hidden pp-btn pp-btn-primary">+ Invite staff</button>
+            </div>
           </div>
           <!-- Co-admins: shown to the administrator only (api/staff-approvals.php canManageCoAdmins); everyone else sees the badge in the table -->
           <div id="coAdminStrip" class="coadmin-strip hidden">
@@ -244,6 +248,33 @@
     <div class="pp-dialog-foot">
       <button type="button" id="assignCancelBtn" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
       <button type="button" id="assignSaveBtn" class="pp-btn pp-btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+<div id="inviteStaffModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div class="modal-card pp-dialog pp-dialog-md" role="dialog" aria-modal="true" aria-labelledby="inviteStaffTitle">
+    <div class="pp-dialog-head">
+      <h2 class="pp-dialog-title" id="inviteStaffTitle">Invite a staff member</h2>
+      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <form id="inviteStaffForm" class="pp-dialog-form flex flex-col gap-3">
+      <p class="text-xs text-gray-500">You choose the position. They get an email with an 8-character access code (valid 24 hours) to set their own password; you never see it. Until then they cannot sign in.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <input type="text" name="lastName" required maxlength="60" placeholder="Last name" aria-label="Last name" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+        <input type="text" name="firstName" required maxlength="60" placeholder="First name" aria-label="First name" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+        <input type="text" name="middleInitial" maxlength="1" placeholder="M.I." aria-label="Middle initial" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+      </div>
+      <input type="email" name="email" required maxlength="255" placeholder="name@mcl.edu.ph" aria-label="School email" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+      <select name="position" required aria-label="Position" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+        <option value="">Choose the position</option>
+        <option value="counselor">Guidance Counselor (licensed)</option>
+        <option value="facilitator">Guidance Facilitator (non-licensed support)</option>
+      </select>
+      <p id="inviteStaffError" class="hidden text-xs text-[#ed1c24]" role="alert"></p>
+    </form>
+    <div class="pp-dialog-foot">
+      <button type="button" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
+      <button type="submit" form="inviteStaffForm" id="inviteStaffSave" class="pp-btn pp-btn-primary">Send invitation</button>
     </div>
   </div>
 </div>
@@ -449,7 +480,51 @@
           '<td class="px-5 py-4 whitespace-nowrap">' + staffBadge(a) + '</td>' +
           (showActions ? '<td class="px-5 py-4 text-center whitespace-nowrap">' + actionButtons(a) + '</td>' : '') +
         '</tr>';
-      }).join('') : '<tr><td colspan="' + staffCols + '" class="px-5 py-8 text-center text-sm text-gray-500">No staff accounts yet. Staff can sign up from the login page.</td></tr>';
+      }).join('') : '<tr><td colspan="' + staffCols + '" class="px-5 py-8 text-center text-sm text-gray-500">No staff accounts yet. Use Invite staff to add one.</td></tr>';
+    }
+
+    // ---- Invite staff (administrator or co-admin) ----
+    if (showActions && mayUnlock) {
+      const inviteBtn = document.getElementById('inviteStaffBtn');
+      const inviteForm = document.getElementById('inviteStaffForm');
+      const inviteError = document.getElementById('inviteStaffError');
+      const inviteDialog = PP.dialog(document.getElementById('inviteStaffModal'));
+      inviteBtn.classList.remove('hidden');
+      inviteBtn.addEventListener('click', function() {
+        inviteForm.reset();
+        inviteError.classList.add('hidden');
+        inviteDialog.open(inviteForm.lastName);
+      });
+      inviteForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        inviteError.classList.add('hidden');
+        const email = inviteForm.email.value.trim();
+        if (!/@mcl\.edu\.ph$/i.test(email)) {
+          inviteError.textContent = 'Use a school email address ending in @mcl.edu.ph.';
+          inviteError.classList.remove('hidden');
+          return;
+        }
+        const save = document.getElementById('inviteStaffSave');
+        const stop = PP.busy(save, 'Sending…');
+        let data = null;
+        try {
+          const res = await fetch('api/staff-approvals.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'invite', lastName: inviteForm.lastName.value.trim(), firstName: inviteForm.firstName.value.trim(),
+              middleInitial: inviteForm.middleInitial.value.trim(), email: email, position: inviteForm.position.value })
+          });
+          data = await res.json();
+        } catch (err) {}
+        stop();
+        if (!data || !data.success) {
+          inviteError.textContent = (data && data.error) || 'Could not send the invitation. Please try again.';
+          inviteError.classList.remove('hidden');
+          return;
+        }
+        inviteDialog.close();
+        showToast(data.emailSent === false ? 'Account created, but the email could not be sent. Use Resend code.' : 'Invitation sent. They will set their own password with the emailed code.', data.emailSent === false);
+        await loadStaff();
+      });
     }
 
     staffTbody.addEventListener('click', async function(e) {
@@ -461,7 +536,7 @@
       const prompts = {
         approve: { title: 'Approve "' + name + '"?', text: 'They will be emailed a temporary access code to create their own password. You will not see the password.', ok: 'Approve' },
         resendCode: { title: 'Send "' + name + '" a new access code?', text: 'Any earlier code stops working.', ok: 'Send code' },
-        reject: { title: 'Reject the sign-up of "' + name + '"?', text: 'They will be emailed and will not be able to sign in.', ok: 'Reject', danger: true },
+        reject: { title: 'Reject the sign-up of "' + name + '"?', text: 'Use this for someone who is not part of the CGC office. They are emailed, cannot sign in, and the record stays in this list and in the Audit Log. You can still approve it later.', ok: 'Reject', danger: true },
         toggleActive: deactivating
           ? { title: 'Deactivate "' + name + '"?', text: 'They will no longer be able to sign in. You can reactivate later.', ok: 'Deactivate', danger: true }
           : { title: 'Reactivate "' + name + '"?', text: 'They will be able to sign in again.', ok: 'Reactivate' },

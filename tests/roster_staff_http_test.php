@@ -54,6 +54,7 @@ $cleanup = function () use ($pdo, $ay) {
         $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
     }
     $pdo->exec("DELETE FROM rate_limit_hits WHERE rate_key LIKE 'staff-register:%' OR rate_key LIKE 'staff-activate%'");
+    $pdo->exec("DELETE FROM security_policies WHERE key = 'staffSignup.mode'");
 };
 try { $cleanup(); } catch (Throwable $e) { echo "  (cleanup note: " . $e->getMessage() . ")\n"; }
 
@@ -123,6 +124,9 @@ $pdo->exec("DELETE FROM users WHERE username = 'qastudent1'");
 
 echo "\n=== Staff sign-up, approval and activation ===\n";
 $pdo->exec("DELETE FROM rate_limit_hits WHERE rate_key LIKE 'staff-register:%'");
+// The public sign-up form is off by default (invite only, modules/UserManagement/lib/StaffSignup.php); this part tests
+// the form itself, so it is opened here and set back to the default in $cleanup.
+$pdo->exec("INSERT INTO security_policies (key, value) VALUES ('staffSignup.mode', 'open') ON CONFLICT (key) DO UPDATE SET value = 'open'");
 $reg = new Client($base);
 $payload = ['lastName' => 'Qatest', 'firstName' => 'Staff', 'middleInitial' => 'Q', 'position' => 'counselor', 'email' => 'qastaff1@mcl.edu.ph', 'username' => 'qastaff1', 'privacyConsent' => true];
 $r = $reg->req('POST', '/api/staff-register.php', $payload); check('valid staff sign-up accepted', $r['code'] === 200 || $r['code'] === 201, $r['code'] . ' ' . substr($r['body'], 0, 140));

@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../Authentication/lib/LoginLock.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditChange.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditRetention.php';
 require_once __DIR__ . '/../../Monitoring/lib/MonitoringLevel.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffSignup.php';
 
 $user = Rbac::requireRole('admin', 'counselor');
 $pdo = Database::get();
@@ -93,6 +94,8 @@ function loadPolicies(PDO $pdo): array
             'sessionTimeoutEnabled' => true,
             'timeoutMinutes' => Auth::timeoutMinutes($rows['timeoutMinutes'] ?? null),
             'timeoutChoices' => Auth::TIMEOUT_CHOICES,
+            // Invite only (default) or open sign-up with approval (modules/UserManagement/lib/StaffSignup.php).
+            'staffSignup' => StaffSignup::mode($rows[StaffSignup::KEY] ?? null),
         ],
         // Detected from today's date (shared/lib/AcademicYear.php) — read-only here.
         'academicYear' => [
@@ -182,9 +185,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($type === 'rbac') {
         // Only the Head of Guidance (administrator) changes permissions; Rbac::editableLevels says the same for each cell.
         if ($user['role'] !== 'admin') {
+            // A refused change is logged too (panel revision S14): the page hides these controls from other staff, so
+            // a request here means someone went around the page.
+            AuditLogger::log($user['id'], $user['role'], 'security_config_denied', 'security_rbac', 'rbac', 'Tried to change the permission table');
             jsonResponse(['success' => false, 'error' => 'Only the administrator can change permissions.'], 403);
         }
     } elseif ($user['role'] !== 'admin') {
+        AuditLogger::log($user['id'], $user['role'], 'security_config_denied', 'security_policies', mb_substr(is_string($type) ? $type : '', 0, 50), 'Tried to change a security setting');
         jsonResponse(['success' => false, 'error' => 'Only administrators can change security configuration.'], 403);
     }
 
@@ -415,6 +422,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ['twoFactor' => 'Email verification for password changes', 'sessionTimeoutEnabled' => 'Session timeout', 'timeoutMinutes' => 'Timeout length (minutes)']
         ));
         jsonResponse(['success' => true] + $fresh);
+    }
+
+    if ($type === 'staffSignup') {
+        $mode = (string) ($body['mode'] ?? '');
+        if (!in_array($mode, StaffSignup::MODES, true)) {
+            jsonResponse(['success' => false, 'error' => 'Choose invite only or open sign-up.'], 400);
+        }
+        $before = loadPolicies($pdo)['settings']['staffSignup'];
+        $pdo->prepare(
+            'INSERT INTO security_policies (key, value, updated_by) VALUES (?, ?, ?)
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW(), updated_by = EXCLUDED.updated_by'
+        )->execute([StaffSignup::KEY, $mode, $user['id']]);
+        $labels = ['invite' => 'Invite only', 'open' => 'Open sign-up, approval required'];
+        AuditLogger::log($user['id'], $user['role'], 'update_settings', 'security_policies', StaffSignup::KEY, AuditChange::detail(
+            'Staff account creation', ['mode' => $labels[$before]], ['mode' => $labels[$mode]], ['mode' => 'Staff accounts']
+        ));
+        jsonResponse(['success' => true] + loadPolicies($pdo));
     }
 
     jsonResponse(['success' => false, 'error' => 'Unknown type.'], 400);

@@ -61,6 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($subject === '' || $message === '') {
         jsonResponse(['success' => false, 'error' => 'Subject and message are required.'], 400);
     }
+    // The student agrees, for this request, that the Guidance Office may read it with their results (panel revision S14).
+    if (($body['consent'] ?? false) !== true) {
+        jsonResponse(['success' => false, 'error' => 'Please agree to share this request with the Guidance Office first.'], 400);
+    }
 
     $name = $user['firstName'] . ' ' . $user['lastName'];
     $insert = $pdo->prepare(
@@ -70,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $insert->execute([$user['id'], $user['schoolId'], Crypto::enc($name), Crypto::enc($subject), Crypto::enc($message)]);
     $id = (int) $insert->fetchColumn();
 
-    AuditLogger::log($user['id'], 'student', 'submit_help_request', 'help_request', (string) $id, $subject);
+    AuditLogger::log($user['id'], 'student', 'submit_help_request', 'help_request', (string) $id, $subject . ' (consent to share given)');
 
     // Simple FIFO queue number: how many open requests (including this one)
     // were submitted at or before this one, oldest first. Not a booked time

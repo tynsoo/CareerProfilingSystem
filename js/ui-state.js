@@ -616,6 +616,38 @@
   };
   PP.clearCache = clearAllCaches;
 
+  // ---------- Code boxes (assessment access code, emailed 6-digit codes, staff activation code) ----------
+  // PP.codeInput(input, { digits: true }): a pasted or typed code keeps only its letters and digits, upper case. A code
+  // copied from an email often brings a space, a line break, a non-breaking space or a dash along. With maxlength on
+  // the box, a leading space alone pushed the last character out, so a correct code read as "invalid". The paste is
+  // cleaned before maxlength applies; the server cleans it again (shared/lib/CodeInput.php).
+  PP.cleanCode = function (text, digitsOnly) {
+    var cleaned = String(text || '').replace(/[\s ​-‍⁠﻿]+/g, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    return digitsOnly ? cleaned.replace(/\D/g, '') : cleaned;
+  };
+  PP.codeInput = function (input, opts) {
+    if (!input || input.dataset.ppCode) return input;
+    input.dataset.ppCode = '1';
+    var digitsOnly = !!(opts && opts.digits);
+    var max = parseInt(input.getAttribute('maxlength'), 10) || 0;
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', digitsOnly ? 'off' : 'characters');
+    input.setAttribute('spellcheck', 'false');
+    input.addEventListener('paste', function (e) {
+      var text = (e.clipboardData || window.clipboardData) ? (e.clipboardData || window.clipboardData).getData('text') : null;
+      if (text == null) return;
+      e.preventDefault();
+      var code = PP.cleanCode(text, digitsOnly);
+      input.value = max ? code.slice(0, max) : code;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    input.addEventListener('input', function () {
+      var code = PP.cleanCode(input.value, digitsOnly);
+      if (code !== input.value) input.value = code;
+    });
+    return input;
+  };
+
   // ---------- Pop-up messages (the same on the staff pages and the student portal) ----------
   // PP.toast(text, isError): a small message in the bottom-right corner for 5 seconds, green for success, red for a problem.
   // PP.confirm(text, { okLabel, danger }): a "Cancel / Confirm" dialog; resolves true or false. danger = a delete, so the button is red.

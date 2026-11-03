@@ -7,6 +7,9 @@ require_once __DIR__ . '/../../../shared/lib/EmailTemplate.php';
 require_once __DIR__ . '/../lib/StaffPosition.php';
 require_once __DIR__ . '/../../Authentication/lib/StaffSetupCode.php';
 require_once __DIR__ . '/../../Authentication/lib/SessionEnd.php';
+require_once __DIR__ . '/../lib/StaffName.php';
+require_once __DIR__ . '/../lib/StaffEmail.php';
+require_once __DIR__ . '/../lib/StaffSignup.php';
 
 // Account Management's staff section: guidance counselors sign up on their own
 // (api/staff-register.php) and an administrator approves, rejects or
@@ -55,6 +58,49 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $body = readJsonBody();
 $type = (string) ($body['type'] ?? '');
 $id = (int) ($body['id'] ?? 0);
+
+// Invite staff (panel revision S1): the administrator or a co-admin pre-registers a Guidance Counselor or Facilitator.
+// The inviter picks the position (the person cannot choose their own role), the email must be a school email, and the
+// account is approved at once but has no usable password: the person gets the temporary access code by email and
+// creates their own password (api/staff-activate.php). Until then they cannot sign in or open any page.
+if ($type === 'invite') {
+    if (!Rbac::isAdminOrCoAdmin($user)) {
+        jsonResponse(['success' => false, 'error' => 'Only the administrator or a co-admin can invite staff.'], 403);
+    }
+    $fullName = StaffName::compose((string) ($body['lastName'] ?? ''), (string) ($body['firstName'] ?? ''), (string) ($body['middleInitial'] ?? ''));
+    $email = trim((string) ($body['email'] ?? ''));
+    $position = (string) ($body['position'] ?? '');
+    if ($fullName === null || !StaffName::isValid($fullName) || mb_strlen($fullName) > 150) {
+        jsonResponse(['success' => false, 'error' => 'Enter the last name and first name using letters only, and a single letter for the middle initial.'], 400);
+    }
+    if (!StaffPosition::isValid($position)) {
+        jsonResponse(['success' => false, 'error' => 'Choose Guidance Counselor or Guidance Facilitator.'], 400);
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 255) {
+        jsonResponse(['success' => false, 'error' => 'Enter a valid email address.'], 400);
+    }
+    $emailCheck = StaffEmail::check($email);
+    if (!$emailCheck['ok']) {
+        jsonResponse(['success' => false, 'error' => $emailCheck['error']], 400);
+    }
+    $taken = $pdo->prepare('SELECT 1 FROM users WHERE LOWER(email) = LOWER(?)');
+    $taken->execute([$email]);
+    if ($taken->fetchColumn()) {
+        jsonResponse(['success' => false, 'error' => 'An account with this email already exists.'], 409);
+    }
+    $username = StaffSignup::usernameFor($pdo, $email);
+    $unusable = password_hash(bin2hex(random_bytes(24)), PASSWORD_BCRYPT); // nobody can sign in with this
+    $insert = $pdo->prepare(
+        "INSERT INTO users (role, username, password_hash, email, full_name, staff_position, is_active, approval_status)
+         VALUES ('counselor', ?, ?, ?, ?, ?, TRUE, 'approved') RETURNING id"
+    );
+    $insert->execute([$username, $unusable, $email, $fullName, $position]);
+    $newId = (int) $insert->fetchColumn();
+    AuditLogger::log($user['id'], $user['role'], 'invite_staff_account', 'user', (string) $newId,
+        $fullName . ' (' . StaffPosition::label($position) . ', ' . $email . ')');
+    $sent = sendSetupCode($pdo, ['id' => $newId, 'email' => $email, 'username' => $username], $fullName);
+    jsonResponse(['success' => true, 'id' => $newId, 'username' => $username, 'emailSent' => $sent]);
+}
 
 $stmt = $pdo->prepare("SELECT id, username, full_name, staff_position, email, email_verified_at, is_active, approval_status, $coAdminCol FROM users WHERE id = ? AND role = 'counselor'");
 $stmt->execute([$id]);

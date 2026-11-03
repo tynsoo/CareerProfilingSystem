@@ -5,6 +5,7 @@ require_once __DIR__ . '/../lib/LoginLock.php';
 require_once __DIR__ . '/../lib/PasswordPolicy.php';
 require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
 require_once __DIR__ . '/../lib/StaffSetupCode.php';
+require_once __DIR__ . '/../../UserManagement/lib/Consent.php';
 
 // Last step of staff sign-up: the person enters the temporary access code emailed when the
 // Head of Guidance approved them, and creates their own password. Works only for an approved
@@ -23,7 +24,8 @@ if ($identifier === '' || $code === '' || $password === '') {
     jsonResponse(['success' => false, 'error' => 'Enter your username or email, the access code and a new password.'], 400);
 }
 
-$generic = ['success' => false, 'error' => 'That code is not valid. Check it and try again, or ask the Head of Guidance to send a new one.'];
+// The code from the approval email lasts StaffSetupCode::HOURS_VALID hours (not the 5-minute password-change code).
+$generic = ['success' => false, 'error' => 'That access code is not valid or has expired. Use the 8-character code from your approval email (it lasts ' . StaffSetupCode::HOURS_VALID . ' hours and works once), or ask the Head of Guidance to send a new one.'];
 
 // Brute-force guard: per account and per IP, whatever the outcome.
 // The real visitor address (behind Render's proxy too; modules/AuditLog/lib/AuditLogger.php), so one visitor cannot use up the limit for everyone.
@@ -49,6 +51,12 @@ if (!$account || !StaffSetupCode::isValid($pdo, (int) $account['id'], $code)) {
     jsonResponse($generic, 400);
 }
 
+// An invited account (Account Management, Invite staff) never saw the sign-up form, so the privacy consent is given here.
+$needsConsent = Consent::latestFor($pdo, (int) $account['id']) === null;
+if ($needsConsent && ($body['privacyConsent'] ?? false) !== true) {
+    jsonResponse(['success' => false, 'error' => 'You must agree to the Data Privacy Policy to activate your account.'], 400);
+}
+
 $errors = PasswordPolicy::errors($pdo, $password);
 if ($errors) {
     jsonResponse(['success' => false, 'error' => implode(' ', $errors)], 400);
@@ -60,6 +68,9 @@ try {
         ->execute([password_hash($password, PASSWORD_BCRYPT), $account['id']]);
     LoginLock::clear($pdo, LoginLock::forAccount((int) $account['id']));
     StaffSetupCode::spend($pdo, (int) $account['id']);
+    if ($needsConsent) {
+        Consent::record($pdo, (int) $account['id'], 'staff_signup');
+    }
     $pdo->commit();
 } catch (Throwable $e) {
     $pdo->rollBack();

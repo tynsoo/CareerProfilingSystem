@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
+require_once __DIR__ . '/../../../shared/lib/CodeInput.php';
 require_once __DIR__ . '/../lib/ExamSchedule.php';
 require_once __DIR__ . '/../lib/RetakeRequest.php';
 require_once __DIR__ . '/../lib/AssessmentProgress.php';
@@ -46,7 +47,8 @@ if (RateLimiter::isLimited('access-code:' . $user['id'], 3, 5)) {
 }
 
 $body = readJsonBody();
-$submitted = strtoupper(trim((string) ($body['code'] ?? '')));
+// Spaces, line breaks and dashes copied along with the code are dropped (shared/lib/CodeInput.php).
+$submitted = CodeInput::clean((string) ($body['code'] ?? ''));
 
 if ($submitted === '') {
     jsonResponse(['success' => false, 'error' => 'Enter the assessment access code.'], 400);
@@ -108,7 +110,7 @@ if ($matchedScheduleId === null) {
     }
     RateLimiter::hit('access-code:' . $user['id']);
     AuditLogger::log($user['id'], 'student', 'access_code_failed', 'assessment', null, 'Incorrect assessment access code');
-    jsonResponse(['success' => false, 'error' => 'Incorrect access code.'], 403);
+    jsonResponse(['success' => false, 'error' => 'Incorrect access code. Check it with your guidance counselor; codes are letters and numbers only, for example 3FA9C1.'], 403);
 }
 
 $_SESSION['assessmentUnlocked'] = true;

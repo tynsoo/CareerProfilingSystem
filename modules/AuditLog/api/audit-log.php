@@ -25,12 +25,12 @@ $pdo = Database::get();
 const FAILED_SUFFIX = '_failed';
 // Security events read as Failed too: a lockout, a possible shared account, and the refusals below.
 // One list for the SQL (FAILED_SQL) and the PHP rule (statusOf), so they cannot drift apart.
-const FAILED_ACTIONS = ['login_lockout', 'login_shared_suspected', 'access_code_throttled', 'assessment_resubmit_denied'];
+const FAILED_ACTIONS = ['login_lockout', 'login_shared_suspected', 'access_code_throttled', 'assessment_resubmit_denied', 'access_denied', 'security_config_denied'];
 define('FAILED_SQL', "(al.action LIKE '%_failed' OR al.action IN ('" . implode("', '", FAILED_ACTIONS) . "'))");
 // Refusals by the app's own rules are shown as "Blocked": an account lockout, too many exam code
 // attempts, a second try at a finished assessment. They stay failures in FAILED_SQL, so the Status
 // filter and the summary cards still count them as Failed.
-const BLOCKED_ACTIONS = ['login_lockout', 'access_code_throttled', 'assessment_resubmit_denied'];
+const BLOCKED_ACTIONS = ['login_lockout', 'access_code_throttled', 'assessment_resubmit_denied', 'access_denied', 'security_config_denied'];
 // Who did it, in 5 groups: for the summary card breakdowns and the exact role filter. Fixed SQL.
 // Counselors and facilitators share actor_role 'counselor'; staff_position tells them apart.
 const ROLE_BUCKET_SQL = "(CASE WHEN al.actor_user_id IS NULL THEN 'none'"
@@ -84,6 +84,7 @@ $actionLabels = [
     'remove_avatar' => 'Removed profile photo',
     // Staff accounts
     'staff_signup' => 'Staff signed up',
+    'invite_staff_account' => 'Invited staff account',
     'create_staff_account' => 'Created staff account',   // older entries only
     'approve_staff_account' => 'Approved staff account',
     'reject_staff_account' => 'Rejected staff account',
@@ -150,6 +151,8 @@ $actionLabels = [
     'resolve_help_request' => 'Resolved counseling request',
     'add_counseling_note' => 'Added counseling note',
     'invite_to_counseling' => 'Invited to counseling',
+    'update_counseling_status' => 'Updated counseling booking status',
+    'view_counseling_notes' => 'Viewed counseling notes',
     'send_counseling_link' => 'Sent counseling booking link to self',
     'rotate_encryption_key' => 'Changed the encryption key',
     'send_counseling_link_failed' => 'Counseling booking link not sent',
@@ -158,6 +161,7 @@ $actionLabels = [
     'monitoring_approve' => 'Approved monitoring flag',
     'monitoring_escalate' => 'Escalated monitoring flag',
     'monitoring_dismiss' => 'Dismissed monitoring flag',
+    'monitoring_resolve' => 'Closed monitoring flag with counseling outcome',
     'view_cbf_debug' => 'Viewed recommendation details',
     // Reports and exports
     'export_analytics_xlsx' => 'Exported analytics report',
@@ -178,6 +182,8 @@ $actionLabels = [
     'update_settings' => 'Changed security setting',
     'update_office_hours' => 'Changed office hours',
     'update_booking_link' => 'Changed booking link',
+    'security_config_denied' => 'Blocked security setting change',
+    'access_denied' => 'Blocked by access permissions',
 ];
 
 $roleLabels = [

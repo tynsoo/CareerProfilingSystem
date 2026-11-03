@@ -199,7 +199,14 @@ CREATE TABLE monitoring_flags (
     counselor_id        INT REFERENCES users(id),
     note                TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    resolved_at         TIMESTAMPTZ
+    resolved_at         TIMESTAMPTZ,
+    -- Traceability (modules/Counseling/lib/CounselingTracking.php): who closed the flag, how it ended
+    -- (CounselingTracking::OUTCOMES), the closing note (encrypted), and who moved it to For Counseling and when.
+    resolved_by         INT REFERENCES users(id) ON DELETE SET NULL,
+    outcome             VARCHAR(30),
+    resolution_note_enc TEXT,
+    escalated_at        TIMESTAMPTZ,
+    escalated_by        INT REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE audit_log (
@@ -441,7 +448,14 @@ CREATE TABLE counseling_invites (
     invited_by  INT REFERENCES users(id) ON DELETE SET NULL,
     booking_url VARCHAR(300) NOT NULL,
     email_sent  BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- The booking happens in the CGC's own system, which cannot report back, so its state is recorded here
+    -- by the Guidance Counselor or the Administrator (modules/Counseling/lib/CounselingTracking.php BOOKING_STATUSES).
+    flag_id             INT REFERENCES monitoring_flags(id) ON DELETE SET NULL,
+    status              VARCHAR(20) NOT NULL DEFAULT 'invited' CHECK (status IN ('invited', 'booked', 'attended', 'no_show', 'declined', 'cancelled')),
+    status_updated_at   TIMESTAMPTZ,
+    status_updated_by   INT REFERENCES users(id) ON DELETE SET NULL,
+    session_date        DATE
 );
 CREATE INDEX idx_counseling_invites_student ON counseling_invites (student_id, id);
 

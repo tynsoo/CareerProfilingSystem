@@ -263,7 +263,7 @@
         <label class="pp-choice"><input type="radio" name="reviewAction" value="dismiss"><span><span class="pp-choice-title">Dismiss the flag</span><span class="pp-choice-text" id="reviewDismissText"></span></span></label>
       </fieldset>
       <div id="reviewNoteWrap">
-        <label for="reviewNote" class="block text-xs font-medium text-slate-600 mb-1">Note (optional)</label>
+        <label for="reviewNote" class="block text-xs font-medium text-slate-600 mb-1">Note (required when dismissing)</label>
         <textarea id="reviewNote" rows="2" maxlength="500" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700" placeholder="Why this decision? Kept private in the audit log."></textarea>
       </div>
       <p id="reviewActionError" class="hidden text-sm text-[#ed1c24]" role="alert"></p>
@@ -473,8 +473,8 @@
     document.getElementById('reviewCareer').textContent = r.career;
     document.getElementById('reviewReason').textContent = r.reason +
       (r.topScore !== null && r.topScore !== undefined ? ' (Cosine Similarity: ' + Number(r.topScore).toFixed(3) + ')' : '');
-    document.getElementById('reviewApproveText').textContent = 'It stands as it is. The flag leaves the review list.';
-    document.getElementById('reviewDismissText').textContent = 'Nothing needs to be done. The flag leaves the review list.';
+    document.getElementById('reviewApproveText').textContent = 'It stands as it is, no counseling needed. The flag is kept in History.';
+    document.getElementById('reviewDismissText').textContent = 'Not a valid flag (add a note on why). The flag is kept in History.';
     document.querySelectorAll('input[name="reviewAction"]').forEach(function(input) { input.checked = false; });
     // View Only staff see the details without the decision part (the link and the title say View, not Review).
     document.getElementById('reviewTitle').textContent = canAct ? 'Review recommendation' : 'Recommendation details';

@@ -16,7 +16,7 @@ require_once __DIR__ . '/../../../shared/lib/EmailTemplate.php';
 class TwoFactor
 {
     private const CODE_LENGTH = 6;
-    private const EXPIRY_MINUTES = 5;
+    public const EXPIRY_MINUTES = 5;
     private const MAX_ATTEMPTS = 5;
 
     /**

@@ -314,7 +314,7 @@
   honestyCheckbox.addEventListener('change', updateBeginState);
 
   const modal = document.getElementById('accessCodeModal');
-  const input = document.getElementById('accessCodeInput');
+  const input = PP.codeInput(document.getElementById('accessCodeInput')); // spaces copied along with the code are dropped
   const errorEl = document.getElementById('accessCodeError');
   const submitBtn = document.getElementById('accessCodeSubmit');
 
@@ -373,7 +373,7 @@
   }
 
   async function submitCode() {
-    const code = input.value.trim();
+    const code = PP.cleanCode(input.value);
     if (!code) {
       errorEl.textContent = 'Enter the access code.';
       errorEl.classList.remove('hidden');

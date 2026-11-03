@@ -8,6 +8,7 @@ require_once __DIR__ . '/../lib/PasswordPolicy.php';
 require_once __DIR__ . '/../lib/PasswordReset.php';
 require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
 require_once __DIR__ . '/../lib/SessionEnd.php';
+require_once __DIR__ . '/../../../shared/lib/CodeInput.php';
 
 // Forgot password, for students and for guidance staff, each from their own sign-in page:
 //   request  { portal, email }            emails a 6-digit code (valid 10 minutes). Also used for "Resend code".
@@ -148,7 +149,7 @@ if ($action === 'request') {
 
 if ($action === 'verify') {
     $email = readEmail($body);
-    $code = trim((string) ($body['code'] ?? ''));
+    $code = CodeInput::digits((string) ($body['code'] ?? '')); // a space or line break pasted along is dropped
     if (!PasswordReset::isCode($code)) {
         fail('invalid', 'Enter all 6 digits.');
     }
@@ -156,7 +157,7 @@ if ($action === 'verify') {
         fail('limit', 'Too many attempts. Please try again in a few minutes.', 429, ['retryAfter' => 600]);
     }
 
-    $expiredMsg = 'This code has expired. Request a new one.';
+    $expiredMsg = 'This code has expired. Reset codes last ' . PasswordReset::CODE_MINUTES . ' minutes. Request a new one.';
     $lockedMsg = 'Too many wrong attempts. Request a new code.';
     $wrongMsg = fn(int $left) => "That code isn't correct. $left " . ($left === 1 ? 'attempt' : 'attempts') . ' left.';
 
