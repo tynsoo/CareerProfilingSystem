@@ -31,7 +31,9 @@ class Rbac
         'analyticsEmail'    => ['counselor' => 'none',    'facilitator' => 'none'],
         // Assessment
         'programs'          => ['counselor' => 'limited', 'facilitator' => 'limited'],
-        'questionBank'      => ['counselor' => 'full',    'facilitator' => 'full'],
+        // View Only by default (panel revision S15, 2026-11-04): changing the assessment questions stays with the Head of
+        // Guidance and co-admins unless the Head of Guidance gives a staff role Full in Security Configuration.
+        'questionBank'      => ['counselor' => 'limited', 'facilitator' => 'limited'],
         'examinations'      => ['counselor' => 'full',    'facilitator' => 'full'],
         'monitoring'        => ['counselor' => 'full',    'facilitator' => 'limited'],
         // Student Support

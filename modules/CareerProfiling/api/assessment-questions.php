@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../lib/QuestionBank.php';
 require_once __DIR__ . '/../../AuditLog/lib/AuditChange.php';
+require_once __DIR__ . '/../../UserManagement/lib/StaffPosition.php';
 
 $pdo = Database::get();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -30,6 +31,94 @@ function readText(array $body): string
         jsonResponse(['success' => false, 'error' => 'Question text must be ' . QuestionBank::MAX_TEXT_LENGTH . ' characters or fewer.'], 400);
     }
     return $text;
+}
+
+/**
+ * Change history of the question bank (panel revision S15): the entries already in the Audit Log for the questions and
+ * for the question order, newest first, for staff who can see the Question Bank. Only question text, the order setting
+ * and staff names: no student data is in these entries. An entry the Audit Log retention removed is gone here too.
+ */
+/** The audit entries that make up the history (one bound value: QuestionBank::SHUFFLE_KEY). */
+const QUESTION_HISTORY_WHERE = "(a.target_type = 'assessment_question'
+                AND a.action IN ('add_question', 'update_question', 'delete_question', 'load_question_set'))
+            OR (a.action = 'update_question_order' AND a.target_id = ?)";
+
+function questionHistoryCount(PDO $pdo): int
+{
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM audit_log a WHERE ' . QUESTION_HISTORY_WHERE);
+    $stmt->execute([QuestionBank::SHUFFLE_KEY]);
+    return (int) $stmt->fetchColumn();
+}
+
+/** One page of the history, newest first. Only these rows are decrypted. */
+function questionHistory(PDO $pdo, int $limit, int $offset = 0): array
+{
+    $coAdminCol = Rbac::hasCoAdminColumn() ? 'u.is_co_admin' : 'FALSE AS is_co_admin'; // until db/migrate_add_co_admin.php runs
+    $stmt = $pdo->prepare(
+        "SELECT a.id, a.action, a.actor_role, a.detail_enc, a.created_at, u.id AS actor_found, u.full_name, u.staff_position, $coAdminCol
+         FROM audit_log a LEFT JOIN users u ON u.id = a.actor_user_id
+         WHERE " . QUESTION_HISTORY_WHERE . "
+         ORDER BY a.id DESC LIMIT ? OFFSET ?"
+    );
+    $stmt->execute([QuestionBank::SHUFFLE_KEY, $limit, $offset]);
+    $out = [];
+    foreach ($stmt->fetchAll() as $r) {
+        try {
+            $detail = $r['detail_enc'] !== null ? (string) Crypto::dec($r['detail_enc']) : '';
+        } catch (Throwable $e) {
+            $detail = '(details could not be read)';
+        }
+        $change = AuditChange::parse($detail);
+        $what = [
+            'add_question' => 'Added', 'update_question' => 'Edited', 'delete_question' => 'Deleted',
+            'load_question_set' => 'Loaded the O*NET set', 'update_question_order' => 'Changed',
+        ][$r['action']];
+        // An edit that only switched "Shown in the assessment" reads as Hidden or Shown again.
+        if ($change && count($change['changes']) === 1 && $change['changes'][0]['field'] === 'Shown in the assessment') {
+            $what = $change['changes'][0]['after'] === 'Yes' ? 'Shown again' : 'Hidden';
+        }
+        // The question order entry is plain text ("Question order: grouped by type -> shuffled for each student").
+        if ($r['action'] === 'update_question_order' && preg_match('/^Question order: (.+) -> (.+)$/', $detail, $m)) {
+            $change = ['summary' => 'Question order for students', 'changes' => [['field' => 'Question order', 'before' => $m[1], 'after' => $m[2]]]];
+        }
+        // The person's name and their position now (a co-admin is named so). No login name: an account without a full
+        // name shows the position only.
+        // An account that no longer exists is not guessed at.
+        $role = $r['actor_role'] === 'admin' ? 'Administrator'
+            : ($r['actor_found'] === null ? 'Former staff account'
+            : (!empty($r['is_co_admin']) ? 'Guidance Counselor, co-admin' : StaffPosition::label($r['staff_position'] ?? null)));
+        $name = trim((string) ($r['full_name'] ?? ''));
+        $out[] = [
+            'id' => (int) $r['id'],
+            'when' => (new DateTime((string) $r['created_at']))->format(DATE_ATOM),
+            'who' => $name !== '' ? $name . ' (' . $role . ')' : $role,
+            'what' => $what,
+            'summary' => $change ? $change['summary'] : $detail,
+            'changes' => $change ? $change['changes'] : [],
+        ];
+    }
+    return $out;
+}
+
+if ($method === 'GET' && isset($_GET['history'])) {
+    Rbac::requireAccess('questionBank', 'limited');
+    // Paged like the other staff lists (PP.pager: 25, 50 or 100 a page). A page past the end shows the last one.
+    $pageSize = (int) ($_GET['pageSize'] ?? 25);
+    if (!in_array($pageSize, [25, 50, 100], true)) {
+        $pageSize = 25;
+    }
+    $total = questionHistoryCount($pdo);
+    $totalPages = max(1, (int) ceil($total / $pageSize));
+    $page = min(max(1, (int) ($_GET['page'] ?? 1)), $totalPages);
+    $offset = ($page - 1) * $pageSize;
+    jsonResponse([
+        'history' => questionHistory($pdo, $pageSize, $offset),
+        'page' => $page,
+        'pageSize' => $pageSize,
+        'total' => $total,
+        'totalPages' => $totalPages,
+        'startIndex' => $total > 0 ? $offset + 1 : 0,
+    ]);
 }
 
 if ($method === 'GET') {

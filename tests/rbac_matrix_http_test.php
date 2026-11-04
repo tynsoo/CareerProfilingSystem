@@ -76,8 +76,13 @@ $rows = [
     ['Upload class rosters', 'NNVY', [
         ['GET', '/api/sections.php?all=1', null, 'view'],
         ['POST', '/api/roster-upload.php', '{}', 'change']]],
-    ['Maintain the question bank', 'NYYY', [
-        ['POST', '/api/assessment-questions.php', ['type' => 'none']]]],
+    // Panel revision S15: by default staff see the questions and their change history, only the administrator changes them.
+    // Needs the default rows in the test database: on an older profilepath_test where questionBank is still saved as
+    // 'full' for counselor and facilitator, set both to View Only first (Security Configuration), or this row fails.
+    ['Maintain the question bank', 'NVVY', [
+        ['GET', '/api/assessment-questions.php?all=1', null, 'staffview'], // students load the questions to answer them
+        ['GET', '/api/assessment-questions.php?history=1', null, 'view'], // the Change history: staff only, students refused
+        ['POST', '/api/assessment-questions.php', ['type' => 'none'], 'change']]],
     ['View analytics, download student lists, and export the Analytics Report as a PDF', 'NNYY', [
         ['GET', '/api/analytics.php', null]]],
     ['Send the Analytics Report by email', 'NNNY', [

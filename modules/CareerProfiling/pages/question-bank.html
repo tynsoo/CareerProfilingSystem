@@ -109,6 +109,14 @@
         <button type="button" id="loadOnetBtn" class="shrink-0 border border-slate-300 text-slate-700 text-sm font-medium rounded-md px-4 py-2.5 hover:bg-slate-50">Use the O*NET 30-question set</button>
       </div>
 
+      <!-- Panel revision S15: the questions and their change history on two tabs (same tab buttons as the Help Center,
+           css/components.css .pp-filter-tab; aria-pressed marks the chosen one). -->
+      <div class="max-w-4xl mb-6 flex flex-wrap items-center gap-2" role="group" aria-label="Question Bank view">
+        <button type="button" id="tabQuestions" data-view="questions" aria-pressed="true" class="qb-tab pp-filter-tab">Questions</button>
+        <button type="button" id="tabHistory" data-view="history" aria-pressed="false" class="qb-tab pp-filter-tab">Change history</button>
+      </div>
+
+      <div id="questionsView">
       <div id="balanceBanner" class="hidden max-w-4xl mb-6 rounded-lg border px-4 py-3 text-sm" role="status"></div>
 
       <section id="orderCard" class="hidden max-w-4xl mb-6 bg-white border border-slate-200 rounded-lg px-5 py-4" aria-labelledby="orderTitle">
@@ -121,6 +129,18 @@
       </section>
 
       <div id="dimensionGroups" class="flex flex-col gap-6 max-w-4xl"></div>
+      </div>
+
+      <!-- Panel revision S15: who changed which question (or the question order) and when (api/assessment-questions.php?history=1, from the Audit Log). -->
+      <section id="historySection" class="hidden max-w-4xl bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden" aria-labelledby="historyTitle">
+        <div class="px-5 py-4 border-b border-slate-200">
+          <h2 id="historyTitle" class="text-base font-bold text-slate-900">Change history</h2>
+          <p id="historyIntro" class="text-xs text-slate-500 mt-1">Every change to the questions and the question order, newest first: who made it, when, and what changed. Kept in the Audit Log.</p>
+        </div>
+        <ol id="historyList" class="divide-y divide-slate-100" aria-busy="true"></ol>
+        <!-- Filled by PP.pager: "Showing 1 to 25 of N changes", Rows per page and the page buttons. -->
+        <div id="historyPager" class="border-t border-slate-200"></div>
+      </section>
 
       </div>
     </main>
@@ -186,7 +206,8 @@
   if (!canEdit) {
     // Loading the O*NET set replaces the questions, so View Only does not get the button (style: it is inline in the header).
     document.getElementById('loadOnetBtn').style.display = 'none';
-    document.querySelector('main h1 + p').textContent = 'The assessment questions students answer, by RIASEC type.';
+    // Panel revision S15: staff are View Only by default (Rbac::DEFAULTS); the Head of Guidance can change that in Security Configuration.
+    document.querySelector('main h1 + p').textContent = 'The assessment questions students answer, by RIASEC type. The Head of Guidance decides who can change them.';
   }
 
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
@@ -248,8 +269,117 @@
   }
 
   let questions = [];
+  let questionsLoadedOnce = false;
   let balance = null;
   const showHidden = {};
+
+  // ---- Change history (panel revision S15). Built with textContent only: question text comes from staff.
+  const historyList = document.getElementById('historyList');
+  function historyNode(tag, cls, text) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function historyDate(iso) {
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
+  }
+  // One page at a time, like the other staff lists (PP.pager). Page and rows per page stay in the address
+  // (?view=history&page=2&pageSize=50). Loaded only while its tab is open: a change to the questions or the order marks
+  // it out of date, and opening the tab again shows page 1 with that change on top.
+  const historySection = document.getElementById('historySection');
+  const historyState = PP.listState({ page: 1, pageSize: 25 });
+  const savedHistory = historyState.read();
+  let historyPage = savedHistory.page;
+  let historyPageSize = [25, 50, 100].indexOf(savedHistory.pageSize) !== -1 ? savedHistory.pageSize : 25;
+  let historyStale = true;   // nothing loaded yet, or a change was made since
+  let historyRequest = 0;    // only the newest answer is drawn
+  const historyPager = PP.pager('historyPager', {
+    noun: ['change', 'changes'], label: 'Change history pages', pageSize: historyPageSize, emptyText: 'No changes recorded yet',
+    onChange: function(p, size, focusRole) { historyPage = p; historyPageSize = size; loadHistory(focusRole, true); }
+  });
+  function historyMessage(text) {
+    historyList.replaceChildren(historyNode('li', 'px-5 py-4 text-sm text-slate-500', text));
+  }
+  async function loadHistory(focusRole, scrollToTop) {
+    const ticket = ++historyRequest;
+    historyList.setAttribute('aria-busy', 'true');
+    historyPager.loading();
+    if (historyStale) historyList.innerHTML = '<li class="px-5 py-4">' + PP.skeleton.lines(4, 16) + '</li>';
+    let data;
+    try {
+      data = await PP.fetchJson('api/assessment-questions.php?history=1&page=' + historyPage + '&pageSize=' + historyPageSize);
+    } catch (e) {
+      if (ticket !== historyRequest) return;
+      historyList.removeAttribute('aria-busy');
+      historyMessage('The change history could not be loaded.');
+      historyPager.clear();
+      return;
+    }
+    if (ticket !== historyRequest) return; // a newer page was asked for meanwhile
+    historyStale = false;
+    historyList.removeAttribute('aria-busy');
+    historyPage = data.page;
+    historyPageSize = data.pageSize;
+    historyState.save({ page: historyPage, pageSize: historyPageSize });
+    const rows = data.history || [];
+    historyPager.render({ page: data.page, pageSize: data.pageSize, total: data.total, totalPages: data.totalPages, startIndex: data.startIndex, shown: rows.length });
+    historyPager.focus(focusRole);
+    // A page turn from the buttons at the bottom goes back to the top of the list.
+    if (scrollToTop && historySection.getBoundingClientRect().top < 0) historySection.scrollIntoView({ block: 'start' });
+    if (!rows.length) {
+      historyMessage('No changes recorded yet.');
+      return;
+    }
+    historyList.replaceChildren.apply(historyList, rows.map(function(h) {
+      const li = historyNode('li', 'px-5 py-3 flex flex-col gap-1');
+      const top = historyNode('div', 'flex flex-wrap items-baseline justify-between');
+      top.style.cssText = 'column-gap:16px;row-gap:4px';
+      const head = historyNode('p', 'text-sm text-slate-800');
+      head.appendChild(historyNode('span', 'font-semibold', h.what));
+      if (h.summary) head.appendChild(document.createTextNode(': ' + h.summary));
+      top.appendChild(head);
+      top.appendChild(historyNode('span', 'text-xs text-slate-500 whitespace-nowrap', historyDate(h.when)));
+      li.appendChild(top);
+      li.appendChild(historyNode('p', 'text-xs text-slate-500', 'by ' + h.who));
+      (h.changes || []).forEach(function(c) {
+        const box = historyNode('div', 'text-xs rounded-md border border-slate-200 px-3 py-2 flex flex-col gap-0.5');
+        box.appendChild(historyNode('p', 'font-medium text-slate-600', c.field));
+        box.appendChild(historyNode('p', 'text-red-700', 'Before: ' + c.before));
+        box.appendChild(historyNode('p', 'text-green-700', 'After: ' + c.after));
+        li.appendChild(box);
+      });
+      return li;
+    }));
+  }
+
+  // A question or the order changed: the history is out of date (redrawn now only if its tab is open).
+  function historyChanged() {
+    historyStale = true;
+    historyPage = 1;
+    if (!historySection.classList.contains('hidden')) loadHistory(null, false);
+  }
+
+  // Tabs: Questions | Change history. ?view=history in the address keeps the tab after a reload.
+  function showView(view) {
+    const onHistory = view === 'history';
+    document.getElementById('questionsView').classList.toggle('hidden', onHistory);
+    historySection.classList.toggle('hidden', !onHistory);
+    document.querySelectorAll('.qb-tab').forEach(function(t) { t.setAttribute('aria-pressed', String(t.dataset.view === view)); });
+    const url = new URL(window.location.href);
+    if (onHistory) {
+      url.searchParams.set('view', 'history');
+    } else {
+      ['view', 'page', 'pageSize'].forEach(function(k) { url.searchParams.delete(k); }); // the history's page belongs to its tab
+    }
+    window.history.replaceState(null, '', url);
+    if (onHistory && historyStale) loadHistory(null, false);
+  }
+  document.querySelectorAll('.qb-tab').forEach(function(t) {
+    t.addEventListener('click', function() { showView(t.dataset.view); });
+  });
+  showView(new URLSearchParams(window.location.search).get('view') === 'history' ? 'history' : 'questions');
 
   async function loadQuestions() {
     const wrap = document.getElementById('dimensionGroups');
@@ -266,6 +396,9 @@
     balance = data.balance || null;
     renderOrder(!!data.shuffle);
     render();
+    // Every reload after the first one follows a change (add, edit, hide, delete, O*NET set).
+    if (questionsLoadedOnce) historyChanged();
+    questionsLoadedOnce = true;
   }
 
   // Question order (Admin and Co-admins change it; View Only sees it). Saved at once, and logged in the Audit Log.
@@ -287,6 +420,7 @@
         return;
       }
       showToast(on ? 'Students now see the questions in a shuffled order.' : 'Students now see the questions grouped by type.');
+      historyChanged();
     });
   });
 
