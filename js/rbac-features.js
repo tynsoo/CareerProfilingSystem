@@ -17,7 +17,7 @@
     analytics: { label: 'Analytics and reports', desc: 'The charts and tables on Analytics & Report.' },
     analyticsEmail: { label: 'Send analytics report', desc: 'Email the Analytics Report to an @mcl.edu.ph address (Full or No Access). Needs Analytics and reports.' },
     programs: { label: 'Program Mapping Crosswalk', desc: 'MMCL programs and their RIASEC codes. Full: add, edit, turn on or off.' },
-    questionBank: { label: 'Question Bank', desc: 'The assessment questions. Full: add, edit, hide, delete, load the O*NET set.' },
+    questionBank: { label: 'Question Bank', desc: 'The assessment questions and their change history. Full: add, edit, hide, delete, load the O*NET set, set the question order.' },
     examinations: { label: 'Assessment Scheduling', desc: 'Schedules, rooms and access codes. Full: create and change them.' },
     monitoring: { label: 'Flagged student monitoring', desc: 'Flagged recommendations. Full: approve, escalate or dismiss them.' },
     announcements: { label: 'Announcements', desc: 'Read the announcements sent. Full: post, edit, delete, send reminders.' },

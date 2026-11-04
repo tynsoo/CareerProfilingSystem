@@ -122,6 +122,15 @@
 
       <div id="dimensionGroups" class="flex flex-col gap-6 max-w-4xl"></div>
 
+      <!-- Panel revision S15: who changed which question (or the question order) and when (api/assessment-questions.php?history=1, from the Audit Log). -->
+      <section id="historySection" class="max-w-4xl mt-8 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden" aria-labelledby="historyTitle">
+        <div class="px-5 py-4 border-b border-slate-200">
+          <h2 id="historyTitle" class="text-base font-bold text-slate-900">Change history</h2>
+          <p id="historyIntro" class="text-xs text-slate-500 mt-1">Every change to the questions and the question order, newest first: who made it, when, and what changed. Kept in the Audit Log.</p>
+        </div>
+        <ol id="historyList" class="divide-y divide-slate-100 overflow-y-auto" style="max-height:28rem" aria-busy="true"></ol>
+      </section>
+
       </div>
     </main>
 
@@ -186,7 +195,8 @@
   if (!canEdit) {
     // Loading the O*NET set replaces the questions, so View Only does not get the button (style: it is inline in the header).
     document.getElementById('loadOnetBtn').style.display = 'none';
-    document.querySelector('main h1 + p').textContent = 'The assessment questions students answer, by RIASEC type.';
+    // Panel revision S15: staff are View Only by default (Rbac::DEFAULTS); the Head of Guidance can change that in Security Configuration.
+    document.querySelector('main h1 + p').textContent = 'The assessment questions students answer, by RIASEC type. The Head of Guidance decides who can change them.';
   }
 
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
@@ -251,6 +261,58 @@
   let balance = null;
   const showHidden = {};
 
+  // ---- Change history (panel revision S15). Built with textContent only: question text comes from staff.
+  const historyList = document.getElementById('historyList');
+  function historyNode(tag, cls, text) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function historyDate(iso) {
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
+  }
+  async function loadHistory() {
+    let data;
+    try {
+      data = await PP.fetchJson('api/assessment-questions.php?history=1');
+    } catch (e) {
+      historyList.replaceChildren(historyNode('li', 'px-5 py-4 text-sm text-slate-500', 'The change history could not be loaded.'));
+      historyList.removeAttribute('aria-busy');
+      return;
+    }
+    historyList.removeAttribute('aria-busy');
+    const rows = data.history || [];
+    if (!rows.length) {
+      historyList.replaceChildren(historyNode('li', 'px-5 py-4 text-sm text-slate-500', 'No changes recorded yet.'));
+      return;
+    }
+    const intro = document.getElementById('historyIntro');
+    intro.textContent = 'Every change to the questions and the question order, newest first: who made it, when, and what changed. Kept in the Audit Log.' +
+      (rows.length >= (data.limit || 100) ? ' Showing the latest ' + rows.length + '; the Audit Log has the rest.' : '');
+    historyList.replaceChildren.apply(historyList, rows.map(function(h) {
+      const li = historyNode('li', 'px-5 py-3 flex flex-col gap-1');
+      const top = historyNode('div', 'flex flex-wrap items-baseline justify-between');
+      top.style.cssText = 'column-gap:16px;row-gap:4px';
+      const head = historyNode('p', 'text-sm text-slate-800');
+      head.appendChild(historyNode('span', 'font-semibold', h.what));
+      if (h.summary) head.appendChild(document.createTextNode(': ' + h.summary));
+      top.appendChild(head);
+      top.appendChild(historyNode('span', 'text-xs text-slate-500 whitespace-nowrap', historyDate(h.when)));
+      li.appendChild(top);
+      li.appendChild(historyNode('p', 'text-xs text-slate-500', 'by ' + h.who));
+      (h.changes || []).forEach(function(c) {
+        const box = historyNode('div', 'text-xs rounded-md border border-slate-200 px-3 py-2 flex flex-col gap-0.5');
+        box.appendChild(historyNode('p', 'font-medium text-slate-600', c.field));
+        box.appendChild(historyNode('p', 'text-red-700', 'Before: ' + c.before));
+        box.appendChild(historyNode('p', 'text-green-700', 'After: ' + c.after));
+        li.appendChild(box);
+      });
+      return li;
+    }));
+  }
+
   async function loadQuestions() {
     const wrap = document.getElementById('dimensionGroups');
     if (!questions || !questions.length) PP.showSkeleton(wrap, PP.skeleton.cards(3));
@@ -266,6 +328,7 @@
     balance = data.balance || null;
     renderOrder(!!data.shuffle);
     render();
+    loadHistory(); // a change just made shows up at the top
   }
 
   // Question order (Admin and Co-admins change it; View Only sees it). Saved at once, and logged in the Audit Log.
@@ -287,6 +350,7 @@
         return;
       }
       showToast(on ? 'Students now see the questions in a shuffled order.' : 'Students now see the questions grouped by type.');
+      loadHistory();
     });
   });
 
