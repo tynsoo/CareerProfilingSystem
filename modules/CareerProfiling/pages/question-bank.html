@@ -111,6 +111,15 @@
 
       <div id="balanceBanner" class="hidden max-w-4xl mb-6 rounded-lg border px-4 py-3 text-sm" role="status"></div>
 
+      <section id="orderCard" class="hidden max-w-4xl mb-6 bg-white border border-slate-200 rounded-lg px-5 py-4" aria-labelledby="orderTitle">
+        <h2 id="orderTitle" class="text-sm font-semibold text-slate-900">Question order for students</h2>
+        <div class="mt-3 flex flex-col gap-2 text-sm text-slate-700" role="radiogroup" aria-labelledby="orderTitle">
+          <label class="flex items-start gap-2"><input type="radio" name="questionOrder" value="grouped" class="mt-1 accent-[#ed1c24]"><span>Grouped by type (Realistic, Investigative, Artistic, Social, Enterprising, Conventional)</span></label>
+          <label class="flex items-start gap-2"><input type="radio" name="questionOrder" value="shuffled" class="mt-1 accent-[#ed1c24]"><span>Shuffled for each student</span></label>
+        </div>
+        <p class="mt-3 text-xs text-slate-500">When shuffled, each student gets their own order, which stays the same if they leave and come back, and the type of each question is not shown. Scoring does not change: every answer still counts toward its own type, and each type is scored on the same 10 to 50 scale.</p>
+      </section>
+
       <div id="dimensionGroups" class="flex flex-col gap-6 max-w-4xl"></div>
 
       </div>
@@ -255,8 +264,31 @@
     wrap.removeAttribute('aria-busy');
     questions = data.questions || [];
     balance = data.balance || null;
+    renderOrder(!!data.shuffle);
     render();
   }
+
+  // Question order (Admin and Co-admins change it; View Only sees it). Saved at once, and logged in the Audit Log.
+  function renderOrder(shuffle) {
+    document.getElementById('orderCard').classList.remove('hidden');
+    document.querySelectorAll('input[name="questionOrder"]').forEach(function(r) {
+      r.checked = (r.value === 'shuffled') === shuffle;
+      r.disabled = !canEdit;
+    });
+  }
+  document.querySelectorAll('input[name="questionOrder"]').forEach(function(r) {
+    r.addEventListener('change', async function() {
+      const on = r.value === 'shuffled';
+      let data;
+      try { data = await send('POST', { action: 'setShuffle', on: on }); } catch (e) { data = {}; }
+      if (!data.success) {
+        showToast(data.error || 'Could not save the question order.', true);
+        renderOrder(!on);
+        return;
+      }
+      showToast(on ? 'Students now see the questions in a shuffled order.' : 'Students now see the questions grouped by type.');
+    });
+  });
 
   function renderBanner() {
     const el = document.getElementById('balanceBanner');

@@ -1,7 +1,7 @@
 <?php
 // Black-box tests for the panel revisions: staff sign-up and invitations (S1), no access before approval and activation
 // (S2), pasted access codes (S3), counseling booking status (S11), the escalation process with outcomes (S12),
-// resolved at / resolved by and the History of closed flags (S13), and logged refusals (S14).
+// resolved at / resolved by and the History of closed flags (S13), logged refusals (S14), the shuffled question order (S17), and the new FAQ entries (S18).
 //   DB_NAME=profilepath_test php -S 127.0.0.1:8099 router.php
 //   DB_NAME=profilepath_test php tests/panel_revisions_http_test.php http://127.0.0.1:8099
 // Emails are never sent (no mail key); the test issues the codes an email would have carried.
@@ -200,6 +200,51 @@ echo "\n=== S14: refused security changes are logged ===\n";
 $r = $coun->req('POST', '/api/security-config.php', ['type' => 'settings', 'timeoutMinutes' => 60]);
 check('a counselor cannot change the session timeout', $r['code'] === 403);
 check('the attempt is in the Audit Log', (bool) $pdo->query("SELECT 1 FROM audit_log WHERE action = 'security_config_denied' AND actor_user_id = $counselorId")->fetchColumn());
+
+echo "\n=== S17: shuffled question order, same scoring ===\n";
+$s = $pdo->prepare("INSERT INTO users (role, username, password_hash, email, email_verified_at, approval_status) VALUES ('student', 'qarevshuf', ?, 'qarevshuf@live.mcl.edu.ph', NOW(), 'approved') RETURNING id");
+$s->execute([$hash('Qa-Shuffle-1234!')]);
+$shufId = (int) $s->fetchColumn();
+$pdo->prepare("INSERT INTO students (user_id, school_id, first_name_enc, last_name_enc, strand, grade_level, section) VALUES (?, 'qarevshuf', ?, ?, 'STEM', '12', 'QA-R')")
+    ->execute([$shufId, Crypto::enc('Qa'), Crypto::enc('Shuffle')]);
+$stu = new Client($base);
+check('a student signs in', $stu->login('qarevshuf', 'Qa-Shuffle-1234!', 'student')['code'] === 200);
+$plain = $stu->json($stu->raw('GET', '/api/assessment-questions.php'));
+check('by default the questions come grouped by type, with no shuffled order', !empty($plain['questions']) && !isset($plain['displayOrder']), json_encode(array_keys($plain)));
+$r = $stu->req('POST', '/api/assessment-questions.php', ['action' => 'setShuffle', 'on' => true]);
+check('a student cannot change the question order', $r['code'] === 403, (string) $r['code']);
+$r = $admin->req('POST', '/api/assessment-questions.php', ['action' => 'setShuffle', 'on' => true]);
+check('the administrator turns on "Shuffled for each student"', $r['code'] === 200 && ($admin->json($r)['shuffle'] ?? null) === true, $r['body']);
+check('the change is in the Audit Log', (bool) $pdo->query("SELECT 1 FROM audit_log WHERE action = 'update_question_order' AND target_id = 'assessment.shuffleQuestions'")->fetchColumn());
+check('the Question Bank page reads the setting', ($admin->json($admin->raw('GET', '/api/assessment-questions.php?all=1'))['shuffle'] ?? null) === true);
+$sh = $stu->json($stu->raw('GET', '/api/assessment-questions.php'));
+$order = $sh['displayOrder'] ?? [];
+$sorted = $order; sort($sorted);
+check('the student gets an order that shows every question once', count($order) === count($sh['questions'] ?? []) && $sorted === range(0, count($order) - 1), json_encode($order));
+check('the questions themselves stay in the standard order (answers are scored in that order)', array_column($sh['questions'] ?? [], 'id') === array_column($plain['questions'], 'id'));
+check('the same student gets the same order again', ($stu->json($stu->raw('GET', '/api/assessment-questions.php'))['displayOrder'] ?? null) === $order);
+$admin->req('POST', '/api/assessment-questions.php', ['action' => 'setShuffle', 'on' => false]);
+check('turned off, the questions are grouped by type again', !isset($stu->json($stu->raw('GET', '/api/assessment-questions.php'))['displayOrder']));
+$pdo->exec("DELETE FROM security_policies WHERE key = 'assessment.shuffleQuestions'");
+
+echo "\n=== S18: FAQ entries on assessment scheduling and the booking link ===\n";
+require_once __DIR__ . '/../modules/Counseling/lib/Faq.php';
+$pdo->prepare('DELETE FROM security_policies WHERE key = ?')->execute([Faq::PANEL_ENTRIES_KEY]);
+$panelQs = [];
+foreach (Faq::panelEntries() as $aud => $items) { foreach ($items as [$q]) { $panelQs[$aud][] = $q; } }
+$pdo->exec("DELETE FROM faqs WHERE question IN ('" . implode("','", array_map(fn($q) => str_replace("'", "''", $q), array_merge(...array_values($panelQs)))) . "')");
+$staffFaqs = array_column($admin->json($admin->raw('GET', '/api/faqs.php?audience=staff'))['faqs'] ?? [], 'question');
+check('the staff Help Center has the new entries', !array_diff($panelQs['staff'], $staffFaqs), json_encode($staffFaqs));
+check('they come after the FAQs that were already there', array_slice($staffFaqs, -count($panelQs['staff'])) === $panelQs['staff']);
+$studentFaqs = array_column($stu->json($stu->raw('GET', '/api/faqs.php'))['faqs'] ?? [], 'question');
+check('the student Help Center has the new entries', !array_diff($panelQs['student'], $studentFaqs), json_encode($studentFaqs));
+check('reading again adds nothing twice', count(array_column($admin->json($admin->raw('GET', '/api/faqs.php?audience=staff'))['faqs'] ?? [], 'question')) === count($staffFaqs));
+$oneId = (int) $pdo->query("SELECT id FROM faqs WHERE audience = 'student' AND question = 'What if I miss my assessment session?'")->fetchColumn();
+$r = $admin->req('POST', '/api/faqs.php', ['type' => 'delete', 'id' => $oneId]);
+$after = array_column($stu->json($stu->raw('GET', '/api/faqs.php'))['faqs'] ?? [], 'question');
+check('an entry staff delete stays deleted', $r['code'] === 200 && !in_array('What if I miss my assessment session?', $after, true), $r['body']);
+$pdo->exec("DELETE FROM faqs WHERE question IN ('" . implode("','", array_map(fn($q) => str_replace("'", "''", $q), array_merge(...array_values($panelQs)))) . "')");
+$pdo->prepare('DELETE FROM security_policies WHERE key = ?')->execute([Faq::PANEL_ENTRIES_KEY]);
 
 $cleanup();
 $pdo->exec("DELETE FROM security_policies WHERE key = 'booking.url'");

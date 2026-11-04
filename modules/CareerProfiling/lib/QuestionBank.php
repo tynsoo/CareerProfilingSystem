@@ -19,6 +19,8 @@ class QuestionBank
     public const MAX_ANSWER = 5;
     /** The scale stored scores use: 50 is "answered 5 to every question of that type". */
     public const SCORE_SCALE = 50;
+    /** security_policies key: 'true' shows the questions in a shuffled order, one order for each student. */
+    public const SHUFFLE_KEY = 'assessment.shuffleQuestions';
 
     /**
      * The 30 questions of the O*NET Mini Interest Profiler (Mini-IP, 5 per type), as printed in Appendix A of
@@ -126,5 +128,34 @@ class QuestionBank
         // round(10 x raw / n) with halves up = floor((20 x raw + n) / (2n))
         $scale = intdiv(self::SCORE_SCALE, self::MAX_ANSWER);   // 10
         return intdiv(2 * $scale * $rawTotal + $questionsInType, 2 * $questionsInType);
+    }
+
+    /** Whether the Question Bank's "Shuffled for each student" option is on (off unless saved as 'true'). */
+    public static function shuffleOn(PDO $pdo): bool
+    {
+        $stmt = $pdo->prepare('SELECT value FROM security_policies WHERE key = ?');
+        $stmt->execute([self::SHUFFLE_KEY]);
+        return $stmt->fetchColumn() === 'true';
+    }
+
+    /**
+     * The order one student sees the questions in when shuffling is on: the positions of the questions in the
+     * standard order (R, I, A, S, E, C), shuffled. Only the display changes: the page still sends the answers in
+     * the standard order, so each answer counts toward its own type and every type is scored the same way.
+     * The order is worked out from the student and the question set, so it stays the same when the student
+     * leaves and comes back, or moves to another PC, and differs from one student to the next.
+     *
+     * @param array<int,int> $ids the active question ids in the standard order
+     * @return array<int,int> positions 0..n-1 in display order
+     */
+    public static function displayOrder(int $studentId, array $ids): array
+    {
+        $set = implode(',', $ids);
+        $keys = [];
+        foreach (array_values($ids) as $pos => $id) {
+            $keys[$pos] = hash('sha256', $studentId . '|' . $set . '|' . $id);
+        }
+        asort($keys, SORT_STRING);
+        return array_keys($keys);
     }
 }

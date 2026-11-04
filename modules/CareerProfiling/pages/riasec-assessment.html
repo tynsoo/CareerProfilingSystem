@@ -289,6 +289,15 @@
     return { start: first, end: first + (dimTotal[code] || 0) };
   }
   const QUESTION_SET = QUESTIONS.map(function(q) { return q.id; }).join(',');
+  // "Shuffled for each student" (Question Bank page): the server sends the order to show the questions in, the same
+  // order every time for this student. state.answers stays in the standard order (answers[i] is QUESTIONS[i]), so
+  // saving, the type of each answer and the scoring do not change. currentIndex below is a position in ORDER.
+  const SHUFFLED = (function(o) {
+    if (!Array.isArray(o) || o.length !== TOTAL) return false;
+    const seen = {};
+    return o.every(function(i) { const ok = Number.isInteger(i) && i >= 0 && i < TOTAL && !seen[i]; seen[i] = true; return ok; });
+  })(questionsData.displayOrder);
+  const ORDER = SHUFFLED ? questionsData.displayOrder : QUESTIONS.map(function(q, i) { return i; });
 
   // Answers are saved on the server as the student goes (api/assessment-progress.php), so signing
   // out, a crash or another PC loses nothing, and each save keeps the student signed in. A copy stays
@@ -430,7 +439,7 @@
       sendProgress();
     }, 4 * 60 * 1000);
   }
-  let currentIndex = state.answers.findIndex(function(a) { return a === null; });
+  let currentIndex = ORDER.findIndex(function(i) { return state.answers[i] === null; });
   if (currentIndex === -1) currentIndex = TOTAL - 1;
 
   function isDimensionComplete(dimIndex) {
@@ -443,14 +452,16 @@
   }
 
   function furthestAnsweredCount() {
-    const idx = state.answers.findIndex(function(a) { return a === null; });
+    const idx = ORDER.findIndex(function(i) { return state.answers[i] === null; });
     return idx === -1 ? TOTAL : idx;
   }
 
   function renderTabs() {
     const wrap = document.getElementById('dimensionTabs');
+    // Shuffled questions are not grouped by type, so there are no type tabs to show.
+    if (SHUFFLED) { wrap.classList.add('hidden'); return; }
     wrap.innerHTML = DIMENSIONS.map(function(dim, i) {
-      const active = dim.code === QUESTIONS[currentIndex].dimension;
+      const active = dim.code === QUESTIONS[ORDER[currentIndex]].dimension;
       const completed = isDimensionComplete(i);
       let cls;
       if (active) {
@@ -478,7 +489,7 @@
 
   function renderOptions() {
     const list = document.getElementById('optionsList');
-    const selected = state.answers[currentIndex];
+    const selected = state.answers[ORDER[currentIndex]];
     list.innerHTML = OPTIONS.map(function(label, i) {
       const value = i + 1;
       const isSelected = selected === value;
@@ -496,7 +507,7 @@
 
     list.querySelectorAll('.option-row').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        state.answers[currentIndex] = parseInt(btn.dataset.value, 10);
+        state.answers[ORDER[currentIndex]] = parseInt(btn.dataset.value, 10);
         saveProgress(state);
         renderOptions();
         renderTabs(); // answering the last question in a dimension should mark it "done" right away
@@ -507,7 +518,7 @@
 
   function updateNavButtons() {
     const btn = document.getElementById('nextBtn');
-    const answered = state.answers[currentIndex] !== null;
+    const answered = state.answers[ORDER[currentIndex]] !== null;
     btn.disabled = !answered;
     if (answered) {
       btn.className = 'flex items-center gap-2 rounded-md px-7 py-2.5 text-sm font-semibold border border-[#ed1c24] bg-[#ed1c24] text-white transition-colors hover:opacity-90';
@@ -556,8 +567,11 @@
   }
 
   function renderQuestion() {
-    const q = QUESTIONS[currentIndex];
-    document.getElementById('questionMeta').textContent = q.label + ' - Question ' + q.indexInDim + ' out of ' + dimTotal[q.dimension];
+    const q = QUESTIONS[ORDER[currentIndex]];
+    // Shuffled: the type is not named, so the order does not hint at what each question measures.
+    document.getElementById('questionMeta').textContent = SHUFFLED
+      ? 'Question ' + (currentIndex + 1) + ' out of ' + TOTAL
+      : q.label + ' - Question ' + q.indexInDim + ' out of ' + dimTotal[q.dimension];
     // O*NET-style items are activities ("Build kitchen cabinets"); statements that already start with "I " need no prompt.
     document.getElementById('questionPrompt').classList.toggle('hidden', /^I\s/.test(q.text));
     document.getElementById('questionText').textContent = q.text;
@@ -579,7 +593,7 @@
   }
 
   document.getElementById('nextBtn').addEventListener('click', async function() {
-    if (state.answers[currentIndex] === null) return;
+    if (state.answers[ORDER[currentIndex]] === null) return;
 
     if (currentIndex === TOTAL - 1) {
       const nextBtn = document.getElementById('nextBtn');
