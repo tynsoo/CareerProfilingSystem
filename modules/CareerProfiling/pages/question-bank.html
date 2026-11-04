@@ -138,6 +138,8 @@
           <p id="historyIntro" class="text-xs text-slate-500 mt-1">Every change to the questions and the question order, newest first: who made it, when, and what changed. Kept in the Audit Log.</p>
         </div>
         <ol id="historyList" class="divide-y divide-slate-100" aria-busy="true"></ol>
+        <!-- Filled by PP.pager: "Showing 1 to 25 of N changes", Rows per page and the page buttons. -->
+        <div id="historyPager" class="border-t border-slate-200"></div>
       </section>
 
       </div>
@@ -267,6 +269,7 @@
   }
 
   let questions = [];
+  let questionsLoadedOnce = false;
   let balance = null;
   const showHidden = {};
 
@@ -282,24 +285,53 @@
     const d = new Date(iso);
     return isNaN(d) ? '' : d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
   }
-  async function loadHistory() {
+  // One page at a time, like the other staff lists (PP.pager). Page and rows per page stay in the address
+  // (?view=history&page=2&pageSize=50). Loaded only while its tab is open: a change to the questions or the order marks
+  // it out of date, and opening the tab again shows page 1 with that change on top.
+  const historySection = document.getElementById('historySection');
+  const historyState = PP.listState({ page: 1, pageSize: 25 });
+  const savedHistory = historyState.read();
+  let historyPage = savedHistory.page;
+  let historyPageSize = [25, 50, 100].indexOf(savedHistory.pageSize) !== -1 ? savedHistory.pageSize : 25;
+  let historyStale = true;   // nothing loaded yet, or a change was made since
+  let historyRequest = 0;    // only the newest answer is drawn
+  const historyPager = PP.pager('historyPager', {
+    noun: ['change', 'changes'], label: 'Change history pages', pageSize: historyPageSize, emptyText: 'No changes recorded yet',
+    onChange: function(p, size, focusRole) { historyPage = p; historyPageSize = size; loadHistory(focusRole, true); }
+  });
+  function historyMessage(text) {
+    historyList.replaceChildren(historyNode('li', 'px-5 py-4 text-sm text-slate-500', text));
+  }
+  async function loadHistory(focusRole, scrollToTop) {
+    const ticket = ++historyRequest;
+    historyList.setAttribute('aria-busy', 'true');
+    historyPager.loading();
+    if (historyStale) historyList.innerHTML = '<li class="px-5 py-4">' + PP.skeleton.lines(4, 16) + '</li>';
     let data;
     try {
-      data = await PP.fetchJson('api/assessment-questions.php?history=1');
+      data = await PP.fetchJson('api/assessment-questions.php?history=1&page=' + historyPage + '&pageSize=' + historyPageSize);
     } catch (e) {
-      historyList.replaceChildren(historyNode('li', 'px-5 py-4 text-sm text-slate-500', 'The change history could not be loaded.'));
+      if (ticket !== historyRequest) return;
       historyList.removeAttribute('aria-busy');
+      historyMessage('The change history could not be loaded.');
+      historyPager.clear();
       return;
     }
+    if (ticket !== historyRequest) return; // a newer page was asked for meanwhile
+    historyStale = false;
     historyList.removeAttribute('aria-busy');
+    historyPage = data.page;
+    historyPageSize = data.pageSize;
+    historyState.save({ page: historyPage, pageSize: historyPageSize });
     const rows = data.history || [];
+    historyPager.render({ page: data.page, pageSize: data.pageSize, total: data.total, totalPages: data.totalPages, startIndex: data.startIndex, shown: rows.length });
+    historyPager.focus(focusRole);
+    // A page turn from the buttons at the bottom goes back to the top of the list.
+    if (scrollToTop && historySection.getBoundingClientRect().top < 0) historySection.scrollIntoView({ block: 'start' });
     if (!rows.length) {
-      historyList.replaceChildren(historyNode('li', 'px-5 py-4 text-sm text-slate-500', 'No changes recorded yet.'));
+      historyMessage('No changes recorded yet.');
       return;
     }
-    const intro = document.getElementById('historyIntro');
-    intro.textContent = 'Every change to the questions and the question order, newest first: who made it, when, and what changed. Kept in the Audit Log.' +
-      (rows.length >= (data.limit || 100) ? ' Showing the latest ' + rows.length + '; the Audit Log has the rest.' : '');
     historyList.replaceChildren.apply(historyList, rows.map(function(h) {
       const li = historyNode('li', 'px-5 py-3 flex flex-col gap-1');
       const top = historyNode('div', 'flex flex-wrap items-baseline justify-between');
@@ -322,15 +354,27 @@
     }));
   }
 
+  // A question or the order changed: the history is out of date (redrawn now only if its tab is open).
+  function historyChanged() {
+    historyStale = true;
+    historyPage = 1;
+    if (!historySection.classList.contains('hidden')) loadHistory(null, false);
+  }
+
   // Tabs: Questions | Change history. ?view=history in the address keeps the tab after a reload.
   function showView(view) {
     const onHistory = view === 'history';
     document.getElementById('questionsView').classList.toggle('hidden', onHistory);
-    document.getElementById('historySection').classList.toggle('hidden', !onHistory);
+    historySection.classList.toggle('hidden', !onHistory);
     document.querySelectorAll('.qb-tab').forEach(function(t) { t.setAttribute('aria-pressed', String(t.dataset.view === view)); });
     const url = new URL(window.location.href);
-    if (onHistory) url.searchParams.set('view', 'history'); else url.searchParams.delete('view');
+    if (onHistory) {
+      url.searchParams.set('view', 'history');
+    } else {
+      ['view', 'page', 'pageSize'].forEach(function(k) { url.searchParams.delete(k); }); // the history's page belongs to its tab
+    }
     window.history.replaceState(null, '', url);
+    if (onHistory && historyStale) loadHistory(null, false);
   }
   document.querySelectorAll('.qb-tab').forEach(function(t) {
     t.addEventListener('click', function() { showView(t.dataset.view); });
@@ -352,7 +396,9 @@
     balance = data.balance || null;
     renderOrder(!!data.shuffle);
     render();
-    loadHistory(); // a change just made shows up at the top
+    // Every reload after the first one follows a change (add, edit, hide, delete, O*NET set).
+    if (questionsLoadedOnce) historyChanged();
+    questionsLoadedOnce = true;
   }
 
   // Question order (Admin and Co-admins change it; View Only sees it). Saved at once, and logged in the Audit Log.
@@ -374,7 +420,7 @@
         return;
       }
       showToast(on ? 'Students now see the questions in a shuffled order.' : 'Students now see the questions grouped by type.');
-      loadHistory();
+      historyChanged();
     });
   });
 

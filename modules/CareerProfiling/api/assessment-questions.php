@@ -38,18 +38,29 @@ function readText(array $body): string
  * for the question order, newest first, for staff who can see the Question Bank. Only question text, the order setting
  * and staff names: no student data is in these entries. An entry the Audit Log retention removed is gone here too.
  */
-function questionHistory(PDO $pdo, int $limit): array
+/** The audit entries that make up the history (one bound value: QuestionBank::SHUFFLE_KEY). */
+const QUESTION_HISTORY_WHERE = "(a.target_type = 'assessment_question'
+                AND a.action IN ('add_question', 'update_question', 'delete_question', 'load_question_set'))
+            OR (a.action = 'update_question_order' AND a.target_id = ?)";
+
+function questionHistoryCount(PDO $pdo): int
+{
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM audit_log a WHERE ' . QUESTION_HISTORY_WHERE);
+    $stmt->execute([QuestionBank::SHUFFLE_KEY]);
+    return (int) $stmt->fetchColumn();
+}
+
+/** One page of the history, newest first. Only these rows are decrypted. */
+function questionHistory(PDO $pdo, int $limit, int $offset = 0): array
 {
     $coAdminCol = Rbac::hasCoAdminColumn() ? 'u.is_co_admin' : 'FALSE AS is_co_admin'; // until db/migrate_add_co_admin.php runs
     $stmt = $pdo->prepare(
         "SELECT a.id, a.action, a.actor_role, a.detail_enc, a.created_at, u.id AS actor_found, u.full_name, u.staff_position, $coAdminCol
          FROM audit_log a LEFT JOIN users u ON u.id = a.actor_user_id
-         WHERE (a.target_type = 'assessment_question'
-                AND a.action IN ('add_question', 'update_question', 'delete_question', 'load_question_set'))
-            OR (a.action = 'update_question_order' AND a.target_id = ?)
-         ORDER BY a.id DESC LIMIT ?"
+         WHERE " . QUESTION_HISTORY_WHERE . "
+         ORDER BY a.id DESC LIMIT ? OFFSET ?"
     );
-    $stmt->execute([QuestionBank::SHUFFLE_KEY, $limit]);
+    $stmt->execute([QuestionBank::SHUFFLE_KEY, $limit, $offset]);
     $out = [];
     foreach ($stmt->fetchAll() as $r) {
         try {
@@ -91,8 +102,23 @@ function questionHistory(PDO $pdo, int $limit): array
 
 if ($method === 'GET' && isset($_GET['history'])) {
     Rbac::requireAccess('questionBank', 'limited');
-    $limit = 100;
-    jsonResponse(['history' => questionHistory($pdo, $limit), 'limit' => $limit]);
+    // Paged like the other staff lists (PP.pager: 25, 50 or 100 a page). A page past the end shows the last one.
+    $pageSize = (int) ($_GET['pageSize'] ?? 25);
+    if (!in_array($pageSize, [25, 50, 100], true)) {
+        $pageSize = 25;
+    }
+    $total = questionHistoryCount($pdo);
+    $totalPages = max(1, (int) ceil($total / $pageSize));
+    $page = min(max(1, (int) ($_GET['page'] ?? 1)), $totalPages);
+    $offset = ($page - 1) * $pageSize;
+    jsonResponse([
+        'history' => questionHistory($pdo, $pageSize, $offset),
+        'page' => $page,
+        'pageSize' => $pageSize,
+        'total' => $total,
+        'totalPages' => $totalPages,
+        'startIndex' => $total > 0 ? $offset + 1 : 0,
+    ]);
 }
 
 if ($method === 'GET') {
