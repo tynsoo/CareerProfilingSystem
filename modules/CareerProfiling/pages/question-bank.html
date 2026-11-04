@@ -109,6 +109,14 @@
         <button type="button" id="loadOnetBtn" class="shrink-0 border border-slate-300 text-slate-700 text-sm font-medium rounded-md px-4 py-2.5 hover:bg-slate-50">Use the O*NET 30-question set</button>
       </div>
 
+      <!-- Panel revision S15: the questions and their change history on two tabs (same tab buttons as the Help Center,
+           css/components.css .pp-filter-tab; aria-pressed marks the chosen one). -->
+      <div class="max-w-4xl mb-6 flex flex-wrap items-center gap-2" role="group" aria-label="Question Bank view">
+        <button type="button" id="tabQuestions" data-view="questions" aria-pressed="true" class="qb-tab pp-filter-tab">Questions</button>
+        <button type="button" id="tabHistory" data-view="history" aria-pressed="false" class="qb-tab pp-filter-tab">Change history</button>
+      </div>
+
+      <div id="questionsView">
       <div id="balanceBanner" class="hidden max-w-4xl mb-6 rounded-lg border px-4 py-3 text-sm" role="status"></div>
 
       <section id="orderCard" class="hidden max-w-4xl mb-6 bg-white border border-slate-200 rounded-lg px-5 py-4" aria-labelledby="orderTitle">
@@ -121,14 +129,15 @@
       </section>
 
       <div id="dimensionGroups" class="flex flex-col gap-6 max-w-4xl"></div>
+      </div>
 
       <!-- Panel revision S15: who changed which question (or the question order) and when (api/assessment-questions.php?history=1, from the Audit Log). -->
-      <section id="historySection" class="max-w-4xl mt-8 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden" aria-labelledby="historyTitle">
+      <section id="historySection" class="hidden max-w-4xl bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden" aria-labelledby="historyTitle">
         <div class="px-5 py-4 border-b border-slate-200">
           <h2 id="historyTitle" class="text-base font-bold text-slate-900">Change history</h2>
           <p id="historyIntro" class="text-xs text-slate-500 mt-1">Every change to the questions and the question order, newest first: who made it, when, and what changed. Kept in the Audit Log.</p>
         </div>
-        <ol id="historyList" class="divide-y divide-slate-100 overflow-y-auto" style="max-height:28rem" aria-busy="true"></ol>
+        <ol id="historyList" class="divide-y divide-slate-100" aria-busy="true"></ol>
       </section>
 
       </div>
@@ -312,6 +321,21 @@
       return li;
     }));
   }
+
+  // Tabs: Questions | Change history. ?view=history in the address keeps the tab after a reload.
+  function showView(view) {
+    const onHistory = view === 'history';
+    document.getElementById('questionsView').classList.toggle('hidden', onHistory);
+    document.getElementById('historySection').classList.toggle('hidden', !onHistory);
+    document.querySelectorAll('.qb-tab').forEach(function(t) { t.setAttribute('aria-pressed', String(t.dataset.view === view)); });
+    const url = new URL(window.location.href);
+    if (onHistory) url.searchParams.set('view', 'history'); else url.searchParams.delete('view');
+    window.history.replaceState(null, '', url);
+  }
+  document.querySelectorAll('.qb-tab').forEach(function(t) {
+    t.addEventListener('click', function() { showView(t.dataset.view); });
+  });
+  showView(new URLSearchParams(window.location.search).get('view') === 'history' ? 'history' : 'questions');
 
   async function loadQuestions() {
     const wrap = document.getElementById('dimensionGroups');
