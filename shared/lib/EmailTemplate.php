@@ -91,7 +91,9 @@ HTML;
 </td>
 </tr>
 HTML;
-        $codeSpaced = implode(' ', str_split($code)); // "482913" -> "4 8 2 9 1 3", easier to read at a glance
+        // The code is spaced out for reading with letter-spacing only, never with real spaces: "A B C D 2 3 4 5" copied
+        // out of the email was 15 characters and the 8-character box on the activation page cut it to "ABCD".
+        $codeSpaced = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
         return <<<HTML
 <!DOCTYPE html>
 <html lang="en">
@@ -114,7 +116,7 @@ HTML;
 </tr>
 <tr>
 <td style="padding:8px 32px 24px 32px;text-align:center;">
-<span style="display:inline-block;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 28px;font-size:28px;font-weight:700;letter-spacing:4px;color:#001c43;font-family:'Consolas',monospace;">{$codeSpaced}</span>
+<span style="display:inline-block;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 28px;font-size:28px;font-weight:700;letter-spacing:8px;color:#001c43;font-family:'Consolas',monospace;">{$codeSpaced}</span>
 </td>
 </tr>
 <tr>
