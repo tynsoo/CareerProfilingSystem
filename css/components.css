@@ -672,7 +672,8 @@ button.breakdown-row.is-picked:not(:disabled):hover {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 12px 24px 0;
+  /* 4px at the bottom so the focus ring of the last box is not cut off by the scrolling area (the access code box). */
+  padding: 12px 24px 4px;
   max-height: calc(100vh - 180px);
   overflow-y: auto;
   font-size: 14px;

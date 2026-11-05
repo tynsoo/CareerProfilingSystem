@@ -617,32 +617,55 @@
   PP.clearCache = clearAllCaches;
 
   // ---------- Code boxes (assessment access code, emailed 6-digit codes, staff activation code) ----------
-  // PP.codeInput(input, { digits: true }): a pasted or typed code keeps only its letters and digits, upper case. A code
-  // copied from an email often brings a space, a line break, a non-breaking space or a dash along. With maxlength on
-  // the box, a leading space alone pushed the last character out, so a correct code read as "invalid". The paste is
-  // cleaned before maxlength applies; the server cleans it again (shared/lib/CodeInput.php).
+  // PP.codeInput(input, { digits: true, length: 6 }): a pasted or typed code keeps only its letters and digits, upper
+  // case. A code copied from an email or chat often brings a space, a line break, a non-breaking space, a dash, or the
+  // words around it ("Access code: 7C3E91") along. With maxlength on the box, the browser cut the paste before it was
+  // cleaned, so a leading space or label pushed characters out and a correct code read as "invalid". The box now
+  // takes the whole paste, cleans it, picks the code out of any words around it (length), and only then applies its
+  // maxlength. The server cleans it again (shared/lib/CodeInput.php).
+  var INVISIBLE = /[\s\u00A0\u200B-\u200D\u2060\uFEFF]+/g;
   PP.cleanCode = function (text, digitsOnly) {
-    var cleaned = String(text || '').replace(/[\s ​-‍⁠﻿]+/g, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    var cleaned = String(text || '').replace(INVISIBLE, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     return digitsOnly ? cleaned.replace(/\D/g, '') : cleaned;
+  };
+  // Same rule as CodeInput::pick(): if the cleaned text is not exactly `length` long, use the last pasted word of
+  // exactly that length, preferring one with a digit in it, so "Access code: 7C3E91" gives "7C3E91".
+  PP.pickCode = function (text, length, digitsOnly) {
+    var cleaned = PP.cleanCode(text, digitsOnly);
+    if (!length || cleaned.length === length) return cleaned;
+    var words = String(text || '').replace(INVISIBLE, ' ').split(/[^A-Za-z0-9]+/).map(function (w) {
+      return PP.cleanCode(w, digitsOnly);
+    }).filter(function (w) { return w.length === length; });
+    var withDigit = words.filter(function (w) { return /\d/.test(w); });
+    if (withDigit.length) return withDigit[withDigit.length - 1];
+    return words.length ? words[words.length - 1] : cleaned;
   };
   PP.codeInput = function (input, opts) {
     if (!input || input.dataset.ppCode) return input;
     input.dataset.ppCode = '1';
     var digitsOnly = !!(opts && opts.digits);
+    var length = (opts && opts.length) || 0;
     var max = parseInt(input.getAttribute('maxlength'), 10) || 0;
+    // The browser would cut a paste or a phone's clipboard suggestion at maxlength before it is cleaned, so the
+    // limit is applied here instead, after cleaning.
+    input.removeAttribute('maxlength');
     input.setAttribute('autocorrect', 'off');
     input.setAttribute('autocapitalize', digitsOnly ? 'off' : 'characters');
     input.setAttribute('spellcheck', 'false');
+    function tidy(text) {
+      var code = PP.pickCode(text, length, digitsOnly);
+      return max ? code.slice(0, max) : code;
+    }
     input.addEventListener('paste', function (e) {
-      var text = (e.clipboardData || window.clipboardData) ? (e.clipboardData || window.clipboardData).getData('text') : null;
+      var data = e.clipboardData || window.clipboardData;
+      var text = data ? data.getData('text') : null;
       if (text == null) return;
       e.preventDefault();
-      var code = PP.cleanCode(text, digitsOnly);
-      input.value = max ? code.slice(0, max) : code;
+      input.value = tidy(text);
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
     input.addEventListener('input', function () {
-      var code = PP.cleanCode(input.value, digitsOnly);
+      var code = tidy(input.value);
       if (code !== input.value) input.value = code;
     });
     return input;

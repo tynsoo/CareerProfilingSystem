@@ -227,7 +227,7 @@
     <div class="pp-dialog-form">
     <p class="text-sm text-gray-500">Your Guidance Office provides this code for the current assessment period.</p>
     <div>
-      <input type="text" id="accessCodeInput" maxlength="12" autocomplete="off" class="w-full border border-gray-300 rounded-md px-4 py-3 text-sm tracking-[3px] text-center uppercase focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent" placeholder="ACCESS CODE">
+      <input type="text" id="accessCodeInput" maxlength="12" autocomplete="off" inputmode="text" aria-label="Access code" class="w-full border border-gray-300 rounded-md px-4 py-3 font-mono text-base tracking-wide text-center uppercase focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent" placeholder="ACCESS CODE">
       <p id="accessCodeError" class="hidden text-sm text-[#ed1c24] mt-2" aria-live="polite"></p>
     </div>
     </div>
@@ -314,7 +314,8 @@
   honestyCheckbox.addEventListener('change', updateBeginState);
 
   const modal = document.getElementById('accessCodeModal');
-  const input = PP.codeInput(document.getElementById('accessCodeInput')); // spaces copied along with the code are dropped
+  // Spaces, line breaks and words copied along with the code ("Access code: 7C3E91") are dropped; codes are 6 characters.
+  const input = PP.codeInput(document.getElementById('accessCodeInput'), { length: 6 });
   const errorEl = document.getElementById('accessCodeError');
   const submitBtn = document.getElementById('accessCodeSubmit');
 
@@ -373,7 +374,7 @@
   }
 
   async function submitCode() {
-    const code = PP.cleanCode(input.value);
+    const code = PP.pickCode(input.value, 6);
     if (!code) {
       errorEl.textContent = 'Enter the access code.';
       errorEl.classList.remove('hidden');
