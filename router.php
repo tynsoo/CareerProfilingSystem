@@ -142,6 +142,7 @@ if (isset(PROTECTED_PAGES[$slug])) {
     if ($user['role'] !== 'student') {
         $roleKey = Rbac::roleKey($user);
         if (!Rbac::pageOpen($slug, $roleKey)) {
+            Rbac::logRefusedPage($user, $slug); // written to the Audit Log (panel revision S14)
             header('Location: /' . Rbac::firstOpenPage($roleKey) . '?denied=1');
             return true;
         }

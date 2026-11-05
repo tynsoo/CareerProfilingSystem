@@ -203,6 +203,9 @@ check('the attempt is in the Audit Log', (bool) $pdo->query("SELECT 1 FROM audit
 $r = $coun->req('GET', '/api/audit-log.php');
 check('a counselor who is not a co-admin cannot open the Audit Log (hidden from them)', $r['code'] === 403, (string) $r['code']);
 check('that refused request is in the Audit Log too', (bool) $pdo->query("SELECT 1 FROM audit_log WHERE action = 'access_denied' AND target_id = 'audit-log.php' AND actor_user_id = $counselorId")->fetchColumn());
+$r = $coun->raw('GET', '/audit-log');
+check('typing the Audit Log address sends a counselor elsewhere', $r['code'] === 302 && str_contains($r['headers'], 'denied=1'), (string) $r['code']);
+check('and that attempt is in the Audit Log', (bool) $pdo->query("SELECT 1 FROM audit_log WHERE action = 'access_denied' AND target_id = 'page:audit-log' AND actor_user_id = $counselorId")->fetchColumn());
 
 echo "\n=== S17: shuffled question order, same scoring ===\n";
 $s = $pdo->prepare("INSERT INTO users (role, username, password_hash, email, email_verified_at, approval_status) VALUES ('student', 'qarevshuf', ?, 'qarevshuf@live.mcl.edu.ph', NOW(), 'approved') RETURNING id");

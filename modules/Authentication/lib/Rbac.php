@@ -514,6 +514,15 @@ class Rbac
         }
     }
 
+    /**
+     * A staff page the person may not open (typed into the address bar, or an old bookmark), refused by router.php.
+     * Logged like a refused API request (panel revision S14), with the same 10-minute limit per person and page.
+     */
+    public static function logRefusedPage(array $user, string $page): void
+    {
+        self::logDenied($user, 'page:' . $page, null, 'Refused: tried to open the ' . $page . ' page');
+    }
+
     /** The API file a refused request was for ("audit-log.php"), so role-gated endpoints are logged like table-gated ones. */
     private static function requestedEndpoint(): string
     {
