@@ -47,8 +47,9 @@ if (RateLimiter::isLimited('access-code:' . $user['id'], 3, 5)) {
 }
 
 $body = readJsonBody();
-// Spaces, line breaks and dashes copied along with the code are dropped (shared/lib/CodeInput.php).
-$submitted = CodeInput::clean((string) ($body['code'] ?? ''));
+// Spaces, line breaks and dashes copied along with the code are dropped, and a code pasted with the words around it
+// ("Access code: 7C3E91") is picked out of them (shared/lib/CodeInput.php). Access codes are 6 characters long.
+$submitted = CodeInput::pick((string) ($body['code'] ?? ''), 6);
 
 if ($submitted === '') {
     jsonResponse(['success' => false, 'error' => 'Enter the assessment access code.'], 400);

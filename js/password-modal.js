@@ -186,7 +186,7 @@
     $('pwCodeUntil').textContent = ' (until ' + until.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ')';
     $('pwCode').value = '';
   }
-  if (window.PP && PP.codeInput) PP.codeInput($('pwCode'), { digits: true });
+  if (window.PP && PP.codeInput) PP.codeInput($('pwCode'), { digits: true, length: 6 });
 
   $('pwVerify').addEventListener('click', function () {
     var err = $('pwCodeError'); hideMsg(err);

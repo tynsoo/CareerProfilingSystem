@@ -102,7 +102,7 @@
     var params = new URLSearchParams(location.search);
     var form = document.getElementById('activateForm');
     if (params.get('u')) form.identifier.value = params.get('u');
-    PP.codeInput(form.code); // spaces or dashes pasted along with the code are dropped
+    PP.codeInput(form.code, { length: 8 }); // spaces, dashes or words pasted along with the 8-character code are dropped
 
     form.addEventListener('submit', async function(e) {
       e.preventDefault();
