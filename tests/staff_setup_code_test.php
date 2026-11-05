@@ -30,6 +30,8 @@ check('200 codes are all different', count($many) === 200);
 echo "\n=== typing the code ===\n";
 check('lower case, dashes and spaces are ignored', StaffSetupCode::normalize('abcd-2345') === 'ABCD2345' && StaffSetupCode::normalize(' ab cd 23 45 ') === 'ABCD2345');
 check('the same code gives the same hash however it is typed', StaffSetupCode::hash(5, 'abcd-2345') === StaffSetupCode::hash(5, 'ABCD2345'));
+check('the code copied out of the email with spaces between the letters works', StaffSetupCode::normalize("A B C D 2 3 4 5\n") === 'ABCD2345');
+check('the code is picked out of a pasted email line', StaffSetupCode::normalize('Temporary access code: ABCD2345') === 'ABCD2345');
 check('the hash is tied to the account (another user\'s code does not work)', StaffSetupCode::hash(5, 'ABCD2345') !== StaffSetupCode::hash(6, 'ABCD2345'));
 check('the hash is not the plain code', strpos(StaffSetupCode::hash(5, 'ABCD2345'), 'ABCD2345') === false);
 check('it cannot double as an email-verification link token', StaffSetupCode::hash(5, 'ABCD2345') !== hash('sha256', 'ABCD2345'));

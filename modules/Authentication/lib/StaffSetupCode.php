@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../../../shared/lib/CodeInput.php';
+
 /**
  * The temporary access code a staff member gets by email once an administrator approves
  * their sign-up. They enter it on the activation page and then create their own
@@ -28,10 +30,13 @@ class StaffSetupCode
         return $code;
     }
 
-    /** Letters/digits only, upper case: "abcd-2345" -> "ABCD2345". */
+    /**
+     * Letters/digits only, upper case: "abcd-2345" -> "ABCD2345", " A B C D 2 3 4 5 " -> "ABCD2345", and the code is
+     * picked out of a pasted line such as "Temporary access code: ABCD2345" (shared/lib/CodeInput.php).
+     */
     public static function normalize(string $code): string
     {
-        return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
+        return CodeInput::pick($code, self::LENGTH);
     }
 
     public static function hash(int $userId, string $code): string
