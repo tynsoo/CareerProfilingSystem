@@ -499,7 +499,7 @@ class Rbac
      * from the screen is not enough on its own, the attempt is kept as well. At most one entry per person and feature
      * every 10 minutes, so a page left open does not flood the log. A logging failure never changes the answer.
      */
-    private static function logDenied(array $user, string $module, string $minLevel): void
+    private static function logDenied(array $user, string $module, ?string $minLevel, ?string $detail = null): void
     {
         try {
             require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
@@ -508,10 +508,18 @@ class Rbac
                 return;
             }
             AuditLogger::log((int) $user['id'], (string) $user['role'], 'access_denied', 'rbac', mb_substr($module, 0, 50),
-                'Refused: needs ' . ($minLevel === 'full' ? 'Full' : 'View Only') . ' on ' . $module . ', has ' . self::accessLevel($module, self::roleKey($user)));
+                $detail ?? ('Refused: needs ' . ($minLevel === 'full' ? 'Full' : 'View Only') . ' on ' . $module . ', has ' . self::accessLevel($module, self::roleKey($user))));
         } catch (\Throwable $e) {
             error_log('[rbac] could not log a refused request: ' . $e->getMessage());
         }
+    }
+
+    /** The API file a refused request was for ("audit-log.php"), so role-gated endpoints are logged like table-gated ones. */
+    private static function requestedEndpoint(): string
+    {
+        $path = (string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+        $name = basename($path);
+        return $name !== '' ? $name : 'unknown';
     }
 
     /**
@@ -528,6 +536,9 @@ class Rbac
     {
         $user = Auth::requireLogin();
         if (!self::isAdminOrCoAdmin($user)) {
+            // Logged like any refused permission check (panel revision S14): the Audit Log is hidden from other staff.
+            $endpoint = self::requestedEndpoint();
+            self::logDenied($user, $endpoint, null, 'Refused: ' . $endpoint . ' is for the administrator or a co-admin');
             http_response_code(403);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Forbidden']);
@@ -546,6 +557,9 @@ class Rbac
     {
         $user = Auth::requireLogin();
         if (!in_array($user['role'], $roles, true)) {
+            // Logged like any refused permission check (panel revision S14).
+            $endpoint = self::requestedEndpoint();
+            self::logDenied($user, $endpoint, null, 'Refused: ' . $endpoint . ' is for ' . implode(' or ', $roles) . ' only');
             http_response_code(403);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Forbidden']);
