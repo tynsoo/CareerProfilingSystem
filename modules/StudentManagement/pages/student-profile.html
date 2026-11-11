@@ -235,6 +235,9 @@
                   </label>
                   <button type="button" id="counselingStatusSave" class="pp-btn pp-btn-secondary">Save status</button>
                 </div>
+                <!-- Invite to counseling (the CGC booking link by email and notification, api/counseling-invite.php): shown when
+                     the student has no active invitation (Invited or Booked) and this person may invite. -->
+                <button type="button" id="counselingInviteBtn" class="hidden pp-btn pp-btn-secondary mt-3">Invite to counseling</button>
                 <p id="counselingStatusMsg" class="hidden text-xs mt-2"></p>
               </div>
 
@@ -471,7 +474,9 @@
   // attend (Did Not Avail), Declined or Cancelled here once they have checked the CGC booking system.
   const canUpdateCounseling = PP.may(currentUser, 'counselingStatus', 'full') && (currentUser.rbacRole || currentUser.role) !== 'facilitator';
   let counselingInvite = null;
+  let counselingStudent = null;
   function renderCounseling(s) {
+    counselingStudent = s;
     const box = document.getElementById('counselingBox');
     const text = s.counseling || 'No request';
     document.getElementById('counselingField').textContent = text;
@@ -495,7 +500,37 @@
       select.value = counselingInvite.status;
       document.getElementById('counselingSessionDate').value = counselingInvite.sessionDate || '';
     }
+    // A deactivated account cannot be invited (isActive is null when the account state is not sent; the server decides).
+    const canInviteNow = canUpdateCounseling && s.isActive !== false && !(counselingInvite && counselingInvite.active);
+    document.getElementById('counselingInviteBtn').classList.toggle('hidden', !canInviteNow);
   }
+  async function reloadCounseling() {
+    const fresh = await (await fetch('api/students.php?id=' + encodeURIComponent(studentUserId))).json().catch(function() { return null; });
+    if (fresh && fresh.student) renderCounseling(fresh.student);
+  }
+  document.getElementById('counselingInviteBtn').addEventListener('click', async function() {
+    const btn = this, msg = document.getElementById('counselingStatusMsg');
+    const who = (counselingStudent && counselingStudent.name) || 'This student';
+    if (!(await PP.confirm(who + ' will be sent the CGC booking link by email and in their notifications.', { title: 'Invite to a counseling session?', okLabel: 'Send invitation' }))) return;
+    btn.disabled = true;
+    let data = null;
+    try {
+      const res = await fetch('api/counseling-invite.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId: Number(studentUserId) }) });
+      data = await res.json();
+    } catch (e) {}
+    btn.disabled = false;
+    msg.classList.remove('hidden');
+    if (!data || !data.success) {
+      msg.textContent = (data && data.error) || 'Could not send the invitation.';
+      msg.className = 'text-xs mt-2 text-[#ed1c24]';
+    } else {
+      msg.textContent = data.emailSent ? 'Invitation sent by email and notification.'
+        : 'Notification sent. The email could not be sent' + (data.hasEmail ? '.' : ' because this student has no verified email.');
+      msg.className = 'text-xs mt-2 ' + (data.emailSent ? 'text-green-700' : 'text-amber-700');
+    }
+    // Sent now, or already active: the status, its source and the editor follow what was saved.
+    if (data && (data.success || data.active)) await reloadCounseling();
+  });
   document.getElementById('counselingStatusSave').addEventListener('click', async function() {
     if (!counselingInvite) return;
     const btn = this, msg = document.getElementById('counselingStatusMsg');
@@ -518,8 +553,7 @@
     msg.textContent = 'Saved: ' + data.statusLabel + '.';
     msg.className = 'text-xs mt-2 text-green-700';
     // Reload the student so the status, its color and the Invite state come from what was saved.
-    const fresh = await (await fetch('api/students.php?id=' + encodeURIComponent(studentUserId))).json().catch(function() { return null; });
-    if (fresh && fresh.student) renderCounseling(fresh.student);
+    await reloadCounseling();
   });
 
   // Counseling Notes (permission table): reading follows View counseling history (Full: every note; View Only: the date
