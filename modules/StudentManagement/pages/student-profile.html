@@ -144,6 +144,10 @@
     <!-- Page Content -->
     <main id="main-content" class="flex-1 p-4 sm:p-8 overflow-auto">
       <div class="sp-wrap">
+        <!-- Back to the student list, at the top left (the same chevron link as the other detail pages). -->
+        <a href="admin-dashboard" class="inline-flex items-center gap-2 mb-4 text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline">
+          <img src="images/admin/icon-chevron-left.svg" alt="" class="w-2 h-3.5">Back to Dashboard
+        </a>
 
         <div id="detailsGrid">
 
@@ -246,8 +250,6 @@
                 <p class="sp-value" style="margin-top:0" id="registeredField">—</p>
               </div>
 
-
-              <a href="admin-dashboard" class="border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-5 py-2.5 hover:bg-gray-50 text-center">&larr; Back to Dashboard</a>
             </div>
 
             <!-- Recommendation (modules/ContentBasedFiltering/lib/RecommendationPipeline.php): what the student sees, plus each
