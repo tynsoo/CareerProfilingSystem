@@ -26,6 +26,7 @@
   .pp-badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; border:1px solid; border-radius:9999px; padding:5px 12px; }
   .pp-badge svg{ width:14px; height:14px; flex-shrink:0; }
   .pp-badge--match{ background:#ecfdf5; border-color:#a7f3d0; color:#047857; }
+  .pp-badge--close{ background:#fffbeb; border-color:#fde68a; color:#92400e; }
   .pp-badge--differs{ background:#eef1fb; border-color:#c7d2e8; color:#001c43; }
   .pp-badge--none{ background:#f1f5f9; border-color:#e2e8f0; color:#475569; }
   .pp-more summary{ cursor:pointer; font-size:13px; font-weight:600; color:#495e88; list-style:none; display:inline-flex; align-items:center; gap:6px; }
@@ -315,6 +316,8 @@
   // Aligned = the Preferred Course is also one of the Best RIASEC Match courses (CBF).
   // The preference never changes the CBF result (modules/ContentBasedFiltering/lib/RecommendationPipeline.php).
   const isAligned = !!(statedProgram && statedProgram.inBestRiasecMatch);
+  // Close = not a Best RIASEC Match, but one of the Alternative Courses (the next-highest similarity).
+  const isClose = !isAligned && !!(statedProgram && statedProgram.inAlternatives);
 
   const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
   const ICON_INFO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 11v5M12 8h.01"/></svg>';
@@ -326,6 +329,9 @@
   } else if (isAligned) {
     badge.className = 'pp-badge pp-badge--match';
     badge.innerHTML = ICON_CHECK + 'Matches Your RIASEC Profile';
+  } else if (isClose) {
+    badge.className = 'pp-badge pp-badge--close';
+    badge.innerHTML = ICON_CHECK + 'Close to Your Best RIASEC Match';
   } else {
     badge.className = 'pp-badge pp-badge--differs';
     badge.innerHTML = ICON_INFO + 'Differs from Best RIASEC Match';
@@ -336,6 +342,8 @@
     ? 'We couldn\'t link "' + (statedCareer || 'your career') + '" to an MMCL program yet. Your Career Results still show the courses closest to your interests.'
     : isAligned
     ? statedProgram.title + ' is one of the courses most similar to your RIASEC profile.'
+    : isClose
+    ? statedProgram.title + ' is a close match. It is one of your Alternative Courses, the next closest to your RIASEC profile after your Best RIASEC Match.'
     : statedProgram.title + ' is not one of your Best RIASEC Matches. That\'s okay. Your Career Results show the courses closest to your interests.';
 
   // Letter-by-letter match: each RIASEC dimension in the chosen career's
@@ -344,10 +352,19 @@
   const programLetters = statedProgram ? statedProgram.hollandCode.split('') : [];
   const matchedLetters = programLetters.filter(function(l) { return topLetters.indexOf(l) !== -1; });
 
+  // The first letter of a program's code is its main (Primary) type and weighs the most in the similarity, so say
+  // when it is the student's own #1 type before counting letters.
+  const mainLetter = programLetters[0];
+  const mainRank = mainLetter ? topLetters.indexOf(mainLetter) : -1;
+  const mainNote = mainRank === 0
+    ? statedProgram.title + '\'s main letter (' + mainLetter + ', ' + LETTER_TO_LABEL[mainLetter] + ') is also your #1 interest area. '
+    : mainRank > 0
+    ? statedProgram.title + '\'s main letter (' + mainLetter + ', ' + LETTER_TO_LABEL[mainLetter] + ') is your #' + (mainRank + 1) + ' interest area. '
+    : '';
   document.getElementById('dimensionSummary').textContent = !statedProgram
     ? 'There is no program to compare letter by letter.'
     : programLetters.length
-    ? matchedLetters.length + ' of ' + programLetters.length + ' letters in ' + statedProgram.title + '\'s code (' + statedProgram.hollandCode.split('').join(' ') + ') are in your top 3.'
+    ? mainNote + matchedLetters.length + ' of ' + programLetters.length + ' letters in its code (' + programLetters.join(' ') + ') are in your top 3.'
     : 'This program has no RIASEC code to compare.';
   document.getElementById('dimensionMatch').innerHTML = programLetters.map(function(letter, i) {
     const rank = topLetters.indexOf(letter);
@@ -361,7 +378,7 @@
         '<p class="text-lg font-bold ' + (matched ? 'text-[#047857]' : 'text-[#5e3f3c]') + '">' + letter + '</p>' + mark +
       '</div>' +
       '<p class="text-xs font-semibold text-[#191c1e] mt-1">' + LETTER_TO_LABEL[letter] + '</p>' +
-      '<p class="text-[11px] text-[#5e3f3c] mt-0.5">' + (matched ? 'Your #' + (rank + 1) + ' interest area' : 'Not in your top 3') + '</p>' +
+      '<p class="text-[11px] text-[#5e3f3c] mt-0.5">' + (i === 0 ? 'Main letter · ' : '') + (matched ? 'Your #' + (rank + 1) + ' interest area' : 'Not in your top 3') + '</p>' +
     '</div>';
   }).join('');
 
@@ -373,6 +390,10 @@
     : isAligned
     ? programTitle + ', the MMCL program for "' + goalTitle + '," is also your Best RIASEC Match: its RIASEC code (' + statedProgram.hollandCode +
       ') is among the codes most similar to your RIASEC profile' + '.'
+    : isClose
+    ? programTitle + ', the MMCL program for "' + goalTitle + '," is one of your Alternative Courses: after your Best RIASEC Match, its RIASEC code (' +
+      statedProgram.hollandCode + ') is the next closest to your RIASEC profile. It is a good fit for your interests. ' +
+      'See your Career Results to compare it with your Best RIASEC Match, and talk with a Guidance Counselor if you\'d like help deciding.'
     : programTitle + ', the MMCL program for "' + goalTitle + '," is the course you selected, but it is not your Best RIASEC Match. ' +
       'That\'s okay. See your Career Results for your Best RIASEC Match and alternative courses, and if you\'d like help deciding, ' +
       'we highly recommend talking with a Guidance Counselor.';

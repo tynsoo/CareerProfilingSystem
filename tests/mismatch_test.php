@@ -34,7 +34,8 @@ $scores = [
 echo "=== match or mismatch ===\n";
 check('Preferred Course is a Best RIASEC Match -> match', Mismatch::isMismatch(2, $scores) === false);
 check('Preferred Course tied at the top -> match', Mismatch::isMismatch(3, $scores) === false);
-check('Preferred Course is the next level (an alternative) -> mismatch', Mismatch::isMismatch(4, $scores) === true);
+check('Preferred Course is the next level (an alternative) -> close match, not a mismatch', Mismatch::isMismatch(4, $scores) === false);
+check('Preferred Course two levels down -> mismatch', Mismatch::isMismatch(1, $scores) === true);
 check('Preferred Course far below -> mismatch', Mismatch::isMismatch(5, $scores) === true);
 check('the typed career could not be linked to a program -> mismatch', Mismatch::isMismatch(null, $scores) === true);
 check('the order the scores are stored in does not matter', Mismatch::isMismatch(3, array_reverse($scores)) === false);

@@ -494,12 +494,13 @@
     const status = document.getElementById('recStatus');
     const tiedAll = !!(r.tie && r.tie.allProgramsTied);
     status.textContent = r.matchStatus === 'mismatch' ? 'Differs from RIASEC match'
+      : r.matchStatus === 'close' ? 'Close match (Alternative Course)'
       : r.matchStatus === 'match' ? (tiedAll ? 'All programs tied' : 'Matches RIASEC') : 'Not compared yet';
-    status.className = 'pp-badge pp-badge-' + (r.matchStatus === 'match' && !tiedAll ? 'green' : r.matchStatus === 'mismatch' ? 'amber' : 'gray');
+    status.className = 'pp-badge pp-badge-' + (r.matchStatus === 'match' && !tiedAll ? 'green' : r.matchStatus === 'mismatch' ? 'amber' : r.matchStatus === 'close' ? 'blue' : 'gray');
     document.getElementById('recPreferred').textContent = r.preferredCourse
       ? withCosine(r.preferredCourse) + (r.preferredCourse.inBestRiasecMatch
           ? (allTied ? ', among the tied programs (every program is tied)' : ', also a Best RIASEC Match')
-          : ', differs from the Best RIASEC Match')
+          : r.preferredCourse.inAlternatives ? ', an Alternative Course (close match)' : ', differs from the Best RIASEC Match')
       : 'No worksheet result';
     const recBest = document.getElementById('recBest');
     if (allTied) {
