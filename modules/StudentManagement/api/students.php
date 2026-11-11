@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../Authentication/lib/SessionEnd.php';
 require_once __DIR__ . '/../../CareerProfiling/lib/AssessmentProgress.php';
 require_once __DIR__ . '/../lib/StudentListPdf.php';
 require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
+require_once __DIR__ . '/../../Counseling/lib/CounselingTracking.php';
 
 $user = Rbac::requireRole('admin', 'counselor');
 $pdo = Database::get();
@@ -168,6 +169,8 @@ if ($idLookup > 0) {
         }
     }
 
+    $invite = CounselingTracking::latestInvites($pdo, [(int) $row['user_id']])[(int) $row['user_id']] ?? null;
+
     $openStmt = $pdo->prepare("SELECT 1 FROM help_requests WHERE student_id = ? AND status = 'open' LIMIT 1");
     $openStmt->execute([(int) $row['user_id']]);
     $openRequest = (bool) $openStmt->fetchColumn();
@@ -232,7 +235,15 @@ if ($idLookup > 0) {
         'riasec' => $hasAssessment && $seesResults ? implode(', ', json_decode($row['top_types'], true)) : '',
         // What the scores establish, ties included (modules/CareerProfiling/lib/RiasecInterpretation.php), without the scores.
         'interpretation' => $hasAssessment && $seesResults ? $withoutScores(RiasecInterpretation::interpret($scoresOf($row))) : null,
-        'counseling' => $hasAssessment ? ($counseled ? 'Availed' : 'Did Not Avail') : '',
+        // From the latest counseling invitation (staff invite or the student's Avail Counseling click), not from
+        // whether the assessment is done; "No request" when there is none (CounselingTracking::displayStatus).
+        'counseling' => CounselingTracking::displayStatus($invite, $counseled),
+        'counselingInvite' => $invite === null ? null : $invite + [
+            'statusLabel' => CounselingTracking::bookingLabel($invite['status']),
+            'active' => in_array($invite['status'], CounselingTracking::ACTIVE_STATUSES, true),
+            // For the status editor on the Student Profile (saved through api/counseling-invite.php type status).
+            'statuses' => array_map(fn($k, $v) => ['value' => $k, 'label' => $v], array_keys(CounselingTracking::BOOKING_STATUSES), CounselingTracking::BOOKING_STATUSES),
+        ],
         'openRequest' => $openRequest,
         'registeredAt' => $row['registered_at'],
         'attempts' => $attempts,
@@ -327,14 +338,18 @@ $recommendedIds = array_flip(array_map('intval', $pdo->query(
     'SELECT DISTINCT student_id FROM recommendations WHERE source_assessment_id IN (SELECT id FROM assessments WHERE is_latest = TRUE)'
 )->fetchAll(PDO::FETCH_COLUMN)));
 
-$students = array_map(function ($r) use ($counseledIds, $mismatchIds, $recommendedIds) {
+$latestInvites = CounselingTracking::latestInvites($pdo);
+
+$students = array_map(function ($r) use ($counseledIds, $mismatchIds, $recommendedIds, $latestInvites) {
     $hasAssessment = $r['completed_at'] !== null;
     $status = $hasAssessment ? 'Completed' : 'Pending';
     $topTypes = $hasAssessment ? json_decode($r['top_types'], true) : [];
     $interpretation = $hasAssessment ? RiasecInterpretation::interpret([
         'R' => $r['score_r'], 'I' => $r['score_i'], 'A' => $r['score_a'], 'S' => $r['score_s'], 'E' => $r['score_e'], 'C' => $r['score_c'],
     ]) : null;
-    $counseling = $hasAssessment ? (isset($counseledIds[(int) $r['user_id']]) ? 'Availed' : 'Did Not Avail') : '';
+    // The latest counseling invitation decides it (CounselingTracking::displayStatus); nobody is "Did Not Avail" by default.
+    $invite = $latestInvites[(int) $r['user_id']] ?? null;
+    $counseling = CounselingTracking::displayStatus($invite, isset($counseledIds[(int) $r['user_id']]));
 
     return [
         'userId' => (int) $r['user_id'],
@@ -355,6 +370,9 @@ $students = array_map(function ($r) use ($counseledIds, $mismatchIds, $recommend
         '_riasecShort' => $interpretation !== null ? RiasecInterpretation::shortLabel($interpretation) : '',
         '_riasecTie' => $interpretation !== null ? RiasecInterpretation::tieLabel($interpretation) : '',
         'counseling' => $counseling,
+        // Who started it ("via Avail Counseling" or "by <staff>"), and whether it is still active (Invite to counseling is off then).
+        'counselingBy' => $invite['by'] ?? null,
+        'counselingActive' => $invite !== null && in_array($invite['status'], CounselingTracking::ACTIVE_STATUSES, true),
         'mismatched' => $hasAssessment && isset($mismatchIds[(int) $r['user_id']]),
         // For the Course Match chart only (counted per section below, never sent per student).
         'matched' => $hasAssessment && isset($recommendedIds[(int) $r['user_id']]) && !isset($mismatchIds[(int) $r['user_id']]),
@@ -488,7 +506,9 @@ if ($statusFilter === 'Mismatched') {
     $filtered = array_values(array_filter($filtered, fn($s) => $s['status'] === $statusFilter));
 }
 if ($counselingFilter !== '') {
-    $filtered = array_values(array_filter($filtered, fn($s) => $s['counseling'] === $counselingFilter));
+    // "none" is No request (no invitation and no advising request).
+    $want = $counselingFilter === 'none' ? '' : $counselingFilter;
+    $filtered = array_values(array_filter($filtered, fn($s) => $s['counseling'] === $want));
 }
 if ($accountFilter === 'active') {
     $filtered = array_values(array_filter($filtered, fn($s) => $s['isActive'] === true));
@@ -566,7 +586,7 @@ if ($asPdf) {
         'registration' => ['registered' => 'Registered', 'notRegistered' => 'Not registered'],
         'account' => ['active' => 'Active', 'inactive' => 'Deactivated'],
         'assessment' => ['assessed' => 'Yes', 'notAssessed' => 'No'],
-        'counseling' => ['Availed' => 'Availed', 'Did Not Avail' => 'Did not avail'],
+        'counseling' => ['none' => 'No request', 'Invited' => 'Invited', 'Booked' => 'Booked', 'Availed' => 'Availed', 'Did Not Avail' => 'Did not avail', 'Declined' => 'Declined', 'Cancelled' => 'Cancelled'],
     ];
     $applied = array_filter([
         $search !== '' ? 'Search "' . $search . '"' : '',

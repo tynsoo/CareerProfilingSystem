@@ -58,6 +58,23 @@ class CounselingTracking
         'cancelled' => 'Invitation cancelled',
     ];
 
+    /**
+     * The Counseling Status shown on Student Information and the Student Profile, from the student's latest invitation.
+     * "Invited" covers both a staff invitation and the student's own Avail Counseling click (the source is shown beside
+     * it); it never means a session was booked. Did Not Avail is only ever set by staff (did not attend), never assumed.
+     */
+    public const STATUS_DISPLAY = [
+        'invited' => 'Invited',
+        'booked' => 'Booked',
+        'attended' => 'Availed',
+        'no_show' => 'Did Not Avail',
+        'declined' => 'Declined',
+        'cancelled' => 'Cancelled',
+    ];
+
+    /** An invitation in one of these is still active: no second one is saved (Avail Counseling or Invite to counseling). */
+    public const ACTIVE_STATUSES = ['invited', 'booked'];
+
     private static ?bool $ready = null;
 
     public static function outcomeLabel(?string $outcome): ?string
@@ -68,6 +85,55 @@ class CounselingTracking
     public static function bookingLabel(?string $status): string
     {
         return self::BOOKING_STATUSES[$status ?? 'invited'] ?? (string) $status;
+    }
+
+    /**
+     * Each student's latest counseling invitation, by student id: id, status, when, session date, and who started it
+     * (the student through Avail Counseling, or the staff member who sent it). Students with none are left out.
+     *
+     * @param int[]|null $studentIds null for every student
+     * @return array<int,array{id:int,status:string,at:string,sessionDate:?string,selfRequested:bool,by:?string}>
+     */
+    public static function latestInvites(PDO $pdo, ?array $studentIds = null): array
+    {
+        self::ensureSchema($pdo);
+        if ($studentIds !== null && !$studentIds) {
+            return [];
+        }
+        $where = $studentIds === null ? '' : 'WHERE ci.student_id IN (' . implode(',', array_fill(0, count($studentIds), '?')) . ')';
+        $stmt = $pdo->prepare(
+            "SELECT DISTINCT ON (ci.student_id) ci.student_id, ci.id, ci.status, ci.created_at, ci.session_date,
+                    ci.invited_by = ci.student_id AS self_requested, u.role, u.full_name, u.username
+             FROM counseling_invites ci LEFT JOIN users u ON u.id = ci.invited_by
+             $where
+             ORDER BY ci.student_id, ci.id DESC"
+        );
+        $stmt->execute($studentIds === null ? [] : array_map('intval', $studentIds));
+        $out = [];
+        foreach ($stmt->fetchAll() as $r) {
+            $staffName = trim((string) $r['full_name']) !== '' ? $r['full_name'] : $r['username'];
+            $out[(int) $r['student_id']] = [
+                'id' => (int) $r['id'],
+                'status' => (string) $r['status'],
+                'at' => $r['created_at'],
+                'sessionDate' => $r['session_date'],
+                'selfRequested' => (bool) $r['self_requested'],
+                'by' => $r['self_requested'] ? 'via Avail Counseling' : ($r['role'] !== null ? 'by ' . $staffName : null),
+            ];
+        }
+        return $out;
+    }
+
+    /**
+     * The Counseling Status label for one student: from the latest invitation, else "Availed" for a student who sent the
+     * older "Request for Academic Advising" message, else '' (shown as "No request").
+     */
+    public static function displayStatus(?array $invite, bool $legacyAdvising): string
+    {
+        if ($invite !== null) {
+            return self::STATUS_DISPLAY[$invite['status']] ?? (string) $invite['status'];
+        }
+        return $legacyAdvising ? 'Availed' : '';
     }
 
     /** Adds the tracking columns if they are missing. Safe to call on every request; it checks once per request. */

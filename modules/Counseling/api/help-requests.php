@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
+require_once __DIR__ . '/../lib/CounselingTracking.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffPosition.php';
 
@@ -132,8 +133,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $lastInvites = [];
     $studentIds = array_values(array_unique(array_filter(array_map(fn($r) => $r['student_id'] !== null ? (int) $r['student_id'] : null, $fetchedRows))));
     if ($canInvite && $studentIds) {
+        CounselingTracking::ensureSchema($pdo);
         $inviteStmt = $pdo->prepare(
-            "SELECT DISTINCT ON (ci.student_id) ci.student_id, ci.created_at, ci.created_at > NOW() - INTERVAL '1440 minutes' AS recent,
+            "SELECT DISTINCT ON (ci.student_id) ci.student_id, ci.created_at, ci.status, ci.created_at > NOW() - INTERVAL '1440 minutes' AS recent,
                     ci.created_at + INTERVAL '1440 minutes' AS again_at,
                     u.role, u.full_name, u.username, u.staff_position, ci.invited_by = ci.student_id AS self_requested
              FROM counseling_invites ci LEFT JOIN users u ON u.id = ci.invited_by
@@ -147,6 +149,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 // The student's own Avail Counseling click is kept as an invitation too (counseling-booking-link.php).
                 'by' => $inv['self_requested'] ? 'the student (Avail Counseling)' : staffLabel($inv['role'], $inv['full_name'], $inv['username'], $inv['staff_position']),
                 'recent' => (bool) $inv['recent'],
+                // Invited or Booked: still active, so Invite again is refused (counseling-invite.php) until staff close it.
+                'active' => in_array($inv['status'], CounselingTracking::ACTIVE_STATUSES, true),
+                'statusLabel' => CounselingTracking::STATUS_DISPLAY[$inv['status']] ?? $inv['status'],
                 'againAt' => $inv['again_at'],
             ];
         }
