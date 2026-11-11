@@ -10,7 +10,8 @@ require_once __DIR__ . '/../lib/CounselingTracking.php';
 
 // "Invite" on Student Information: sends one student the CGC's counseling booking link by email, and shows the same invitation
 // in the student's notifications. Only staff with Full on Update counseling status (set in the permission table) can invite.
-// The link is the one saved on the Staff Help Center.
+// The link is the one saved on the Staff Help Center. A student with an active invitation (Invited or Booked) is not
+// invited again: the answer says so, and staff update that invitation's status instead.
 $user = Rbac::requireAccess('counselingStatus', 'full');
 // Guidance Facilitators keep the counseling notes but never send invitations (DFD process 4.0), whatever the table says.
 if (Rbac::isFacilitator($user)) {
@@ -89,8 +90,31 @@ if ($bookingUrl === '') {
     jsonResponse(['success' => false, 'error' => 'The CGC booking link is not set yet. The Administrator adds it under CGC Counseling Booking Link on the Staff Help Center.'], 409);
 }
 
+// One active invitation per student: while the latest one is Invited or Booked (sent by staff, or the student's own Avail
+// Counseling click), no second one is saved. The same lock as api/counseling-booking-link.php, so the two cannot cross.
+$pdo->beginTransaction();
+$pdo->prepare("SELECT pg_advisory_xact_lock(hashtext('counseling-avail:' || ?::text))")->execute([$studentId]);
+$activeStmt = $pdo->prepare(
+    "SELECT ci.id, ci.status, ci.flag_id, ci.created_at, ci.invited_by = ci.student_id AS self_requested
+     FROM counseling_invites ci WHERE ci.student_id = ? ORDER BY ci.id DESC LIMIT 1"
+);
+$activeStmt->execute([$studentId]);
+$active = $activeStmt->fetch();
+if ($active && in_array($active['status'], CounselingTracking::ACTIVE_STATUSES, true)) {
+    // Sent from a flag in the Counseling Queue: tie the active invitation to that flag, so the queue shows its status.
+    if ($flagId > 0 && $active['flag_id'] === null) {
+        $pdo->prepare('UPDATE counseling_invites SET flag_id = ? WHERE id = ?')->execute([$flagId, $active['id']]);
+    }
+    $pdo->commit();
+    $since = (new DateTime((string) $active['created_at']))->setTimezone(new DateTimeZone(APP_TIMEZONE))->format('M j, Y');
+    jsonResponse(['success' => false, 'active' => true, 'inviteId' => (int) $active['id'], 'status' => $active['status'],
+        'error' => 'This student already has an active counseling invitation (' . CounselingTracking::STATUS_DISPLAY[$active['status']]
+            . ($active['self_requested'] ? ' via Avail Counseling' : '') . " since $since). Update its status instead of inviting again."], 409);
+}
+
 $rateKey = 'counseling-invite:' . $studentId;
 if (RateLimiter::tooMany($rateKey, 1, 1440)) {
+    $pdo->rollBack();
     jsonResponse(['success' => false, 'error' => 'This student was already invited today.'], 429);
 }
 
@@ -114,6 +138,7 @@ if ($canEmail) {
 $insert = $pdo->prepare('INSERT INTO counseling_invites (student_id, invited_by, booking_url, email_sent, flag_id) VALUES (?, ?, ?, ?, ?) RETURNING id');
 $insert->execute([$studentId, $user['id'], $bookingUrl, (int) $emailSent, $flagId > 0 ? $flagId : null]);
 $inviteId = (int) $insert->fetchColumn();
+$pdo->commit();
 
 AuditLogger::log($user['id'], $user['role'], 'invite_to_counseling', 'student', (string) $studentId, $emailSent ? 'Booking link emailed and notified' : 'Notified; email not sent');
 

@@ -239,13 +239,15 @@
     // The student's latest invite (any page). Within 24 hours the server refuses another one, so the button is off until then.
     const inv = r.lastInvite;
     const inviteBtn = !(canInvite && r.studentId) ? ''
+      : inv && inv.active
+        ? '<button type="button" disabled class="shrink-0 border border-[#0f2a6b] text-[#0f2a6b] text-sm font-semibold rounded-md px-4 py-2 opacity-60 cursor-not-allowed" title="This student already has an active invitation. Update its status on the Student Profile.">' + escapeHtml(inv.statusLabel) + '</button>'
       : inv && inv.recent
         ? '<button type="button" disabled class="shrink-0 border border-[#0f2a6b] text-[#0f2a6b] text-sm font-semibold rounded-md px-4 py-2 opacity-60 cursor-not-allowed" title="Can invite again after ' + formatDate(inv.againAt) + '">Invited</button>'
         : '<button type="button" class="invite-btn shrink-0 border border-[#0f2a6b] text-[#0f2a6b] text-sm font-semibold rounded-md px-4 py-2 hover:bg-slate-50" data-student-id="' + r.studentId + '" data-name="' + escapeHtml(r.name) + '">' + (inv ? 'Invite Again' : 'Invite to Counseling') + '</button>';
     const inviteLine = r.status === 'open' && inv
       ? '<p class="flex items-center gap-2 text-xs text-slate-500"><svg class="w-4 h-4 shrink-0 text-slate-400" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>' +
           '<span>' + (inv.recent ? 'Invited ' : 'Last invited ') + formatDate(inv.at) + (inv.by ? ' by <span class="font-medium text-slate-700">' + escapeHtml(inv.by) + '</span>' : '') +
-          (inv.recent ? ' &middot; can invite again after ' + formatDate(inv.againAt) : '') + '</span></p>'
+          (inv.active ? ' &middot; ' + escapeHtml(inv.statusLabel) : (inv.recent ? ' &middot; can invite again after ' + formatDate(inv.againAt) : '')) + '</span></p>'
       : '';
     // Overdue: shown only from 3 office days of waiting (Monday to Saturday; the office never opens on Sunday).
     const waited = r.status === 'open' ? officeDaysSince(r.sentAt) : 0;

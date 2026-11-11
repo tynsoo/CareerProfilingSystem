@@ -223,6 +223,19 @@
                   <span id="counselingBadge" class="pp-badge pp-badge-amber hidden">Pending Request</span>
                 </div>
                 <p class="sp-value" id="counselingField">—</p>
+                <!-- Who started it (staff invite or the student's Avail Counseling click) and when; staff with Full on
+                     Update counseling status (not Guidance Facilitators) record the booking here (api/counseling-invite.php type status). -->
+                <p class="hidden text-xs text-gray-600 mt-1" id="counselingSource"></p>
+                <div id="counselingEdit" class="hidden flex flex-wrap items-end gap-2 mt-3">
+                  <label class="text-xs text-slate-600">Status
+                    <select id="counselingStatusSelect" class="block border border-slate-300 rounded-md px-2 py-1.5 text-sm bg-white"></select>
+                  </label>
+                  <label class="text-xs text-slate-600">Session date
+                    <input type="date" id="counselingSessionDate" class="block border border-slate-300 rounded-md px-2 py-1 text-sm bg-white">
+                  </label>
+                  <button type="button" id="counselingStatusSave" class="pp-btn pp-btn-secondary">Save status</button>
+                </div>
+                <p id="counselingStatusMsg" class="hidden text-xs mt-2"></p>
               </div>
 
               <div class="sp-row">
@@ -454,6 +467,61 @@
       btn.disabled = false;
     }
   });
+  // Counseling Status and its editor. "Invited" never means booked: staff set Booked, Attended (Availed), Did not
+  // attend (Did Not Avail), Declined or Cancelled here once they have checked the CGC booking system.
+  const canUpdateCounseling = PP.may(currentUser, 'counselingStatus', 'full') && (currentUser.rbacRole || currentUser.role) !== 'facilitator';
+  let counselingInvite = null;
+  function renderCounseling(s) {
+    const box = document.getElementById('counselingBox');
+    const text = s.counseling || 'No request';
+    document.getElementById('counselingField').textContent = text;
+    box.className = 'sp-status' + (text === 'Availed' ? ' ok' : (s.counseling ? '' : ' na'));
+    document.getElementById('counselingLabel').style.color = text === 'Availed' ? '#15803d' : (s.counseling ? '#b45309' : '#6b7280');
+    counselingInvite = s.counselingInvite || null;
+    const source = document.getElementById('counselingSource');
+    source.classList.toggle('hidden', !counselingInvite);
+    if (counselingInvite) {
+      source.textContent = 'Invited ' + (counselingInvite.by ? counselingInvite.by + ' ' : '') + 'on ' + new Date(String(counselingInvite.at).replace(/([+-]\d{2})$/, '$1:00')).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' }) +
+        (counselingInvite.sessionDate ? ' · session ' + counselingInvite.sessionDate : '');
+    }
+    const edit = document.getElementById('counselingEdit');
+    const show = !!counselingInvite && canUpdateCounseling;
+    edit.classList.toggle('hidden', !show);
+    edit.classList.toggle('flex', show);
+    if (show) {
+      const select = document.getElementById('counselingStatusSelect');
+      select.innerHTML = '';
+      (counselingInvite.statuses || []).forEach(function(o) { select.add(new Option(o.label, o.value)); });
+      select.value = counselingInvite.status;
+      document.getElementById('counselingSessionDate').value = counselingInvite.sessionDate || '';
+    }
+  }
+  document.getElementById('counselingStatusSave').addEventListener('click', async function() {
+    if (!counselingInvite) return;
+    const btn = this, msg = document.getElementById('counselingStatusMsg');
+    btn.disabled = true;
+    let data = null;
+    try {
+      const res = await fetch('api/counseling-invite.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'status', inviteId: counselingInvite.id, status: document.getElementById('counselingStatusSelect').value, sessionDate: document.getElementById('counselingSessionDate').value })
+      });
+      data = await res.json();
+    } catch (e) {}
+    btn.disabled = false;
+    msg.classList.remove('hidden');
+    if (!data || !data.success) {
+      msg.textContent = (data && data.error) || 'Could not save the counseling status.';
+      msg.className = 'text-xs mt-2 text-[#ed1c24]';
+      return;
+    }
+    msg.textContent = 'Saved: ' + data.statusLabel + '.';
+    msg.className = 'text-xs mt-2 text-green-700';
+    // Reload the student so the status, its color and the Invite state come from what was saved.
+    const fresh = await (await fetch('api/students.php?id=' + encodeURIComponent(studentUserId))).json().catch(function() { return null; });
+    if (fresh && fresh.student) renderCounseling(fresh.student);
+  });
+
   // Counseling Notes (permission table): reading follows View counseling history (Full: every note; View Only: the date
   // and author, plus the text of one's own notes) and writing follows Create counseling notes (Full shows the composer).
   // Declared here, before the student lookup below calls loadCounselingNotes(), since that call happens well before this
@@ -730,12 +798,9 @@
       }
 
 
-      // Counseling status: amber until the student has asked for advising, green once they have.
-      const counselingBox = document.getElementById('counselingBox');
-      const counselingText = s.counseling || 'Not applicable';
-      document.getElementById('counselingField').textContent = counselingText;
-      counselingBox.className = 'sp-status' + (counselingText === 'Availed' ? ' ok' : (s.counseling ? '' : ' na'));
-      document.getElementById('counselingLabel').style.color = counselingText === 'Availed' ? '#15803d' : (s.counseling ? '#b45309' : '#6b7280');
+      // Counseling status: from the latest counseling invitation (api/students.php). Gray with no request, green once
+      // the student attended (Availed), amber otherwise.
+      renderCounseling(s);
       document.getElementById('counselingBadge').classList.toggle('hidden', !s.openRequest);
 
       loadRecommendation(s.userId);

@@ -12,7 +12,7 @@ return [
     ],
     'staff' => [
         ['How do I resolve a counseling request?', 'Open the request card and click "Mark Resolved" once you’ve followed up with the student. It moves to the Resolved tab and the student gets a notification that their request was resolved.'],
-        ['What does "Availed" counseling status mean on a student’s profile?', 'A student is marked "Availed" once they’ve submitted a counseling request with the subject "Request for Academic Advising" — the "Schedule Advising" button on their Career Results page. It’s a self-reported signal, separate from Monitoring.'],
+        ['What does "Availed" counseling status mean on a student’s profile?', 'It comes from the student’s latest counseling invitation. "Invited" means staff sent Invite to counseling or the student clicked Avail Counseling (it does not mean a session was booked). The Guidance Counselor or the Administrator then records Booked, Availed (attended), Did Not Avail (did not attend), Declined or Cancelled on the Student Profile. "No request" means there is no invitation yet.'],
         ['How is a counseling request different from a Monitoring escalation?', 'Monitoring automatically flags a student when their top career match falls below the confidence threshold, for a counselor to review. A counseling request here is initiated directly by the student asking for help — the two are tracked independently.'],
         ['Can I tell which staff member responded to a request?', 'Not from this page currently — resolving a request marks it complete and notifies the student, but doesn’t record which staff member handled it. Check the Audit Log for a full history of resolve actions.'],
     ],

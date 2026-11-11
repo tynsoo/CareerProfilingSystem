@@ -302,8 +302,13 @@
                       <legend class="fp-label">Counseling status</legend>
                       <div class="fp-options">
                         <label class="fp-option"><input type="radio" name="filterCounseling" value="" checked><span>All</span></label>
+                        <label class="fp-option"><input type="radio" name="filterCounseling" value="none"><span>No request</span></label>
+                        <label class="fp-option"><input type="radio" name="filterCounseling" value="Invited"><span>Invited</span></label>
+                        <label class="fp-option"><input type="radio" name="filterCounseling" value="Booked"><span>Booked</span></label>
                         <label class="fp-option"><input type="radio" name="filterCounseling" value="Availed"><span>Availed</span></label>
                         <label class="fp-option"><input type="radio" name="filterCounseling" value="Did Not Avail"><span>Did not avail</span></label>
+                        <label class="fp-option"><input type="radio" name="filterCounseling" value="Declined"><span>Declined</span></label>
+                        <label class="fp-option"><input type="radio" name="filterCounseling" value="Cancelled"><span>Cancelled</span></label>
                       </div>
                     </fieldset>
                   </div>
@@ -804,7 +809,8 @@
 
   // Badge colors by meaning (PP.badge in js/ui-state.js): not taking counseling is not an error, so it is gray.
   const STATUS_TONE = { Completed: 'green', Pending: 'amber', 'Not Registered': 'blue' };
-  const COUNSELING_TONE = { Availed: 'green', 'Did Not Avail': 'gray' };
+  // Counseling Status comes from the latest counseling invitation (api/students.php, CounselingTracking::displayStatus).
+  const COUNSELING_TONE = { Invited: 'blue', Booked: 'amber', Availed: 'green', 'Did Not Avail': 'gray', Declined: 'gray', Cancelled: 'gray' };
 
   // Shown in school time (Asia/Manila); Postgres may send "+08" without
   // minutes, which some browsers can't parse, so pad it first.
@@ -833,8 +839,10 @@
           : s.isActive
           ? PP.badge('Active', 'green')
           : PP.badge('Deactivated', 'gray'));
+    // "Invited" says who started it: the student's Avail Counseling click or a staff invitation.
     const counselingCell = s.counseling
-      ? PP.badge(s.counseling, COUNSELING_TONE[s.counseling])
+      ? PP.badge(s.counseling, COUNSELING_TONE[s.counseling] || 'gray') +
+        (s.counselingBy ? '<span class="block text-[11px] text-gray-500 mt-1">' + escapeHtml(s.counselingBy) + '</span>' : '')
       : '<span class="text-gray-500">No request</span>';
     const params = new URLSearchParams({ id: s.userId });
     // Only the slots this person can ever use (open profile | counseling or register invite | activate or deactivate), so
@@ -857,7 +865,12 @@
         cells.push(isRosterOnly
           ? (canManageAccounts && s.hasEmail && !isPastYear ? '<button type="button" class="invite-btn ' + NAVY_BTN + '" style="' + BTN + '" data-roster-id="' + s.rosterId + '" data-name="' + escapeHtml(s.name) + '">Invite to register</button>' : '')
           // isActive is null when the account state is not sent (No Access on accounts); the server refuses a deactivated student.
-          : (canInvite && s.isActive !== false ? '<button type="button" class="counsel-invite-btn ' + NAVY_BTN + '" style="' + BTN + '" data-id="' + s.userId + '" data-name="' + escapeHtml(s.name) + '">Invite to counseling</button>' : ''));
+          // An active invitation (Invited or Booked) is not sent again: the button shows that state instead.
+          : (canInvite && s.isActive !== false
+            ? (s.counselingActive
+              ? '<button type="button" disabled class="' + NAVY_BTN + ' opacity-60 cursor-not-allowed" style="' + BTN + '" title="Active invitation. Update its status on the Student Profile.">' + escapeHtml(s.counseling) + '</button>'
+              : '<button type="button" class="counsel-invite-btn ' + NAVY_BTN + '" style="' + BTN + '" data-id="' + s.userId + '" data-name="' + escapeHtml(s.name) + '">Invite to counseling</button>')
+            : ''));
       }
       if (ACTION_SLOTS.toggle) {
         cells.push(isRosterOnly ? '' : '<button type="button" class="toggle-active-btn text-xs font-semibold rounded-md border ' + (s.isActive ? 'btn-danger text-[#ed1c24] border-[#ed1c24] hover:bg-red-50' : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50') + '" style="' + BTN + '" data-id="' + s.userId + '" data-active="' + (s.isActive ? '1' : '0') + '" data-name="' + escapeHtml(s.name) + '">' + (s.isActive ? 'Deactivate' : 'Activate') + '</button>');
@@ -1070,9 +1083,16 @@
       try {
         const res = await fetch('api/counseling-invite.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId: Number(inviteBtn.dataset.id) }) });
         const data = await res.json();
-        summary.textContent = !data.success ? (data.error || 'Could not send the invitation.')
+        const msg = !data.success ? (data.error || 'Could not send the invitation.')
           : (data.emailSent ? 'Counseling invitation sent to ' + inviteBtn.dataset.name + ' by email and notification.'
             : 'Notification sent to ' + inviteBtn.dataset.name + '. The email could not be sent' + (data.hasEmail ? '.' : ' because this student has no verified email.'));
+        // The row's Counseling Status and button follow the saved invitation (sent now, or already active).
+        if (data.success || data.active) {
+          await load({ listOnly: true });
+          PP.toast(msg, !data.success);
+        } else {
+          summary.textContent = msg;
+        }
       } catch (err) {
         summary.textContent = 'Unable to reach the server. Please try again.';
       } finally {
