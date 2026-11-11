@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $inviteStmt = $pdo->prepare(
             "SELECT DISTINCT ON (ci.student_id) ci.student_id, ci.created_at, ci.created_at > NOW() - INTERVAL '1440 minutes' AS recent,
                     ci.created_at + INTERVAL '1440 minutes' AS again_at,
-                    u.role, u.full_name, u.username, u.staff_position
+                    u.role, u.full_name, u.username, u.staff_position, ci.invited_by = ci.student_id AS self_requested
              FROM counseling_invites ci LEFT JOIN users u ON u.id = ci.invited_by
              WHERE ci.student_id IN (" . implode(',', array_fill(0, count($studentIds), '?')) . ')
              ORDER BY ci.student_id, ci.id DESC'
@@ -144,7 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         foreach ($inviteStmt->fetchAll() as $inv) {
             $lastInvites[(int) $inv['student_id']] = [
                 'at' => $inv['created_at'],
-                'by' => staffLabel($inv['role'], $inv['full_name'], $inv['username'], $inv['staff_position']),
+                // The student's own Avail Counseling click is kept as an invitation too (counseling-booking-link.php).
+                'by' => $inv['self_requested'] ? 'the student (Avail Counseling)' : staffLabel($inv['role'], $inv['full_name'], $inv['username'], $inv['staff_position']),
                 'recent' => (bool) $inv['recent'],
                 'againAt' => $inv['again_at'],
             ];

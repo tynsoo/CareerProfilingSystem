@@ -111,7 +111,7 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
                    mf.resolved_at, res.full_name AS resolved_by_name, res.username AS resolved_by_username, res.role AS resolved_by_role,
                    COALESCE(mf.outcome, CASE WHEN mf.note = 'Replaced by a retake' THEN 'replaced_by_retake' END) AS outcome,
                    mf.resolution_note_enc,
-                   ci.id AS invite_id, ci.status AS invite_status, ci.created_at AS invited_at, ci.session_date, ci.status_updated_at,
+                   ci.id AS invite_id, ci.status AS invite_status, ci.created_at AS invited_at, ci.session_date, ci.status_updated_at, ci.self_requested,
                    s.user_id, s.school_id, s.strand, s.section, s.first_name_enc, s.last_name_enc,
                    r.top_program_id, r.top_score, r.cbf_program_ids, r.match_status
             FROM monitoring_flags mf
@@ -120,7 +120,7 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
             LEFT JOIN users esc ON esc.id = mf.escalated_by
             LEFT JOIN users res ON res.id = mf.resolved_by
             LEFT JOIN LATERAL (
-                SELECT id, status, created_at, session_date, status_updated_at FROM counseling_invites
+                SELECT id, status, created_at, session_date, status_updated_at, invited_by = student_id AS self_requested FROM counseling_invites
                 WHERE student_id = mf.student_id AND (flag_id = mf.id OR (flag_id IS NULL AND created_at >= COALESCE(mf.escalated_at, mf.created_at)))
                 ORDER BY id DESC LIMIT 1
             ) ci ON TRUE
@@ -157,6 +157,8 @@ function buildFlagRows(PDO $pdo, string $status, float $threshold): array
                 'status' => $r['invite_status'],
                 'statusLabel' => CounselingTracking::bookingLabel($r['invite_status']),
                 'invitedAt' => $r['invited_at'],
+                // Saved by the student's Avail Counseling click rather than sent by staff.
+                'selfRequested' => (bool) $r['self_requested'],
                 'sessionDate' => $r['session_date'],
                 'updatedAt' => $r['status_updated_at'],
             ],

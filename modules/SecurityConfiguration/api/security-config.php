@@ -383,7 +383,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($type === 'bookingLink') {
-        $checked = BookingLink::validate((string) ($body['url'] ?? ''));
+        $checked = BookingLink::validate((string) ($body['url'] ?? ''), BookingLink::requestHost());
         if ($checked['error'] !== null) {
             jsonResponse(['success' => false, 'error' => $checked['error']], 400);
         }

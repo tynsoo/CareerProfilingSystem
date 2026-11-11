@@ -146,16 +146,16 @@
             <p class="text-sm text-gray-800">CGC Office Senior Highschool, Einstein Building 3rd Floor</p>
           </div>
         </div>
-        <!-- Avail Counseling: emails the CGC booking link to the student's registered email (api/counseling-booking-link.php).
-             Shown only when the guidance staff have saved the booking link. -->
+        <!-- Avail Counseling: records the request as Invited for the guidance staff and opens the CGC booking page
+             (api/counseling-booking-link.php). Shown only when the guidance staff have saved the booking link. -->
         <div id="availCounselingBox" class="hidden border-t border-slate-200 px-6 py-5">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p class="text-sm font-semibold text-gray-900">Want to talk to a counselor?</p>
-              <p class="text-xs text-gray-500 mt-1">We will email the CGC counseling booking link to your registered email address. You choose your schedule on the booking page.</p>
+              <p class="text-xs text-gray-500 mt-1">This opens the CGC counseling booking page, where you choose your schedule. The Guidance Office will see that you asked for counseling.</p>
             </div>
             <button type="button" id="availCounselingBtn" class="shrink-0 inline-flex items-center justify-center gap-2 bg-[#ed1c24] text-white text-sm font-medium rounded-md px-5 py-2.5 hover:opacity-90">
-              <svg class="w-4 h-4" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>
+              <svg class="w-4 h-4" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/></svg>
               Avail Counseling
             </button>
           </div>
@@ -280,17 +280,17 @@
       document.getElementById('availCounselingBox').classList.toggle('hidden', !(data && data.bookingUrl));
     }).catch(function() {});
 
-    // Avail Counseling: the server emails the booking link to the address on this account (it never comes from the page).
-    // The button is disabled while sending, so a double click sends one email; the server also refuses a repeat within
-    // 5 minutes. The success message shows only when the email service accepted the email.
+    // Avail Counseling: the server records the request (status Invited on the staff side, never twice while one is open)
+    // and returns the CGC booking link saved by the guidance staff; the page then opens it. The new tab is opened during the
+    // click so pop-up blockers allow it; if it was blocked anyway, this tab goes to the booking page instead.
     (function() {
       const btn = document.getElementById('availCounselingBtn');
       const statusEl = document.getElementById('availCounselingStatus');
       const STYLES = {
         ok: 'bg-green-50 border-green-200 text-green-800',
-        info: 'bg-slate-50 border-slate-200 text-slate-700',
         error: 'bg-red-50 border-red-200 text-red-800'
       };
+      const FAILED = 'We couldn\'t open the counseling booking page. Please try again later or contact the Guidance and Counseling Center.';
       function showStatus(text, kind) {
         statusEl.textContent = text;
         statusEl.className = 'mt-4 text-sm rounded-md border px-3.5 py-2.5 ' + STYLES[kind];
@@ -298,23 +298,28 @@
       btn.addEventListener('click', async function() {
         if (btn.disabled) return;
         statusEl.classList.add('hidden');
-        const stopBusy = PP.busy(btn, 'Sending…');
+        const win = window.open('', '_blank');
+        if (win) { win.opener = null; }
+        const stopBusy = PP.busy(btn, 'Opening…');
         try {
           const res = await fetch('api/counseling-booking-link.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
           const data = await res.json().catch(function() { return {}; });
-          if (res.ok && data.success) {
-            showStatus(data.message, 'ok');
-            PP.toast('Booking link sent. Please check your inbox.', false);
-          } else if (data.repeat) {
-            showStatus(data.error, 'info');
+          if (res.ok && data.success && /^https:\/\//i.test(data.url || '')) {
+            if (win && !win.closed) {
+              win.location.href = data.url;
+              showStatus('The CGC counseling booking page opened in a new tab. Choose a schedule there to book your session.', 'ok');
+            } else {
+              window.location.assign(data.url);
+            }
           } else {
-            showStatus(data.error || 'We couldn\'t send your counseling booking link. Please try again later or contact the Guidance and Counseling Center.', 'error');
+            if (win) { win.close(); }
+            showStatus(data.error || FAILED, 'error');
           }
         } catch (e) {
-          showStatus('We couldn\'t send your counseling booking link. Please try again later or contact the Guidance and Counseling Center.', 'error');
+          if (win) { win.close(); }
+          showStatus(FAILED, 'error');
         } finally {
           stopBusy();
-          btn.focus();
         }
       });
     })();
