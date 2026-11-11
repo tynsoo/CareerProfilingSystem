@@ -281,13 +281,15 @@
     }).catch(function() {});
 
     // Avail Counseling: the server records the request (status Invited on the staff side, never twice while one is open)
-    // and returns the CGC booking link saved by the guidance staff; the page then opens it. The new tab is opened during the
+    // and returns the CGC booking link saved by the guidance staff; the page then opens it. Once a day per student (the
+    // server refuses a repeat within 24 hours and says when it frees up). The new tab is opened during the
     // click so pop-up blockers allow it; if it was blocked anyway, this tab goes to the booking page instead.
     (function() {
       const btn = document.getElementById('availCounselingBtn');
       const statusEl = document.getElementById('availCounselingStatus');
       const STYLES = {
         ok: 'bg-green-50 border-green-200 text-green-800',
+        info: 'bg-slate-50 border-slate-200 text-slate-700',
         error: 'bg-red-50 border-red-200 text-red-800'
       };
       const FAILED = 'We couldn\'t open the counseling booking page. Please try again later or contact the Guidance and Counseling Center.';
@@ -313,7 +315,7 @@
             }
           } else {
             if (win) { win.close(); }
-            showStatus(data.error || FAILED, 'error');
+            showStatus(data.error || FAILED, data.repeat ? 'info' : 'error');
           }
         } catch (e) {
           if (win) { win.close(); }
