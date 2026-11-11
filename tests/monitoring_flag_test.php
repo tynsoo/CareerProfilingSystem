@@ -58,6 +58,7 @@ try {
     $r2 = $save($flat);
     check('a flat profile gives 0.6547 for the top program', abs($r2['topScore'] - 0.6547) < 0.00005, (string) $r2['topScore']);
     check('with a Pending flag already open, no second flag is raised', count($flags()) === 1);
+    check('...and the Pending flag now shows the newest result', (int) $flags()[0]['recommendation_id'] === $r2['recommendationId']);
     $pdo->prepare('UPDATE monitoring_flags SET status = ? WHERE id = ?')->execute(['escalated', $f[0]['id']]);
     $r3 = $save($worst);
     $f = $flags();

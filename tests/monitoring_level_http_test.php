@@ -108,8 +108,11 @@ try {
     check('Monitoring reports the level 0.793', abs(($m['threshold'] ?? 0) - 0.793) < 1e-9, json_encode($m['threshold'] ?? null));
     check('the student below the level is in Needs Review', in_array('LowSimilarity, Qa', $names, true), json_encode($names));
     $row = array_values(array_filter($m['rows'] ?? [], fn($r) => $r['name'] === 'LowSimilarity, Qa'))[0] ?? [];
-    check('...with the reason "Highest similarity below the monitoring level", priority Medium and the score', ($row['reason'] ?? '') === 'Highest similarity below the monitoring level'
-        && ($row['priority'] ?? '') === 'Medium' && abs(($row['topScore'] ?? 0) - 0.792) < 0.00005, json_encode($row));
+    check('...with the reason "Highest similarity below the monitoring level" and the score (no priority: the list is sorted on the score)', ($row['reason'] ?? '') === 'Highest similarity below the monitoring level'
+        && !array_key_exists('priority', $row) && abs(($row['topScore'] ?? 0) - 0.792) < 0.00005, json_encode($row));
+    $scores = array_map(fn($r) => $r['topScore'] ?? INF, $m['rows'] ?? []);
+    $sorted = $scores; sort($sorted);
+    check('Needs Review lists the lowest similarity first', $scores === $sorted, json_encode($scores));
     check('the student with only a career mismatch is not listed', !in_array('MismatchOnly, Qa', $names, true));
     check('the summary count equals the rows of Needs Review', ($m['summary']['needsReview'] ?? -1) === count($m['rows'] ?? []));
 

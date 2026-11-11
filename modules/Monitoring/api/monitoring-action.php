@@ -10,6 +10,8 @@ require_once __DIR__ . '/../../Counseling/lib/CounselingTracking.php';
 //   resolve             a flag For Counseling, with a counseling outcome: the Guidance Counselor or the Administrator
 //                       only (Full on Update counseling status, never a Guidance Facilitator).
 // Every closing writes resolved_at and resolved_by; the note is stored encrypted on the flag and in the Audit Log.
+// Closing a flag For Counseling also closes its active invitation (CounselingTracking::closeInviteForFlag), in the same
+// transaction, so the Student Portal and Student Information never keep showing Invited or Booked for it.
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
@@ -35,7 +37,7 @@ if (mb_strlen($note) > 500) {
     jsonResponse(['success' => false, 'error' => 'The note can be at most 500 characters.'], 400);
 }
 
-$flagStmt = $pdo->prepare('SELECT id, student_id, status FROM monitoring_flags WHERE id = ?');
+$flagStmt = $pdo->prepare('SELECT id, student_id, status, created_at, escalated_at FROM monitoring_flags WHERE id = ?');
 $flagStmt->execute([$flagId]);
 $flag = $flagStmt->fetch();
 if (!$flag) {
@@ -77,29 +79,56 @@ if ($action === 'dismiss' && $note === '') {
 }
 
 $now = date('Y-m-d H:i:sO');
-// "AND status = ?" makes two staff clicking at the same time safe: only the first one changes it.
-if ($action === 'escalate') {
-    $update = $pdo->prepare(
-        'UPDATE monitoring_flags
-         SET status = ?, escalated_at = ?, escalated_by = ?, counselor_id = COALESCE(?, counselor_id)
-         WHERE id = ? AND status = ?'
-    );
-    $update->execute(['escalated', $now, $user['id'], $user['role'] === 'counselor' ? $user['id'] : null, $flagId, $flag['status']]);
-} else {
-    $update = $pdo->prepare(
-        'UPDATE monitoring_flags
-         SET status = ?, outcome = ?, resolved_at = ?, resolved_by = ?, resolution_note_enc = ?
-         WHERE id = ? AND status = ?'
-    );
-    $update->execute([$newStatus, $outcome, $now, $user['id'], $note !== '' ? Crypto::enc($note) : null, $flagId, $flag['status']]);
-}
-if ($update->rowCount() === 0) {
-    jsonResponse(['success' => false, 'error' => 'This flag was already handled. Refresh the list to see its current status.'], 409);
+$closedInvite = null;
+$pdo->beginTransaction();
+try {
+    // The same per-student lock as Avail Counseling and Invite to counseling, so no invitation is saved half-way.
+    $pdo->prepare("SELECT pg_advisory_xact_lock(hashtext('counseling-avail:' || ?::text))")->execute([$flag['student_id']]);
+    // "AND status = ?" makes two staff clicking at the same time safe: only the first one changes it.
+    if ($action === 'escalate') {
+        $update = $pdo->prepare(
+            'UPDATE monitoring_flags
+             SET status = ?, escalated_at = ?, escalated_by = ?, counselor_id = COALESCE(?, counselor_id)
+             WHERE id = ? AND status = ?'
+        );
+        $update->execute(['escalated', $now, $user['id'], $user['role'] === 'counselor' ? $user['id'] : null, $flagId, $flag['status']]);
+    } else {
+        $update = $pdo->prepare(
+            'UPDATE monitoring_flags
+             SET status = ?, outcome = ?, resolved_at = ?, resolved_by = ?, resolution_note_enc = ?
+             WHERE id = ? AND status = ?'
+        );
+        $update->execute([$newStatus, $outcome, $now, $user['id'], $note !== '' ? Crypto::enc($note) : null, $flagId, $flag['status']]);
+    }
+    if ($update->rowCount() === 0) {
+        $pdo->rollBack();
+        jsonResponse(['success' => false, 'error' => 'This flag was already handled. Refresh the list to see its current status.'], 409);
+    }
+    // A flag For Counseling that is closed takes its open invitation with it: the outcome's booking status, or Cancelled
+    // for a dismissed flag (a student's own Avail Counseling request stays open then).
+    if ($flag['status'] === 'escalated') {
+        $closedInvite = $action === 'resolve'
+            ? CounselingTracking::closeInviteForFlag($pdo, $flag, CounselingTracking::OUTCOME_BOOKING[$outcome], (int) $user['id'])
+            : CounselingTracking::closeInviteForFlag($pdo, $flag, 'cancelled', (int) $user['id'], true);
+    }
+
+    $detail = "Student user #{$flag['student_id']}"
+        . ($outcome !== '' ? ' | Outcome: ' . CounselingTracking::outcomeLabel($outcome) : '')
+        . ($note !== '' ? " | Note: {$note}" : '');
+    AuditLogger::log($user['id'], $user['role'], 'monitoring_' . $action, 'monitoring_flag', (string) $flagId, $detail);
+    if ($closedInvite !== null) {
+        $newBooking = $action === 'resolve' ? CounselingTracking::OUTCOME_BOOKING[$outcome] : 'cancelled';
+        AuditLogger::log($user['id'], $user['role'], 'update_counseling_status', 'student', (string) $flag['student_id'],
+            'Invitation #' . $closedInvite[0] . ': ' . CounselingTracking::bookingLabel($closedInvite[1]) . ' -> '
+                . CounselingTracking::bookingLabel($newBooking) . " (flag #{$flagId} closed)");
+    }
+    $pdo->commit();
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    throw $e;
 }
 
-$detail = "Student user #{$flag['student_id']}"
-    . ($outcome !== '' ? ' | Outcome: ' . CounselingTracking::outcomeLabel($outcome) : '')
-    . ($note !== '' ? " | Note: {$note}" : '');
-AuditLogger::log($user['id'], $user['role'], 'monitoring_' . $action, 'monitoring_flag', (string) $flagId, $detail);
-
-jsonResponse(['success' => true, 'status' => $newStatus, 'outcome' => $outcome !== '' ? $outcome : null]);
+jsonResponse(['success' => true, 'status' => $newStatus, 'outcome' => $outcome !== '' ? $outcome : null,
+    'invite' => $closedInvite === null ? null : ['id' => $closedInvite[0], 'status' => $action === 'resolve' ? CounselingTracking::OUTCOME_BOOKING[$outcome] : 'cancelled']]);

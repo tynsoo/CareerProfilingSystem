@@ -3,7 +3,8 @@
 /**
  * Traceability of the counseling process (panel revisions S11, S12, S13).
  *
- * The escalation process for a flagged student (a RIASEC mismatch or a low similarity), as the system enforces it:
+ * The escalation process for a flagged student (a low cosine similarity; a RIASEC mismatch never raises a flag), as the
+ * system enforces it:
  *
  *   1. Needs Review (status 'pending'). Raised by the system (CBFData::saveRecommendation). Anyone with Full on
  *      "Flagged student monitoring" reviews it and either
@@ -15,7 +16,8 @@
  *      link and records what happened with the booking (BOOKING_STATUSES), since the external booking system cannot
  *      report back on its own.
  *   3. Resolved. The Guidance Counselor or the Administrator closes the flag with one of COUNSELING_OUTCOMES. Closing
- *      writes resolved_at and resolved_by, and the note is stored encrypted.
+ *      writes resolved_at and resolved_by, and the note is stored encrypted. The flag's active invitation is closed with
+ *      it (OUTCOME_BOOKING; Cancelled when a staff invitation's flag is dismissed), so the student's status follows.
  *
  * Every step is also written to the Audit Log. Approved and dismissed flags are kept and listed on the History tab
  * (monitoring.php tab=history) with when, by whom and why.
@@ -74,6 +76,44 @@ class CounselingTracking
 
     /** An invitation in one of these is still active: no second one is saved (Avail Counseling or Invite to counseling). */
     public const ACTIVE_STATUSES = ['invited', 'booked'];
+
+    /**
+     * The booking status an active invitation takes when its flag is closed with a counseling outcome, so the Student
+     * Portal and Student Information stop showing it as Invited or Booked (and the student can ask again later).
+     */
+    public const OUTCOME_BOOKING = [
+        'counseled_kept_choice' => 'attended',
+        'counseled_changed_choice' => 'attended',
+        'referred' => 'attended',
+        'declined_counseling' => 'declined',
+        'no_show' => 'no_show',
+    ];
+
+    /**
+     * Closes the active invitation tied to a flag For Counseling when the flag is closed (api/monitoring-action.php),
+     * in the caller's transaction. The invitation is the one the Counseling Queue shows for the flag (api/monitoring.php):
+     * tied to the flag, or sent after it was raised without a flag. $status is the booking status it takes. With
+     * $staffOnly, an invitation the student started with Avail Counseling stays open (a dismissed flag does not cancel
+     * the student's own request). Returns [invite id, old status] when one was changed, else null.
+     */
+    public static function closeInviteForFlag(PDO $pdo, array $flag, string $status, int $userId, bool $staffOnly = false): ?array
+    {
+        $stmt = $pdo->prepare(
+            "SELECT id, status FROM counseling_invites
+             WHERE student_id = ? AND status IN ('invited', 'booked')
+               AND (flag_id = ? OR (flag_id IS NULL AND created_at >= COALESCE(?::timestamptz, ?::timestamptz)))"
+            . ($staffOnly ? ' AND invited_by IS DISTINCT FROM student_id' : '') . '
+             ORDER BY id DESC LIMIT 1'
+        );
+        $stmt->execute([$flag['student_id'], $flag['id'], $flag['escalated_at'], $flag['created_at']]);
+        $invite = $stmt->fetch();
+        if (!$invite) {
+            return null;
+        }
+        $pdo->prepare('UPDATE counseling_invites SET status = ?, status_updated_at = NOW(), status_updated_by = ? WHERE id = ?')
+            ->execute([$status, $userId, $invite['id']]);
+        return [(int) $invite['id'], (string) $invite['status']];
+    }
 
     private static ?bool $ready = null;
 

@@ -108,8 +108,8 @@
         </div>
       </div>
 
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <!-- Summary Cards: what needs staff (Needs Review, Counseling Queue) and where the assessments stand. -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
 
         <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-[21px] flex flex-col justify-between">
           <div class="flex items-start mb-4">
@@ -120,34 +120,6 @@
             </div>
           </div>
           <a href="monitoring-details?tab=needs-review" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
-            View all
-            <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
-          </a>
-        </div>
-
-        <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-[21px] flex flex-col justify-between">
-          <div class="flex items-start mb-4">
-            <img src="images/monitoring/card-icon-completed.svg" alt="" class="w-9 h-12">
-            <div class="pl-4">
-              <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Completed Today</p>
-              <p class="mt-1"><span class="text-3xl font-bold text-[#001c43]" id="cardCompleted">—</span> <span class="text-sm text-slate-500">Assessments</span></p>
-            </div>
-          </div>
-          <a href="monitoring-details?tab=completed" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
-            View all
-            <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
-          </a>
-        </div>
-
-        <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-[21px] flex flex-col justify-between">
-          <div class="flex items-start mb-4">
-            <img src="images/monitoring/card-icon-pending.svg" alt="" class="w-9 h-12">
-            <div class="pl-4">
-              <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Pending Assessments</p>
-              <p class="mt-1"><span class="text-3xl font-bold text-orange-500" id="cardPending">—</span> <span class="text-sm text-slate-500">Students</span></p>
-            </div>
-          </div>
-          <a href="monitoring-details?tab=pending" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
             View all
             <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
           </a>
@@ -166,18 +138,31 @@
             <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
           </a>
         </div>
+
+        <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-[21px] flex flex-col justify-between">
+          <div class="flex items-start mb-4">
+            <img src="images/monitoring/card-icon-completed.svg" alt="" class="w-9 h-12">
+            <div class="pl-4">
+              <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Assessments</p>
+              <p class="mt-1"><span class="text-3xl font-bold text-[#001c43]" id="cardCompleted">—</span> <span class="text-sm text-slate-500">completed today</span></p>
+              <p class="text-sm text-slate-500"><span class="font-bold text-orange-500" id="cardPending">—</span> not started yet</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600">
+            <a href="monitoring-details?tab=completed" class="hover:text-[#ed1c24]">Completed today</a>
+            <a href="monitoring-details?tab=pending" class="flex items-center gap-2 hover:text-[#ed1c24]">Not started
+              <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5"></a>
+          </div>
+        </div>
       </div>
 
-      <!-- Flagged Recommendations -->
+      <!-- Needs Review: the five lowest similarities; Review opens that student on Monitoring Details. -->
       <div class="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
         <div class="border-b border-slate-100 flex items-center justify-between px-5 py-5 flex-wrap gap-3">
           <div class="flex items-start">
             <img src="images/monitoring/icon-flag.svg" alt="" class="w-3.5 h-4 mt-1">
             <div class="pl-3">
-              <div class="flex items-center gap-2">
-                <h2 class="text-lg font-bold text-slate-900">Flagged Recommendations</h2>
-                <span class="bg-red-50 border border-red-100 text-[#ed1c24] text-xs font-bold px-2.5 py-0.5 rounded-full" id="flaggedCount">—</span>
-              </div>
+              <h2 class="text-lg font-bold text-slate-900">Needs Review: lowest similarity first</h2>
               <p class="text-xs text-slate-500" id="flaggedHint">Students whose recommendations require review.</p>
             </div>
           </div>
@@ -188,20 +173,19 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse min-w-[1100px]">
+          <table class="w-full text-left border-collapse min-w-[900px]">
             <thead class="bg-slate-50 border-b border-slate-100">
               <tr>
                 <th class="px-6 py-3 text-sm font-bold text-slate-500">Student</th>
                 <th class="px-6 py-3 text-sm font-bold text-slate-500">Strand</th>
                 <th class="px-6 py-3 text-sm font-bold text-slate-500">Best RIASEC Match</th>
                 <th class="px-6 py-3 text-sm font-bold text-slate-500">Preferred vs RIASEC</th>
-                <th class="px-6 py-3 text-sm font-bold text-slate-500">Flag Reason</th>
-                <th class="px-6 py-3 text-sm font-bold text-slate-500">Priority</th>
+                <th class="px-6 py-3 text-sm font-bold text-slate-500">Similarity</th>
                 <th class="px-6 py-3 text-sm font-bold text-slate-500">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50" id="flaggedTableBody">
-              <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">Loading…</td></tr>
+              <tr><td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -220,58 +204,6 @@
         <span>&middot;</span>
         <a href="accessibility" class="hover:text-gray-600 hover:underline">Accessibility</a>
       </footer>
-  </div>
-</div>
-
-<!-- Review Modal -->
-<!-- Review recommendation: the shared pop-up frame (css/components.css .pp-dialog, PP.dialog in js/ui-state.js).
-     The three decisions are choices that say what will happen; the main button follows the choice. -->
-<div id="reviewModal" class="modal-backdrop hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="modal-card pp-dialog pp-dialog-lg">
-    <div class="pp-dialog-head">
-      <h2 id="reviewTitle" class="pp-dialog-title">Review recommendation</h2>
-      <button type="button" class="pp-dialog-x" data-dialog-close aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="pp-dialog-form">
-      <div class="pp-dialog-summary">
-        <div>
-          <p id="reviewStudentName" class="text-sm font-semibold text-slate-900"></p>
-          <p id="reviewStudentMeta" class="text-xs text-slate-500"></p>
-        </div>
-        <button type="button" id="reviewInviteBtn" class="hidden text-sm font-medium text-[#0f2a6b] underline underline-offset-2 whitespace-nowrap">Invite to counseling</button>
-      </div>
-      <p id="reviewInviteMsg" class="hidden text-sm"></p>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <p class="text-xs font-medium text-slate-500">Preferred vs RIASEC</p>
-          <p id="reviewMatch" class="text-sm text-slate-900"></p>
-          <p id="reviewMatchNote" class="hidden text-xs text-slate-500 mt-1">A Match can still be flagged: no course fits this student strongly.</p>
-        </div>
-        <div>
-          <p class="text-xs font-medium text-slate-500">Flag reason</p>
-          <p id="reviewReason" class="text-sm text-slate-900"></p>
-        </div>
-      </div>
-      <div>
-        <p class="text-xs font-medium text-slate-500">Best RIASEC match</p>
-        <p id="reviewCareer" class="text-sm text-slate-900"></p>
-      </div>
-      <fieldset id="reviewDecision">
-        <legend class="text-xs font-medium text-slate-600 mb-2">Your decision</legend>
-        <label class="pp-choice"><input type="radio" name="reviewAction" value="approve"><span><span class="pp-choice-title">Approve the recommendation</span><span class="pp-choice-text" id="reviewApproveText"></span></span></label>
-        <label class="pp-choice" id="reviewEscalateChoice"><input type="radio" name="reviewAction" value="escalate"><span><span class="pp-choice-title">Escalate to a counselor</span><span class="pp-choice-text">Moves to the Counseling Queue; staff with Monitoring access are notified.</span></span></label>
-        <label class="pp-choice"><input type="radio" name="reviewAction" value="dismiss"><span><span class="pp-choice-title">Dismiss the flag</span><span class="pp-choice-text" id="reviewDismissText"></span></span></label>
-      </fieldset>
-      <div id="reviewNoteWrap">
-        <label for="reviewNote" class="block text-xs font-medium text-slate-600 mb-1">Note (required when dismissing)</label>
-        <textarea id="reviewNote" rows="2" maxlength="500" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700" placeholder="Why this decision? Kept private in the audit log."></textarea>
-      </div>
-      <p id="reviewActionError" class="hidden text-sm text-[#ed1c24]" role="alert"></p>
-    </div>
-    <div class="pp-dialog-foot">
-      <button type="button" id="reviewCancelBtn" data-dialog-close class="pp-btn pp-btn-secondary">Cancel</button>
-      <button type="button" id="reviewSubmitBtn" class="pp-btn pp-btn-primary" disabled>Choose a decision</button>
-    </div>
   </div>
 </div>
 
@@ -336,191 +268,63 @@
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // Badge colors by meaning (PP.badge in js/ui-state.js).
-  const PRIORITY_TONE = { High: 'red', Medium: 'amber', Low: 'gray' };
   const matchClass = (matchStr) => {
     // Match / Mismatch (RecommendationPipeline): mismatch -> refer to a Guidance Counselor.
     return matchStr === 'Mismatch' ? 'text-red-600' : matchStr === 'Match' ? 'text-green-600' : 'text-slate-500';
   };
 
-  // Invite to counseling: sends the student the CGC booking link by email and as a notification. Counseling belongs to the
-  // Guidance Counselors and the Head of Guidance (the Counseling Notes permission), so the button only shows for them.
-  // Approve / Escalate / Dismiss need Full on Monitoring; View Only sees the Review window without them
-  // (api/monitoring-action.php checks this again).
-  let canInvite = currentUser.role === 'admin';
+  // Review (Full on Monitoring) or View (View Only) opens that student's review on Monitoring Details
+  // (?flag=), where every decision is made; api/monitoring-action.php checks the access again.
   let canAct = currentUser.role === 'admin';
   try {
-    const inviteCfg = await (await fetch('api/security-config.php')).json();
-    const levelFor = (module) => ((inviteCfg.rbac && inviteCfg.rbac[module] && inviteCfg.rbac[module][currentUser.rbacRole || currentUser.role]) || 'none');
-    canInvite = levelFor('counselingStatus') === 'full' && (currentUser.rbacRole || currentUser.role) !== 'facilitator'; // Facilitators never invite (DFD process 4.0)
-    canAct = levelFor('monitoring') === 'full';
+    const cfg = await (await fetch('api/security-config.php')).json();
+    canAct = ((cfg.rbac && cfg.rbac.monitoring && cfg.rbac.monitoring[currentUser.rbacRole || currentUser.role]) || 'none') === 'full';
   } catch (e) {}
-  async function sendCounselingInvite(studentId) {
-    const res = await fetch('api/counseling-invite.php', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ studentId: Number(studentId) })
-    });
-    const data = await res.json();
-    if (!data.success) return { ok: false, text: data.error || 'Could not send the invitation.' };
-    return data.emailSent
-      ? { ok: true, text: 'Invitation sent by email and notification.' }
-      : { ok: false, text: 'Notification sent. The email could not be sent' + (data.hasEmail ? '.' : ' because this student has no verified email.') };
-  }
   const flaggedTableBody = document.getElementById('flaggedTableBody');
-  let rowsById = {};
+  let threshold = null;
 
   function renderRow(r) {
+    const score = r.topScore === null || r.topScore === undefined ? '<span class="text-slate-500">Not computed</span>' : Number(r.topScore).toFixed(3);
     return '<tr data-flag-id="' + r.flagId + '">' +
       '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
       '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
       '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
       '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
-      '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
-      '<td class="px-6 py-3">' + PP.badge(r.priority, PRIORITY_TONE[r.priority] || 'gray') + '</td>' +
-      '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">' + (canAct ? 'Review' : 'View') +
+      '<td class="px-6 py-3 text-sm text-slate-900">' + score + '</td>' +
+      '<td class="px-6 py-3"><a href="monitoring-details?tab=needs-review&amp;flag=' + Number(r.flagId) + '" class="flex items-center gap-1 text-sm text-blue-600 hover:underline">' + (canAct ? 'Review' : 'View') +
         '<img src="images/monitoring/icon-chevron-right3.svg" alt="" class="w-1.5 h-2.5"></a></td>' +
     '</tr>';
   }
 
-  let loadedOnce = false;
   async function load() {
     const statIds = ['cardNeedsReview', 'cardCompleted', 'cardPending', 'cardCounseling'];
-    if (!loadedOnce) { statIds.forEach(PP.statLoading); PP.showSkeleton(flaggedTableBody, PP.skeleton.rows(7, 5)); }
+    statIds.forEach(PP.statLoading);
+    PP.showSkeleton(flaggedTableBody, PP.skeleton.rows(6, 5));
     let data;
     try {
       data = await PP.fetchJson('api/monitoring.php?tab=needs-review&limit=5');
     } catch (e) {
-      if (loadedOnce) return; // a refresh after an action failed: keep what is already on screen
       statIds.forEach(PP.statFailed);
-      PP.showError(flaggedTableBody, e.message, load, 7);
+      PP.showError(flaggedTableBody, e.message, load, 6);
       document.getElementById('flaggedSummary').textContent = '';
       return;
     }
-    loadedOnce = true;
     flaggedTableBody.removeAttribute('aria-busy');
-    rowsById = {};
-    data.rows.forEach(r => { rowsById[r.flagId] = r; });
+    threshold = data.threshold;
 
     document.getElementById('cardNeedsReview').textContent = data.summary.needsReview;
     document.getElementById('cardCompleted').textContent = data.summary.completedToday;
     document.getElementById('cardPending').textContent = data.summary.pending;
     document.getElementById('cardCounseling').textContent = data.summary.counseling;
-    document.getElementById('flaggedCount').textContent = data.summary.needsReview;
     document.getElementById('flaggedHint').textContent =
-      'Students are flagged when their best match is below a Cosine Similarity of ' + Number(data.threshold).toFixed(3) + '.';
+      'This school year. A student is flagged when their highest Cosine Similarity is below ' + Number(threshold).toFixed(3) + '.';
 
     flaggedTableBody.innerHTML = data.rows.length
       ? data.rows.map(renderRow).join('')
-      : '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">No flagged recommendations right now.</td></tr>';
+      : '<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">No flagged recommendations right now.</td></tr>';
     document.getElementById('flaggedSummary').textContent =
       'Showing ' + data.rows.length + ' of ' + data.summary.needsReview + ' flagged recommendations';
-
-    bindReviewLinks();
   }
-
-  function bindReviewLinks() {
-    flaggedTableBody.querySelectorAll('.review-link').forEach(function(link) {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        openReviewModal(rowsById[Number(e.currentTarget.dataset.flagId)]);
-      });
-    });
-  }
-
-  document.getElementById('reviewInviteBtn').addEventListener('click', async function() {
-    const btn = this, msg = document.getElementById('reviewInviteMsg');
-    if (!(await PP.confirm('The student will be sent the CGC booking link by email and in their notifications.', { title: 'Invite to a counseling session?', okLabel: 'Send invitation' }))) return;
-    btn.disabled = true;
-    try {
-      const result = await sendCounselingInvite(btn.dataset.studentId);
-      msg.textContent = result.text;
-      msg.className = 'text-sm ' + (result.ok ? 'text-green-600' : 'text-[#ed1c24]');
-    } catch (e) {
-      msg.textContent = 'Unable to reach the server. Please try again.';
-      msg.className = 'text-sm text-[#ed1c24]';
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
-  // ---- Review recommendation: the three decisions are choices that say what will happen, and the main button follows
-  // the choice (Approve, Escalate, Dismiss). The shared pop-up behaviour comes from PP.dialog (js/ui-state.js).
-  let currentFlag = null;
-  const reviewDialog = PP.dialog('reviewModal', { onClose: function() { currentFlag = null; } });
-  const reviewSubmit = document.getElementById('reviewSubmitBtn');
-  const REVIEW_BUTTON = { approve: 'Approve', escalate: 'Escalate', dismiss: 'Dismiss' };
-  function pickedAction() {
-    const picked = document.querySelector('input[name="reviewAction"]:checked');
-    return picked ? picked.value : null;
-  }
-  function updateReviewSubmit() {
-    const action = pickedAction();
-    reviewSubmit.disabled = !action;
-    reviewSubmit.textContent = action ? REVIEW_BUTTON[action] : 'Choose a decision';
-  }
-  document.querySelectorAll('input[name="reviewAction"]').forEach(function(input) { input.addEventListener('change', updateReviewSubmit); });
-  function openReviewModal(r) {
-    currentFlag = r;
-    document.getElementById('reviewStudentName').textContent = r.name;
-    // Postgres sends "2026-10-18 14:35:00.12+08"; Date needs a "T" and a "+08:00" offset.
-    const flagged = r.createdAt
-      ? new Date(r.createdAt.replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00')).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
-      : '';
-    document.getElementById('reviewStudentMeta').textContent = r.strand + (flagged ? ' · Flagged ' + flagged : '');
-    document.getElementById('reviewMatch').textContent = r.match;
-    // Low similarity flags a student whatever the match, so say why a Match is here.
-    document.getElementById('reviewMatchNote').classList.toggle('hidden', !(r.match === 'Match' && r.reason === 'Highest similarity below the monitoring level'));
-    document.getElementById('reviewCareer').textContent = r.career;
-    document.getElementById('reviewReason').textContent = r.reason +
-      (r.topScore !== null && r.topScore !== undefined ? ' (Cosine Similarity: ' + Number(r.topScore).toFixed(3) + ')' : '');
-    document.getElementById('reviewApproveText').textContent = 'It stands as it is, no counseling needed. The flag is kept in History.';
-    document.getElementById('reviewDismissText').textContent = 'Not a valid flag (add a note on why). The flag is kept in History.';
-    document.querySelectorAll('input[name="reviewAction"]').forEach(function(input) { input.checked = false; });
-    // View Only staff see the details without the decision part (the link and the title say View, not Review).
-    document.getElementById('reviewTitle').textContent = canAct ? 'Review recommendation' : 'Recommendation details';
-    document.getElementById('reviewDecision').classList.toggle('hidden', !canAct);
-    document.getElementById('reviewNoteWrap').classList.toggle('hidden', !canAct);
-    reviewSubmit.classList.toggle('hidden', !canAct);
-    document.getElementById('reviewCancelBtn').textContent = canAct ? 'Cancel' : 'Close';
-    document.getElementById('reviewNote').value = '';
-    document.getElementById('reviewActionError').classList.add('hidden');
-    const inviteBtn = document.getElementById('reviewInviteBtn');
-    inviteBtn.classList.toggle('hidden', !canInvite);
-    inviteBtn.dataset.studentId = r.userId;
-    document.getElementById('reviewInviteMsg').classList.add('hidden');
-    updateReviewSubmit();
-    reviewDialog.open(canAct ? document.querySelector('input[name="reviewAction"]') : document.getElementById('reviewCancelBtn'));
-  }
-  function closeReviewModal() { reviewDialog.close(); }
-
-  // One decision, saved at once: the choice already says what will happen, so there is no second "Are you sure?".
-  // The server's message shows if it could not be saved (for example someone else handled the flag a moment earlier).
-  reviewSubmit.addEventListener('click', async function() {
-    const action = pickedAction();
-    if (!currentFlag || !action) return;
-    const flag = currentFlag;
-    const errorEl = document.getElementById('reviewActionError');
-    errorEl.classList.add('hidden');
-    reviewSubmit.disabled = true;
-    let data = null;
-    try {
-      const res = await fetch('api/monitoring-action.php', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flagId: flag.flagId, action: action, note: document.getElementById('reviewNote').value })
-      });
-      data = await res.json();
-    } catch (e) {}
-    if (!data || !data.success) {
-      reviewSubmit.disabled = false;
-      errorEl.textContent = (data && data.error) || 'Could not save the decision. Please try again.';
-      errorEl.classList.remove('hidden');
-      return;
-    }
-    closeReviewModal();
-    PP.toast(action === 'approve' ? 'Recommendation approved.' : action === 'escalate' ? 'Flag escalated to the Counseling Queue.' : 'Flag dismissed.');
-    await load();
-  });
-
 
   await load();
 })();

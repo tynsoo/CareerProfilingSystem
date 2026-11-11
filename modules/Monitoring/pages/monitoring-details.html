@@ -122,15 +122,26 @@
         <button type="button" data-tab="completed" aria-pressed="false" class="tab-btn pp-filter-tab">Completed Today <span class="tab-count"></span></button>
         <button type="button" data-tab="pending" aria-pressed="false" class="tab-btn pp-filter-tab">Pending Assessments <span class="tab-count"></span></button>
         <button type="button" data-tab="counseling" aria-pressed="false" class="tab-btn pp-filter-tab">Counseling Queue <span class="tab-count"></span></button>
-        <button type="button" data-tab="dismissed" aria-pressed="false" class="tab-btn pp-filter-tab">Dismissed <span class="tab-count"></span></button>
         <button type="button" data-tab="history" aria-pressed="false" class="tab-btn pp-filter-tab">History <span class="tab-count"></span></button>
       </div>
 
       <!-- Data Table -->
       <div class="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
-        <div class="border-b border-slate-100 px-5 py-4">
-          <p id="tableTitle" class="text-sm font-bold text-slate-900"></p>
-          <p id="tableHint" class="hidden text-xs text-slate-500 mt-0.5"></p>
+        <div class="border-b border-slate-100 px-5 py-4 flex items-start justify-between flex-wrap gap-3">
+          <div>
+            <p id="tableTitle" class="text-sm font-bold text-slate-900"></p>
+            <p id="tableHint" class="hidden text-xs text-slate-500 mt-0.5"></p>
+          </div>
+          <!-- History only: how the flag was closed (the Dismissed list is the "Dismissed by staff" choice). -->
+          <label id="historyFilterWrap" class="hidden text-xs text-slate-600 flex items-center gap-2">Show
+            <select id="historyFilter" class="border border-slate-300 rounded-md px-2 py-1.5 text-sm text-slate-700">
+              <option value="">All closed flags</option>
+              <option value="reviewed">Reviewed, no counseling needed</option>
+              <option value="counseling">Closed with a counseling outcome</option>
+              <option value="dismissed">Dismissed by staff</option>
+              <option value="retake">Replaced by a retake</option>
+            </select>
+          </label>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse min-w-[900px]">
@@ -208,7 +219,7 @@
       <fieldset id="reviewDecision">
         <legend class="text-xs font-medium text-slate-600 mb-2">Your decision</legend>
         <label class="pp-choice" id="reviewApproveChoice"><input type="radio" name="reviewAction" value="approve"><span><span class="pp-choice-title">Approve the recommendation</span><span class="pp-choice-text" id="reviewApproveText"></span></span></label>
-        <label class="pp-choice hidden" id="reviewResolveChoice"><input type="radio" name="reviewAction" value="resolve"><span><span class="pp-choice-title">Record the counseling outcome</span><span class="pp-choice-text">Closes the flag with the outcome below. It moves to History with the date and your name.</span></span></label>
+        <label class="pp-choice hidden" id="reviewResolveChoice"><input type="radio" name="reviewAction" value="resolve"><span><span class="pp-choice-title">Record the counseling outcome</span><span class="pp-choice-text">Closes the flag with the outcome below. It moves to History with the date and your name, and an open invitation takes the matching status (Availed, Did Not Avail or Declined).</span></span></label>
         <div id="reviewOutcomeWrap" class="hidden pl-7 pb-2">
           <label for="reviewOutcome" class="block text-xs font-medium text-slate-600 mb-1">Outcome</label>
           <select id="reviewOutcome" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-700"><option value="">Choose the outcome</option></select>
@@ -286,14 +297,13 @@
   }, { passive: true });
   })();
 
-  (function() {
+  (async function() {
     const TAB_META = {
-      'needs-review': { title: 'Flagged Recommendations Needing Review', hasAction: true },
+      'needs-review': { title: 'Flagged Recommendations Needing Review', hint: 'This school year, lowest similarity first.', hasAction: true },
       'completed': { title: 'Assessments Completed Today', hasAction: false },
       'pending': { title: 'Students with Pending Assessments', hasAction: false },
       'counseling': { title: 'Students Queued for Counseling', hasAction: true },
-      'dismissed': { title: 'Dismissed Flags', hint: 'Flags staff dismissed, newest first. A dismissal does not notify the student.', hasAction: false },
-      'history': { title: 'Closed Flags (approved and dismissed flags are kept here)', hasAction: false },
+      'history': { title: 'Closed Flags', hint: 'Every approved, counseled and dismissed flag is kept here, newest first. A dismissal does not notify the student.', hasAction: false },
     };
 
     function escapeHtml(str) {
@@ -307,7 +317,9 @@
     let rowsById = {};
     // The tab and page live in the page address (?tab=, also used by links from Monitoring); the search (a student
     // name) stays in this tab only (PP.listState in js/ui-state.js).
-    const listState = PP.listState({ tab: 'needs-review', search: '', page: 1, pageSize: 50 }, ['search']);
+    const listState = PP.listState({ tab: 'needs-review', search: '', page: 1, pageSize: 50, show: '' }, ['search']);
+    let historyFilter = '';
+    let threshold = null;
     const getRows = PP.latestJson(); // a new tab click or search cancels the list still on its way
     // api/monitoring.php sends every row of a tab (after the search), so the pages are cut here.
     let allRows = [];
@@ -323,10 +335,9 @@
     });
 
     function headForTab(tab) {
-      if (tab === 'needs-review') return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Flag Reason', 'Priority', 'Action'];
+      if (tab === 'needs-review') return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Similarity', 'Action'];
       if (tab === 'completed') return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Completed At'];
       if (tab === 'pending') return ['Student', 'Strand', 'Registered', 'Status'];
-      if (tab === 'dismissed') return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Flag Reason', 'Dismissed'];
       if (tab === 'history') return ['Student', 'Strand', 'Flag Reason', 'Outcome', 'Closed', 'Closed By', 'Note'];
       return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Escalated', 'Booking', 'Action'];
     }
@@ -371,31 +382,18 @@
         '</tr>';
       }
       if (tab === 'needs-review') {
-        const priorityCell = tab === 'needs-review'
-          ? '<td class="px-6 py-3">' + PP.badge(r.priority, { High: 'red', Medium: 'amber' }[r.priority] || 'gray') + '</td>'
-          : '';
+        // The highest Cosine Similarity of the result (the list is sorted on it, lowest first) instead of a priority.
+        const similarityCell = '<td class="px-6 py-3 text-sm text-slate-900 whitespace-nowrap">' +
+          (r.topScore === null || r.topScore === undefined ? '<span class="text-slate-500">Not computed</span>'
+            : Number(r.topScore).toFixed(3) + (threshold !== null ? '<span class="block text-xs text-slate-500">level ' + Number(threshold).toFixed(3) + '</span>' : '')) +
+          '</td>';
         return '<tr>' +
           '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
           '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
           '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
-          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
-          priorityCell +
+          similarityCell +
           '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">' + (canAct ? 'Review' : 'View') + '</a></td>' +
-        '</tr>';
-      }
-      if (tab === 'dismissed') {
-        // Who dismissed it and when, under the badge (the name comes from the audit log; a retake dismisses by itself).
-        const who = r.dismissedAuto ? 'Automatically, after the student retook the assessment'
-          : r.dismissedBy ? 'by <span class="font-medium text-slate-700">' + escapeHtml(r.dismissedBy) + '</span>' : '';
-        return '<tr>' +
-          '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
-          '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
-          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
-          '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
-          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
-          '<td class="px-6 py-3">' + PP.badge('Dismissed', 'gray') +
-            '<p class="text-xs text-slate-500 mt-1">' + (who ? who + '<br>' : '') + escapeHtml(r.resolvedAt || '') + '</p></td>' +
         '</tr>';
       }
       if (tab === 'completed') {
@@ -426,14 +424,14 @@
         : '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">No entries in this category.</td></tr>';
       pager.render({ page: page, pageSize: pageSize, total: allRows.length, totalPages: totalPages, startIndex: start + 1, shown: shown.length });
       pager.focus(focus);
-      listState.save({ tab: activeTab, search: document.getElementById('searchInput').value.trim(), page: page, pageSize: pageSize });
+      listState.save({ tab: activeTab, search: document.getElementById('searchInput').value.trim(), page: page, pageSize: pageSize, show: activeTab === 'history' ? historyFilter : '' });
       bindReviewLinks();
     }
 
     let renderedTab = null;
     async function render() {
       const q = document.getElementById('searchInput').value.trim();
-      listState.save({ tab: activeTab, search: q, page: page, pageSize: pageSize });
+      listState.save({ tab: activeTab, search: q, page: page, pageSize: pageSize, show: activeTab === 'history' ? historyFilter : '' });
       const url = 'api/monitoring.php?tab=' + encodeURIComponent(activeTab) + (q ? '&search=' + encodeURIComponent(q) : '');
       const body = document.getElementById('tableBody');
       const cols = headForTab(activeTab).length;
@@ -468,12 +466,14 @@
       hintEl.classList.toggle('hidden', !TAB_META[activeTab].hint);
       document.getElementById('tableHeadRow').innerHTML = headForTab(activeTab)
         .map(h => '<th class="px-6 py-3 text-sm font-bold text-slate-500">' + h + '</th>').join('');
-      allRows = data.rows;
+      threshold = typeof data.threshold === 'number' ? data.threshold : null;
+      document.getElementById('historyFilterWrap').classList.toggle('hidden', activeTab !== 'history');
+      allRows = activeTab === 'history' && historyFilter ? data.rows.filter(r => r.closedAs === historyFilter) : data.rows;
       drawPage(null);
 
       const tabCounts = {
         'needs-review': data.summary.needsReview, 'completed': data.summary.completedToday,
-        'pending': data.summary.pending, 'counseling': data.summary.counseling, 'dismissed': data.summary.dismissed, 'history': data.summary.history,
+        'pending': data.summary.pending, 'counseling': data.summary.counseling, 'history': data.summary.history,
       };
       canCounsel = data.canCounsel === true;
       fillOptions(data);
@@ -511,7 +511,8 @@
       const booking = document.getElementById('reviewBookingStatus');
       (data.bookingStatuses || []).forEach(function(o) { booking.add(new Option(o.label, o.value)); });
     }
-    fetch('api/security-config.php').then(function(r) { return r.json(); }).then(function(inviteCfg) {
+    // A link to one flag waits for this before opening the review, so it shows the right decisions.
+    const accessReady = fetch('api/security-config.php').then(function(r) { return r.json(); }).then(function(inviteCfg) {
       const levelFor = (module) => ((inviteCfg.rbac && inviteCfg.rbac[module] && inviteCfg.rbac[module][currentUser.rbacRole || currentUser.role]) || 'none');
       canInvite = levelFor('counselingStatus') === 'full' && (currentUser.rbacRole || currentUser.role) !== 'facilitator'; // Facilitators never invite (DFD process 4.0)
       canAct = levelFor('monitoring') === 'full';
@@ -605,7 +606,8 @@
       // In the Counseling Queue it is closed with a counseling outcome (Guidance Counselor or Administrator only).
       const leaves = currentFlag.escalated ? 'The flag leaves the Counseling Queue and is kept in History.' : 'The flag leaves the review list and is kept in History.';
       document.getElementById('reviewApproveText').textContent = 'It stands as it is, no counseling needed. ' + leaves;
-      document.getElementById('reviewDismissText').textContent = 'Not a valid flag. ' + leaves;
+      document.getElementById('reviewDismissText').textContent = 'Not a valid flag. ' + leaves +
+        (currentFlag.escalated ? ' An open invitation sent by staff is cancelled; a student\'s own request stays open.' : '');
       document.getElementById('reviewEscalateChoice').classList.toggle('hidden', currentFlag.escalated);
       document.getElementById('reviewApproveChoice').classList.toggle('hidden', currentFlag.escalated);
       document.getElementById('reviewResolveChoice').classList.toggle('hidden', !currentFlag.escalated);
@@ -669,7 +671,10 @@
         return;
       }
       closeReviewModal();
-      PP.toast(action === 'approve' ? 'Recommendation approved.' : action === 'escalate' ? 'Flag escalated to the Counseling Queue.' : action === 'resolve' ? 'Outcome recorded. The flag is in History.' : 'Flag dismissed. It is kept in History.');
+      // A flag For Counseling that is closed also closes its open invitation (api/monitoring-action.php), so the
+      // student's Counseling Status follows; the message says so.
+      const inviteNote = data.invite ? ' The counseling invitation is now ' + (data.invite.status === 'cancelled' ? 'Cancelled' : data.invite.status === 'attended' ? 'Availed' : data.invite.status === 'no_show' ? 'Did Not Avail' : 'Declined') + '.' : '';
+      PP.toast((action === 'approve' ? 'Recommendation approved.' : action === 'escalate' ? 'Flag escalated to the Counseling Queue.' : action === 'resolve' ? 'Outcome recorded. The flag is in History.' : 'Flag dismissed. It is kept in History.') + inviteNote);
       await render();
     });
 
@@ -684,14 +689,41 @@
     // The search waits until typing stops for 300 ms, and starts again from the first page.
     document.getElementById('searchInput').addEventListener('input', PP.debounce(function() { page = 1; render(); }, 300));
 
+    document.getElementById('historyFilter').addEventListener('change', function() {
+      historyFilter = this.value;
+      page = 1;
+      render();
+    });
+
     // Start from the tab and page in the page address and the search kept in this tab (Reload, Back, a link from Monitoring).
     const saved = listState.read();
+    // The Dismissed list is now History filtered to Dismissed by staff; older links (?tab=dismissed) still land there.
+    if (saved.tab === 'dismissed') { saved.tab = 'history'; saved.show = 'dismissed'; }
     if (TAB_META[saved.tab]) activeTab = saved.tab;
-    document.getElementById('searchInput').value = saved.search;
-    page = saved.page;
+    if (activeTab === 'history' && ['reviewed', 'counseling', 'dismissed', 'retake'].includes(saved.show)) historyFilter = saved.show;
+    document.getElementById('historyFilter').value = historyFilter;
+    const flagParam = Number(new URLSearchParams(window.location.search).get('flag'));
+    // A link to one flag shows its whole list, not a search kept from before.
+    document.getElementById('searchInput').value = flagParam > 0 ? '' : saved.search;
+    page = flagParam > 0 ? 1 : saved.page;
     if ([25, 50, 100].includes(saved.pageSize)) pageSize = saved.pageSize;
 
-    render();
+    // ?flag=ID (Review on Monitoring, a notification): open that student's review at once. The id is taken off the
+    // address afterwards, so Reload or Back shows the list, not the window again. Opening it changes nothing.
+    await render();
+    if (flagParam > 0) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('flag');
+        window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+      } catch (e) {}
+      if (rowsById[flagParam]) {
+        await accessReady;
+        openReviewModal(rowsById[flagParam]);
+      } else if (activeTab === 'needs-review' || activeTab === 'counseling') {
+        PP.toast('This flag was already handled. It is listed in History.');
+      }
+    }
   })();
 })();
 </script>

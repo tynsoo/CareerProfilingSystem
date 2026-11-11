@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
 require_once __DIR__ . '/../../UserManagement/lib/StaffScope.php';
 require_once __DIR__ . '/../../CareerProfiling/lib/ExamSchedule.php';
+require_once __DIR__ . '/../../../shared/lib/AcademicYear.php';
 
 $user = Auth::requireLogin();
 $pdo = Database::get();
@@ -72,22 +73,25 @@ if ($isStaff) {
     // Monitoring flags: only for staff whose role can open Monitoring (the flag names who was flagged).
     // Guidance staff handle flags as a team, so these are not limited to assigned sections.
     if (Rbac::accessLevel('monitoring', Rbac::roleKey($user)) !== 'none') {
-        // Waiting for review
-        $stmt = $pdo->query(
+        // Waiting for review: the current school year only, like Needs Review on Monitoring (api/monitoring.php).
+        [$yearSql, $yearParams] = AcademicYear::studentCondition('s', AcademicYear::current());
+        $stmt = $pdo->prepare(
             "SELECT mf.id, mf.reason, mf.created_at, s.first_name_enc, s.last_name_enc
              FROM monitoring_flags mf
              JOIN students s ON s.user_id = mf.student_id
-             WHERE mf.status = 'pending'
+             WHERE mf.status = 'pending' AND $yearSql
              ORDER BY mf.created_at DESC LIMIT $each"
         );
+        $stmt->execute($yearParams);
         foreach ($stmt->fetchAll() as $row) {
             $name = Crypto::dec($row['first_name_enc']) . ' ' . Crypto::dec($row['last_name_enc']);
-            $reasonLabel = $row['reason'] === 'low_confidence' ? 'low RIASEC confidence' : $row['reason'];
+            // The same wording as Monitoring (a career mismatch never raises a flag).
+            $reasonLabel = $row['reason'] === 'low_confidence' ? 'highest similarity below the monitoring level' : $row['reason'];
             $items[] = [
                 'type' => 'flag',
                 'title' => 'Assessment flagged',
                 'text' => "$name ($reasonLabel).",
-                'link' => 'monitoring',
+                'link' => 'monitoring-details?tab=needs-review&flag=' . (int) $row['id'], // opens this student's review
                 'ts' => $row['created_at'],
             ];
         }
@@ -110,7 +114,7 @@ if ($isStaff) {
                 'type' => 'flag_escalated',
                 'title' => 'Flag escalated to counseling',
                 'text' => "$name needs a counselor's follow-up.",
-                'link' => 'monitoring-details?tab=counseling',
+                'link' => 'monitoring-details?tab=counseling&flag=' . (int) $row['id'], // opens this student's review
                 'ts' => $row['escalated_at'] ?? $row['created_at'],
             ];
         }
