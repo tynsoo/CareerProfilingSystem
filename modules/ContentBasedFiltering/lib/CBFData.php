@@ -159,12 +159,10 @@ class CBFData
             );
             $pendingCheck->execute([$studentId]);
             $openFlags = $pendingCheck->fetchAll();
-            // A flag already with the counselors stays one flag, but now shows the newest result (a retake that is
-            // still low), so nobody approves a result the student has replaced.
+            // An open flag (Needs Review or with the counselors) stays one flag, but now shows the newest result (a
+            // retake or a re-saved worksheet that is still low), so nobody reviews a result the student has replaced.
             foreach ($openFlags as $open) {
-                if ($open['status'] === 'escalated') {
-                    $pdo->prepare('UPDATE monitoring_flags SET recommendation_id = ? WHERE id = ?')->execute([$recommendationId, $open['id']]);
-                }
+                $pdo->prepare('UPDATE monitoring_flags SET recommendation_id = ? WHERE id = ?')->execute([$recommendationId, $open['id']]);
             }
             if (!$openFlags) {
                 $pdo->prepare(

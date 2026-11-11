@@ -175,6 +175,10 @@ check('the counselor closes it with a counseling outcome', $r['code'] === 200, $
 $row = $pdo->query("SELECT status, outcome, resolved_at, resolved_by, resolution_note_enc FROM monitoring_flags WHERE id = $flagId")->fetch();
 check('resolved at, resolved by and the outcome are stored', $row['resolved_at'] !== null && (int) $row['resolved_by'] === $counselorId && $row['outcome'] === 'counseled_changed_choice');
 check('the note is stored encrypted', $row['resolution_note_enc'] !== null && !str_contains($row['resolution_note_enc'], 'Psychology'));
+check('closing it with a counseling outcome marks the booked invitation Attended (shown as Availed)',
+    $pdo->query("SELECT status FROM counseling_invites WHERE id = $inviteId")->fetchColumn() === 'attended'
+    && ($coun->json($r)['invite']['status'] ?? '') === 'attended', $r['body']);
+check('the invitation change is in the Audit Log', (bool) $pdo->query("SELECT 1 FROM audit_log WHERE action = 'update_counseling_status' AND target_id = '$studentId' AND id = (SELECT MAX(id) FROM audit_log WHERE action = 'update_counseling_status' AND target_id = '$studentId')")->fetchColumn());
 
 $flag2 = $mkFlag();
 $r = $coun->req('POST', '/api/monitoring-action.php', ['flagId' => $flag2, 'action' => 'dismiss', 'note' => 'Duplicate after a retake.']);
@@ -189,12 +193,12 @@ check('History shows when, by whom, the outcome and the note', ($byId[$flagId]['
     && ($byId[$flagId]['outcomeLabel'] ?? '') === CounselingTracking::OUTCOMES['counseled_changed_choice']
     && ($byId[$flag2]['resolutionNote'] ?? '') === 'Duplicate after a retake.');
 check('the History count is sent', ($hist['summary']['history'] ?? 0) >= 2);
-// The Dismissed tab (master) still works next to History: who dismissed it, the date as text, no note sent.
+// The Dismissed tab is now History filtered on Dismissed: each row says how it was closed, and old links still work.
+check('History says how each flag was closed', ($byId[$flagId]['closedAs'] ?? '') === 'counseling' && ($byId[$flag2]['closedAs'] ?? '') === 'dismissed', json_encode([$byId[$flagId]['closedAs'] ?? null, $byId[$flag2]['closedAs'] ?? null]));
+check('History names who dismissed it', ($byId[$flag2]['resolvedBy'] ?? '') === 'Qa, qarevcoun', json_encode($byId[$flag2] ?? null));
 $dis = $coun->json($coun->raw('GET', '/api/monitoring.php?tab=dismissed'));
-$d2 = array_values(array_filter($dis['rows'] ?? [], fn($x) => $x['flagId'] === $flag2))[0] ?? null;
-check('Dismissed lists the dismissed flag with who dismissed it', $d2 !== null && str_starts_with((string) ($d2['dismissedBy'] ?? ''), 'Qa, qarevcoun'), json_encode($d2));
-check('Dismissed shows the date as text and never sends the note', $d2 !== null && preg_match('/^[A-Z][a-z]{2} \d{1,2}, \d{4} /', (string) $d2['resolvedAt']) === 1 && !array_key_exists('note', $d2));
-check('both counts are sent', isset($dis['summary']['dismissed'], $dis['summary']['history']));
+check('an old Dismissed link answers with History', ($dis['tab'] ?? '') === 'history' && count($dis['rows'] ?? []) === count($hist['rows'] ?? []));
+check('no separate Dismissed count is sent any more', !isset($dis['summary']['dismissed']) && isset($dis['summary']['history']));
 
 echo "\n=== S14: refused security changes are logged ===\n";
 $r = $coun->req('POST', '/api/security-config.php', ['type' => 'settings', 'timeoutMinutes' => 60]);
