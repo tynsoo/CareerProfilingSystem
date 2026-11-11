@@ -57,6 +57,40 @@
   .chart-scroll { max-height:540px; overflow-y:auto; }
   /* Same header height on both cards, so the two pies line up side by side. */
   @media (min-width:1024px) { .pie-pair .pie-head { min-height:96px; } }
+
+  /* Student list (panel UI revision): six columns, quiet badges, View + a More menu, cards on phones. */
+  .st-table th { padding:12px 16px; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#64748b; white-space:nowrap; }
+  .st-table td { padding:12px 16px; vertical-align:middle; font-size:14px; color:#374151; }
+  .st-sub { display:block; margin-top:2px; font-size:12px; font-weight:400; color:#6b7280; white-space:nowrap; }
+  .st-name { font-weight:500; color:#111827; }
+  .st-flag { margin-left:6px; vertical-align:middle; }
+  .st-actions { display:flex; align-items:center; justify-content:flex-end; gap:6px; }
+  .st-view { display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; font-weight:600; color:#0f2a6b; white-space:nowrap; }
+  .st-view:hover, .st-more:hover { background:#f8fafc; }
+  .st-more { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid #cbd5e1; border-radius:6px; color:#475569; }
+  .st-more[aria-expanded="true"] { background:#f1f5f9; }
+  .st-menu { position:fixed; z-index:40; min-width:210px; padding:4px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 10px 25px rgba(15,23,42,.12); }
+  .st-menu [role="menuitem"] { display:block; width:100%; padding:8px 12px; border-radius:6px; text-align:left; font-size:13px; color:#1f2937; white-space:nowrap; }
+  .st-menu [role="menuitem"]:hover:not(:disabled), .st-menu [role="menuitem"]:focus-visible { background:#f1f5f9; outline:none; }
+  .st-menu [role="menuitem"]:disabled { color:#9ca3af; cursor:not-allowed; }
+  .st-menu .st-danger { color:#c81e1e; }
+  .st-menu .st-note { display:block; font-size:11px; color:#9ca3af; white-space:normal; }
+  .st-menu hr { margin:4px 0; border:0; border-top:1px solid #e5e7eb; }
+  /* Sized by the table's own width (not the window), so the sidebar never squeezes it: the RIASEC column goes below
+     900px (it is on the profile), and below 720px each student becomes a small card (name, strand and section, the two
+     badges, then the actions). */
+  #studentTableScroll { container-type:inline-size; }
+  @container (max-width:900px) { .st-table .st-col-riasec { display:none; } }
+  @container (max-width:720px) {
+    .st-table thead { display:none; }
+    .st-table, .st-table tbody, .st-table tr, .st-table td { display:block; width:100%; }
+    .st-table tr { padding:12px 16px; }
+    .st-table td { padding:2px 0; }
+    .st-table td.st-col-riasec { display:none; }
+    .st-table td.st-col-assess, .st-table td.st-col-counsel { display:inline-block; width:auto; margin:6px 16px 0 0; vertical-align:top; text-align:left; }
+    .st-table td.st-col-actions { margin-top:10px; }
+    .st-table .st-actions { justify-content:flex-start; }
+  }
 </style>
 </head>
 <body class="bg-[#f9fafb]">
@@ -316,7 +350,7 @@
                 <!-- No Apply or Done button: every choice updates the list right away; ×, Escape or a click outside closes the panel. -->
               </div>
             </div>
-            <button type="button" id="clearFilters" disabled class="pp-clear-filters ov-btn">
+            <button type="button" id="clearFilters" disabled class="pp-clear-filters ov-btn hidden">
               <span class="pp-clear-filters-icon" aria-hidden="true"></span>
               Clear filters
             </button>
@@ -331,23 +365,19 @@
         <p id="noResults" class="hidden px-6 py-6 text-sm text-gray-500 text-center">No students match your search or filters.</p>
 
         <div class="overflow-auto max-h-[60vh]" id="studentTableScroll">
-          <table class="w-full text-left border-collapse">
+          <table class="st-table w-full text-left border-collapse">
             <thead class="bg-gray-50 border-b border-gray-200 sticky top-0 z-[1]">
               <tr>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">#</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Name</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Strand</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Section</th>
-                <th id="accountHead" class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Account</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Assessment Status</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Assessment Date</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase">Top 3 RIASEC</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase text-center">Counseling Status</th>
-                <th class="px-6 py-4 text-xs font-semibold tracking-wide text-gray-600 uppercase text-center">Actions</th>
+                <th scope="col">Student</th>
+                <th scope="col">Strand &middot; Section</th>
+                <th scope="col">Assessment</th>
+                <th scope="col" class="st-col-riasec">Top 3 RIASEC</th>
+                <th scope="col">Counseling</th>
+                <th scope="col" class="text-right"><span class="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100" id="studentTbody">
-              <tr><td colspan="10" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>
+              <tr><td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -472,9 +502,8 @@
   // No Access on Student account management: no Account column and no Account status filter (api/students.php does not
   // send the account state to them either).
   const seesAccounts = PP.may(currentUser, 'studentAccounts');
-  const COLS = seesAccounts ? 10 : 9;
+  const COLS = 6;
   if (!seesAccounts) {
-    document.getElementById('accountHead').remove();
     document.getElementById('filterAccountField').remove();
   }
 
@@ -808,9 +837,11 @@
   });
 
   // Badge colors by meaning (PP.badge in js/ui-state.js): not taking counseling is not an error, so it is gray.
-  const STATUS_TONE = { Completed: 'green', Pending: 'amber', 'Not Registered': 'blue' };
+  // Green done, amber waiting, blue invited, gray neutral (none, closed or off).
+  const STATUS_TONE = { Completed: 'green', Pending: 'amber', 'Not Registered': 'gray' };
   // Counseling Status comes from the latest counseling invitation (api/students.php, CounselingTracking::displayStatus).
   const COUNSELING_TONE = { Invited: 'blue', Booked: 'amber', Availed: 'green', 'Did Not Avail': 'gray', Declined: 'gray', Cancelled: 'gray' };
+  const MORE_ICON = '<svg class="w-4 h-4" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M240-400q-33 0-56.5-23.5T160-480q0-33 23.5-56.5T240-560q33 0 56.5 23.5T320-480q0 33-23.5 56.5T240-400Zm240 0q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm240 0q-33 0-56.5-23.5T640-480q0-33 23.5-56.5T720-560q33 0 56.5 23.5T800-480q0 33-23.5 56.5T720-400Z"/></svg>';
 
   // Shown in school time (Asia/Manila); Postgres may send "+08" without
   // minutes, which some browsers can't parse, so pad it first.
@@ -823,78 +854,116 @@
   // "View profile" as an eye: it opens the profile, it does not edit (the old pencil suggested editing).
   const EYE_ICON = '<svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-300Zm0 220q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280Z"/></svg>';
 
-  function renderRow(s, index) {
+  // One row: Student (name, email, and a tag only when the account is locked or deactivated), Strand · Section,
+  // Assessment (status with the date under it), Top 3 RIASEC, Counseling (status with who started it), and the actions:
+  // View plus a More menu (invite, unlock, activate or deactivate). Every menu action keeps its confirmation.
+  function renderRow(s) {
     const isRosterOnly = s.userId === null;
-    const statusCell = PP.badge(s.status === 'Not Registered' ? 'Not registered' : s.status, STATUS_TONE[s.status]);
-    // A student with no account has no sign-in to show.
-    // Locked by wrong passwords (for example on exam day): shown right here with Unlock, so staff in the
-    // room see it without opening each profile.
-    const accountCell = isRosterOnly
-      ? PP.badge('No account', 'gray')
-      : (s.isActive && s.locked
-          ? '<span class="inline-flex items-center gap-2 whitespace-nowrap">' +
-              PP.badge('Locked', 'amber') +
-              (canManageAccounts ? '<button type="button" class="unlock-btn text-xs font-semibold text-[#0f2a6b] underline" data-id="' + s.userId + '" data-name="' + escapeHtml(s.name) + '">Unlock</button>' : '') +
-            '</span>'
-          : s.isActive
-          ? PP.badge('Active', 'green')
-          : PP.badge('Deactivated', 'gray'));
+    const name = escapeHtml(s.name);
+    // Account state shows only when it is not the usual "Active" (the Account filter and the profile show it in full).
+    const accountFlag = isRosterOnly || !seesAccounts ? ''
+      : (s.isActive && s.locked ? '<span class="st-flag">' + PP.badge('Locked', 'amber') + '</span>'
+        : (s.isActive === false ? '<span class="st-flag">' + PP.badge('Deactivated', 'gray') + '</span>' : ''));
+    const assessDate = s.assessmentDate ? formatDate(s.assessmentDate) : (s.status === 'Pending' ? 'Not taken yet' : '');
+    const assessCell = PP.badge(s.status === 'Not Registered' ? 'Not registered' : s.status, STATUS_TONE[s.status]) +
+      (assessDate ? '<span class="st-sub">' + assessDate + '</span>' : '');
+    const riasecCell = !s.riasec ? '<span class="text-gray-400">&mdash;</span>'
+      : s.riasecTied ? '<span title="Equal scores: no unique ranked Top-3 code">' + escapeHtml(s.riasecLabel) + '</span>'
+      : escapeHtml(s.riasecLabel);
     // "Invited" says who started it: the student's Avail Counseling click or a staff invitation.
-    const counselingCell = s.counseling
-      ? PP.badge(s.counseling, COUNSELING_TONE[s.counseling] || 'gray') +
-        (s.counselingBy ? '<span class="block text-[11px] text-gray-500 mt-1">' + escapeHtml(s.counselingBy) + '</span>' : '')
-      : '<span class="text-gray-500">No request</span>';
-    const params = new URLSearchParams({ id: s.userId });
-    // Only the slots this person can ever use (open profile | counseling or register invite | activate or deactivate), so
-    // the buttons line up from row to row and no column stands empty. When opening the profile is all they can do, it is a
-    // labeled "View profile" button; next to other buttons it is an eye icon (it opens the profile, it does not edit).
-    // A roster-only entry has no account, so no profile to open.
-    const BTN = 'display:inline-flex;align-items:center;justify-content:center;width:100%;height:32px;padding:0 8px;white-space:nowrap';
-    const NAVY_BTN = 'text-xs font-semibold rounded-md border text-[#0f2a6b] border-[#0f2a6b] hover:bg-slate-50';
-    const profileHref = 'student-profile?' + params.toString();
-    let actionCell;
-    if (!ACTION_SLOTS.invite && !ACTION_SLOTS.toggle) {
-      actionCell = isRosterOnly
-        ? '<span class="text-xs text-gray-500">No profile yet</span>'
-        : '<a href="' + profileHref + '" class="' + NAVY_BTN + '" style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;white-space:nowrap">' +
-            EYE_ICON + 'View profile</a>';
+    const counselingCell = PP.badge(s.counseling || 'No request', s.counseling ? (COUNSELING_TONE[s.counseling] || 'gray') : 'gray') +
+      (s.counselingBy ? '<span class="st-sub">' + escapeHtml(s.counselingBy) + '</span>' : '');
+
+    // The More menu: only the actions this person may use on this row.
+    const items = [];
+    if (isRosterOnly) {
+      if (canManageAccounts && s.hasEmail && !isPastYear) {
+        items.push('<button type="button" role="menuitem" class="invite-btn" data-roster-id="' + s.rosterId + '" data-name="' + name + '">Invite to register</button>');
+      }
     } else {
-      const cells = [isRosterOnly ? '' :
-        '<a href="' + profileHref + '" title="View profile" aria-label="View profile of ' + escapeHtml(s.name) + '" class="inline-flex items-center justify-center border border-gray-200 rounded shadow-sm hover:bg-gray-50 text-slate-500" style="width:32px;height:32px">' + EYE_ICON + '</a>'];
-      if (ACTION_SLOTS.invite) {
-        cells.push(isRosterOnly
-          ? (canManageAccounts && s.hasEmail && !isPastYear ? '<button type="button" class="invite-btn ' + NAVY_BTN + '" style="' + BTN + '" data-roster-id="' + s.rosterId + '" data-name="' + escapeHtml(s.name) + '">Invite to register</button>' : '')
-          // isActive is null when the account state is not sent (No Access on accounts); the server refuses a deactivated student.
-          // An active invitation (Invited or Booked) is not sent again: the button shows that state instead.
-          : (canInvite && s.isActive !== false
-            ? (s.counselingActive
-              ? '<button type="button" disabled class="' + NAVY_BTN + ' opacity-60 cursor-not-allowed" style="' + BTN + '" title="Active invitation. Update its status on the Student Profile.">' + escapeHtml(s.counseling) + '</button>'
-              : '<button type="button" class="counsel-invite-btn ' + NAVY_BTN + '" style="' + BTN + '" data-id="' + s.userId + '" data-name="' + escapeHtml(s.name) + '">Invite to counseling</button>')
-            : ''));
+      // isActive is null when the account state is not sent (No Access on accounts); the server refuses a deactivated student.
+      if (canInvite && s.isActive !== false) {
+        items.push(s.counselingActive
+          // An active invitation (Invited or Booked) is not sent again.
+          ? '<button type="button" role="menuitem" disabled aria-disabled="true">Invite to counseling<span class="st-note">Already ' + escapeHtml(s.counseling.toLowerCase()) + '. Update it on the profile.</span></button>'
+          : '<button type="button" role="menuitem" class="counsel-invite-btn" data-id="' + s.userId + '" data-name="' + name + '">Invite to counseling</button>');
       }
-      if (ACTION_SLOTS.toggle) {
-        cells.push(isRosterOnly ? '' : '<button type="button" class="toggle-active-btn text-xs font-semibold rounded-md border ' + (s.isActive ? 'btn-danger text-[#ed1c24] border-[#ed1c24] hover:bg-red-50' : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50') + '" style="' + BTN + '" data-id="' + s.userId + '" data-active="' + (s.isActive ? '1' : '0') + '" data-name="' + escapeHtml(s.name) + '">' + (s.isActive ? 'Deactivate' : 'Activate') + '</button>');
+      if (canManageAccounts && s.isActive && s.locked) {
+        items.push('<button type="button" role="menuitem" class="unlock-btn" data-id="' + s.userId + '" data-name="' + name + '">Unlock account</button>');
       }
-      actionCell = '<div style="display:grid;grid-template-columns:' + ACTION_SLOTS.columns + ';gap:8px;align-items:center;justify-content:center">' +
-        cells.map(function(html) { return html || '<span></span>'; }).join('') + '</div>';
+      if (canManageAccounts) {
+        if (items.length) items.push('<hr role="separator">');
+        items.push('<button type="button" role="menuitem" class="toggle-active-btn' + (s.isActive ? ' st-danger' : '') + '" data-id="' + s.userId + '" data-active="' + (s.isActive ? '1' : '0') + '" data-name="' + name + '">' + (s.isActive ? 'Deactivate account' : 'Activate account') + '</button>');
+      }
     }
+    const view = isRosterOnly ? '<span class="text-xs text-gray-500">No profile yet</span>'
+      : '<a href="student-profile?' + new URLSearchParams({ id: s.userId }).toString() + '" class="st-view" aria-label="View profile of ' + name + '">' + EYE_ICON + 'View</a>';
+    const more = items.length
+      ? '<span class="st-more-wrap"><button type="button" class="st-more" aria-haspopup="menu" aria-expanded="false" aria-label="More actions for ' + name + '">' + MORE_ICON + '</button>' +
+        '<div class="st-menu hidden" role="menu" aria-label="Actions for ' + name + '">' + items.join('') + '</div></span>'
+      : '';
+
     return '<tr>' +
-      '<td class="px-6 py-4 text-sm text-gray-500">' + index + '</td>' +
-      '<td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">' + escapeHtml(s.name) +
-        (s.email ? '<span class="block text-xs font-normal text-gray-500">' + escapeHtml(s.email) + '</span>' : '') +
-      '</td>' +
-      '<td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">' + PP.strandLabel(s.strand) + '</td>' + // strand color dot (js/strand-colors.js)
-      '<td class="px-6 py-4 text-sm text-gray-500">' + escapeHtml(s.section) + '</td>' +
-      (seesAccounts ? '<td class="px-6 py-4 whitespace-nowrap">' + accountCell + '</td>' : '') +
-      '<td class="px-6 py-4 whitespace-nowrap">' + statusCell + '</td>' +
-      '<td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">' + formatDate(s.assessmentDate) + '</td>' +
-      '<td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">' + (!s.riasec ? '<span class="text-gray-500">No result yet</span>'
-        : s.riasecTied ? '<span title="Equal scores: no unique ranked Top-3 code">' + escapeHtml(s.riasecLabel) + '</span>'
-        : escapeHtml(s.riasecLabel)) + '</td>' +
-      '<td class="px-6 py-4 text-center whitespace-nowrap" style="min-width:170px">' + counselingCell + '</td>' +
-      '<td class="px-6 py-4 text-center">' + actionCell + '</td>' +
+      '<td><span class="st-name">' + name + '</span>' + accountFlag +
+        (s.email ? '<span class="st-sub">' + escapeHtml(s.email) + '</span>' : '') + '</td>' +
+      '<td class="whitespace-nowrap">' + PP.strandLabel(s.strand) + // strand color dot (js/strand-colors.js)
+        (s.section ? ' <span class="text-gray-400">&middot;</span> <span class="text-gray-600">' + escapeHtml(s.section) + '</span>' : '') + '</td>' +
+      '<td class="st-col-assess whitespace-nowrap">' + assessCell + '</td>' +
+      '<td class="st-col-riasec whitespace-nowrap">' + riasecCell + '</td>' +
+      '<td class="st-col-counsel whitespace-nowrap">' + counselingCell + '</td>' +
+      '<td class="st-col-actions"><div class="st-actions">' + view + more + '</div></td>' +
     '</tr>';
   }
+
+  // ---- The row's More menu. Fixed position (from the button), so the scrolling table never clips it; it opens upward
+  // near the bottom of the window. Arrow keys move between items, Escape or a click outside closes it.
+  let openMenu = null;
+  function closeMenu(focusButton) {
+    if (!openMenu) return;
+    openMenu.menu.classList.add('hidden');
+    openMenu.button.setAttribute('aria-expanded', 'false');
+    if (focusButton) openMenu.button.focus();
+    openMenu = null;
+  }
+  function menuItems(menu) { return Array.from(menu.querySelectorAll('[role="menuitem"]:not(:disabled)')); }
+  function openRowMenu(button) {
+    const menu = button.nextElementSibling;
+    menu.classList.remove('hidden');
+    button.setAttribute('aria-expanded', 'true');
+    const r = button.getBoundingClientRect();
+    const h = menu.offsetHeight, w = menu.offsetWidth;
+    menu.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';
+    menu.style.top = (r.bottom + 4 + h > window.innerHeight - 8 ? Math.max(8, r.top - 4 - h) : r.bottom + 4) + 'px';
+    openMenu = { button: button, menu: menu };
+    const first = menuItems(menu)[0];
+    if (first) first.focus({ preventScroll: true });
+  }
+  tbody.addEventListener('click', function(e) {
+    const btn = e.target.closest('.st-more');
+    if (btn) {
+      e.stopPropagation();
+      const wasOpen = openMenu && openMenu.button === btn;
+      closeMenu(false);
+      if (!wasOpen) openRowMenu(btn);
+      return;
+    }
+    // A chosen item closes the menu; its own handler below (invite, unlock, activate or deactivate) still runs.
+    if (e.target.closest('.st-menu [role="menuitem"]:not(:disabled)')) closeMenu(false);
+  });
+  tbody.addEventListener('keydown', function(e) {
+    if (!openMenu || !openMenu.menu.contains(e.target)) return;
+    const list = menuItems(openMenu.menu);
+    const at = list.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); closeMenu(true); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); list[(at + 1) % list.length].focus({ preventScroll: true }); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); list[(at - 1 + list.length) % list.length].focus({ preventScroll: true }); }
+    else if (e.key === 'Tab') { closeMenu(false); }
+  });
+  document.addEventListener('click', function(e) { if (openMenu && !openMenu.menu.contains(e.target)) closeMenu(false); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && openMenu) closeMenu(true); });
+  window.addEventListener('resize', function() { closeMenu(false); });
+  window.addEventListener('scroll', function() { closeMenu(false); }, { passive: true });
+  document.getElementById('studentTableScroll').addEventListener('scroll', function() { closeMenu(false); }, { passive: true });
 
   // Loads one page of students (state.page) with the search and filters in use.
   // opts.listOnly: a filter, search or page change. The cards and charts are not fetched again: they are redrawn from the
@@ -944,7 +1013,7 @@
     pager.focus(opts.focus);
     noResults.classList.toggle('hidden', data.students.length !== 0);
     tbody.innerHTML = data.students.length
-      ? data.students.map((s, i) => renderRow(s, data.startIndex + i)).join('')
+      ? data.students.map((s) => renderRow(s)).join('')
       : '';
     renderEmailButton();
     // A Strand or Section change at the top: the cards and charts follow it, drawn from the sections already loaded.
@@ -1052,10 +1121,6 @@
     const inviteCfg = await (await fetch('api/security-config.php')).json();
     canInvite = ((inviteCfg.rbac && inviteCfg.rbac.counselingStatus && inviteCfg.rbac.counselingStatus[currentUser.rbacRole || currentUser.role]) || 'none') === 'full' && (currentUser.rbacRole || currentUser.role) !== 'facilitator'; // Facilitators never invite or decide retakes (DFD process 4.0)
   } catch (e) {}
-  // The Actions column's slots for this person (renderRow): the profile, then an invite (to counseling, or to register
-  // for a student with no account yet) and activate or deactivate, only when they may use them.
-  const ACTION_SLOTS = { invite: canInvite || canManageAccounts, toggle: canManageAccounts };
-  ACTION_SLOTS.columns = ['32px', ACTION_SLOTS.invite ? '150px' : '', ACTION_SLOTS.toggle ? '96px' : ''].filter(Boolean).join(' ');
 
   // ---- Account actions on a registered student's row: invite to counseling (the CGC booking link), activate / deactivate.
   tbody.addEventListener('click', async function(e) {
@@ -1238,10 +1303,11 @@
     }).join('');
     updateClearBtn();
   }
-  // Clear filters: grey until a filter or the search is in use, then navy (as on the Audit Log).
+  // Clear filters: shown only while a filter or the search is in use (beside the filter chips), hidden otherwise.
   const clearFiltersBtn = document.getElementById('clearFilters');
   function updateClearBtn() {
     clearFiltersBtn.disabled = !(searchInput.value.trim() || FILTERS.some(function(f) { return state[f.key]; }));
+    clearFiltersBtn.classList.toggle('hidden', clearFiltersBtn.disabled);
   }
   document.getElementById('activeFilters').addEventListener('click', function(e) {
     const btn = e.target.closest('[data-remove-filter]');
