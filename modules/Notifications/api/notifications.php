@@ -262,10 +262,11 @@ if ($isStaff) {
     }
 
     // A counselor invited this student to book a counseling session: the link goes straight to the CGC booking page.
+    // The student's own Avail Counseling clicks (invited_by = the student) are not invitations from the Guidance Office.
     try {
         $stmt = $pdo->prepare(
             "SELECT id, booking_url, created_at FROM counseling_invites
-             WHERE student_id = ? AND created_at > NOW() - INTERVAL '$days days'
+             WHERE student_id = ? AND invited_by IS DISTINCT FROM student_id AND created_at > NOW() - INTERVAL '$days days'
              ORDER BY created_at DESC LIMIT $each"
         );
         $stmt->execute([$user['id']]);

@@ -155,6 +155,7 @@ $actionLabels = [
     'update_counseling_status' => 'Updated counseling booking status',
     'view_counseling_notes' => 'Viewed counseling notes',
     'send_counseling_link' => 'Sent counseling booking link to self',
+    'avail_counseling' => 'Availed counseling (opened the CGC booking link)',
     'rotate_encryption_key' => 'Changed the encryption key',
     'send_counseling_link_failed' => 'Counseling booking link not sent',
     'invite_unregistered_students' => 'Invited unregistered students',

@@ -28,6 +28,9 @@ check('an address without a scheme is refused', BookingLink::validate('booking.e
 check('javascript: and other schemes are refused', BookingLink::validate('javascript:alert(1)')['error'] !== null && BookingLink::validate('ftp://x.example.org')['error'] !== null);
 check('a user name and password in the link are refused', BookingLink::validate('https://user:pw@booking.example.edu.ph')['error'] !== null);
 check('a very long link is refused', BookingLink::validate('https://example.org/' . str_repeat('a', 400))['error'] !== null);
+check('a link back to ProfilePath itself is refused (it would loop)', BookingLink::validate('https://profilepath.example.org/student-help-center', 'profilepath.example.org')['error'] !== null
+    && BookingLink::validate('https://ProfilePath.Example.org/x', 'profilepath.example.org')['error'] !== null);
+check('a link on another host is accepted when the own host is known', BookingLink::validate('https://booking.example.edu.ph/cgc', 'profilepath.example.org')['error'] === null);
 
 echo "\n=== Summary: $passed passed, $failures failed ===\n";
 exit($failures > 0 ? 1 : 0);

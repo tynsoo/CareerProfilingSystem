@@ -552,7 +552,7 @@
       document.getElementById('reviewBookingMsg').classList.add('hidden');
       if (!r.escalated) return;
       document.getElementById('reviewBookingText').textContent = r.invite
-        ? r.invite.statusLabel + ' (invited ' + fmtWhen(r.invite.invitedAt) + (r.invite.updatedAt ? ', updated ' + fmtWhen(r.invite.updatedAt) : '') + ')'
+        ? r.invite.statusLabel + ' (' + (r.invite.selfRequested ? 'student used Avail Counseling ' : 'invited ') + fmtWhen(r.invite.invitedAt) + (r.invite.updatedAt ? ', updated ' + fmtWhen(r.invite.updatedAt) : '') + ')'
         : 'Not invited yet. Use Invite to counseling to send the CGC booking link.';
       document.getElementById('reviewBookingEdit').classList.toggle('hidden', !(r.invite && canCounsel));
       if (r.invite) {

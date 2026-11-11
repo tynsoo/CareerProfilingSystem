@@ -1,82 +1,71 @@
 <?php
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
-require_once __DIR__ . '/../../../shared/lib/Mailer.php';
-require_once __DIR__ . '/../../../shared/lib/EmailTemplate.php';
-require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
 require_once __DIR__ . '/../lib/BookingLink.php';
+require_once __DIR__ . '/../lib/CounselingTracking.php';
 
-// "Avail Counseling" on the Student Help Center: emails the signed-in student the CGC's counseling booking link, to the
-// email address already on their account (never one typed in the request). The link is the one the guidance staff saved
-// on the Staff Help Center (security_policies booking.url, modules/Counseling/lib/BookingLink.php), so it changes without touching code.
-// Sending the link books nothing: the student books on the CGC page, and no request, invite or counseling status is
-// recorded here. Success is reported only when the email service accepted the message.
+// "Avail Counseling" on the Student Help Center: records that the signed-in student asked for counseling and returns the
+// CGC's counseling booking link, which the page opens at once (no email round trip). The link is the one the guidance staff
+// saved on the Staff Help Center (security_policies booking.url, modules/Counseling/lib/BookingLink.php).
+//
+// The request is kept as a counseling invitation with the status "invited" (invited_by = the student, so staff see that
+// the student asked through Avail Counseling). Opening the page books nothing: the student books on the CGC page, and the
+// Guidance Counselor or the Administrator records the booking afterwards (api/counseling-invite.php type status).
+// No duplicates: while the student has an open invitation (invited or booked, from staff or from this button), it is
+// reused and nothing new is saved; a lock per student keeps a double click from saving two.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
 }
 $user = Auth::requireLogin();
 if ($user['role'] !== 'student') {
-    jsonResponse(['success' => false, 'error' => 'Only students can request the counseling booking link.'], 403);
+    jsonResponse(['success' => false, 'error' => 'Only students can use Avail Counseling.'], 403);
 }
 $pdo = Database::get();
-
-const FAILED_MESSAGE = 'We couldn\'t send your counseling booking link. Please try again later or contact the Guidance and Counseling Center.';
+CounselingTracking::ensureSchema($pdo);
+$studentId = (int) $user['id'];
 
 $setting = $pdo->prepare('SELECT value FROM security_policies WHERE key = ?');
 $setting->execute([BookingLink::KEY]);
-$bookingUrl = BookingLink::validate((string) ($setting->fetchColumn() ?: ''))['url'];
+$bookingUrl = BookingLink::validate((string) ($setting->fetchColumn() ?: ''), BookingLink::requestHost())['url'];
 if ($bookingUrl === '') {
     jsonResponse(['success' => false, 'error' => 'Online counseling booking is not available yet. Please contact the Guidance and Counseling Center, or send them a message below.'], 409);
 }
 
-$stmt = $pdo->prepare(
-    'SELECT s.first_name_enc, u.email, u.email_verified_at, u.is_active
-     FROM students s JOIN users u ON u.id = s.user_id WHERE s.user_id = ?'
-);
-$stmt->execute([(int) $user['id']]);
-$student = $stmt->fetch();
-$email = trim((string) ($student['email'] ?? ''));
-if (!$student || !$student['is_active']) {
-    jsonResponse(['success' => false, 'error' => FAILED_MESSAGE], 409);
-}
-if ($email === '' || $student['email_verified_at'] === null || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    jsonResponse(['success' => false, 'error' => 'Your account has no verified email address, so the link could not be sent. Please contact the Guidance and Counseling Center.'], 409);
+$active = $pdo->prepare('SELECT u.is_active FROM students s JOIN users u ON u.id = s.user_id WHERE s.user_id = ?');
+$active->execute([$studentId]);
+if (!$active->fetchColumn()) {
+    jsonResponse(['success' => false, 'error' => 'Your account cannot book counseling right now. Please contact the Guidance and Counseling Center.'], 409);
 }
 
-// A second click soon after a send is almost always a repeat: one sent link per 5 minutes (only sends that went through
-// count, so a failed attempt can be retried at once), and at most 5 tries a day so the button cannot flood an inbox.
-$sentKey = 'counseling-link:' . (int) $user['id'];
-if (RateLimiter::isLimited($sentKey, 1, 5)) {
-    jsonResponse(['success' => false, 'repeat' => true, 'error' => 'Your booking link was sent a few minutes ago. Please check your inbox, including the spam or junk folder.'], 429);
-}
-if (RateLimiter::tooMany('counseling-link-try:' . (int) $user['id'], 5, 1440)) {
-    jsonResponse(['success' => false, 'error' => 'You have asked for the booking link several times today. Please check your inbox, or contact the Guidance and Counseling Center.'], 429);
+$pdo->beginTransaction();
+try {
+    $pdo->prepare("SELECT pg_advisory_xact_lock(hashtext('counseling-avail:' || ?::text))")->execute([$studentId]);
+    $open = $pdo->prepare(
+        "SELECT id FROM counseling_invites WHERE student_id = ? AND status IN ('invited', 'booked') ORDER BY id DESC LIMIT 1"
+    );
+    $open->execute([$studentId]);
+    $inviteId = (int) ($open->fetchColumn() ?: 0);
+    $created = false;
+    if ($inviteId === 0) {
+        // Tie it to the student's flag that is For Counseling, if any, so the Counseling Queue shows its booking status.
+        $flag = $pdo->prepare("SELECT id FROM monitoring_flags WHERE student_id = ? AND status = 'escalated' ORDER BY id DESC LIMIT 1");
+        $flag->execute([$studentId]);
+        $flagId = $flag->fetchColumn();
+        $insert = $pdo->prepare(
+            "INSERT INTO counseling_invites (student_id, invited_by, booking_url, email_sent, flag_id, status) VALUES (?, ?, ?, FALSE, ?, 'invited') RETURNING id"
+        );
+        $insert->execute([$studentId, $studentId, $bookingUrl, $flagId !== false ? (int) $flagId : null]);
+        $inviteId = (int) $insert->fetchColumn();
+        $created = true;
+    }
+    $pdo->commit();
+} catch (Throwable $e) {
+    $pdo->rollBack();
+    throw $e;
 }
 
-$first = trim((string) Crypto::dec($student['first_name_enc']));
-$greeting = $first !== '' ? "Hi $first," : 'Hi,';
-$safeGreeting = htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8');
-$safeUrl = htmlspecialchars($bookingUrl, ENT_QUOTES, 'UTF-8');
-$html = EmailTemplate::render(
-    'Your CGC counseling booking link',
-    "<p style=\"margin:0 0 12px 0;\">$safeGreeting</p>"
-        . '<p style="margin:0 0 12px 0;">Thank you for reaching out. We are glad you want to talk with a counselor.</p>'
-        . '<p style="margin:0 0 12px 0;">Click the button below to open the CGC counseling booking page and choose a schedule that works for you. Your session is booked once you complete the booking on that page.</p>'
-        . "<p style=\"margin:0;font-size:12px;color:#64748b;\">If the button does not work, copy this link into your browser:<br><span style=\"word-break:break-all;\">$safeUrl</span></p>",
-    'Book a counseling session',
-    $safeUrl,
-    '',
-    'Center for Guidance and Counseling (CGC), Mapúa Malayan Colleges Laguna. You received this because you clicked Avail Counseling in ProfilePath.'
-);
-$text = "$greeting\n\nThank you for reaching out. We are glad you want to talk with a counselor.\n\n"
-    . "Open this link to go to the CGC counseling booking page and choose a schedule that works for you. Your session is booked once you complete the booking on that page:\n$bookingUrl\n\n"
-    . "Center for Guidance and Counseling (CGC)\nMapúa Malayan Colleges Laguna";
-
-$sent = Mailer::send($email, $first !== '' ? $first : $email, 'CGC Counseling Booking Link', $html, $text);
-if (!$sent) {
-    AuditLogger::log($user['id'], $user['role'], 'send_counseling_link_failed', 'student', (string) $user['id'], 'Booking link email not accepted by the email service');
-    jsonResponse(['success' => false, 'error' => FAILED_MESSAGE], 502);
+if ($created) {
+    AuditLogger::log($user['id'], $user['role'], 'avail_counseling', 'student', (string) $studentId,
+        'Invitation #' . $inviteId . ': student opened the CGC booking link through Avail Counseling (status Invited)');
 }
-RateLimiter::hit($sentKey);
-AuditLogger::log($user['id'], $user['role'], 'send_counseling_link', 'student', (string) $user['id'], 'Counseling booking link emailed to the student');
-jsonResponse(['success' => true, 'message' => 'Your CGC counseling booking link has been sent to your registered email address. Please check your inbox.']);
+jsonResponse(['success' => true, 'url' => $bookingUrl, 'inviteId' => $inviteId, 'created' => $created]);
