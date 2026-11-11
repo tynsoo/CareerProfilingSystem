@@ -1,6 +1,6 @@
 <?php
 // Black-box tests for Avail Counseling on the Student Help Center: it returns the CGC booking link for the page to open,
-// records the student as Invited on the staff side, and never saves a second record while one is open.
+// records the student as Invited on the staff side, never saves a second record while one is open, and works once a day.
 //   DB_NAME=profilepath_test php -S 127.0.0.1:8099 router.php
 //   DB_NAME=profilepath_test php tests/avail_counseling_http_test.php http://127.0.0.1:8099
 require_once __DIR__ . '/../shared/lib/Database.php';
@@ -41,7 +41,7 @@ $cleanup = function () use ($pdo) {
         }
         $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
     }
-    $pdo->exec("DELETE FROM rate_limit_hits WHERE rate_key LIKE 'counseling-invite:%' OR rate_key LIKE 'login-ip:%'");
+    $pdo->exec("DELETE FROM rate_limit_hits WHERE rate_key LIKE 'counseling-invite:%' OR rate_key LIKE 'counseling-avail:%' OR rate_key LIKE 'login-ip:%'");
 };
 $cleanup();
 CounselingTracking::ensureSchema($pdo);
@@ -81,11 +81,12 @@ check('one invitation is recorded as Invited, by the student', $count($studentId
     && $pdo->query("SELECT status = 'invited' AND invited_by = $studentId AND email_sent = FALSE FROM counseling_invites WHERE student_id = $studentId")->fetchColumn());
 check('it is in the Audit Log', (bool) $pdo->query("SELECT 1 FROM audit_log WHERE action = 'avail_counseling' AND target_id = '$studentId'")->fetchColumn());
 
-echo "=== no duplicates ===\n";
+echo "=== once a day ===\n";
 $r2 = $stu->req('POST', '/api/counseling-booking-link.php', []);
-check('a second click still opens the link', $r2['code'] === 200 && ($stu->json($r2)['url'] ?? '') === 'https://example.com/cgc-booking');
-check('and reuses the same invitation', $count($studentId) === 1 && ($stu->json($r2)['inviteId'] ?? 0) === ($j['inviteId'] ?? -1) && ($stu->json($r2)['created'] ?? true) === false);
-// Five clicks at once (a double click or several tabs): still one record.
+$j2 = $stu->json($r2);
+check('a second click the same day is refused, with when it frees up', $r2['code'] === 429 && ($j2['repeat'] ?? false) === true && !isset($j2['url']) && !empty($j2['againAt']), $r2['body']);
+check('and saves nothing', $count($studentId) === 1);
+// Five clicks at once (a double click or several tabs): still one record, none of them let through.
 $mh = curl_multi_init(); $hs = [];
 for ($i = 0; $i < 5; $i++) {
     $ch = curl_init("$base/api/counseling-booking-link.php");
@@ -93,20 +94,43 @@ for ($i = 0; $i < 5; $i++) {
     curl_multi_add_handle($mh, $ch); $hs[] = $ch;
 }
 do { curl_multi_exec($mh, $running); curl_multi_select($mh); } while ($running);
-check('clicks at the same time save nothing new', $count($studentId) === 1, (string) $count($studentId));
+check('clicks at the same time are all refused and save nothing', $count($studentId) === 1 && count(array_filter($hs, fn($h) => curl_getinfo($h, CURLINFO_RESPONSE_CODE) === 429)) === 5);
+$nextDay = fn() => $pdo->exec("UPDATE rate_limit_hits SET created_at = created_at - INTERVAL '1441 minutes' WHERE rate_key = 'counseling-avail:$studentId'");
+
+echo "=== no duplicates (on later days) ===\n";
+$nextDay();
+$r2 = $stu->req('POST', '/api/counseling-booking-link.php', []);
+check('the next day the link opens again', $r2['code'] === 200 && ($stu->json($r2)['url'] ?? '') === 'https://example.com/cgc-booking', $r2['body']);
+check('and reuses the open invitation', $count($studentId) === 1 && ($stu->json($r2)['inviteId'] ?? 0) === ($j['inviteId'] ?? -1) && ($stu->json($r2)['created'] ?? true) === false);
 $pdo->exec("UPDATE counseling_invites SET status = 'booked' WHERE student_id = $studentId");
+$nextDay();
 $stu->req('POST', '/api/counseling-booking-link.php', []);
 check('a booked invitation is also reused', $count($studentId) === 1);
 $pdo->exec("UPDATE counseling_invites SET status = 'attended' WHERE student_id = $studentId");
+$nextDay();
 $r = $stu->req('POST', '/api/counseling-booking-link.php', []);
 check('after the last one was closed, a new request is recorded', $count($studentId) === 2 && ($stu->json($r)['created'] ?? false) === true);
 check('the closed one keeps its status', (int) $pdo->query("SELECT COUNT(*) FROM counseling_invites WHERE student_id = $studentId AND status = 'attended'")->fetchColumn() === 1);
+
+$nextDay();
+$before = $count($studentId);
+$mh = curl_multi_init(); $hs = [];
+for ($i = 0; $i < 5; $i++) {
+    $ch = curl_init("$base/api/counseling-booking-link.php");
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_POSTFIELDS => '{}', CURLOPT_COOKIEFILE => $stu->jar, CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'X-CSRF-Token: ' . $stu->csrf]]);
+    curl_multi_add_handle($mh, $ch); $hs[] = $ch;
+}
+do { curl_multi_exec($mh, $running); curl_multi_select($mh); } while ($running);
+$codes = array_map(fn($h) => curl_getinfo($h, CURLINFO_RESPONSE_CODE), $hs);
+check('on a new day, five clicks at once let exactly one through', count(array_filter($codes, fn($c) => $c === 200)) === 1 && count(array_filter($codes, fn($c) => $c === 429)) === 4, implode(',', $codes));
+check('and still no new record while one is open', $count($studentId) === $before);
 
 echo "=== staff side ===\n";
 $flag = $pdo->prepare("INSERT INTO monitoring_flags (student_id, reason, status, escalated_at, escalated_by) VALUES (?, 'manual_escalation', 'escalated', NOW(), ?) RETURNING id");
 $flag->execute([$studentId, $counselorId]);
 $flagId = (int) $flag->fetchColumn();
 $pdo->exec("UPDATE counseling_invites SET status = 'cancelled' WHERE student_id = $studentId");
+$nextDay();
 $stu->req('POST', '/api/counseling-booking-link.php', []);
 check('a request while a flag is For Counseling is tied to that flag', (int) $pdo->query("SELECT flag_id FROM counseling_invites WHERE student_id = $studentId ORDER BY id DESC LIMIT 1")->fetchColumn() === $flagId);
 $list = $coun->json($coun->raw('GET', '/api/monitoring.php?tab=counseling'));
@@ -125,6 +149,7 @@ $inviteNotes = array_filter($notes['items'] ?? $notes['notifications'] ?? [], fn
 check('a real staff invitation still notifies the student', $r['code'] === 200 && count($inviteNotes) === 1, $r['body'] . ' ' . substr(json_encode($notes), 0, 300));
 
 $pdo->exec("DELETE FROM security_policies WHERE key = 'booking.url'");
+$nextDay();
 $r = $stu->req('POST', '/api/counseling-booking-link.php', []);
 $before = $count($studentId);
 check('with no booking link saved, nothing opens and nothing is saved', $r['code'] === 409 && $count($studentId) === $before);

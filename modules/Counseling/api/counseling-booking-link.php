@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../../../shared/api/_bootstrap.php';
+require_once __DIR__ . '/../../../shared/lib/RateLimiter.php';
 require_once __DIR__ . '/../lib/BookingLink.php';
 require_once __DIR__ . '/../lib/CounselingTracking.php';
 
@@ -13,6 +14,8 @@ require_once __DIR__ . '/../lib/CounselingTracking.php';
 // Guidance Counselor or the Administrator records the booking afterwards (api/counseling-invite.php type status).
 // No duplicates: while the student has an open invitation (invited or booked, from staff or from this button), it is
 // reused and nothing new is saved; a lock per student keeps a double click from saving two.
+// Once a day: a student can use the button once in 24 hours, so the booking link is not opened over and over; a repeat
+// click is refused with the time it frees up (counted only when the link was given, inside the same lock).
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
 }
@@ -40,6 +43,15 @@ if (!$active->fetchColumn()) {
 $pdo->beginTransaction();
 try {
     $pdo->prepare("SELECT pg_advisory_xact_lock(hashtext('counseling-avail:' || ?::text))")->execute([$studentId]);
+    $dailyKey = 'counseling-avail:' . $studentId;
+    if (RateLimiter::isLimited($dailyKey, 1, 1440)) {
+        $last = $pdo->prepare('SELECT MAX(created_at) + INTERVAL \'1440 minutes\' FROM rate_limit_hits WHERE rate_key = ?');
+        $last->execute([$dailyKey]);
+        $againAt = $last->fetchColumn();
+        $pdo->rollBack();
+        jsonResponse(['success' => false, 'repeat' => true, 'againAt' => $againAt,
+            'error' => 'You already used Avail Counseling today. You can use it again after ' . (new DateTime((string) $againAt))->setTimezone(new DateTimeZone(APP_TIMEZONE))->format('M j, g:i A') . '. If you still need to book, check the CGC booking page you opened, or contact the Guidance and Counseling Center.'], 429);
+    }
     $open = $pdo->prepare(
         "SELECT id FROM counseling_invites WHERE student_id = ? AND status IN ('invited', 'booked') ORDER BY id DESC LIMIT 1"
     );
@@ -58,6 +70,7 @@ try {
         $inviteId = (int) $insert->fetchColumn();
         $created = true;
     }
+    RateLimiter::hit($dailyKey);
     $pdo->commit();
 } catch (Throwable $e) {
     $pdo->rollBack();
