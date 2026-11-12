@@ -378,6 +378,19 @@
   }
 }
 
+/* ---- Cards (UI refinement, Phase 1) ----
+   Every content card on the staff and student pages is "bg-white border rounded-xl shadow-sm". They become flat:
+   8px corners, a 1px border a little darker than before, and no shadow. Shadows stay on menus, drop-downs and
+   dialogs only. Placed before the summary-card rules so a selected card keeps its navy ring. */
+.rounded-xl.shadow-sm {
+  border-radius: 8px;
+  box-shadow: none;
+}
+.rounded-xl.shadow-sm:not(.summary-card).border-gray-100,
+.rounded-xl.shadow-sm:not(.summary-card).border-slate-100 {
+  border-color: var(--pp-border, #e5e7eb);
+}
+
 /* ---- Summary cards that open a breakdown (Audit Log, Student Information) ---- */
 /* The row of cards: one per row on a phone, two from 640px, four only from 1280px, where each card is wide
    enough for its label and number (with the sidebar, four in a row at 1024px squeezed the labels). */
@@ -393,6 +406,7 @@
   .pp-card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .summary-card {
+  border-color: var(--pp-border, #e5e7eb);
   cursor: pointer;
   transition: border-color var(--dur-button, 150ms) ease, box-shadow var(--dur-button, 150ms) ease;
 }
@@ -640,8 +654,8 @@ button.breakdown-row.is-picked:not(:disabled):hover {
   background: #f9fafb;
 }
 .pp-btn-primary {
-  background: #0f2a6b;
-  border-color: #0f2a6b;
+  background: var(--pp-navy-800, #0f2a6b);
+  border-color: var(--pp-navy-800, #0f2a6b);
   color: #fff;
 }
 .pp-btn-primary:hover,
@@ -649,8 +663,8 @@ button.breakdown-row.is-picked:not(:disabled):hover {
   opacity: 0.9; /* same hover as the other buttons (hover:opacity-90) */
 }
 .pp-btn-danger {
-  background: #ed1c24;
-  border-color: #ed1c24;
+  background: var(--pp-red, #ed1c24);
+  border-color: var(--pp-red, #ed1c24);
   color: #fff;
 }
 

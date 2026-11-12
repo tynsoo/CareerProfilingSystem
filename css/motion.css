@@ -468,6 +468,10 @@ td, th, .break-words { overflow-wrap: break-word; }
 .gap-x-4 { column-gap: 1rem; }
 .gap-y-2 { row-gap: 0.5rem; }
 .max-w-\[480px\] { max-width: 480px; }
+/* Navy primary buttons (UI refinement, Phase 1): red is kept for the brand accent and delete actions. */
+.border-\[\#0f2a6b\] { border-color: #0f2a6b; }
+:where(.peer):checked ~ .peer-checked\:bg-\[\#0f2a6b\] { background-color: #0f2a6b; }
+:where(.peer):checked ~ .peer-checked\:border-\[\#0f2a6b\] { border-color: #0f2a6b; }
 .max-w-\[1100px\] { max-width: 1100px; }
 .leading-snug { line-height: 1.375; }
 .tracking-normal { letter-spacing: 0; }
