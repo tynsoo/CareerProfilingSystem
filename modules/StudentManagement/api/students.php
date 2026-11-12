@@ -331,7 +331,9 @@ $viewAy = AcademicYear::resolve($pdo, (string) ($_GET['academicYear'] ?? ''));
 $viewRoster = AcademicYear::rosterIds($pdo, $viewAy);
 $rows = array_values(array_filter($rows, fn($r) => AcademicYear::studentBelongs($r['academic_year'], (string) $r['school_id'], $viewAy, $viewRoster)));
 $rows = array_values(array_filter($rows, fn($r) => StaffScope::allows($scope, $r['strand'], $r['section'])));
-$mismatchIds = Mismatch::studentIds($pdo); // finished students whose Preferred Course isn't a Best RIASEC Match
+$matchStatus = Mismatch::statusByStudent($pdo); // 'match', 'close' (an Alternative Course) or 'mismatch', per student
+$mismatchIds = array_filter($matchStatus, fn($st) => $st === 'mismatch'); // Preferred Course isn't a Best RIASEC Match or an Alternative
+$closeIds = array_filter($matchStatus, fn($st) => $st === 'close');
 // Students with a recommendation for their latest assessment (assessment + worksheet done), the same rule as
 // Mismatch::studentIds: they are either matched or mismatched. An assessment without a worksheet is neither yet.
 $recommendedIds = array_flip(array_map('intval', $pdo->query(
@@ -340,7 +342,7 @@ $recommendedIds = array_flip(array_map('intval', $pdo->query(
 
 $latestInvites = CounselingTracking::latestInvites($pdo);
 
-$students = array_map(function ($r) use ($counseledIds, $mismatchIds, $recommendedIds, $latestInvites) {
+$students = array_map(function ($r) use ($counseledIds, $mismatchIds, $closeIds, $recommendedIds, $latestInvites) {
     $hasAssessment = $r['completed_at'] !== null;
     $status = $hasAssessment ? 'Completed' : 'Pending';
     $topTypes = $hasAssessment ? json_decode($r['top_types'], true) : [];
@@ -375,7 +377,9 @@ $students = array_map(function ($r) use ($counseledIds, $mismatchIds, $recommend
         'counselingActive' => $invite !== null && in_array($invite['status'], CounselingTracking::ACTIVE_STATUSES, true),
         'mismatched' => $hasAssessment && isset($mismatchIds[(int) $r['user_id']]),
         // For the Course Match chart only (counted per section below, never sent per student).
-        'matched' => $hasAssessment && isset($recommendedIds[(int) $r['user_id']]) && !isset($mismatchIds[(int) $r['user_id']]),
+        'matched' => $hasAssessment && isset($recommendedIds[(int) $r['user_id']]) && !isset($mismatchIds[(int) $r['user_id']]) && !isset($closeIds[(int) $r['user_id']]),
+        // Close match: the Preferred Course is one of the Alternative Courses (counted per section, never sent per student).
+        'close' => $hasAssessment && isset($closeIds[(int) $r['user_id']]),
         'registeredAt' => $r['registered_at'],
         'assessmentDate' => $r['completed_at'],
         '_email' => $r['email'], // only for the CSV download; never sent in the list JSON
@@ -414,6 +418,7 @@ if ($currentAy !== '') {
             'counseling' => '',
             'mismatched' => false,
             'matched' => false,
+            'close' => false,
             'registeredAt' => null,
             'assessmentDate' => null,
             'rosterId' => (int) $rr['id'],
@@ -451,7 +456,7 @@ foreach ($students as $s) {
     if (!isset($sectionSummary[$key])) {
         // Counts only: no page reads names per section, so they are not sent (fewer names leave the server).
         $sectionSummary[$key] = [
-            'strand' => $s['strand'], 'section' => $s['section'], 'total' => 0, 'completed' => 0, 'pending' => 0, 'notRegistered' => 0, 'mismatched' => 0, 'matched' => 0,
+            'strand' => $s['strand'], 'section' => $s['section'], 'total' => 0, 'completed' => 0, 'pending' => 0, 'notRegistered' => 0, 'mismatched' => 0, 'matched' => 0, 'close' => 0,
         ];
     }
     $sectionSummary[$key]['total']++;
@@ -467,6 +472,9 @@ foreach ($students as $s) {
     }
     if ($s['matched']) {
         $sectionSummary[$key]['matched']++;
+    }
+    if ($s['close']) {
+        $sectionSummary[$key]['close']++;
     }
 }
 ksort($sectionSummary);
@@ -502,6 +510,9 @@ if ($statusFilter === 'Mismatched') {
 } elseif ($statusFilter === 'Matched') {
     // Course Match "Matched" (an assessment result): only with Assessment results access, otherwise nobody matches.
     $filtered = $may('assessmentResults') ? array_values(array_filter($filtered, fn($s) => $s['matched'])) : [];
+} elseif ($statusFilter === 'Close') {
+    // Course Match "Close match" (an Alternative Course): an assessment result too.
+    $filtered = $may('assessmentResults') ? array_values(array_filter($filtered, fn($s) => $s['close'])) : [];
 } elseif ($statusFilter !== '') {
     $filtered = array_values(array_filter($filtered, fn($s) => $s['status'] === $statusFilter));
 }
@@ -582,7 +593,7 @@ if ($asPdf) {
     $filtered = array_map($withName, $filtered);
     usort($filtered, fn($a, $b) => [$a['strand'], $a['section'], $a['name']] <=> [$b['strand'], $b['section'], $b['name']]);
     $labels = [
-        'status' => ['Completed' => 'Completed', 'Pending' => 'Pending', 'Mismatched' => 'Mismatched', 'Matched' => 'Matched', 'Not Registered' => 'Not registered'],
+        'status' => ['Completed' => 'Completed', 'Pending' => 'Pending', 'Mismatched' => 'Mismatched', 'Matched' => 'Matched', 'Close' => 'Close match', 'Not Registered' => 'Not registered'],
         'registration' => ['registered' => 'Registered', 'notRegistered' => 'Not registered'],
         'account' => ['active' => 'Active', 'inactive' => 'Deactivated'],
         'assessment' => ['assessed' => 'Yes', 'notAssessed' => 'No'],
@@ -667,7 +678,7 @@ $pageRows = array_map(function ($s) use ($withName, $seesResults, $seesAccounts)
         $s['isActive'] = null; // the account state belongs to Student account management
         unset($s['locked']);
     }
-    unset($s['_email'], $s['_schoolId'], $s['matched']); // matched: only as a count per section
+    unset($s['_email'], $s['_schoolId'], $s['matched'], $s['close']); // matched, close: only as counts per section
     return $s;
 }, array_slice($filtered, $offset, $pageSize));
 // The Announcements picker without Student information gets only what it needs to choose recipients.
@@ -687,7 +698,7 @@ jsonResponse([
     'seesCards' => $seesCards,
     // Matched (Course Match chart) is an assessment result: only with Assessment results access.
     'sections' => !$seesCards ? [] : ($seesResults ? array_values($sectionSummary)
-        : array_map(function ($sec) { unset($sec['matched']); return $sec; }, array_values($sectionSummary))),
+        : array_map(function ($sec) { unset($sec['matched'], $sec['close']); return $sec; }, array_values($sectionSummary))),
     'academicYear' => $viewAy,
     'academicYears' => AcademicYear::available($pdo),
     'isPastYear' => AcademicYear::isPast($viewAy),

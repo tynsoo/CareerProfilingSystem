@@ -21,16 +21,29 @@ class Mismatch
      */
     public static function isMismatch(?int $statedProgramId, array $scores): bool
     {
+        return self::status($statedProgramId, $scores) === 'mismatch';
+    }
+
+    /**
+     * 'match' (a Best RIASEC Match), 'close' (an Alternative Course) or 'mismatch'.
+     *
+     * @param array<int,array{programId:int,cosine:float}> $scores the stored per-program CBF results
+     */
+    public static function status(?int $statedProgramId, array $scores): string
+    {
         if ($statedProgramId === null) {
-            return true;
+            return 'mismatch';
         }
         usort($scores, fn($a, $b) => [$b['cosine'], $a['programId']] <=> [$a['cosine'], $b['programId']]);
         $bestRows = CBFEngine::selectCandidates($scores, 'cosine');
         $best = array_map(fn($s) => (int) $s['programId'], $bestRows);
+        if (in_array($statedProgramId, $best, true)) {
+            return 'match';
+        }
         // A Preferred Course among the Alternative Courses (next-highest similarity) is a close match, not a mismatch.
         $rest = array_values(array_filter($scores, fn($s) => !in_array((int) $s['programId'], $best, true)));
         $close = $best ? array_map(fn($s) => (int) $s['programId'], CBFEngine::selectCandidates($rest, 'cosine')) : [];
-        return !in_array($statedProgramId, $best, true) && !in_array($statedProgramId, $close, true);
+        return in_array($statedProgramId, $close, true) ? 'close' : 'mismatch';
     }
 
     /**
@@ -41,6 +54,17 @@ class Mismatch
      */
     public static function studentIds(PDO $pdo): array
     {
+        return array_map(fn() => true, array_filter(self::statusByStudent($pdo), fn($st) => $st === 'mismatch'));
+    }
+
+    /**
+     * Every student with a recommendation for their latest assessment, with its status: 'match', 'close' or
+     * 'mismatch' (the status saved with the result when present, else worked out from the stored scores).
+     *
+     * @return array<int,string> keyed by user id
+     */
+    public static function statusByStudent(PDO $pdo): array
+    {
         $rows = $pdo->query(
             'SELECT DISTINCT ON (student_id) student_id, stated_program_id, scores, match_status
              FROM recommendations WHERE source_assessment_id IN (SELECT id FROM assessments WHERE is_latest = TRUE)
@@ -49,14 +73,11 @@ class Mismatch
         $out = [];
         foreach ($rows as $r) {
             if ($r['match_status'] !== null) {
-                $mismatch = $r['match_status'] === 'mismatch';
+                $out[(int) $r['student_id']] = (string) $r['match_status'];
             } else {
                 $scores = json_decode((string) $r['scores'], true) ?: [];
                 $stated = $r['stated_program_id'] !== null ? (int) $r['stated_program_id'] : null;
-                $mismatch = self::isMismatch($stated, $scores);
-            }
-            if ($mismatch) {
-                $out[(int) $r['student_id']] = true;
+                $out[(int) $r['student_id']] = self::status($stated, $scores);
             }
         }
         return $out;

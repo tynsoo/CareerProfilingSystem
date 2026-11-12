@@ -49,18 +49,22 @@
   .fp-option span:hover { background:#f1f5f9; }
   .fp-option input:checked + span { background:#0f2a6b; border-color:#0f2a6b; color:#fff; }
   .fp-option input:focus-visible + span { outline:2px solid #0f2a6b; outline-offset:2px; }
-  /* Student Status and Course Match: side by side from 1024px, stacked below. */
-  .pie-pair { display:grid; grid-template-columns:1fr; gap:24px; }
-  @media (min-width:1024px) { .pie-pair { grid-template-columns:1fr 1fr; } .pie-pair:has(> .hidden) { grid-template-columns:1fr; } }
-  .pie-pair > .hidden { display:none; }
+  /* Progress by Strand and Course Match: side by side from 1024px (progress wider), stacked below. */
+  .chart-pair { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; }
+  @media (min-width:1024px) { .chart-pair { grid-template-columns:minmax(0,3fr) minmax(0,2fr); } .chart-pair:has(> .hidden) { grid-template-columns:minmax(0,1fr); } }
+  .chart-pair > .hidden { display:none; }
   /* A chart with many sections (STEM alone has about 30) scrolls inside its card instead of making the page very long. */
-  .chart-scroll { max-height:540px; overflow-y:auto; }
-  /* Same header height on both cards, so the two pies line up side by side. */
-  @media (min-width:1024px) { .pie-pair .pie-head { min-height:96px; } }
+  .chart-scroll { max-height:320px; overflow-y:auto; }
+  .chart-key { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; font-size:12px; color:#4b5563; }
+  .chart-key span { display:inline-flex; align-items:center; gap:6px; }
+  .chart-key i { width:10px; height:10px; border-radius:2px; display:inline-block; }
+  /* The Export menu hangs under its button (the row menus are placed by script instead). */
+  #exportMenu { position:absolute; right:0; top:calc(100% + 4px); left:auto; }
+  .st-menu .st-menu-note { padding:6px 12px 2px; font-size:11px; color:#6b7280; white-space:normal; max-width:260px; }
 
   /* Student list (panel UI revision): six columns, quiet badges, View + a More menu, cards on phones. */
-  .st-table th { padding:12px 16px; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#64748b; white-space:nowrap; }
-  .st-table td { padding:12px 16px; vertical-align:middle; font-size:14px; color:#374151; }
+  .st-table th { padding:10px 16px; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#64748b; white-space:nowrap; }
+  .st-table td { padding:10px 16px; vertical-align:middle; font-size:14px; color:#374151; }
   .st-sub { display:block; margin-top:2px; font-size:12px; font-weight:400; color:#6b7280; white-space:nowrap; }
   .st-name { font-weight:500; color:#111827; }
   .st-flag { margin-left:6px; vertical-align:middle; }
@@ -76,17 +80,14 @@
   .st-menu .st-danger { color:#c81e1e; }
   .st-menu .st-note { display:block; font-size:11px; color:#9ca3af; white-space:normal; }
   .st-menu hr { margin:4px 0; border:0; border-top:1px solid #e5e7eb; }
-  /* Sized by the table's own width (not the window), so the sidebar never squeezes it: the RIASEC column goes below
-     900px (it is on the profile), and below 720px each student becomes a small card (name, strand and section, the two
-     badges, then the actions). */
+  /* Sized by the table's own width (not the window), so the sidebar never squeezes it: below 720px each student becomes
+     a small card (name, strand and section, the two badges, then the actions). Top 3 RIASEC is on the profile. */
   #studentTableScroll { container-type:inline-size; }
-  @container (max-width:900px) { .st-table .st-col-riasec { display:none; } }
   @container (max-width:720px) {
     .st-table thead { display:none; }
     .st-table, .st-table tbody, .st-table tr, .st-table td { display:block; width:100%; }
     .st-table tr { padding:12px 16px; }
     .st-table td { padding:2px 0; }
-    .st-table td.st-col-riasec { display:none; }
     .st-table td.st-col-assess, .st-table td.st-col-counsel { display:inline-block; width:auto; margin:6px 16px 0 0; vertical-align:top; text-align:left; }
     .st-table td.st-col-actions { margin-top:10px; }
     .st-table .st-actions { justify-content:flex-start; }
@@ -207,52 +208,28 @@
         </div>
       </div>
 
-      <!-- Summary Cards: totals and shares only (the assessment is taken once a year, so there is no monthly trend).
+      <!-- Summary: one strip of four numbers (the assessment is taken once a year, so there is no monthly trend).
            Each opens its number split by strand in #breakdownPanel, as on the Audit Log (see the script). -->
-      <div id="summaryCards" class="pp-card-grid mb-6">
-
-        <button type="button" id="cardTotalBtn" data-card="total" aria-expanded="false" aria-controls="breakdownPanel"
-          class="summary-card text-left w-full bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex items-start gap-4">
-            <span class="w-12 h-12 rounded-lg bg-[#dbeafe] flex items-center justify-center shrink-0">
-              <img src="images/admin/card-icon-students.svg" alt="" class="w-5 h-5">
-            </span>
-            <span class="block min-w-0">
-              <span class="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Total Students</span>
-              <span class="block text-3xl font-bold text-gray-900" id="cardTotalStudents">—</span>
-            </span>
+      <div id="summaryCards" class="pp-stats mb-6">
+        <button type="button" id="cardTotalBtn" data-card="total" aria-expanded="false" aria-controls="breakdownPanel" class="summary-card pp-stat">
+          <span class="pp-stat-label">Students</span>
+          <span class="pp-stat-value" id="cardTotalStudents">—</span>
+          <span class="pp-stat-sub" id="cardTotalSub"></span>
         </button>
-        <button type="button" id="cardCompletedBtn" data-card="completed" aria-expanded="false" aria-controls="breakdownPanel"
-          class="summary-card text-left w-full bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex items-start gap-4">
-            <span class="w-12 h-12 rounded-lg bg-[#dcfce7] flex items-center justify-center shrink-0">
-              <img src="images/admin/card-icon-assessments.svg" alt="" class="w-4 h-5">
-            </span>
-            <span class="block min-w-0">
-              <span class="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Assessments Completed</span>
-              <span class="block text-3xl font-bold text-gray-900" id="cardCompleted">—</span>
-              <span class="block text-xs mt-1 font-medium whitespace-nowrap text-emerald-700" id="cardCompletedPct">—</span>
-            </span>
+        <button type="button" id="cardCompletedBtn" data-card="completed" aria-expanded="false" aria-controls="breakdownPanel" class="summary-card pp-stat">
+          <span class="pp-stat-label">Completed</span>
+          <span class="pp-stat-value" id="cardCompleted">—</span>
+          <span class="pp-stat-sub" id="cardCompletedPct"></span>
         </button>
-        <button type="button" id="cardPendingBtn" data-card="pending" aria-expanded="false" aria-controls="breakdownPanel"
-          class="summary-card text-left w-full bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex items-start gap-4">
-            <span class="w-12 h-12 rounded-lg bg-[#ffedd5] flex items-center justify-center shrink-0">
-              <img src="images/admin/card-icon-pending.svg" alt="" class="w-5 h-5">
-            </span>
-            <span class="block min-w-0">
-              <span class="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Not Completed</span>
-              <span class="block text-3xl font-bold text-gray-900" id="cardPending">—</span>
-              <span class="block text-xs mt-1 font-medium whitespace-nowrap text-amber-700" id="cardPendingPct">—</span>
-            </span>
+        <button type="button" id="cardPendingBtn" data-card="pending" aria-expanded="false" aria-controls="breakdownPanel" class="summary-card pp-stat">
+          <span class="pp-stat-label">Not yet completed</span>
+          <span class="pp-stat-value" id="cardPending">—</span>
+          <span class="pp-stat-sub" id="cardPendingPct"></span>
         </button>
-        <button type="button" id="cardMismatchedBtn" data-card="mismatched" aria-expanded="false" aria-controls="breakdownPanel"
-          class="summary-card text-left w-full bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex items-start gap-4">
-            <span class="w-12 h-12 rounded-lg bg-[#f3e8ff] flex items-center justify-center shrink-0">
-              <img src="images/admin/card-icon-counseling.svg" alt="" class="w-5 h-5">
-            </span>
-            <span class="block min-w-0">
-              <span class="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Mismatched Results</span>
-              <span class="block text-3xl font-bold text-gray-900" id="cardMismatched">—</span>
-              <span class="block text-xs mt-1 font-medium whitespace-nowrap text-purple-700" id="cardMismatchedPct">—</span>
-            </span>
+        <button type="button" id="cardMismatchedBtn" data-card="mismatched" aria-expanded="false" aria-controls="breakdownPanel" class="summary-card pp-stat">
+          <span class="pp-stat-label">Mismatch</span>
+          <span class="pp-stat-value" id="cardMismatched">—</span>
+          <span class="pp-stat-sub" id="cardMismatchedPct"></span>
         </button>
       </div>
 
@@ -265,6 +242,41 @@
         <div id="breakdownRows"></div>
         <p id="breakdownNote" class="text-xs text-gray-500 mt-2"></p>
       </section>
+
+      <!-- Progress and Course Match, side by side on wide screens. Both follow the School Year, Strand and Section at the top. -->
+      <div class="chart-pair mb-6">
+      <!-- Sections at a glance -->
+      <div id="sectionCompletionCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="border-b border-gray-200 px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 class="text-base font-semibold text-gray-900" id="completionTitle">Student Progress by Strand</h2>
+            <!-- The status colors used everywhere (badges, Analytics): green done, amber waiting, gray not started. -->
+            <div class="chart-key mt-1" aria-label="Chart colors">
+              <span><i style="background:#16a34a"></i>Completed</span>
+              <span><i style="background:#d97706"></i>Pending (registered, not taken yet)</span>
+              <span><i style="background:#94a3b8"></i>Not registered</span>
+            </div>
+          </div>
+        </div>
+        <div class="px-5 pt-3"><p id="completionSummaryLine" class="text-xs text-gray-600"></p></div>
+        <div class="px-5 pb-4 pt-2 chart-scroll"><div id="completionChartBox" style="position:relative;height:260px"><canvas id="sectionCompletionChart" aria-label="Completed, pending and not registered students by strand or section"></canvas></div></div>
+      </div>
+      <!-- Course Match: is the Preferred Course one of the Best RIASEC Match programs (Match), one of the Alternative Courses
+           (Close match) or neither (Mismatch)? An assessment result: only with Assessment results access (api/students.php
+           sends the counts only then). One stacked bar instead of a pie: three parts read better side by side. -->
+      <div id="matchCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <div class="border-b border-gray-200 px-5 py-3">
+          <h2 class="text-base font-semibold text-gray-900">Course Match</h2>
+          <p class="text-xs text-gray-500 mt-1">Students who finished the assessment and the worksheet. <span class="scope-note"></span></p>
+        </div>
+        <div class="px-5 py-4 flex-1">
+          <div id="matchChartBox" style="position:relative;height:56px"><canvas id="matchChart" aria-label="Match, close match and mismatch"></canvas></div>
+          <p id="matchEmpty" class="hidden text-sm text-gray-500 text-center py-6">No finished worksheets in this view yet.</p>
+          <div id="matchKey" class="chart-key mt-3" aria-live="polite"></div>
+          <p class="text-xs text-gray-500 mt-3">Match: a Best RIASEC Match program. Close match: one of the Alternative Courses. Mismatch: neither, so the student is asked to visit the Guidance Office.</p>
+        </div>
+      </div>
+      </div>
 
       <!-- Data Table Section -->
       <!-- No overflow-hidden here: the Filters drop-down hangs below its button and must be able to extend past a short table. -->
@@ -320,7 +332,16 @@
                         <label class="fp-option"><input type="radio" name="filterStatus" value="" checked><span>All</span></label>
                         <label class="fp-option"><input type="radio" name="filterStatus" value="Completed"><span>Completed</span></label>
                         <label class="fp-option"><input type="radio" name="filterStatus" value="Pending"><span>Pending</span></label>
-                        <label class="fp-option"><input type="radio" name="filterStatus" value="Mismatched"><span>Mismatched</span></label>
+                      </div>
+                    </fieldset>
+                    <!-- Same radio group as Assessment status (one choice at a time, the "status" filter): a course match
+                         result is always a completed assessment. -->
+                    <fieldset class="fp-field">
+                      <legend class="fp-label">Course match</legend>
+                      <div class="fp-options">
+                        <label class="fp-option" data-results-only><input type="radio" name="filterStatus" value="Matched"><span>Match</span></label>
+                        <label class="fp-option" data-results-only><input type="radio" name="filterStatus" value="Close"><span>Close match</span></label>
+                        <label class="fp-option"><input type="radio" name="filterStatus" value="Mismatched"><span>Mismatch</span></label>
                       </div>
                     </fieldset>
                     <fieldset class="fp-field">
@@ -354,30 +375,46 @@
               <span class="pp-clear-filters-icon" aria-hidden="true"></span>
               Clear filters
             </button>
-            <button type="button" id="downloadListBtn" class="pp-filter-btn ov-btn" title="A PDF of every student in the list below, with the filters in use">
-              <img src="images/audit/icon-export.svg" alt="" class="w-4 h-4">
-              <span id="downloadListLabel">Export PDF</span>
-            </button>
+            <div class="relative ov-filter" id="exportWrap">
+              <button type="button" id="downloadListBtn" class="pp-filter-btn ov-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu">
+                <img src="images/audit/icon-export.svg" alt="" class="w-4 h-4">
+                <span id="downloadListLabel">Export PDF</span>
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div id="exportMenu" class="st-menu hidden" role="menu" aria-label="Export PDF">
+                <button type="button" role="menuitem" data-export="list">This list (search and filters in use)</button>
+                <hr role="separator">
+                <p class="st-menu-note">Everyone in the School Year, Strand and Section at the top:</p>
+                <button type="button" role="menuitem" data-export="completed">Completed</button>
+                <button type="button" role="menuitem" data-export="pending">Pending</button>
+                <button type="button" role="menuitem" data-export="notRegistered">Not registered</button>
+                <div id="exportMatchGroup" class="hidden">
+                  <hr role="separator">
+                  <button type="button" role="menuitem" data-export="matched">Match</button>
+                  <button type="button" role="menuitem" data-export="close">Close match</button>
+                  <button type="button" role="menuitem" data-export="mismatched">Mismatch</button>
+                </div>
+              </div>
+            </div>
             <button type="button" id="emailListedBtn" class="pp-filter-btn is-navy ov-btn hidden">Email these students</button>
           </div>
         </div>
         <div id="activeFilters" class="pp-chips hidden" aria-label="Filters in use"></div>
         <p id="noResults" class="hidden px-6 py-6 text-sm text-gray-500 text-center">No students match your search or filters.</p>
 
-        <div class="overflow-auto max-h-[60vh]" id="studentTableScroll">
+        <div class="overflow-x-auto" id="studentTableScroll">
           <table class="st-table w-full text-left border-collapse">
             <thead class="bg-gray-50 border-b border-gray-200 sticky top-0 z-[1]">
               <tr>
                 <th scope="col">Student</th>
                 <th scope="col">Strand &middot; Section</th>
                 <th scope="col">Assessment</th>
-                <th scope="col" class="st-col-riasec">Top 3 RIASEC</th>
                 <th scope="col">Counseling</th>
                 <th scope="col" class="text-right"><span class="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100" id="studentTbody">
-              <tr><td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>
+              <tr><td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -385,62 +422,6 @@
         <!-- Filled by PP.pager: "Showing 1 to 50 of N students", Rows per page and the page buttons. -->
         <div id="studentPager"></div>
         <p class="text-xs text-red-600 hidden px-6 pb-4" id="exportError" role="alert"></p>
-      </div>
-
-      <!-- Sections at a glance -->
-      <div id="sectionCompletionCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
-        <div class="border-b border-gray-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-bold text-gray-900" id="completionTitle">Student Progress by Strand</h2>
-            <p class="text-xs text-gray-500 mt-1">Completed, pending (registered, not taken yet) and not registered students, as a share of each group.</p>
-            <!-- The same colors as the Student Status pie, so each status has one color on the page. -->
-            <div class="text-xs text-gray-600" style="display:flex;flex-wrap:wrap;align-items:center;margin-top:8px;row-gap:4px" aria-label="Chart colors">
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#059669;display:inline-block"></span>Completed</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#d97706;display:inline-block"></span>Pending</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px"><span style="width:12px;height:12px;border-radius:3px;background:#3b82f6;display:inline-block"></span>Not registered</span>
-            </div>
-          </div>
-        </div>
-        <div class="px-6 pt-4"><p id="completionSummaryLine" class="text-sm text-gray-700"></p></div>
-        <div class="p-6 pt-3 chart-scroll"><div id="completionChartBox" style="position:relative;height:260px"><canvas id="sectionCompletionChart" aria-label="Completed, pending and not registered students by strand or section"></canvas></div></div>
-      </div>
-      <!-- Two pies side by side on wide screens. Both follow the School Year, Strand and Section at the top of the page. -->
-      <div class="pie-pair mb-8">
-      <div id="statusCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-        <div class="pie-head border-b border-gray-200 px-6 py-4">
-          <h2 class="text-lg font-bold text-gray-900">Student Status</h2>
-          <p class="text-xs text-gray-500 mt-1">Completed, pending (registered, not taken yet) and not registered students. <span class="scope-note"></span></p>
-        </div>
-        <div class="p-6 flex-1">
-          <div id="statusChartBox" style="position:relative;height:280px"><canvas id="statusChart" aria-label="Completed, pending and not registered students"></canvas></div>
-          <p id="statusEmpty" class="hidden text-sm text-gray-500 text-center py-10">No students in this view yet.</p>
-        </div>
-        <div class="px-6 pb-6 flex flex-wrap items-center gap-2">
-          <span class="w-full text-xs text-gray-500">Download for the filters at the top:</span>
-          <button type="button" data-pdf="completed" class="pie-dl border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Completed (PDF)</button>
-          <button type="button" data-pdf="pending" class="pie-dl border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Pending (PDF)</button>
-          <button type="button" data-pdf="notRegistered" class="pie-dl border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Not registered (PDF)</button>
-        </div>
-        <p class="text-xs text-red-600 hidden px-6 pb-4" id="statusDlError" role="alert"></p>
-      </div>
-      <!-- Course Match: is the Preferred Course one of the Best RIASEC Match programs (an assessment result: only with
-           Assessment results access; api/students.php sends "matched" only then). -->
-      <div id="matchCard" class="hidden bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-        <div class="pie-head border-b border-gray-200 px-6 py-4">
-          <h2 class="text-lg font-bold text-gray-900">Course Match</h2>
-          <p class="text-xs text-gray-500 mt-1">Students who finished the assessment and the worksheet: is their Preferred Course one of their Best RIASEC Match programs? <span class="scope-note"></span></p>
-        </div>
-        <div class="p-6 flex-1">
-          <div id="matchChartBox" style="position:relative;height:280px"><canvas id="matchChart" aria-label="Matched and mismatched students"></canvas></div>
-          <p id="matchEmpty" class="hidden text-sm text-gray-500 text-center py-10">No finished worksheets in this view yet.</p>
-        </div>
-        <div id="matchDownloads" class="px-6 pb-6 flex flex-wrap items-center gap-2">
-          <span class="w-full text-xs text-gray-500">Download for the filters at the top:</span>
-          <button type="button" data-pdf="matched" class="pie-dl border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Matched (PDF)</button>
-          <button type="button" data-pdf="mismatched" class="pie-dl border border-gray-300 rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">Mismatched (PDF)</button>
-        </div>
-        <p class="text-xs text-red-600 hidden px-6 pb-4" id="matchDlError" role="alert"></p>
-      </div>
       </div>
 
     </main>
@@ -496,13 +477,15 @@
   // buttons are not shown, instead of answering 403.
   const canExportNames = PP.may(currentUser, 'exportResults', 'full') && PP.may(currentUser, 'studentInfo');
   if (!canExportNames) {
-    document.getElementById('downloadListBtn').classList.add('hidden');
-    document.querySelectorAll('.pie-dl').forEach(function(b) { b.parentElement.classList.add('hidden'); }); // the pie downloads
+    document.getElementById('exportWrap').classList.add('hidden'); // the Export menu (every PDF has names)
   }
+  // Match and Close match are assessment results: without Assessment results access the API matches nobody, so they are not offered.
+  const seesResults = PP.may(currentUser, 'assessmentResults');
+  if (!seesResults) document.querySelectorAll('[data-results-only]').forEach(function(el) { el.remove(); });
   // No Access on Student account management: no Account column and no Account status filter (api/students.php does not
   // send the account state to them either).
   const seesAccounts = PP.may(currentUser, 'studentAccounts');
-  const COLS = 6;
+  const COLS = 5;
   if (!seesAccounts) {
     document.getElementById('filterAccountField').remove();
   }
@@ -594,10 +577,10 @@
   const tbody = document.getElementById('studentTbody');
   // The filters and page live in the page address, so Reload and Back show the same list. The search (it can be a
   // name) is kept in this tab only, never in the address (PP.listState in js/ui-state.js).
-  const listState = PP.listState({ search: '', strand: '', section: '', status: '', counseling: '', registration: '', assessment: '', account: '', academicYear: '', page: 1, pageSize: 50 }, ['search']);
+  const listState = PP.listState({ search: '', strand: '', section: '', status: '', counseling: '', registration: '', assessment: '', account: '', academicYear: '', page: 1, pageSize: 25 }, ['search']);
   const state = listState.read();
   if (!seesAccounts) state.account = ''; // an old address with ?account= does nothing for them
-  if (![25, 50, 100].includes(state.pageSize)) state.pageSize = 50;
+  if (![25, 50, 100].includes(state.pageSize)) state.pageSize = 25;
   searchInput.value = state.search;
   const getStudents = PP.latestJson(); // a new request cancels the one still on its way
   const pager = PP.pager('studentPager', {
@@ -605,7 +588,9 @@
     onChange: function(page, pageSize, focus) {
       state.page = page;
       state.pageSize = pageSize;
-      document.getElementById('studentTableScroll').scrollTop = 0;
+      // The page scrolls (not the table): bring the top of the list back into view.
+      const card = document.getElementById('studentListCard');
+      if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ block: 'start' });
       load({ listOnly: true, focus: focus });
     }
   });
@@ -616,7 +601,6 @@
   let pickedSets = null; // { before }: what a card's strand click replaced (status, assessment), put back when it is undone
   let isPastYear = false;
   let lastTotal = 0;
-  let statusChart = null;
   let matchChart = null;
   let lastSectionRows = []; // every section of the school year (api/students.php "sections"), from the last full load
   let drawnScope = null;    // the Strand|Section the cards and charts were last drawn for
@@ -635,63 +619,72 @@
     return 'Showing all strands.';
   }
 
-  // One pie, drawn the same way for Student Status and Course Match: labels with count and share, a "n of total" tooltip.
-  function drawPie(chart, canvasId, boxId, emptyId, names, counts, colors) {
+  const sumOf = function(rows, k) { return rows.reduce(function(n, s) { return n + (s[k] || 0); }, 0); };
+  // A share as text: whole percents, with one decimal near 0% and 100% so 405 of 407 does not read as 100%.
+  function pctText(n, of) {
+    if (!of) return '0%';
+    const p = n / of * 100;
+    return ((p > 0 && p < 1) || (p > 99 && p < 100) ? p.toFixed(1) : String(Math.round(p))) + '%';
+  }
+
+  // Course Match: one stacked bar, Match (green), Close match (blue), Mismatch (amber), the colors of their badges.
+  // A mismatch is a reason to visit Guidance, not an error, so it is not red.
+  const MATCH_PARTS = [
+    { key: 'matched', label: 'Match', color: '#16a34a' },
+    { key: 'close', label: 'Close match', color: '#2563eb' },
+    { key: 'mismatched', label: 'Mismatch', color: '#d97706' }
+  ];
+  function renderMatch(rows) {
+    const shown = lastSectionRows.length > 0 && lastSectionRows.some(function(s) { return 'matched' in s; });
+    document.getElementById('matchCard').classList.toggle('hidden', !shown);
+    document.getElementById('exportMatchGroup').classList.toggle('hidden', !shown);
+    if (!shown) return;
+    const counts = MATCH_PARTS.map(function(p) { return sumOf(rows, p.key); });
     const total = counts.reduce(function(a, b) { return a + b; }, 0);
-    if (chart) chart.destroy();
-    document.getElementById(boxId).classList.toggle('hidden', total === 0);
-    document.getElementById(emptyId).classList.toggle('hidden', total !== 0);
-    if (!total) return null;
-    return new Chart(document.getElementById(canvasId).getContext('2d'), {
-      type: 'pie',
+    if (matchChart) { matchChart.destroy(); matchChart = null; }
+    document.getElementById('matchChartBox').classList.toggle('hidden', total === 0);
+    document.getElementById('matchEmpty').classList.toggle('hidden', total !== 0);
+    const key = document.getElementById('matchKey');
+    key.replaceChildren.apply(key, MATCH_PARTS.map(function(p, i) {
+      const item = document.createElement('span');
+      const sw = document.createElement('i');
+      sw.style.background = p.color;
+      item.append(sw, p.label + ': ' + counts[i].toLocaleString() + ' (' + pctText(counts[i], total) + ')');
+      return item;
+    }));
+    if (!total) return;
+    matchChart = new Chart(document.getElementById('matchChart').getContext('2d'), {
+      type: 'bar',
       data: {
-        labels: names.map(function(n, i) { return n + ': ' + counts[i] + ' (' + Math.round(counts[i] / total * 100) + '%)'; }),
-        // No white border when one slice is the whole pie (the empty slices would draw a thin line).
-        datasets: [{ data: counts, backgroundColor: colors, borderColor: '#ffffff', borderWidth: counts.filter(function(n) { return n > 0; }).length > 1 ? 2 : 0 }]
+        labels: ['Course match'],
+        datasets: MATCH_PARTS.map(function(p, i) { return { label: p.label, data: [counts[i] / total * 100], backgroundColor: p.color, barThickness: 28 }; })
       },
       options: {
-        maintainAspectRatio: false,
+        indexAxis: 'y', maintainAspectRatio: false,
+        scales: { x: { stacked: true, min: 0, max: 100, display: false }, y: { stacked: true, display: false } },
         plugins: {
-          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14, font: { size: 13 } } },
-          tooltip: { callbacks: { label: function(ctx) { return ' ' + names[ctx.dataIndex] + ': ' + counts[ctx.dataIndex] + ' of ' + total + ' students'; } } }
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(ctx) { return ' ' + MATCH_PARTS[ctx.datasetIndex].label + ': ' + counts[ctx.datasetIndex] + ' of ' + total + ' students'; } } }
         }
       }
     });
   }
-  const sumOf = function(rows, k) { return rows.reduce(function(n, s) { return n + (s[k] || 0); }, 0); };
 
-  // Where the students stand: completed, pending (registered, not taken yet), not registered.
-  function renderStatus(rows) {
-    document.getElementById('statusCard').classList.toggle('hidden', lastSectionRows.length === 0);
-    statusChart = drawPie(statusChart, 'statusChart', 'statusChartBox', 'statusEmpty', ['Completed', 'Pending', 'Not registered'],
-      [sumOf(rows, 'completed'), sumOf(rows, 'pending'), sumOf(rows, 'notRegistered')], ['#059669', '#d97706', '#3b82f6']);
-  }
-
-  // Course Match: matched vs mismatched among the students with a recommendation. Navy = on track; violet = the same
-  // family as the Mismatched card (a reason to visit Guidance, not an error, so not red). Dark vs light slice, so the
-  // two read apart without color too.
-  function renderMatch(rows) {
-    const shown = lastSectionRows.length > 0 && lastSectionRows.some(function(s) { return 'matched' in s; });
-    document.getElementById('matchCard').classList.toggle('hidden', !shown);
-    if (!shown) return;
-    matchChart = drawPie(matchChart, 'matchChart', 'matchChartBox', 'matchEmpty', ['Matched', 'Mismatched'],
-      [sumOf(rows, 'matched'), sumOf(rows, 'mismatched')], ['#0f2a6b', '#8b5cf6']);
-  }
-
-  // The four cards for the sections in view (the same counting as api/students.php: Not Completed = pending + not registered).
+  // The four numbers for the sections in view (the same counting as api/students.php: Not yet completed = pending + not registered).
   function renderCards(rows) {
     const total = sumOf(rows, 'total');
     const completed = sumOf(rows, 'completed');
     const mismatched = sumOf(rows, 'mismatched');
+    const plural = function(n, word) { return n.toLocaleString() + ' ' + word + (n === 1 ? '' : 's'); };
     document.getElementById('cardTotalStudents').textContent = total.toLocaleString();
     document.getElementById('cardCompleted').textContent = completed.toLocaleString();
     document.getElementById('cardPending').textContent = (total - completed).toLocaleString();
     document.getElementById('cardMismatched').textContent = mismatched.toLocaleString();
-    const pct = (n) => total > 0 ? Math.round((n / total) * 100) + '% of total' : '0% of total';
-    document.getElementById('cardCompletedPct').textContent = pct(completed);
-    document.getElementById('cardPendingPct').textContent = pct(total - completed);
-    // Mismatched is a share of the students who finished the assessment.
-    document.getElementById('cardMismatchedPct').textContent = completed > 0 ? Math.round((mismatched / completed) * 100) + '% of completed' : '0% of completed';
+    document.getElementById('cardTotalSub').textContent = 'in ' + plural(rows.length, 'section');
+    document.getElementById('cardCompletedPct').textContent = pctText(completed, total) + ' of students';
+    document.getElementById('cardPendingPct').textContent = sumOf(rows, 'pending').toLocaleString() + ' pending, ' + sumOf(rows, 'notRegistered').toLocaleString() + ' not registered';
+    // Mismatch is a share of the students who finished the assessment.
+    document.getElementById('cardMismatchedPct').textContent = pctText(mismatched, completed) + ' of completed';
   }
 
   // Cards and charts for the Strand and Section at the top. force: after a full load (new numbers).
@@ -702,7 +695,6 @@
     const rows = scopeRows();
     document.querySelectorAll('.scope-note').forEach(function(el) { el.textContent = scopeText(); });
     if (lastSummary && lastSummary.totalStudents !== undefined) renderCards(rows);
-    renderStatus(rows);
     renderMatch(rows);
     renderCompletion(rows);
   }
@@ -744,7 +736,7 @@
       (byStrand ? ' Pick a strand at the top to see its sections.' : (rows.length > 1 ? ' Lowest completion first.' : ''));
 
     // A strand row is taller than a section row; the card scrolls past about 15 sections (.chart-scroll).
-    document.getElementById('completionChartBox').style.height = (rows.length * (byStrand ? 48 : 30) + 50) + 'px';
+    document.getElementById('completionChartBox').style.height = (rows.length * (byStrand ? 36 : 28) + 40) + 'px';
     const pct = function(n, r) { return r.total > 0 ? Math.round(n / r.total * 1000) / 10 : 0; };
     const done = function(r) { return r.total > 0 ? Math.round(r.completed / r.total * 100) : 0; };
     completionChart = new Chart(document.getElementById('sectionCompletionChart').getContext('2d'), {
@@ -752,13 +744,13 @@
       data: {
         labels: rows.map(function(r) { return byStrand ? r.label + ' (' + plural(r.sections, 'section') + ')' : r.label + '  ' + done(r) + '%'; }),
         datasets: [
-          { label: 'Completed', data: rows.map(function(r) { return pct(r.completed, r); }), backgroundColor: '#059669' },
+          { label: 'Completed', data: rows.map(function(r) { return pct(r.completed, r); }), backgroundColor: '#16a34a' },
           { label: 'Pending', data: rows.map(function(r) { return pct(r.pending, r); }), backgroundColor: '#d97706' },
-          { label: 'Not registered', data: rows.map(function(r) { return pct(r.notRegistered, r); }), backgroundColor: '#3b82f6' }
+          { label: 'Not registered', data: rows.map(function(r) { return pct(r.notRegistered, r); }), backgroundColor: '#94a3b8' }
         ]
       },
       options: {
-        indexAxis: 'y', maintainAspectRatio: false, barThickness: byStrand ? 26 : 16,
+        indexAxis: 'y', maintainAspectRatio: false, barThickness: byStrand ? 20 : 14,
         layout: { padding: { right: 12 } },
         scales: { x: { stacked: true, min: 0, max: 100, ticks: { callback: function(v) { return v + '%'; } } }, y: { stacked: true } },
         plugins: {
@@ -811,29 +803,51 @@
       btn.removeAttribute('aria-busy');
     }
   }
-  // Export PDF: every student matching the search and filters in use (not just this page).
+  // ---- Export menu: this list (the search and every filter in use, all pages), or one group for the School Year,
+  // Strand and Section at the top (All Strands = the whole school).
   const downloadListBtn = document.getElementById('downloadListBtn');
-  downloadListBtn.addEventListener('click', function() {
-    downloadPdf({ search: state.search, strand: state.strand, section: state.section, status: state.status, counseling: state.counseling,
-      registration: state.registration, assessment: state.assessment, account: state.account, academicYear: state.academicYear },
-      downloadListBtn, document.getElementById('exportError'));
-  });
-  // The pie downloads, for the School Year, Strand and Section at the top (All Strands = the whole school).
-  // Student Status: one per slice (Completed, Pending = registered but not taken yet, Not registered).
-  // Course Match: Matched, Mismatched.
-  const PIE_PDFS = {
+  const exportMenu = document.getElementById('exportMenu');
+  const GROUP_PDFS = {
     completed: { status: 'Completed' },
     pending: { status: 'Pending' },
     notRegistered: { registration: 'notRegistered' },
     matched: { status: 'Matched' },
+    close: { status: 'Close' },
     mismatched: { status: 'Mismatched' }
   };
-  document.querySelectorAll('.pie-dl').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      const errorEl = document.getElementById(btn.closest('#matchCard') ? 'matchDlError' : 'statusDlError');
-      downloadPdf(Object.assign({ strand: state.strand, section: state.section, academicYear: state.academicYear }, PIE_PDFS[btn.dataset.pdf]),
-        btn, errorEl);
-    });
+  function exportItems() { return Array.from(exportMenu.querySelectorAll('[role="menuitem"]')).filter(function(b) { return b.offsetParent !== null; }); }
+  function closeExportMenu(focusButton) {
+    if (exportMenu.classList.contains('hidden')) return;
+    exportMenu.classList.add('hidden');
+    downloadListBtn.setAttribute('aria-expanded', 'false');
+    if (focusButton) downloadListBtn.focus();
+  }
+  downloadListBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (!exportMenu.classList.contains('hidden')) { closeExportMenu(false); return; }
+    exportMenu.classList.remove('hidden');
+    downloadListBtn.setAttribute('aria-expanded', 'true');
+    const first = exportItems()[0];
+    if (first) first.focus({ preventScroll: true });
+  });
+  exportMenu.addEventListener('keydown', function(e) {
+    const list = exportItems();
+    const at = list.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeExportMenu(true); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); list[(at + 1) % list.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); list[(at - 1 + list.length) % list.length].focus(); }
+    else if (e.key === 'Tab') { closeExportMenu(false); }
+  });
+  document.addEventListener('click', function(e) { if (!exportMenu.contains(e.target)) closeExportMenu(false); });
+  exportMenu.addEventListener('click', function(e) {
+    const item = e.target.closest('[data-export]');
+    if (!item) return;
+    closeExportMenu(true);
+    const filters = item.dataset.export === 'list'
+      ? { search: state.search, strand: state.strand, section: state.section, status: state.status, counseling: state.counseling,
+          registration: state.registration, assessment: state.assessment, account: state.account, academicYear: state.academicYear }
+      : Object.assign({ strand: state.strand, section: state.section, academicYear: state.academicYear }, GROUP_PDFS[item.dataset.export]);
+    downloadPdf(filters, downloadListBtn, document.getElementById('exportError'));
   });
 
   // Badge colors by meaning (PP.badge in js/ui-state.js): not taking counseling is not an error, so it is gray.
@@ -855,7 +869,7 @@
   const EYE_ICON = '<svg class="w-4 h-4 shrink-0" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-300Zm0 220q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280Z"/></svg>';
 
   // One row: Student (name, email, and a tag only when the account is locked or deactivated), Strand · Section,
-  // Assessment (status with the date under it), Top 3 RIASEC, Counseling (status with who started it), and the actions:
+  // Assessment (status with the date under it), Counseling (status with who started it), and the actions:
   // View plus a More menu (invite, unlock, activate or deactivate). Every menu action keeps its confirmation.
   function renderRow(s) {
     const isRosterOnly = s.userId === null;
@@ -867,11 +881,9 @@
     const assessDate = s.assessmentDate ? formatDate(s.assessmentDate) : (s.status === 'Pending' ? 'Not taken yet' : '');
     const assessCell = PP.badge(s.status === 'Not Registered' ? 'Not registered' : s.status, STATUS_TONE[s.status]) +
       (assessDate ? '<span class="st-sub">' + assessDate + '</span>' : '');
-    const riasecCell = !s.riasec ? '<span class="text-gray-400">&mdash;</span>'
-      : s.riasecTied ? '<span title="Equal scores: no unique ranked Top-3 code">' + escapeHtml(s.riasecLabel) + '</span>'
-      : escapeHtml(s.riasecLabel);
     // "Invited" says who started it: the student's Avail Counseling click or a staff invitation.
-    const counselingCell = PP.badge(s.counseling || 'No request', s.counseling ? (COUNSELING_TONE[s.counseling] || 'gray') : 'gray') +
+    // No request is plain gray text, not a badge, so the statuses that need attention stand out.
+    const counselingCell = (s.counseling ? PP.badge(s.counseling, COUNSELING_TONE[s.counseling] || 'gray') : '<span class="text-xs text-gray-500">No request</span>') +
       (s.counselingBy ? '<span class="st-sub">' + escapeHtml(s.counselingBy) + '</span>' : '');
 
     // The More menu: only the actions this person may use on this row.
@@ -909,7 +921,6 @@
       '<td class="whitespace-nowrap">' + PP.strandLabel(s.strand) + // strand color dot (js/strand-colors.js)
         (s.section ? ' <span class="text-gray-400">&middot;</span> <span class="text-gray-600">' + escapeHtml(s.section) + '</span>' : '') + '</td>' +
       '<td class="st-col-assess whitespace-nowrap">' + assessCell + '</td>' +
-      '<td class="st-col-riasec whitespace-nowrap">' + riasecCell + '</td>' +
       '<td class="st-col-counsel whitespace-nowrap">' + counselingCell + '</td>' +
       '<td class="st-col-actions"><div class="st-actions">' + view + more + '</div></td>' +
     '</tr>';
@@ -963,7 +974,6 @@
   document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && openMenu) closeMenu(true); });
   window.addEventListener('resize', function() { closeMenu(false); });
   window.addEventListener('scroll', function() { closeMenu(false); }, { passive: true });
-  document.getElementById('studentTableScroll').addEventListener('scroll', function() { closeMenu(false); }, { passive: true });
 
   // Loads one page of students (state.page) with the search and filters in use.
   // opts.listOnly: a filter, search or page change. The cards and charts are not fetched again: they are redrawn from the
@@ -972,16 +982,15 @@
   async function load(opts = {}) {
     const listOnly = !!opts.listOnly && lastSummary !== null;
     const statIds = ['cardTotalStudents', 'cardCompleted', 'cardPending', 'cardMismatched'];
-    const chartBoxes = ['completionChartBox', 'statusChartBox', 'matchChartBox'];
+    const chartBoxes = ['completionChartBox', 'matchChartBox'];
     listState.save(state);
     PP.showSkeleton(tbody, PP.skeleton.rows(COLS, 6));
     pager.loading();
     if (!listOnly) {
       statIds.forEach(PP.statLoading);
-      ['cardCompletedPct', 'cardPendingPct', 'cardMismatchedPct'].forEach(function(id) { document.getElementById(id).textContent = ''; });
+      ['cardTotalSub', 'cardCompletedPct', 'cardPendingPct', 'cardMismatchedPct'].forEach(function(id) { document.getElementById(id).textContent = ''; });
       if (!completionChart) { document.getElementById('sectionCompletionCard').classList.remove('hidden'); PP.chartLoading('completionChartBox'); }
-      if (!statusChart) { document.getElementById('statusCard').classList.remove('hidden'); PP.chartLoading('statusChartBox'); }
-      if (!matchChart && PP.may(currentUser, 'assessmentResults')) { document.getElementById('matchCard').classList.remove('hidden'); PP.chartLoading('matchChartBox'); }
+      if (!matchChart && seesResults) { document.getElementById('matchCard').classList.remove('hidden'); PP.chartLoading('matchChartBox'); }
     }
     const params = new URLSearchParams({
       page: state.page, pageSize: state.pageSize, search: state.search, strand: state.strand, section: state.section, status: state.status,
@@ -1296,7 +1305,8 @@
     const box = document.getElementById('activeFilters');
     box.classList.toggle('hidden', active.length === 0);
     box.innerHTML = active.map(function(f) {
-      const text = f.label + ': ' + choiceText(f, state[f.key]);
+      const isMatch = f.key === 'status' && ['Matched', 'Close', 'Mismatched'].includes(state[f.key]);
+      const text = (isMatch ? 'Course match' : f.label) + ': ' + choiceText(f, state[f.key]);
       return '<span class="pp-chip">' + escapeHtml(text) +
         '<button type="button" data-remove-filter="' + f.key + '" aria-label="Remove ' + escapeHtml(text) + '">' +
         '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button></span>';
@@ -1389,10 +1399,10 @@
   // Strand, and the word for its students in the notes. The status and assessed filters are set together, so an
   // earlier choice cannot empty the table.
   const CARDS = {
-    total: { title: 'Total students by strand', count: function(b) { return b.total; }, color: '#2563eb', sets: {}, group: '' },
+    total: { title: 'Total students by strand', count: function(b) { return b.total; }, color: '#0f2a6b', sets: {}, group: '' },
     completed: { title: 'Assessments completed by strand', count: function(b) { return b.completed; }, color: '#16a34a', sets: { status: 'Completed', assessment: '' }, group: 'completed' },
-    pending: { title: 'Not completed by strand', count: function(b) { return b.pending; }, color: '#d97706', sets: { status: '', assessment: 'notAssessed' }, group: 'not completed' },
-    mismatched: { title: 'Mismatched results by strand', count: function(b) { return b.mismatched; }, color: '#9333ea', sets: { status: 'Mismatched', assessment: '' }, group: 'mismatched' },
+    pending: { title: 'Not yet completed by strand', count: function(b) { return b.pending; }, color: '#d97706', sets: { status: '', assessment: 'notAssessed' }, group: 'not completed' },
+    mismatched: { title: 'Mismatch by strand', count: function(b) { return b.mismatched; }, color: '#b45309', sets: { status: 'Mismatched', assessment: '' }, group: 'mismatched' },
   };
 
   function filterFor(key) { return FILTERS.find(function(f) { return f.key === key; }); }
