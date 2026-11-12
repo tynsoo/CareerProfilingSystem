@@ -599,6 +599,12 @@
   PP.badge = function (label, tone, opts) {
     return '<span class="pp-badge pp-badge-' + (tone || 'gray') + (opts && opts.large ? ' pp-badge-lg' : '') + '">' + esc(label) + '</span>';
   };
+  // The Course Match result as a badge, the same colors on every page: Match green, Close match blue, Mismatch amber
+  // (a reason to visit Guidance, not an error, so not red). A low-similarity flag is a separate thing (Monitoring).
+  PP.matchBadge = function (label) {
+    var tone = { 'Match': 'green', 'Close match': 'blue', 'Mismatch': 'amber' }[label] || 'gray';
+    return PP.badge(label || 'Not computed', tone);
+  };
 
   PP.swr = function (url, render, ttlMs) {
     var s = storage(), key = SWR_PREFIX + url, shown = false;

@@ -108,63 +108,40 @@
         </div>
       </div>
 
-      <!-- Summary Cards: what needs staff (Needs Review, Counseling Queue) and where the assessments stand. -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-
-        <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-[21px] flex flex-col justify-between">
-          <div class="flex items-start mb-4">
-            <img src="images/monitoring/card-icon-needs-review.svg" alt="" class="w-[38px] h-12">
-            <div class="pl-4">
-              <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Needs Review</p>
-              <p class="mt-1"><span class="text-3xl font-bold text-[#ed1c24]" id="cardNeedsReview">—</span> <span class="text-sm text-slate-500">Students</span></p>
-            </div>
-          </div>
-          <a href="monitoring-details?tab=needs-review" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
-            View all
-            <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
-          </a>
-        </div>
-
-        <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-[21px] flex flex-col justify-between">
-          <div class="flex items-start mb-4">
-            <img src="images/monitoring/card-icon-counseling.svg" alt="" class="w-11 h-12">
-            <div class="pl-4">
-              <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Counseling Queue</p>
-              <p class="mt-1"><span class="text-3xl font-bold text-green-600" id="cardCounseling">—</span> <span class="text-sm text-slate-500">Students</span></p>
-            </div>
-          </div>
-          <a href="monitoring-details?tab=counseling" class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600 hover:text-[#ed1c24]">
-            View all
-            <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5">
-          </a>
-        </div>
-
-        <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-[21px] flex flex-col justify-between">
-          <div class="flex items-start mb-4">
-            <img src="images/monitoring/card-icon-completed.svg" alt="" class="w-9 h-12">
-            <div class="pl-4">
-              <p class="text-xs font-bold tracking-wide text-slate-500 uppercase">Assessments</p>
-              <p class="mt-1"><span class="text-3xl font-bold text-[#001c43]" id="cardCompleted">—</span> <span class="text-sm text-slate-500">completed today</span></p>
-              <p class="text-sm text-slate-500"><span class="font-bold text-orange-500" id="cardPending">—</span> not started yet</p>
-            </div>
-          </div>
-          <div class="flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600">
-            <a href="monitoring-details?tab=completed" class="hover:text-[#ed1c24]">Completed today</a>
-            <a href="monitoring-details?tab=pending" class="flex items-center gap-2 hover:text-[#ed1c24]">Not started
-              <img src="images/monitoring/icon-chevron-right.svg" alt="" class="w-1.5 h-2.5"></a>
-          </div>
-        </div>
+      <!-- Work strip: what needs staff first (Needs Review, Counseling Queue), then where the assessments stand. Each
+           number opens its list on Monitoring Details. Numbers stay neutral: these are work queues, not good or bad. -->
+      <div class="pp-stats mb-6">
+        <a href="monitoring-details?tab=needs-review" class="pp-stat">
+          <span class="pp-stat-label">Needs Review</span>
+          <span class="pp-stat-value" id="cardNeedsReview">—</span>
+          <span class="pp-stat-sub">Low similarity, not reviewed yet</span>
+          <span class="pp-stat-link">Review list &rarr;</span>
+        </a>
+        <a href="monitoring-details?tab=counseling" class="pp-stat">
+          <span class="pp-stat-label">Counseling Queue</span>
+          <span class="pp-stat-value" id="cardCounseling">—</span>
+          <span class="pp-stat-sub">Escalated to a counselor</span>
+          <span class="pp-stat-link">Open queue &rarr;</span>
+        </a>
+        <a href="monitoring-details?tab=pending" class="pp-stat">
+          <span class="pp-stat-label">Not started</span>
+          <span class="pp-stat-value" id="cardPending">—</span>
+          <span class="pp-stat-sub">Registered, assessment not taken</span>
+          <span class="pp-stat-link">See students &rarr;</span>
+        </a>
+        <a href="monitoring-details?tab=completed" class="pp-stat">
+          <span class="pp-stat-label">Completed today</span>
+          <span class="pp-stat-value" id="cardCompleted">—</span>
+          <span class="pp-stat-sub">Assessments finished today</span>
+          <span class="pp-stat-link">See students &rarr;</span>
+        </a>
       </div>
-
       <!-- Needs Review: the five lowest similarities; Review opens that student on Monitoring Details. -->
       <div class="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
-        <div class="border-b border-slate-100 flex items-center justify-between px-5 py-5 flex-wrap gap-3">
-          <div class="flex items-start">
-            <img src="images/monitoring/icon-flag.svg" alt="" class="w-3.5 h-4 mt-1">
-            <div class="pl-3">
-              <h2 class="text-lg font-bold text-slate-900">Needs Review: lowest similarity first</h2>
-              <p class="text-xs text-slate-500" id="flaggedHint">Students whose recommendations require review.</p>
-            </div>
+        <div class="border-b border-slate-100 flex items-center justify-between px-5 py-4 flex-wrap gap-3">
+          <div>
+            <h2 class="text-base font-semibold text-slate-900">Needs Review: lowest similarity first</h2>
+            <p class="text-xs text-slate-500 mt-1" id="flaggedHint">Students whose recommendations require review.</p>
           </div>
           <a href="monitoring-details?tab=needs-review" class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-md px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-100">
             View All
@@ -173,15 +150,15 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse min-w-[900px]">
+          <table class="w-full text-left border-collapse min-w-[720px]">
             <thead class="bg-slate-50 border-b border-slate-100">
               <tr>
-                <th class="px-6 py-3 text-sm font-bold text-slate-500">Student</th>
-                <th class="px-6 py-3 text-sm font-bold text-slate-500">Strand</th>
-                <th class="px-6 py-3 text-sm font-bold text-slate-500">Best RIASEC Match</th>
-                <th class="px-6 py-3 text-sm font-bold text-slate-500">Preferred vs RIASEC</th>
-                <th class="px-6 py-3 text-sm font-bold text-slate-500">Similarity</th>
-                <th class="px-6 py-3 text-sm font-bold text-slate-500">Action</th>
+                <th class="px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Student</th>
+                <th class="px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Strand</th>
+                <th class="px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Best RIASEC Match</th>
+                <th class="px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Course match</th>
+                <th class="px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Similarity</th>
+                <th class="px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 text-right">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50" id="flaggedTableBody">
@@ -268,10 +245,6 @@
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  const matchClass = (matchStr) => {
-    // Match / Mismatch (RecommendationPipeline): mismatch -> refer to a Guidance Counselor.
-    return matchStr === 'Mismatch' ? 'text-red-600' : matchStr === 'Match' ? 'text-green-600' : 'text-slate-500';
-  };
 
   // Review (Full on Monitoring) or View (View Only) opens that student's review on Monitoring Details
   // (?flag=), where every decision is made; api/monitoring-action.php checks the access again.
@@ -283,16 +256,19 @@
   const flaggedTableBody = document.getElementById('flaggedTableBody');
   let threshold = null;
 
+  // Course match (Match / Close match / Mismatch) is the course-choice result, a badge; the flag itself is the low
+  // similarity, shown as the score against the monitoring level (red: it is what put the student on this list).
   function renderRow(r) {
-    const score = r.topScore === null || r.topScore === undefined ? '<span class="text-slate-500">Not computed</span>' : Number(r.topScore).toFixed(3);
+    const score = r.topScore === null || r.topScore === undefined ? '<span class="text-slate-500">Not computed</span>'
+      : '<span class="font-medium text-red-700">' + Number(r.topScore).toFixed(3) + '</span>' +
+        (threshold !== null && threshold !== undefined ? '<span class="block text-xs text-slate-500">level ' + Number(threshold).toFixed(3) + '</span>' : '');
     return '<tr data-flag-id="' + r.flagId + '">' +
-      '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
-      '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
-      '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
-      '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
-      '<td class="px-6 py-3 text-sm text-slate-900">' + score + '</td>' +
-      '<td class="px-6 py-3"><a href="monitoring-details?tab=needs-review&amp;flag=' + Number(r.flagId) + '" class="flex items-center gap-1 text-sm text-blue-600 hover:underline">' + (canAct ? 'Review' : 'View') +
-        '<img src="images/monitoring/icon-chevron-right3.svg" alt="" class="w-1.5 h-2.5"></a></td>' +
+      '<td class="px-5 py-2.5 text-sm text-slate-900">' + escapeHtml(r.name) + '</td>' +
+      '<td class="px-5 py-2.5 text-sm text-slate-700">' + escapeHtml(r.strand) + '</td>' +
+      '<td class="px-5 py-2.5 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
+      '<td class="px-5 py-2.5">' + PP.matchBadge(r.match) + '</td>' +
+      '<td class="px-5 py-2.5 text-sm whitespace-nowrap">' + score + '</td>' +
+      '<td class="px-5 py-2.5 text-right"><a href="monitoring-details?tab=needs-review&amp;flag=' + Number(r.flagId) + '" class="pp-btn pp-btn-secondary" style="height:32px;padding:0 12px;font-size:13px">' + (canAct ? 'Review' : 'View') + '</a></td>' +
     '</tr>';
   }
 
