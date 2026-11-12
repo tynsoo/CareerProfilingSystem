@@ -207,6 +207,34 @@
     max-width: 100%;
   }
 }
+/* Page tabs: links between pages that belong together (student Career Results and Worksheet Results).
+   The current page has aria-current="page" and a navy underline. */
+.pp-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--pp-border, #e5e7eb);
+  overflow-x: auto;
+}
+.pp-tabs a {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--pp-muted, #6b7280);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.pp-tabs a:hover { color: var(--pp-text, #111827); }
+.pp-tabs a:focus-visible { outline: 2px solid #001c43; outline-offset: -2px; border-radius: 4px; }
+.pp-tabs a[aria-current="page"] {
+  color: var(--pp-navy-900, #001c43);
+  border-bottom-color: var(--pp-navy-800, #0f2a6b);
+  font-weight: 600;
+}
 /* A button that dims while it cannot be used (motion.css gives disabled buttons no visual change). */
 .pp-dim-disabled:disabled {
   opacity: 0.5;

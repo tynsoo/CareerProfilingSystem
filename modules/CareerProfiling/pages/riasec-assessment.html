@@ -114,12 +114,12 @@
     <main id="main-content" class="flex-1 px-9 py-10 max-w-[1152px]">
 
       <div class="flex items-start gap-5 mb-8">
-        <button type="button" id="backBtn" aria-label="Back" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#5e3f3c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <button type="button" id="backBtn" aria-label="Back" class="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center shrink-0 hover:bg-slate-50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         </button>
         <div>
           <h1 class="text-2xl font-bold text-[#191c1e]">RIASEC Assessment</h1>
-          <p class="text-sm text-[#5e3f3c] mt-1">Answer honestly — there are no right or wrong answers.</p>
+          <p class="text-sm text-slate-600 mt-1">Answer honestly — there are no right or wrong answers.</p>
         </div>
       </div>
 
@@ -132,9 +132,9 @@
         <div class="flex-1 h-2.5 rounded-full bg-slate-200 overflow-hidden">
           <div id="overallProgressBar" class="h-full rounded-full bg-[#ed1c24] transition-all duration-300" style="width:0%"></div>
         </div>
-        <span class="text-sm font-semibold text-[#5e3f3c] shrink-0" id="overallProgressText">&nbsp;</span>
+        <span class="text-sm font-semibold text-slate-600 shrink-0" id="overallProgressText">&nbsp;</span>
         <!-- Countdown to the end of the exam session (filled by the script; none for a retake). -->
-        <span id="timeLeft" class="hidden text-sm font-semibold text-[#5e3f3c] shrink-0"></span>
+        <span id="timeLeft" class="hidden text-sm font-semibold text-slate-600 shrink-0"></span>
       </div>
       <p id="saveStatus" class="text-xs text-gray-500 text-right mb-3" style="margin-top:-0.5rem;min-height:1rem" aria-live="polite"></p>
       <!-- Read out once by screen readers (5 minutes left, time up); the ticking countdown is not. -->
@@ -143,7 +143,7 @@
       <!-- Question Card -->
       <div id="questionCard" class="content-swap bg-white border border-[#e0e3e5] rounded-lg p-6 md:p-8 min-h-[420px] flex flex-col">
         <p class="text-xs font-semibold tracking-[0.6px] text-[#495e88] uppercase mb-3" id="questionMeta">Realistic - Question 1 out of 10</p>
-        <p class="hidden text-sm text-[#5e3f3c] mb-1" id="questionPrompt">How much would you enjoy this activity?</p>
+        <p class="hidden text-sm text-slate-600 mb-1" id="questionPrompt">How much would you enjoy this activity?</p>
         <h2 class="text-[#191c1e] text-lg md:text-xl font-medium mb-8" id="questionText">—</h2>
 
         <div id="optionsList" class="flex flex-col gap-3 max-w-[900px] mx-auto w-full"></div>
@@ -151,7 +151,7 @@
         <div class="flex-1"></div>
         <p id="submitError" class="hidden text-sm text-[#ed1c24] text-right mb-2" aria-live="polite"></p>
         <div class="flex justify-between items-center pt-6">
-          <button type="button" id="prevBtn" disabled class="flex items-center gap-2 rounded-md px-7 py-2.5 text-sm font-semibold border border-gray-300 bg-white text-[#5e3f3c] transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white">
+          <button type="button" id="prevBtn" disabled class="flex items-center gap-2 rounded-md px-7 py-2.5 text-sm font-semibold border border-gray-300 bg-white text-slate-600 transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             Previous
           </button>
@@ -469,7 +469,7 @@
       } else if (completed) {
         cls = 'bg-white text-[#001c43] border border-[#001c43] font-medium hover:bg-slate-50 cursor-pointer';
       } else {
-        cls = 'bg-white text-[#5e3f3c] border border-[#e0e3e5] font-medium';
+        cls = 'bg-white text-slate-600 border border-[#e0e3e5] font-medium';
       }
       // A completed dimension's label is clickable so a student can jump
       // back and review/change answers for a part they've already finished.
@@ -495,7 +495,7 @@
       const isSelected = selected === value;
       const rowCls = isSelected
         ? 'bg-red-50 border-[#ed1c24]'
-        : 'bg-white border-gray-300 hover:border-[#e8bcb7]';
+        : 'bg-white border-gray-300 hover:border-gray-400';
       const dotCls = isSelected ? 'border-[#ed1c24]' : 'border-gray-300';
       const dotInner = isSelected ? '<span class="w-2.5 h-2.5 rounded-full bg-[#ed1c24]"></span>' : '';
       const popCls = isSelected ? ' option-selected-pop' : '';

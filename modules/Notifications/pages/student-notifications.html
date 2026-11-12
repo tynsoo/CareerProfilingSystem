@@ -115,16 +115,16 @@
     <main id="main-content" class="flex-1 px-9 py-10 max-w-[1152px]">
 
       <div class="flex items-start gap-5 mb-8">
-        <a href="assessment" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#5e3f3c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <a href="assessment" class="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center shrink-0 hover:bg-slate-50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         </a>
         <div>
           <h1 class="text-2xl font-bold text-[#191c1e]">Notifications</h1>
-          <p class="text-sm text-[#5e3f3c] mt-1">Announcements, results, and other updates sent to you.</p>
+          <p class="text-sm text-slate-600 mt-1">Announcements, results, and other updates sent to you.</p>
         </div>
       </div>
 
-      <p id="loadingState" class="text-sm text-[#5e3f3c]">Loading your notifications…</p>
+      <p id="loadingState" class="text-sm text-slate-600">Loading your notifications…</p>
       <p id="listError" class="hidden text-sm text-[#ed1c24]"></p>
 
       <div id="emptyState" class="hidden bg-white border border-[#e0e3e5] rounded-lg p-10">
@@ -133,7 +133,7 @@
             <svg class="w-6 h-6 text-[#495e88]" viewBox="0 -960 960 960" fill="currentColor"><path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/></svg>
           </span>
           <h2 class="text-base font-semibold text-[#191c1e]">You're all caught up</h2>
-          <p class="text-sm text-[#5e3f3c] max-w-sm">Nothing new right now — announcements and updates will show up here.</p>
+          <p class="text-sm text-slate-600 max-w-sm">Nothing new right now — announcements and updates will show up here.</p>
         </div>
       </div>
 
@@ -213,7 +213,7 @@
       return '<div class="notif-row flex items-start gap-3 px-5 py-4" data-key="' + escapeHtml(n.key || '') + '">' +
         '<a href="' + escapeHtml(n.link) + '" class="min-w-0 flex-1 block hover:opacity-80">' +
           '<p class="text-sm font-semibold text-[#191c1e]">' + escapeHtml(n.title || (isAnnouncement ? 'Announcement' : 'Update')) + '</p>' +
-          (n.text ? '<p class="text-sm text-[#5e3f3c] mt-0.5 break-words">' + escapeHtml(n.text) + '</p>' : '') +
+          (n.text ? '<p class="text-sm text-slate-600 mt-0.5 break-words">' + escapeHtml(n.text) + '</p>' : '') +
           '<p class="text-xs text-gray-500 mt-1">' + timeAgo(n.ts) + '</p>' +
         '</a>' +
         '<button type="button" class="btn-danger delete-notif shrink-0 w-8 h-8 flex items-center justify-center rounded-md text-gray-500 hover:text-[#ed1c24] hover:bg-red-50" aria-label="Delete this notification" title="Delete">' + TRASH + '</button>' +

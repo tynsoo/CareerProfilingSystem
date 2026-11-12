@@ -20,7 +20,7 @@
   @media (min-width:1024px){ .pp-main{ padding:40px 36px 48px; } }
   .pp-card{ background:#fff; border:1px solid #e0e3e5; border-radius:10px; padding:20px; }
   .pp-h2{ font-size:20px; font-weight:600; color:#191c1e; line-height:1.3; }
-  .pp-label{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:#5e3f3c; margin-bottom:4px; }
+  .pp-label{ font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:#475569; margin-bottom:4px; }
   .pp-layout{ display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
   @media (min-width:1024px){ .pp-layout{ grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:20px; } }
   .pp-badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; border:1px solid; border-radius:9999px; padding:5px 12px; }
@@ -135,14 +135,20 @@
     <main id="main-content" class="flex-1 pp-main">
 
       <div class="flex items-start gap-4 mb-6">
-        <a href="assessment" aria-label="Back to My Assessments" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#5e3f3c" stroke-width="2" class="w-4 h-4" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <a href="assessment" aria-label="Back to My Assessments" class="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center shrink-0 hover:bg-slate-50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" class="w-4 h-4" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         </a>
         <div>
           <h1 class="text-2xl font-bold text-[#001a40]">Worksheet Results</h1>
-          <p class="text-sm text-[#5e3f3c] mt-1">How your chosen career fits your RIASEC profile.</p>
+          <p class="text-sm text-slate-600 mt-1">How your chosen career fits your RIASEC profile.</p>
         </div>
       </div>
+
+      <!-- Both result pages, one tab each (they need a finished worksheet, as does this view). -->
+      <nav class="pp-tabs" aria-label="Your results">
+        <a href="results">Career Results</a>
+        <a href="worksheet-results" aria-current="page">Worksheet Results</a>
+      </nav>
 
       <div class="pp-layout">
 
@@ -179,7 +185,7 @@
               <p class="pp-label">Your RIASEC Code</p>
               <p class="flex items-baseline gap-3 flex-wrap">
                 <span class="text-xl font-bold text-[#bb0013] tracking-[2px]" id="profileCode">—</span>
-                <span class="text-xs text-[#5e3f3c]" id="profileLabels">—</span>
+                <span class="text-xs text-slate-600" id="profileLabels">—</span>
               </p>
             </div>
             <div>
@@ -190,7 +196,7 @@
 
           <div>
             <p class="pp-label">Letter-by-Letter Match</p>
-            <p class="text-xs text-[#5e3f3c] mb-3" id="dimensionSummary">—</p>
+            <p class="text-xs text-slate-600 mb-3" id="dimensionSummary">—</p>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="dimensionMatch"></div>
           </div>
 
@@ -307,7 +313,7 @@
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   document.getElementById('keySkillsList').innerHTML = (recommendation.electives || []).map(function(skill) {
     return '<span class="bg-[#f2f4f6] border border-[#e0e3e5] rounded-full px-3.5 py-1.5 text-xs text-[#191c1e]">' + esc(skill) + '</span>';
-  }).join('') || '<span class="text-xs text-[#5e3f3c]">No electives selected.</span>';
+  }).join('') || '<span class="text-xs text-slate-600">No electives selected.</span>';
 
   document.getElementById('profileCode').textContent = topLetters.join(' ');
   document.getElementById('profileLabels').textContent = topTypes.map(function(t) { return t === 'Investigate' ? 'Investigative' : t; }).join(', ');
@@ -375,10 +381,10 @@
       : '<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" class="w-4 h-4 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>';
     return '<div class="border rounded p-3 ' + box + '">' +
       '<div class="flex items-center justify-between gap-2">' +
-        '<p class="text-lg font-bold ' + (matched ? 'text-[#047857]' : 'text-[#5e3f3c]') + '">' + letter + '</p>' + mark +
+        '<p class="text-lg font-bold ' + (matched ? 'text-[#047857]' : 'text-slate-600') + '">' + letter + '</p>' + mark +
       '</div>' +
       '<p class="text-xs font-semibold text-[#191c1e] mt-1">' + LETTER_TO_LABEL[letter] + '</p>' +
-      '<p class="text-[11px] text-[#5e3f3c] mt-0.5">' + (i === 0 ? 'Main letter · ' : '') + (matched ? 'Your #' + (rank + 1) + ' interest area' : 'Not in your top 3') + '</p>' +
+      '<p class="text-[11px] text-slate-600 mt-0.5">' + (i === 0 ? 'Main letter · ' : '') + (matched ? 'Your #' + (rank + 1) + ' interest area' : 'Not in your top 3') + '</p>' +
     '</div>';
   }).join('');
 
