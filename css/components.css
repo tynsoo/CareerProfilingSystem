@@ -425,7 +425,7 @@
   cursor: default;
 }
 /* ---- Summary strip (UI refinement, Phase 2): the four numbers in one bordered row, no icon tiles. Each number is still
-   a .summary-card button that opens its breakdown. Dividers are drawn as shadows so they follow the wrap (2 x 2 below
+   a .summary-card button that opens its breakdown (Student Information) or a link to its list (Monitoring). Dividers are drawn as shadows so they follow the wrap (2 x 2 below
    1024px, one row of 4 above); the strip's overflow:hidden trims the outer ones. */
 .pp-stats {
   display: grid;
@@ -450,6 +450,32 @@
   border-radius: 0;
   box-shadow: -1px 0 0 var(--pp-border, #e5e7eb), 0 -1px 0 var(--pp-border, #e5e7eb);
 }
+/* Each number keeps its module icon (TYN: the strip read too plain without them): icon on the left, text beside it. */
+.pp-stats .pp-stat:has(> .pp-stat-icon) {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 14px;
+}
+.pp-stat-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.pp-stat-icon img { display: block; flex: none; }
+@media (max-width: 639px) {
+  .pp-stats .pp-stat:has(> .pp-stat-icon) { flex-direction: column; gap: 8px; }
+}
+.pp-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
 .pp-stats .pp-stat:hover {
   background: #f8fafc;
 }
@@ -460,7 +486,9 @@
 .pp-stats .pp-stat:focus-visible {
   outline-offset: -2px;
 }
-/* "By strand" under each clickable number, so it reads as a button; the arrow turns up while its breakdown is open. */
+/* "By strand" (Student Information) or "Review list" (Monitoring) under each clickable number, so it reads as a
+   button or link; on Student Information the arrow turns up while its breakdown is open. */
+.pp-stats a.pp-stat { color: inherit; text-decoration: none; }
 .pp-stat-link {
   display: inline-flex;
   align-items: center;

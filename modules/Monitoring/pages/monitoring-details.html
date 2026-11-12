@@ -335,15 +335,17 @@
     });
 
     function headForTab(tab) {
-      if (tab === 'needs-review') return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Similarity', 'Action'];
-      if (tab === 'completed') return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Completed At'];
+      if (tab === 'needs-review') return ['Student', 'Strand', 'Best RIASEC Match', 'Course match', 'Similarity', 'Action'];
+      if (tab === 'completed') return ['Student', 'Strand', 'Best RIASEC Match', 'Course match', 'Completed At'];
       if (tab === 'pending') return ['Student', 'Strand', 'Registered', 'Status'];
       if (tab === 'history') return ['Student', 'Strand', 'Flag Reason', 'Outcome', 'Closed', 'Closed By', 'Note'];
-      return ['Student', 'Strand', 'Best RIASEC Match', 'Preferred vs RIASEC', 'Escalated', 'Booking', 'Action'];
+      return ['Student', 'Strand', 'Best RIASEC Match', 'Course match', 'Escalated', 'Booking', 'Action'];
     }
 
-    // Match green, Mismatch red (same colors as the Monitoring table).
-    const matchClass = (m) => m === 'Mismatch' ? 'text-red-600' : m === 'Match' ? 'text-green-600' : 'text-slate-500';
+    // Course match as a badge (PP.matchBadge): Match green, Close match blue, Mismatch amber, as on every page.
+    // The flag reason is short in the lists ("Low similarity"); the review shows the full sentence.
+    const SHORT_REASON = { 'Highest similarity below the monitoring level': 'Low similarity' };
+    const shortReason = (reason) => SHORT_REASON[reason] || reason;
 
     // Postgres sends "2026-10-18 14:35:00.12+08"; Date needs a "T" and a "+08:00" offset.
     function fmtWhen(iso) {
@@ -363,7 +365,7 @@
         return '<tr>' +
           '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
           '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
-          '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.reason) + '</td>' +
+          '<td class="px-6 py-3 text-sm text-slate-600" title="' + escapeHtml(r.reason) + '">' + escapeHtml(shortReason(r.reason)) + '</td>' +
           '<td class="px-6 py-3">' + PP.badge(r.outcomeLabel || r.status, r.status === 'dismissed' ? 'gray' : 'green') + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600 whitespace-nowrap">' + escapeHtml(fmtWhen(r.resolvedAt) || 'Not recorded') + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.resolvedBy || 'Not recorded') + '</td>' +
@@ -375,7 +377,7 @@
           '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
           '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
-          '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
+          '<td class="px-6 py-3">' + PP.matchBadge(r.match) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(fmtWhen(r.escalatedAt) || 'Earlier') + (r.escalatedBy ? '<span class="block text-xs text-slate-500">by ' + escapeHtml(r.escalatedBy) + '</span>' : '') + '</td>' +
           '<td class="px-6 py-3">' + bookingCell(r) + '</td>' +
           '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">' + (canAct ? 'Review' : 'View') + '</a></td>' +
@@ -385,13 +387,13 @@
         // The highest Cosine Similarity of the result (the list is sorted on it, lowest first) instead of a priority.
         const similarityCell = '<td class="px-6 py-3 text-sm text-slate-900 whitespace-nowrap">' +
           (r.topScore === null || r.topScore === undefined ? '<span class="text-slate-500">Not computed</span>'
-            : Number(r.topScore).toFixed(3) + (threshold !== null ? '<span class="block text-xs text-slate-500">level ' + Number(threshold).toFixed(3) + '</span>' : '')) +
+            : '<span class="font-medium text-red-700">' + Number(r.topScore).toFixed(3) + '</span>' + (threshold !== null ? '<span class="block text-xs text-slate-500">level ' + Number(threshold).toFixed(3) + '</span>' : '')) +
           '</td>';
         return '<tr>' +
           '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
           '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
-          '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
+          '<td class="px-6 py-3">' + PP.matchBadge(r.match) + '</td>' +
           similarityCell +
           '<td class="px-6 py-3"><a href="#" class="review-link flex items-center gap-1 text-sm text-blue-600 hover:underline" data-flag-id="' + r.flagId + '">' + (canAct ? 'Review' : 'View') + '</a></td>' +
         '</tr>';
@@ -401,7 +403,7 @@
           '<td class="px-6 py-3"><p class="text-sm text-slate-900">' + escapeHtml(r.name) + '</p></td>' +
           '<td class="px-6 py-3 text-sm text-slate-900">' + escapeHtml(r.strand) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.career) + '</td>' +
-          '<td class="px-6 py-3 text-sm font-bold ' + matchClass(r.match) + '">' + escapeHtml(r.match) + '</td>' +
+          '<td class="px-6 py-3">' + PP.matchBadge(r.match) + '</td>' +
           '<td class="px-6 py-3 text-sm text-slate-600">' + escapeHtml(r.time) + '</td>' +
         '</tr>';
       }

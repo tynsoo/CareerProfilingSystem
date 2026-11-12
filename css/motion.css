@@ -472,6 +472,7 @@ td, th, .break-words { overflow-wrap: break-word; }
 .border-\[\#0f2a6b\] { border-color: #0f2a6b; }
 :where(.peer):checked ~ .peer-checked\:bg-\[\#0f2a6b\] { background-color: #0f2a6b; }
 :where(.peer):checked ~ .peer-checked\:border-\[\#0f2a6b\] { border-color: #0f2a6b; }
+.min-w-\[720px\] { min-width: 720px; }
 .max-w-\[1100px\] { max-width: 1100px; }
 .leading-snug { line-height: 1.375; }
 .tracking-normal { letter-spacing: 0; }
