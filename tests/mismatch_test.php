@@ -40,5 +40,11 @@ check('Preferred Course far below -> mismatch', Mismatch::isMismatch(5, $scores)
 check('the typed career could not be linked to a program -> mismatch', Mismatch::isMismatch(null, $scores) === true);
 check('the order the scores are stored in does not matter', Mismatch::isMismatch(3, array_reverse($scores)) === false);
 
+echo "=== three-way status (Student Information Course Match) ===\n";
+check('Best RIASEC Match -> match', Mismatch::status(2, $scores) === 'match');
+check('Alternative Course -> close', Mismatch::status(4, $scores) === 'close');
+check('two levels down -> mismatch', Mismatch::status(1, $scores) === 'mismatch');
+check('no linked program -> mismatch', Mismatch::status(null, $scores) === 'mismatch');
+
 echo "\n=== Summary: $passed passed, $failures failed ===\n";
 exit($failures > 0 ? 1 : 0);

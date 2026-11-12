@@ -424,6 +424,73 @@
 .summary-card[aria-disabled="true"] {
   cursor: default;
 }
+/* ---- Summary strip (UI refinement, Phase 2): the four numbers in one bordered row, no icon tiles. Each number is still
+   a .summary-card button that opens its breakdown. Dividers are drawn as shadows so they follow the wrap (2 x 2 below
+   1024px, one row of 4 above); the strip's overflow:hidden trims the outer ones. */
+.pp-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: var(--pp-surface, #fff);
+  border: 1px solid var(--pp-border, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+}
+@media (min-width: 1024px) {
+  .pp-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.pp-stats .pp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 14px 20px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: -1px 0 0 var(--pp-border, #e5e7eb), 0 -1px 0 var(--pp-border, #e5e7eb);
+}
+.pp-stats .pp-stat:hover {
+  background: #f8fafc;
+}
+.pp-stats .pp-stat[aria-expanded="true"] {
+  background: #eef2f9;
+  box-shadow: -1px 0 0 var(--pp-border, #e5e7eb), 0 -1px 0 var(--pp-border, #e5e7eb), inset 0 -2px 0 var(--pp-navy-800, #0f2a6b);
+}
+.pp-stats .pp-stat:focus-visible {
+  outline-offset: -2px;
+}
+/* "By strand" under each clickable number, so it reads as a button; the arrow turns up while its breakdown is open. */
+.pp-stat-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pp-navy-600, #19427b);
+}
+.pp-stats .pp-stat:hover .pp-stat-link { text-decoration: underline; }
+.pp-stat-chev { width: 12px; height: 12px; transition: transform 150ms ease; }
+.pp-stat[aria-expanded="true"] .pp-stat-chev { transform: rotate(180deg); }
+.pp-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pp-muted, #6b7280);
+}
+.pp-stat-value {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  color: var(--pp-text, #111827);
+  font-variant-numeric: tabular-nums;
+}
+.pp-stat-sub {
+  min-height: 16px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--pp-muted, #6b7280);
+}
 /* Breakdown rows: group, bar, count, percent. Each row filters the table to that group. */
 .breakdown-row {
   display: grid;
