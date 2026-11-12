@@ -438,7 +438,7 @@
 @media (min-width: 1024px) {
   .pp-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
-.pp-stats .summary-card.pp-stat {
+.pp-stats .pp-stat {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -450,16 +450,29 @@
   border-radius: 0;
   box-shadow: -1px 0 0 var(--pp-border, #e5e7eb), 0 -1px 0 var(--pp-border, #e5e7eb);
 }
-.pp-stats .summary-card.pp-stat:hover {
+.pp-stats .pp-stat:hover {
   background: #f8fafc;
 }
-.pp-stats .summary-card.pp-stat[aria-expanded="true"] {
+.pp-stats .pp-stat[aria-expanded="true"] {
   background: #eef2f9;
   box-shadow: -1px 0 0 var(--pp-border, #e5e7eb), 0 -1px 0 var(--pp-border, #e5e7eb), inset 0 -2px 0 var(--pp-navy-800, #0f2a6b);
 }
-.pp-stats .summary-card.pp-stat:focus-visible {
+.pp-stats .pp-stat:focus-visible {
   outline-offset: -2px;
 }
+/* "By strand" under each clickable number, so it reads as a button; the arrow turns up while its breakdown is open. */
+.pp-stat-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pp-navy-600, #19427b);
+}
+.pp-stats .pp-stat:hover .pp-stat-link { text-decoration: underline; }
+.pp-stat-chev { width: 12px; height: 12px; transition: transform 150ms ease; }
+.pp-stat[aria-expanded="true"] .pp-stat-chev { transform: rotate(180deg); }
 .pp-stat-label {
   font-size: 12px;
   font-weight: 500;
