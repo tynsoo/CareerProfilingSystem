@@ -114,12 +114,12 @@
     <main id="main-content" class="flex-1 px-9 py-10 max-w-[1152px]">
 
       <div class="flex items-start gap-5 mb-8">
-        <a href="assessment" aria-label="Back to My Assessments" class="w-10 h-10 rounded-xl border border-[#e8bcb7] flex items-center justify-center shrink-0 hover:bg-red-50">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#5e3f3c" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <a href="assessment" aria-label="Back to My Assessments" class="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center shrink-0 hover:bg-slate-50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         </a>
         <div>
           <h1 class="text-2xl font-bold text-[#191c1e]">Career Worksheet</h1>
-          <p class="text-sm text-[#5e3f3c] mt-1">Type the career you want to take, as you answered on the worksheet from your guidance counselor, then pick the electives that support it.</p>
+          <p class="text-sm text-slate-600 mt-1">Type the career you want to take, as you answered on the worksheet from your guidance counselor, then pick the electives that support it.</p>
         </div>
       </div>
 
@@ -128,25 +128,25 @@
         <!-- Your RIASEC Result -->
         <div class="bg-white border border-[#e0e3e5] rounded-lg p-6">
           <p class="text-[11px] font-semibold tracking-[1.2px] text-[#495e88] uppercase mb-1">Your RIASEC Result</p>
-          <p class="text-xs text-[#5e3f3c] max-w-[600px]">This is your top three from the assessment you just completed. Use it as a guide while answering the worksheet below.</p>
+          <p class="text-xs text-slate-600 max-w-[600px]">This is your top three from the assessment you just completed. Use it as a guide while answering the worksheet below.</p>
           <div class="flex flex-wrap gap-x-10 gap-y-4 mt-5" id="topCodeRow"></div>
         </div>
 
         <!-- Career I want to take -->
         <div class="bg-white border border-[#e0e3e5] rounded-lg p-6">
           <h2 class="text-xl font-semibold text-[#191c1e] mb-1">Career I Want to Take</h2>
-          <p class="text-xs text-[#5e3f3c] mb-4">Type the career you want to pursue, as you answered on the worksheet from your guidance counselor, even if you are not yet certain. Suggestions appear as you type, but you can write your own.</p>
+          <p class="text-xs text-slate-600 mb-4">Type the career you want to pursue, as you answered on the worksheet from your guidance counselor, even if you are not yet certain. Suggestions appear as you type, but you can write your own.</p>
           <input type="text" id="careerGoal" list="careerSuggestions" maxlength="80" autocomplete="off" aria-label="Career I want to take" placeholder="e.g. Software Engineer" class="w-full max-w-[520px] border border-gray-300 rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#ed1c24] focus:border-transparent bg-white">
           <datalist id="careerSuggestions"></datalist>
-          <p id="careerProgramNote" class="hidden text-xs text-[#5e3f3c] mt-3 max-w-[520px]"></p>
+          <p id="careerProgramNote" class="hidden text-xs text-slate-600 mt-3 max-w-[520px]"></p>
         </div>
 
         <!-- Elective Selection -->
         <div class="bg-white border border-[#e0e3e5] rounded-lg p-6">
           <h2 class="text-xl font-semibold text-[#191c1e] mb-1">Elective Selection</h2>
-          <p class="text-xs text-[#5e3f3c] mb-6" id="electivesHint">Select the electives available to your strand that best support the career you chose above.</p>
+          <p class="text-xs text-slate-600 mb-6" id="electivesHint">Select the electives available to your strand that best support the career you chose above.</p>
 
-          <div id="electivesEmpty" class="text-center py-8 text-sm text-[#5e3f3c] border border-dashed border-gray-300 rounded-lg">
+          <div id="electivesEmpty" class="text-center py-8 text-sm text-slate-600 border border-dashed border-gray-300 rounded-lg">
             Type a career above to see the electives that best support it.
           </div>
 
@@ -237,9 +237,9 @@
   const topLetters = topTypes.map(function(t) { return LABEL_TO_LETTER[t] || t[0]; });
 
   document.getElementById('topCodeRow').innerHTML =
-    '<div class="flex flex-col gap-1"><p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase">Top Code</p><p class="text-base font-bold text-[#bb0013]">' + topLetters.join(' – ') + '</p></div>' +
+    '<div class="flex flex-col gap-1"><p class="text-xs font-semibold tracking-[0.6px] text-slate-600 uppercase">Top Code</p><p class="text-base font-bold text-[#bb0013]">' + topLetters.join(' – ') + '</p></div>' +
     topTypes.map(function(label, i) {
-      return '<div class="flex flex-col gap-1"><p class="text-xs font-semibold tracking-[0.6px] text-[#5e3f3c] uppercase">Dimension ' + (i + 1) + '</p><p class="text-base font-semibold text-[#191c1e]">' + label + '</p></div>';
+      return '<div class="flex flex-col gap-1"><p class="text-xs font-semibold tracking-[0.6px] text-slate-600 uppercase">Dimension ' + (i + 1) + '</p><p class="text-base font-semibold text-[#191c1e]">' + label + '</p></div>';
     }).join('');
 
   // Elective clusters and the college -> electives mapping come from
@@ -304,7 +304,7 @@
         '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
           byCluster[cluster].map(function(opt) {
             const id = 'elective_' + opt.replace(/[^a-zA-Z0-9]/g, '');
-            return '<label for="' + id + '" class="elective-option flex items-center gap-3 border border-gray-300 rounded-lg h-[52px] px-4 cursor-pointer hover:bg-slate-50 hover:border-[#e8bcb7]">' +
+            return '<label for="' + id + '" class="elective-option flex items-center gap-3 border border-gray-300 rounded-lg h-[52px] px-4 cursor-pointer hover:bg-slate-50 hover:border-gray-400">' +
               '<input type="checkbox" id="' + id + '" class="elective-check w-4 h-4 accent-[#ed1c24]" data-label="' + opt + '">' +
               '<span class="text-sm text-[#191c1e]">' + opt + '</span>' +
             '</label>';
