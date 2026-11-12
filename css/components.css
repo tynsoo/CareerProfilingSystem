@@ -450,6 +450,32 @@
   border-radius: 0;
   box-shadow: -1px 0 0 var(--pp-border, #e5e7eb), 0 -1px 0 var(--pp-border, #e5e7eb);
 }
+/* Each number keeps its module icon (TYN: the strip read too plain without them): icon on the left, text beside it. */
+.pp-stats .pp-stat:has(> .pp-stat-icon) {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 14px;
+}
+.pp-stat-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.pp-stat-icon img { display: block; flex: none; }
+@media (max-width: 639px) {
+  .pp-stats .pp-stat:has(> .pp-stat-icon) { flex-direction: column; gap: 8px; }
+}
+.pp-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
 .pp-stats .pp-stat:hover {
   background: #f8fafc;
 }

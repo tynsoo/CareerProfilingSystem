@@ -112,28 +112,40 @@
            number opens its list on Monitoring Details. Numbers stay neutral: these are work queues, not good or bad. -->
       <div class="pp-stats mb-6">
         <a href="monitoring-details?tab=needs-review" class="pp-stat">
-          <span class="pp-stat-label">Needs Review</span>
-          <span class="pp-stat-value" id="cardNeedsReview">—</span>
-          <span class="pp-stat-sub">Low similarity, not reviewed yet</span>
-          <span class="pp-stat-link">Review list &rarr;</span>
+          <span class="pp-stat-icon" style="background:#fef2f2"><img src="images/monitoring/card-icon-needs-review.svg" alt="" width="38" height="48"></span>
+          <span class="pp-stat-body">
+            <span class="pp-stat-label">Needs Review</span>
+            <span class="pp-stat-value" id="cardNeedsReview">—</span>
+            <span class="pp-stat-sub">Low similarity, not reviewed yet</span>
+            <span class="pp-stat-link">Review list &rarr;</span>
+          </span>
         </a>
         <a href="monitoring-details?tab=counseling" class="pp-stat">
-          <span class="pp-stat-label">Counseling Queue</span>
-          <span class="pp-stat-value" id="cardCounseling">—</span>
-          <span class="pp-stat-sub">Escalated to a counselor</span>
-          <span class="pp-stat-link">Open queue &rarr;</span>
+          <span class="pp-stat-icon" style="background:#f0fdf4"><img src="images/monitoring/card-icon-counseling.svg" alt="" width="44" height="48"></span>
+          <span class="pp-stat-body">
+            <span class="pp-stat-label">Counseling Queue</span>
+            <span class="pp-stat-value" id="cardCounseling">—</span>
+            <span class="pp-stat-sub">Escalated to a counselor</span>
+            <span class="pp-stat-link">Open queue &rarr;</span>
+          </span>
         </a>
         <a href="monitoring-details?tab=pending" class="pp-stat">
-          <span class="pp-stat-label">Not started</span>
-          <span class="pp-stat-value" id="cardPending">—</span>
-          <span class="pp-stat-sub">Registered, assessment not taken</span>
-          <span class="pp-stat-link">See students &rarr;</span>
+          <span class="pp-stat-icon" style="background:#fff7ed"><img src="images/monitoring/card-icon-pending.svg" alt="" width="36" height="48"></span>
+          <span class="pp-stat-body">
+            <span class="pp-stat-label">Not started</span>
+            <span class="pp-stat-value" id="cardPending">—</span>
+            <span class="pp-stat-sub">Assessment not taken yet</span>
+            <span class="pp-stat-link">See students &rarr;</span>
+          </span>
         </a>
         <a href="monitoring-details?tab=completed" class="pp-stat">
-          <span class="pp-stat-label">Completed today</span>
-          <span class="pp-stat-value" id="cardCompleted">—</span>
-          <span class="pp-stat-sub">Assessments finished today</span>
-          <span class="pp-stat-link">See students &rarr;</span>
+          <span class="pp-stat-icon" style="background:#eff6ff"><img src="images/monitoring/card-icon-completed.svg" alt="" width="36" height="48"></span>
+          <span class="pp-stat-body">
+            <span class="pp-stat-label">Completed today</span>
+            <span class="pp-stat-value" id="cardCompleted">—</span>
+            <span class="pp-stat-sub">Assessments finished today</span>
+            <span class="pp-stat-link">See students &rarr;</span>
+          </span>
         </a>
       </div>
       <!-- Needs Review: the five lowest similarities; Review opens that student on Monitoring Details. -->
