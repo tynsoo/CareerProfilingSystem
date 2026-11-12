@@ -159,7 +159,7 @@
             </div>
           </div>
           <div class="border-l border-slate-100 pl-10 shrink-0">
-            <a href="assessment-instructions" id="riasecActionBtn" class="inline-block bg-[#ed1c24] text-white text-[15px] font-semibold rounded-md px-8 py-3.5 shadow-sm hover:opacity-90">Take Assessment</a>
+            <a href="assessment-instructions" id="riasecActionBtn" class="inline-block bg-[#0f2a6b] text-white text-[15px] font-semibold rounded-md px-8 py-3.5 shadow-sm hover:opacity-90">Take Assessment</a>
             <div id="retakeArea" class="hidden flex-col gap-2 mt-3" style="align-items:stretch;text-align:center"></div>
           </div>
         </div>
@@ -363,7 +363,7 @@
       const outline = 'inline-block border border-[#ed1c24] text-[#ed1c24] text-sm font-semibold rounded-md px-6 py-2.5 hover:bg-red-50';
       let html = '';
       if (status === 'approved') {
-        html = '<a href="assessment-instructions" class="inline-block bg-[#ed1c24] text-white text-sm font-semibold rounded-md px-6 py-2.5 hover:opacity-90">Retake Assessment</a>';
+        html = '<a href="assessment-instructions" class="inline-block bg-[#0f2a6b] text-white text-sm font-semibold rounded-md px-6 py-2.5 hover:opacity-90">Retake Assessment</a>';
       } else if (status === 'pending') {
         html = '<span class="pp-badge pp-badge-lg pp-badge-amber" style="justify-content:center">Retake requested</span>';
       } else {
@@ -444,7 +444,7 @@
         wPill.textContent = 'Ready to take';
         wBtn.textContent = 'Start Worksheet';
         wBtn.setAttribute('href', 'career-worksheet');
-        wBtn.className = 'inline-block bg-[#ed1c24] text-white text-[15px] font-semibold rounded-md px-8 py-3.5 shadow-sm hover:opacity-90';
+        wBtn.className = 'inline-block bg-[#0f2a6b] text-white text-[15px] font-semibold rounded-md px-8 py-3.5 shadow-sm hover:opacity-90';
       }
     }
   })();

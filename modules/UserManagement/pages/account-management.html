@@ -420,7 +420,7 @@
       const data = ' data-id="' + a.id + '" data-name="' + escapeHtml(a.fullName || a.email) + '"';
       if (a.status === 'pending') {
         return '<div class="flex items-center justify-center gap-2">' +
-          '<button type="button" class="' + btn + 'text-white bg-[#ed1c24] border-[#ed1c24] hover:opacity-90" data-action="approve"' + data + '>Approve</button>' +
+          '<button type="button" class="' + btn + 'text-white bg-[#0f2a6b] border-[#0f2a6b] hover:opacity-90" data-action="approve"' + data + '>Approve</button>' +
           '<button type="button" class="' + btn + 'text-[#ed1c24] border-[#ed1c24] hover:bg-red-50" data-action="reject"' + data + '>Reject</button>' +
         '</div>';
       }

@@ -234,7 +234,7 @@
       : PP.badge('Resolved', 'green');
     // Resolving needs Full on Update counseling status (canInvite holds that level, see above).
     const resolveBtn = r.status === 'open' && canInvite
-      ? '<button type="button" class="resolve-btn shrink-0 bg-[#ed1c24] text-white text-sm font-semibold rounded-md px-4 py-2 hover:opacity-90" data-id="' + r.id + '">Mark Resolved</button>'
+      ? '<button type="button" class="resolve-btn shrink-0 bg-[#0f2a6b] text-white text-sm font-semibold rounded-md px-4 py-2 hover:opacity-90" data-id="' + r.id + '">Mark Resolved</button>'
       : '';
     // The student's latest invite (any page). Within 24 hours the server refuses another one, so the button is off until then.
     const inv = r.lastInvite;
@@ -311,7 +311,7 @@
           '<input type="text" maxlength="300" placeholder="Note to the student (optional)" class="retake-note w-full border border-slate-300 rounded-md px-3 py-2 text-sm" data-id="' + r.id + '">' +
           '<div class="flex justify-end gap-2">' +
             '<button type="button" class="retake-decide border border-slate-300 text-slate-600 text-sm font-semibold rounded-md px-4 py-2 hover:bg-slate-50" data-decision="decline" data-id="' + r.id + '">Decline</button>' +
-            '<button type="button" class="retake-decide bg-[#ed1c24] text-white text-sm font-semibold rounded-md px-4 py-2 hover:opacity-90" data-decision="approve" data-id="' + r.id + '">Approve Retake</button>' +
+            '<button type="button" class="retake-decide bg-[#0f2a6b] text-white text-sm font-semibold rounded-md px-4 py-2 hover:opacity-90" data-decision="approve" data-id="' + r.id + '">Approve Retake</button>' +
           '</div></div>'
       : '';
     return '<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 flex flex-col gap-3">' +
