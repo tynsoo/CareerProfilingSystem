@@ -181,7 +181,7 @@ CREATE TABLE recommendations (
     source_assessment_id    INT NOT NULL REFERENCES assessments(id),
     source_worksheet_id     INT REFERENCES worksheets(id),
     -- Match/mismatch outcome (RecommendationPipeline::finalRecommendation); NULL on results saved before it existed.
-    match_status            VARCHAR(10) CHECK (match_status IN ('match', 'mismatch')),
+    match_status            VARCHAR(10) CHECK (match_status IN ('match', 'close', 'mismatch')),
     mismatch_reason         VARCHAR(40),
     -- Pipeline stages (modules/ContentBasedFiltering/lib/RecommendationPipeline.php); NULL on results saved before they existed.
     cbf_program_ids         INT[],              -- Best RIASEC Match (CBF: highest cosine similarity)

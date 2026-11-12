@@ -70,7 +70,12 @@ function topMatchesLabel(array $ids, array $titles, string $empty): string
 
 function statusLabel(?string $status): string
 {
-    return $status === 'mismatch' ? 'Mismatch' : ($status === 'match' ? 'Match' : 'Not compared yet');
+    return match ($status) {
+        'mismatch' => 'Mismatch',
+        'match' => 'Match',
+        'close' => 'Close match',
+        default => 'Not compared yet',
+    };
 }
 
 $threshold = MonitoringLevel::get($pdo);

@@ -170,7 +170,8 @@ $response = [
     // The student's own selection (Career Electives Worksheet), shown separately; it never
     // changes the CBF result.
     'preferredCourse' => $preferredId !== null && isset($programs[$preferredId])
-        ? $programs[$preferredId] + ['inBestRiasecMatch' => in_array($preferredId, $bestIds, true)]
+        ? $programs[$preferredId] + ['inBestRiasecMatch' => in_array($preferredId, $bestIds, true),
+            'inAlternatives' => in_array($preferredId, $alternativeIds, true)]
         : null,
     // The final Best Match (CBF + prediction model + worksheet) needs an adviser-approved
     // combination rule, so it is not computed.

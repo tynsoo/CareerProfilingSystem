@@ -112,7 +112,8 @@ class RecommendationPipeline
         $best = $available ? $cbf['candidateIds'] : [];
         $alternatives = $available ? ($cbf['alternatives'] ?? []) : [];
 
-        $preferred = array_map(fn($id) => ['id' => $id, 'inBestRiasecMatch' => in_array($id, $best, true)], $worksheet['courseIds']);
+        $preferred = array_map(fn($id) => ['id' => $id, 'inBestRiasecMatch' => in_array($id, $best, true),
+            'inAlternatives' => in_array($id, $alternatives, true)], $worksheet['courseIds']);
 
         // Does the student's preference agree with the RIASEC-based (CBF) result?
         if (!$available) {
@@ -121,6 +122,10 @@ class RecommendationPipeline
             [$status, $reason] = ['mismatch', 'no_cbf_match'];
         } elseif ($worksheet['status'] !== 'available') {
             [$status, $reason] = ['mismatch', 'no_worksheet'];
+        } elseif ($preferred[0]['inAlternatives']) {
+            // Close match: the Preferred Course is at the next-highest similarity (an Alternative Course). Not a
+            // mismatch, so the student is not asked to visit the Guidance Office for it.
+            [$status, $reason] = ['close', null];
         } elseif (!$preferred[0]['inBestRiasecMatch']) {
             [$status, $reason] = ['mismatch', 'preferred_not_matched'];
         } else {

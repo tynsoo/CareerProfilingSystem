@@ -48,7 +48,7 @@ echo "\n=== Preferred Course is separate from the CBF result ===\n";
 $r = RecommendationPipeline::finalRecommendation($cbf([$A, $B], [$C]), $ws([$D]), $noPrediction);
 check('Preferred Course D (not most similar) is NOT made the Best RIASEC Match', $r['bestRiasecMatchIds'] === [$A, $B]);
 check('... and does not change the alternatives', $r['alternativeIds'] === [$C]);
-check('... reported as differing from the Best RIASEC Match (mismatch)', $r['preferred'] === [['id' => $D, 'inBestRiasecMatch' => false]] && $r['reason'] === 'preferred_not_matched');
+check('... reported as differing from the Best RIASEC Match (mismatch)', $r['preferred'] === [['id' => $D, 'inBestRiasecMatch' => false, 'inAlternatives' => false]] && $r['reason'] === 'preferred_not_matched');
 
 $r = RecommendationPipeline::finalRecommendation($cbf([$A, $B], [$C]), $ws([$B]), $noPrediction);
 check('Preferred Course B that is most similar appears naturally in the Best RIASEC Match, list unchanged',
@@ -56,7 +56,8 @@ check('Preferred Course B that is most similar appears naturally in the Best RIA
 check('tied Best RIASEC Match courses are all kept (no tie-break by the preference)', count($r['bestRiasecMatchIds']) === 2);
 
 $r = RecommendationPipeline::finalRecommendation($cbf([$A, $B], [$C]), $ws([$C]), $noPrediction);
-check('Preferred Course among the alternatives still differs from the Best RIASEC Match', $r['status'] === 'mismatch' && $r['bestRiasecMatchIds'] === [$A, $B]);
+check('Preferred Course among the alternatives is a close match (not a mismatch), Best RIASEC Match unchanged',
+    $r['status'] === 'close' && $r['reason'] === null && $r['preferred'][0]['inAlternatives'] === true && $r['bestRiasecMatchIds'] === [$A, $B]);
 
 $r = RecommendationPipeline::finalRecommendation($cbf([$A], [$B]), $ws([]), $noPrediction);
 check('empty worksheet result -> CBF result unchanged', $r['bestRiasecMatchIds'] === [$A] && $r['alternativeIds'] === [$B] && $r['reason'] === 'no_worksheet');
@@ -95,7 +96,7 @@ check('Best RIASEC Match = the one program coded C-I-E (the student\'s own order
     $run['bestRiasecMatchIds'] === [$idOf['BS Accounting Information System']]
     && !in_array($idOf['BS Nursing'], $run['bestRiasecMatchIds'], true));
 check('Alternative Courses = the next level: BS Accountancy (C-E-I)', $run['alternativeIds'] === [$idOf['BS Accountancy']]);
-check('Preferred Course BS Nursing shown as differing', $run['preferred'][0] === ['id' => $idOf['BS Nursing'], 'inBestRiasecMatch' => false]);
+check('Preferred Course BS Nursing shown as differing', $run['preferred'][0] === ['id' => $idOf['BS Nursing'], 'inBestRiasecMatch' => false, 'inAlternatives' => false] && $run['status'] === 'mismatch');
 check('alternatives = the next similarity level, none of them a Best RIASEC Match',
     $run['alternativeIds'] && !array_intersect($run['alternativeIds'], $run['bestRiasecMatchIds']));
 $withPref = RecommendationPipeline::run($profile, $progs, [$idOf['BS Accountancy']], $off);

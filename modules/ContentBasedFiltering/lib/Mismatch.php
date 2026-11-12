@@ -6,7 +6,8 @@ require_once __DIR__ . '/CBFData.php';
 /**
  * A student's result "matches" when their Preferred Course (the program the career on their
  * worksheet links to) is also one of their Best RIASEC Match programs: the programs with the
- * highest cosine similarity to their RIASEC profile (modules/ContentBasedFiltering/lib/CBFEngine.php). Otherwise it is a
+ * highest cosine similarity to their RIASEC profile (modules/ContentBasedFiltering/lib/CBFEngine.php). It is a "close"
+ * match when the Preferred Course is one of their Alternative Courses (the next-highest similarity). Otherwise it is a
  * mismatch and they are asked to see the Guidance Office. A career that could not be linked
  * to any program is a mismatch too. A student who has not done the worksheet yet has no
  * recommendation, so there is nothing to compare.
@@ -24,8 +25,12 @@ class Mismatch
             return true;
         }
         usort($scores, fn($a, $b) => [$b['cosine'], $a['programId']] <=> [$a['cosine'], $b['programId']]);
-        $best = array_map(fn($s) => (int) $s['programId'], CBFEngine::selectCandidates($scores, 'cosine'));
-        return !in_array($statedProgramId, $best, true);
+        $bestRows = CBFEngine::selectCandidates($scores, 'cosine');
+        $best = array_map(fn($s) => (int) $s['programId'], $bestRows);
+        // A Preferred Course among the Alternative Courses (next-highest similarity) is a close match, not a mismatch.
+        $rest = array_values(array_filter($scores, fn($s) => !in_array((int) $s['programId'], $best, true)));
+        $close = $best ? array_map(fn($s) => (int) $s['programId'], CBFEngine::selectCandidates($rest, 'cosine')) : [];
+        return !in_array($statedProgramId, $best, true) && !in_array($statedProgramId, $close, true);
     }
 
     /**
